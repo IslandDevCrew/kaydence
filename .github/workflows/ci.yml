@@ -18,6 +18,20 @@ jobs:
       - name: enable pnpm
         run: corepack enable
         shell: bash
+      # --- Linux system deps (P0-T5, ADR-0011): Tauri 2.x webview + tray +
+      #     gtk-layer-shell for the HUD overlay (ADR-0004 study). CANNOT be
+      #     verified on the current macOS-only host — waived-pending-infra. ---
+      - name: linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libgtk-layer-shell-dev \
+            patchelf
       # --- Rust backend ---
       - name: fmt
         run: cargo fmt --all -- --check
