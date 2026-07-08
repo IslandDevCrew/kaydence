@@ -20,18 +20,24 @@ invariants (left-nav order, 8px card radius, prediction-blue, ~0.5s amber-gold m
 pulse, destructive confirm gate, no cloud-sync copy on core screens, keyboard/a11y)
 never vary; changing one is a critical decision path → operator go + ADR.
 
-## Logo options → ADR-0012 (operator decision pending, task P1-D2)
+## Logo options -> ADR-0012 (accepted, task P1-D2)
+
+ADR-0012 is accepted. The operator selected a dual-asset identity:
+Option 1 is the sole product mark for app icon, tray/menu bar, installer,
+HUD badge, and every isolated-logo use. Option 4 is the Kaydence wordmark
+for public-site/docs/marketing headers only. The Option 4 standalone icon is
+retired, and its serif display style must not appear inside the product UI.
 
 | # | File | Direction |
 |---|------|-----------|
-| 1 | [`kaydence-logo-option-1.png`](../../assets/brand/logos/kaydence-logo-option-1.png) | K Waveform — K-shaped voice/caret mark, teal/blue; everyday app-icon direction |
+| 1 | [`kaydence-logo-option-1.png`](../../assets/brand/logos/kaydence-logo-option-1.png) | **Selected mark.** K Waveform — K-shaped voice/caret mark, teal/blue; everyday app-icon direction |
 | 2 | [`kaydence-logo-option-2.png`](../../assets/brand/logos/kaydence-logo-option-2.png) | Protected Path — circular voice-path/seal for the privacy-first promise |
 | 3 | [`kaydence-logo-option-3.png`](../../assets/brand/logos/kaydence-logo-option-3.png) | Relay Monogram — cross-device K monogram, three-desktop story |
-| 4 | [`kaydence-logo-option-4.png`](../../assets/brand/logos/kaydence-logo-option-4.png) | Wordmark Forward — typography-led, public-site header |
+| 4 | [`kaydence-logo-option-4.png`](../../assets/brand/logos/kaydence-logo-option-4.png) | **Selected wordmark.** Wordmark Forward — typography-led, public-site/docs/marketing header only |
 | 5 | [`kaydence-logo-option-5.png`](../../assets/brand/logos/kaydence-logo-option-5.png) | Voice Constellation — three-node local-fleet mark (premium feel) |
 
-Until ADR-0012 locks the winner, screens use a placeholder mark in the reserved slot;
-the winning logo drops in without changing any layout.
+Screens use the Option 1 mark in the reserved slot. The mark and wordmark are never
+composed side-by-side as twin logos; each has its own role.
 
 ## Screen families → build phase → fidelity gate
 

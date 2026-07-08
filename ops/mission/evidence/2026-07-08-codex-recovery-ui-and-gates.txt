@@ -1,0 +1,47 @@
+Kaydence Codex recovery pass evidence
+Date: 2026-07-08 17:29 CDT / 2026-07-08T22:29Z
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Remote truth:
+- Command: git fetch origin
+- Result: remote: Repository not found.
+- Interpretation: origin https://github.com/IslandDevCrew/kaydence.git is unavailable.
+  Local main remains authoritative until the operator restores/recreates/repoints remote.
+
+Fresh local gates before/after source edits:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check: PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 26 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 28 total backend tests PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design Proposed exception
+- ./script/build_and_run.sh build: PASS
+  - pnpm --filter kaydence-desktop build: PASS
+  - cargo build --manifest-path apps/desktop/src-tauri/Cargo.toml: PASS
+
+Browser/render smoke:
+- Dev server: pnpm --filter kaydence-desktop dev --host 127.0.0.1
+- Browser: Playwright using system Google Chrome
+- URL: http://127.0.0.1:1420/
+- Result: PASS
+  - h1: Dictation cockpit
+  - active OS lane: macOS
+  - metric cards: 4
+  - nav items: 10
+  - favicon link present: yes
+  - console/page errors: []
+
+Source changes made:
+- Replaced the P0 React placeholder with a presentation-only cockpit/setup shell
+  aligned to screen families 01, 03, and 10.
+- Added Vite public favicon and index.html favicon link.
+- Added Codex Run action wired to ./script/build_and_run.sh.
+- Corrected docs/design/README.md to reflect ADR-0012 accepted identity roles.
+- Added current state, Windows handoff, and Codex super-goal prompt docs.
+
+Generated build cleanup:
+- Vite dist artifacts created by build/smoke were removed after verification.
+- apps/desktop/dist/index.html restored to the pre-existing committed placeholder.

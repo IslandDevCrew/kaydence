@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kaydence">
+  <rect width="64" height="64" rx="14" fill="#102026"/>
+  <path d="M18 14h8v17l17-17h10L33 35l21 15H41L26 39v11h-8z" fill="#eef7f8"/>
+  <path d="M42 19c3 3 4 7 3 11-1 5-5 8-11 9" fill="none" stroke="#18a999" stroke-width="4" stroke-linecap="round"/>
+  <path d="M34 39l8 6" stroke="#d99b18" stroke-width="4" stroke-linecap="round"/>
+</svg>
