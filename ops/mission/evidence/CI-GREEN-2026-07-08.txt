@@ -1,0 +1,21 @@
+CI-green fixes — 2026-07-08 (branch mission/ci-green-pnpm-icon)
+
+== Fix 1: pnpm 11 allowBuilds (all-OS 'install' step failure) ==
+Root cause: pnpm 11.10 ignores package.json 'pnpm.onlyBuiltDependencies' AND
+pnpm-10-style workspace 'onlyBuiltDependencies'; approvals now live under
+'allowBuilds' in pnpm-workspace.yaml (written by 'pnpm approve-builds').
+Verification: rm -rf node_modules && pnpm install --frozen-lockfile -> PASS
+(esbuild postinstall ran); scripts/check-frontend.sh -> PASS.
+
+== Fix 2: Windows tauri-build icon (windows 'clippy' step failure) ==
+Root cause: 'icons/icon.ico not found; required for generating a Windows
+Resource file during tauri-build'. Generated the full icon set from the
+ADR-0012 Option 1 K Waveform mark (assets/brand/logos/kaydence-logo-option-1.png):
+auto-cropped tile (bbox x408-838 y290-734), 22.5% rounded-corner alpha,
+icon.png/32/128/128@2x PNGs + multi-res icon.ico + icon.icns (iconutil).
+tauri.conf.json bundle.icon updated to the full set. cargo check exit 0.
+NOTE: dev-grade cut; production-grade icon polish stays with P3 installers (ADR-0012).
+
+== P1-P0-4 WAL evidence (rides into main with the design-branch merges) ==
+cargo test --test crash_recovery -> 2 passed; 0 failed (child_writer_process,
+killing_the_writer_mid_dictation_loses_no_flushed_audio) — macOS leg.
