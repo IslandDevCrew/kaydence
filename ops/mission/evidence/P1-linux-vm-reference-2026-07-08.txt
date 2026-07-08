@@ -1,0 +1,16 @@
+Linux reference machine brought online — 2026-07-08
+Host: UTM VM 192.168.64.4 (ssh debian@…), reachable from the macOS host.
+Env:  Debian GNU/Linux 12 (bookworm), aarch64 (ARM64 — native virtualization).
+      Graphical session Type=wayland (GNOME/Mutter — the hard/representative lane,
+      i.e. the portal path, not permissive wlroots). Confirms the spike's target.
+Setup (this host, over SSH):
+  - apt: build-essential, libgtk-3-dev, libwebkit2gtk-4.1-dev, libayatana-appindicator3-dev,
+    librsvg2-dev, libxdo-dev, at-spi2-core, libatspi2.0-dev, libssl-dev, pkg-config, rsync.
+  - rustup: stable 1.96.1 (minimal profile).
+  - repo synced (rsync, source only; excludes target/node_modules/.git).
+Result:
+  cargo test --lib  →  26 passed; 0 failed  (ARM64 Debian, beyond CI's x86 Ubuntu leg).
+  Includes inject::* (13, incl. secure_field_is_always_refused) + hotkeys::* (6).
+Status: Linux reference is READY. Live injection validation (AT-SPI insert, GNOME
+  portal/libei keystrokes, secure-field refusal, clipboard round-trip) is unblocked
+  the moment the ADR-0013 dependency set is approved and the backends are built.

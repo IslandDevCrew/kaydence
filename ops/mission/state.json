@@ -456,7 +456,7 @@
       "When adding real ASR/audio deps in P1 (cpal, ort, whisper.cpp, vad-rs), each is a critical-path dependency add -> audit-network allowlist + ADR per the ADR-0004 study."
     ],
     "blockers": [
-      "P0-G5 (windowed cargo tauri dev on Win/Linux) still needs the physical reference machines — headless CI can't verify a window opens. This is now the ONLY open P0 exit gate (P0-G6 3-OS CI closed GREEN 2026-07-08).",
+      "P0-G5 (windowed cargo tauri dev on Win/Linux) still needs the physical reference machines — headless CI can't verify a window opens. Linux reference is now LIVE: UTM Debian 12 VM (192.168.64.4, ARM64, GNOME/Wayland), toolchain + build deps installed, 26 tests pass on ARM64 (evidence P1-linux-vm-reference-2026-07-08.txt) — the Linux windowed check + injection validation can run here once backends build. Windows leg still needs a real box for the windowed/hands-on checks (CI covers compile/test).",
       "P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.",
       "Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).",
       "ADR-0009 (Relay crypto) operator review required before the P4-1 build.",
