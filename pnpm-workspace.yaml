@@ -1,7 +1,12 @@
 packages:
   - "apps/*"
 
-# pnpm >= ~11.2 reads settings here (the package.json "pnpm" field is kept in
-# parallel for older versions; each side warn-ignores the other's copy).
+# pnpm 11 reads build-script approvals from `allowBuilds` here (written by
+# `pnpm approve-builds`). The older `onlyBuiltDependencies` (pnpm 10) and the
+# package.json "pnpm" field (pnpm 9) are kept in parallel for cross-version
+# compatibility; each version warn-ignores the copies it doesn't read.
+allowBuilds:
+  esbuild: true
+
 onlyBuiltDependencies:
   - esbuild
