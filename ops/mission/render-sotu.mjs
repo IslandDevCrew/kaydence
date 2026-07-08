@@ -56,6 +56,7 @@ const risks = Array.isArray(state.risks) ? state.risks : [];
 const prLog = Array.isArray(state.prLog) ? state.prLog : [];
 const resume = state.resume ?? {};
 const policies = state.policies ?? {};
+const design = state.designDirection ?? null;
 
 for (const p of phases) {
   if (!p.status) warn(`phase ${p.id ?? "?"} has no status — defaulting to "pending"`);
@@ -249,6 +250,66 @@ function risksPanel() {
   return `<section aria-labelledby="risks"><h2 id="risks">Risks &amp; Blockers</h2><div class="panel"><ul class="bare">${blockers}${riskItems}</ul></div></section>`;
 }
 
+// Locked visual system: the screen-family boards are the build reference set.
+// Rendered from state.designDirection; degrades to nothing when absent.
+function designSection() {
+  if (!design) return "";
+  const lanes = Array.isArray(design.osLanes) ? design.osLanes : [];
+  const invariants = Array.isArray(design.invariants) ? design.invariants : [];
+  const logos = Array.isArray(design.logoOptions) ? design.logoOptions : [];
+  const screens = Array.isArray(design.screenFamilies) ? design.screenFamilies : [];
+  const statusTone = design.status === "locked" ? "green" : "amber";
+
+  const laneRows = lanes
+    .map(
+      (l) =>
+        `<tr><td><b>${esc(l.lane)}</b></td><td>${esc(l.accent)}</td><td>${esc(l.varies)}</td><td>${esc(l.doNotVary)}</td></tr>`
+    )
+    .join("");
+  const laneTable = lanes.length
+    ? `<div class="table-wrap"><table><thead><tr><th>OS lane</th><th>Free-tier accent</th><th>Varies</th><th>Never varies</th></tr></thead><tbody>${laneRows}</tbody></table></div>`
+    : "";
+
+  const invList = invariants.length
+    ? `<h3 style="margin-top:16px">Shared invariants (never vary by OS)</h3><ul class="bare">${invariants
+        .map((i) => `<li><span class="chip green">invariant</span> ${esc(i)}</li>`)
+        .join("")}</ul>`
+    : "";
+
+  const logoCards = logos.length
+    ? `<h3 style="margin-top:16px">Logo directions (operator picks 1 &rarr; ADR-0012)</h3><ul class="bare">${logos
+        .map((o) => `<li><span class="chip blue">option ${esc(o.id)}</span> <b>${esc(o.name)}</b> &mdash; <span class="muted">${esc(o.note)}</span></li>`)
+        .join("")}</ul>`
+    : "";
+
+  const screenRows = screens
+    .map(
+      (s) =>
+        `<tr><td><b>${esc(s.id)}</b></td><td><b>${esc(s.name)}</b></td><td>${esc(s.phase)}</td><td>${esc(s.note)}</td></tr>`
+    )
+    .join("");
+  const screenTable = screens.length
+    ? `<h3 style="margin-top:16px">Screen families &rarr; build phase (the fidelity-gate reference set)</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>Screen family</th><th>Phase</th><th>What it covers</th></tr></thead><tbody>${screenRows}</tbody></table></div>`
+    : "";
+
+  const decision = design.openDecision
+    ? `<p class="note"><b>Open decision:</b> ${esc(design.openDecision)}</p>`
+    : "";
+  const sources = `<p class="small muted" style="margin-top:12px">Report: <code>${esc(design.report ?? "?")}</code><br>Assets: <code>${esc(design.assets ?? "?")}</code>${design.promptPack ? `<br>Prompt pack: <code>${esc(design.promptPack)}</code>` : ""}</p>`;
+
+  return `<section aria-labelledby="design"><h2 id="design">Design Direction &mdash; Visual System v1</h2>
+  <div class="panel">
+    <div style="margin-bottom:8px">${chip(`visual system: ${design.status ?? "?"}`, statusTone)}${design.lockedOn ? chip(`locked ${design.lockedOn}`) : ""}${chip(`${logos.length} logos`, "blue")}${chip(`${screens.length} screen families`, "blue")}</div>
+    <p class="muted">${esc(design.summary ?? "")}</p>
+    ${laneTable}
+    ${invList}
+    ${logoCards}
+    ${screenTable}
+    ${decision}
+    ${sources}
+  </div></section>`;
+}
+
 function prTimeline() {
   if (!prLog.length) return "";
   const rows = [...prLog]
@@ -365,6 +426,7 @@ button.copy:hover{background:rgba(88,215,179,.2)}
   </section>
 
   ${metricsTable()}
+  ${designSection()}
   ${risksPanel()}
 
   <section aria-labelledby="phases">
