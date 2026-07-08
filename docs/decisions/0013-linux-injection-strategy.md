@@ -1,6 +1,6 @@
 # ADR-0013: Linux text injection strategy (Wayland + X11)
 
-- **Status:** Proposed <!-- OPERATOR DECISION PENDING: approve the capability ladder + the dependency set before the platform backends are implemented. Declared by-design exception in scripts/check-adr-status.sh until then, same mechanism as ADR-0009. -->
+- **Status:** Accepted <!-- Operator approved the capability ladder + dependency set 2026-07-08 ("GO" into the backend build). Removed from the check-adr-status.sh exception list on acceptance. Backends implemented incrementally, each dep with its own audit-network review; validated on the reference machines (Linux = the UTM Debian 12 GNOME VM). -->
 - **Date:** 2026-07-08
 - **PRD items affected:** P0-3 (universal injection) on the Linux lane; supports P1-G4
   (screen 03 Injection) and the injection portions of every later phase
@@ -21,8 +21,10 @@ plumbing that fills in behind the `TextInjector` trait.
 
 ## Decision
 
-**PENDING OPERATOR APPROVAL.** Adopt a runtime **capability ladder** on Linux, choosing the
-highest-trust available path per injection:
+**APPROVED 2026-07-08.** Adopt a runtime **capability ladder** on Linux, choosing the
+highest-trust available path per injection. Backends land incrementally against the
+Debian-12 GNOME reference VM; each new dependency gets its own audit-network review at
+add time. Ladder:
 
 1. **AT-SPI2 `EditableText`** native insertion when the focused app exposes it (also our
    secure-field signal).
