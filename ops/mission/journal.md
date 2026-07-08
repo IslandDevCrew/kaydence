@@ -151,3 +151,8 @@
 - Kept a local preview fallback for ordinary Vite/browser smoke tests outside the Tauri runtime. The fallback mirrors the Rust defaults but is explicitly marked `preview config` in the UI; in Tauri, the command can switch the badge to `backend config`.
 - UI now renders snapshot-derived app name, engine, hotkey binding, cleanup default, retention/context posture, and unknown-focus policy instead of hardcoded display constants.
 - Evidence saved at `ops/mission/evidence/2026-07-08-frontend-app-snapshot-invoke.txt`: backend tests PASS (33), frontend check PASS, audit-network PASS (0 sites), ADR status PASS, `./script/build_and_run.sh build` PASS, and browser smoke PASS in system Chrome with zero console/page errors.
+
+## 2026-07-08T22:46Z — Codex P1 slice (global-shortcut registration)
+- Added the official Tauri v2 global-shortcut plugin crate for desktop targets and registered the default RightAlt binding during Tauri setup. The handler feeds pressed/released events into the existing tested `CaptureCoordinator` with push-to-talk defaults and logs coordinator actions locally.
+- This is a deliberately narrow OS wiring increment: it proves the plugin dependency compiles, the app starts with registration installed, and shortcut events have a path into the tested coordinator. It does **not** yet connect `StartCapture`/`FinalizeCapture` to audio/WAL, and real keypress behavior still needs manual OS-level validation.
+- Evidence saved at `ops/mission/evidence/2026-07-08-global-shortcut-registration.txt`: fmt PASS, backend tests PASS (33), clippy PASS, frontend check PASS, audit-network PASS (0 sites), ADR status PASS, `./script/build_and_run.sh build` PASS, and macOS `./script/build_and_run.sh --verify` PASS with cleanup.

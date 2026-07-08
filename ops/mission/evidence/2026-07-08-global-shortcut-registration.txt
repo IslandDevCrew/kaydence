@@ -1,0 +1,37 @@
+Kaydence global shortcut registration evidence
+Date: 2026-07-08 17:46 CDT / 2026-07-08T22:46Z
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Added Tauri global-shortcut plugin crate for desktop targets:
+  tauri-plugin-global-shortcut = "2".
+- Registered the default RightAlt shortcut in Tauri setup on desktop.
+- Fed pressed/released shortcut events into the existing tested
+  CaptureCoordinator using the default push-to-talk CaptureConfig.
+- This slice only emits local coordinator actions. It does not yet connect
+  StartCapture/FinalizeCapture to audio/WAL.
+
+Dependency note:
+- The plugin is the official Tauri v2 global-shortcut plugin documented at
+  v2.tauri.app/plugin/global-shortcut.
+- The P1 platform dependency set had already been operator-approved in mission
+  state before this slice.
+- No application network surface was added; audit-network remained green.
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 31 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 33 total backend tests PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings: PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design Proposed exception
+- ./script/build_and_run.sh build: PASS
+- ./script/build_and_run.sh --verify: PASS on macOS; Tauri dev process stayed
+  alive long enough for process verification, then was cleaned up.
+
+Notes:
+- Real hotkey press/release behavior still needs manual OS-level validation.
+- Audio/WAL connection remains a follow-up P1 slice.

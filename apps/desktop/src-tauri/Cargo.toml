@@ -21,6 +21,9 @@ serde_json = "1"
 thiserror = "2"
 ulid = { version = "1", features = ["serde"] }
 
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2"
+
 # Linux text injection (P1-P0-3, ADR-0013). AT-SPI = native insert + the
 # secure-field signal (non-negotiable #8). atspi uses zbus/async-io; pollster
 # drives it synchronously without pulling a tokio runtime into the inject path.
