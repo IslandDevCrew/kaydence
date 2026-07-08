@@ -1,0 +1,53 @@
+Kaydence VAD gate contract evidence
+Date: 2026-07-08 18:19 CDT / 2026-07-08T18:19:29-0500
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Added `audio::vad` as the dependency-free speech-gating contract between the
+  16 kHz audio boundary and the future engine feed.
+- The gate accepts 16 kHz mono samples after WAL persistence. It does not write
+  to WAL and does not own ASR; it only decides which samples are eligible for
+  the engine.
+- Default timing matches the audio invariants:
+  - 16 kHz sample rate
+  - 512-sample frames
+  - 250 ms pre-roll = 4,000 samples
+  - 300 ms end-silence window = 4,800 samples
+- `VadDetector` is a trait so the production Silero adapter can land later
+  without changing the gate behavior.
+- `EnergyVad` exists only as a deterministic local/test detector. It is not
+  represented as the production Silero model.
+
+Fresh tests added:
+- audio::vad::tests::default_config_matches_audio_boundary_and_preroll_contract
+- audio::vad::tests::energy_vad_detects_frames_above_threshold
+- audio::vad::tests::speech_segment_includes_configured_pre_roll
+- audio::vad::tests::long_leading_silence_is_trimmed_to_pre_roll
+- audio::vad::tests::short_pause_stays_inside_active_segment
+- audio::vad::tests::configured_silence_ends_segment_without_trailing_silence
+- audio::vad::tests::incomplete_frames_are_buffered_until_flush
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml audio::vad --lib:
+  PASS, 7 VAD tests
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 51 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 53 total backend tests PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings:
+  PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design
+  Proposed exception
+- ./script/build_and_run.sh build: PASS
+- ./script/build_and_run.sh --verify: PASS on macOS; Tauri dev process stayed
+  alive long enough for process verification, then was cleaned up.
+
+Important boundary:
+- This slice proves VAD timing and pre-roll behavior, not production Silero
+  inference.
+- The gate is not yet wired into a live engine feed because `engine/` is still
+  an ASR trait/stage stub.
+- WAL still receives all samples before any VAD decision.

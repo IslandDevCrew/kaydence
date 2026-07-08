@@ -1,12 +1,14 @@
-//! Capture: mic -> lock-free ring buffer -> WAL file -> Silero VAD. Emits
+//! Capture: mic -> lock-free ring buffer -> WAL file -> VAD gate. Emits
 //! AudioPersisted (non-negotiable #2).
 //!
 //! `wal` is real (P1, PRD P0-4): write-ahead persistence + crash recovery.
 //! cpal capture now feeds a lock-free ring buffer; the drain thread owns WAL
 //! writes and resamples native device rates back to the 16 kHz WAL contract.
-//! VAD lands next.
+//! The VAD gate contract is in `vad`; the production Silero adapter lands with
+//! ASR.
 #![allow(dead_code)]
 
+pub mod vad;
 pub mod wal;
 
 use crate::events::{SessionEvent, SessionId};
