@@ -13,8 +13,9 @@ safety system.
 - **Owned repo:** `/Users/IDC2.5/Kaydence/kaydence` (local-only, default branch `main`).
 - **Locked reference:** `ops/mission/state.json` → `designDirection`, and the generation
   report at `/Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html`.
-- **Boards:** `/Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/`
-  (`logos/kaydence-logo-option-{1..5}.png`, `screens/kaydence-screen-family-{01..10}.png`).
+- **Boards (in-repo since P1-D1):** `assets/brand/`
+  (`logos/kaydence-logo-option-{1..5}.png`, `screens/kaydence-screen-family-{01..10}.png`);
+  index at `docs/design/README.md`.
 - **Governing loops:** `prompts/BUILD-LOOP.md` (ORIENT→PLAN→BUILD→JUDGE→AUDIT→GATE) and
   `prompts/JUDGE-AUDITOR.md` (critical decision paths). Mission-control governs phases.
 
@@ -75,7 +76,7 @@ React/TypeScript presentation; business logic stays in the Rust modules per
 docs/ARCHITECTURE.md). This is authorized work on the owned monorepo.
 
 Reference (do not deviate from the board without operator go + ADR):
-- Board: assets/generated/kaydence-visual-pack/screens/kaydence-screen-family-<NN>.png
+- Board: assets/brand/screens/kaydence-screen-family-<NN>.png
 - designDirection in ops/mission/state.json (invariants + OS lanes).
 
 Requirements:
@@ -102,7 +103,7 @@ Run the screen-family fidelity gate for phase <P?>. Authorized review of owned,
 already-built screens — compare them to their boards; do not modify product behavior.
 
 Compare each built screen against its board
-(assets/generated/kaydence-visual-pack/screens/kaydence-screen-family-<NN>.png) and check:
+(assets/brand/screens/kaydence-screen-family-<NN>.png) and check:
 - Layout, left-nav order, component set, and 8px card radius match the board.
 - Product states match (prediction-blue, ~0.5s amber-gold merge pulse where applicable,
   destructive confirm gate where applicable).
@@ -123,7 +124,7 @@ Prepare the logo-selection decision for the operator. This is a design recommend
 not an authority to lock identity — the operator chooses.
 
 Using only the five generated options
-(assets/generated/kaydence-visual-pack/logos/kaydence-logo-option-{1..5}.png) and their
+(assets/brand/logos/kaydence-logo-option-{1..5}.png) and their
 descriptions in designDirection, produce for each option:
 - Fit for an everyday app icon at small sizes (macOS/Windows/Linux).
 - Fit for the public-site header and the three-desktop / Relay story.
@@ -135,7 +136,11 @@ for the operator. Do not lock the choice, do not change any layout, and do not i
 brand claims. HALT for operator go before marking ADR-0012 Accepted or task P1-D2 done.
 ```
 
-## E · Vendor the visual pack into the monorepo (P1-D1)
+## E · Vendor the visual pack into the monorepo (P1-D1) — ✅ COMPLETED 2026-07-08
+
+> Kept for provenance/re-vendoring (e.g. after an upstream regeneration). The pack now
+> lives at `assets/brand/` with the index at `docs/design/README.md`; all fidelity-gate
+> paths point in-repo.
 
 ```md
 Vendor Visual System v1 into the owned monorepo as the in-repo build reference. This is

@@ -42,3 +42,11 @@
 - Authored prompts/VISUAL-BUILD-PROMPT-PACK.md — fable-safe scoped prompts (resume /goal, per-screen build, fidelity-gate review, logo-selection->ADR-0012, vendor-assets), keeping the safety core visible: owned repo, build/report-only, evidence-first, no invented claims, HALT at critical decision paths.
 - Discrepancy noted (NOT fixed here, out of scope): git HEAD is on branch mission/p1-p0-4-wal with P1-P0-4 (WAL/crash-recovery) already committed, but state.json still lists P1-P0-4 as pending — that branch owes its own mission heartbeat. Left untouched so this design-direction change stays isolated.
 - Scope discipline: did not merge to main (visual identity + invariant changes are operator-facing). Committed on branch mission/design-direction-lock for operator review/merge per policy.
+
+## 2026-07-08T00:45Z — session 2 (P1-D1 vendor visual pack)
+- Operator GO on P1-D1. Vendored Visual System v1 into the monorepo on branch mission/p1-d1-vendor-visual-pack (off design-direction-lock — first P1 task merged into the mission line).
+- Copied 15 PNGs (5 logos + 10 screen-family boards, 18MB) from /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/ to assets/brand/{logos,screens}/. Verified byte-identical: all 15 shasums match (evidence: ops/mission/evidence/P1-D1-vendor-2026-07-08.txt).
+- Authored docs/design/README.md — the design-reference index: provenance + the one rule (accent-only OS variation), logo table -> ADR-0012, and family -> board -> phase -> fidelity-gate map.
+- Repointed every board reference in-repo: 4 fidelity-gate commands (P1-G4/P2-G3/P3-G4/P4-G-SCREENS), the designDirection.assets pointer, the visual convention, and prompt-pack sections B/C/D. Prompt E (vendor) marked completed, kept for re-vendoring provenance.
+- P1-D1 marked done in state.json (8/34 tasks). Note: .gitignore ships no image excludes, so the 18MB of boards commit cleanly; acceptable for a local-only repo, revisit (LFS?) if a GitHub remote lands.
+- Next design work: P1-D2 logo selection (operator decision -> ADR-0012); prompt D in the pack preps the recommendation.
