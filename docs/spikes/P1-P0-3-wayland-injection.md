@@ -113,6 +113,33 @@ None are network crates; all must keep `audit-network.sh` green (no egress).
 3. Prove, in order: (a) AT-SPI native insert into gedit/GNOME Text Editor; (b) secure-field refusal against a GTK password entry; (c) RemoteDesktop-portal keystrokes into an opaque app (approve the portal dialog once); (d) clipboard snapshot-restore round-trip.
 4. Record evidence (screen capture + logs) under `ops/mission/evidence/` and close the Linux leg of the P1-G4 / injection gates. Repeat (a)/(c) under a Sway session for the wlroots path if available.
 
+## 7b. Live findings from the Debian-12 GNOME VM (2026-07-08)
+
+Validated `bin/atspi-selftest` against the reference VM. Three concrete results that
+**revise the strategy**:
+
+1. **AT-SPI connects + reads reliably on GNOME.** Connect → `AccessibleProxy` → tree
+   traversal → `get_role`/`get_state`/`get_text`/`character_count` all work. Enumerated
+   the desktop, found `gnome-text-editor`, walked to its `role=Text, editable=true`
+   field. Detection works.
+2. **AT-SPI `EditableText.InsertText` is UNRELIABLE on modern GNOME.** On both
+   gnome-text-editor (GTK4) *and* gedit 44, `InsertText` returns `true` but the text
+   never lands (readback stays empty). GTK4's newer accessibility backend treats these
+   as effectively read-only; GTK's AT-SPI insertion is not a dependable inject path.
+   → **AT-SPI is our detection + secure-field signal, NOT our primary insertion path.**
+3. **uinput keystroke synthesis is the working inject path.** `ydotool` runs daemonless
+   against `/dev/uinput` (exit 0). Keystroke synthesis below the compositor is
+   compositor-agnostic and actually delivers text on GNOME/Wayland.
+
+**Revised ladder (evidence-based):**
+- **Detection / secure-field gate:** AT-SPI (`role`/`state`) — validated, keep.
+- **Insertion:** keystroke synthesis — **uinput** (compositor-agnostic; opt-in device
+  permission) or the **RemoteDesktop portal + libei** (permission-gated, no raw device
+  access). AT-SPI native insert is a best-effort *bonus* only where an app honors it.
+- **Focus:** a script-launched window does not reliably get keyboard focus on Wayland
+  (same isolation), so the final "type into the focused app" check is operator-in-the-loop
+  by nature: the operator focuses the target, the injector types, AT-SPI reads it back.
+
 ## 8. Recommendation
 
 Adopt the capability ladder (§3) with AT-SPI-based secure-field detection and the honest

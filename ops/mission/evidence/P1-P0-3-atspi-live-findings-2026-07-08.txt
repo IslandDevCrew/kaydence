@@ -1,0 +1,17 @@
+P1-P0-3 Linux injection — live findings on the GNOME VM — 2026-07-08
+Harness: apps/desktop/src-tauri/src/bin/atspi-selftest.rs (modes: focus-track, --direct, --read)
+
+1. AT-SPI connect + READ works on GNOME:
+   - desktop root role = DesktopFrame
+   - enumerated apps (gnome-shell, gnome-text-editor, ...)
+   - --direct gnome-text-editor: found "editable field: role=Text -> Editable"
+   - character_count + get_text round-trip OK.
+2. AT-SPI EditableText.InsertText UNRELIABLE on modern GNOME:
+   - gnome-text-editor (GTK4): insert_text returned true, readback "" (no-op)
+   - gedit 44: insert_text returned true, readback "" (no-op)
+   => AT-SPI = detection/secure-field signal, NOT the primary insertion path.
+3. Keystroke path available: ydotool runs daemonless on /dev/uinput (exit 0).
+   => uinput (or portal+libei) is the primary insertion path on Wayland.
+Focus note: a script-launched window does not reliably get keyboard focus on
+   Wayland, so the end-to-end "type into focused app" check is operator-in-the-loop.
+Strategy updated in docs/spikes/P1-P0-3-wayland-injection.md §7b and ADR-0013 amendment.

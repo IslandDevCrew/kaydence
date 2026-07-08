@@ -29,6 +29,7 @@ ulid = { version = "1", features = ["serde"] }
 atspi = "0.30"
 pollster = "0.4"
 zbus = "5"
+futures-lite = "2"
 
 [features]
 # Feature-gated network surfaces stay OFF by default (non-negotiable #1).
