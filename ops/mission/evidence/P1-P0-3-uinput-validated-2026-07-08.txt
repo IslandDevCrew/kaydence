@@ -1,0 +1,18 @@
+P1-P0-3 uinput keystroke backend — validated on the GNOME VM — 2026-07-08
+Code: apps/desktop/src-tauri/src/inject/uinput.rs
+  - char_to_key: pure US-QWERTY keymap (letters/digits/symbols/space/enter/tab),
+    5 unit tests pass (CI runs them on the Ubuntu leg).
+  - UinputKeyboard (evdev 0.13): creates a virtual keyboard under /dev/uinput,
+    types text as key events below the compositor.
+Live run (as root for /dev/uinput access):
+  $ ./target/debug/atspi-selftest --type 'Kaydence_uinput_123'
+  [type] 19 of 19 char(s) are typable on US-QWERTY
+  [type] virtual keyboard created: ["/dev/input/event5"]   <- real kernel input device
+  [type] PASS — emitted 19 keystroke char(s) via uinput.
+  (also emitted a 26-char string successfully.)
+Confirms: the uinput write path works on GNOME/Wayland (device creation + keystroke
+  emission). This is the validated PRIMARY insertion path (AT-SPI InsertText no-ops on
+  modern GNOME; ADR-0013 amendment).
+Operator-in-the-loop step (Wayland focus): run scripts/linux-inject-demo.sh, then focus a
+  text field and watch it type / focus a password field to confirm refusal. /dev/uinput
+  access via the shipped udev rule (input group) — no root needed after setup + re-login.

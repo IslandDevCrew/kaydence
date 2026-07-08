@@ -19,6 +19,9 @@ use crate::events::{HoldReason, InjectMethod, SessionEvent, SessionId, Stage};
 #[cfg(target_os = "linux")]
 pub mod linux;
 
+#[cfg(target_os = "linux")]
+pub mod uinput;
+
 // ─────────────────────────────── secure-field policy ───────────────────────
 
 /// What the accessibility layer can tell us about the focused field. On some
