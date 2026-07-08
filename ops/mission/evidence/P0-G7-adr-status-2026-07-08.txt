@@ -11,4 +11,5 @@
   0010   OK    (Accepted)
   0011   OK    (Accepted)
   0012   OK    (Accepted)
-RESULT: PASS — all ADRs Accepted except declared by-design exceptions: 0009 
+  0013   WAIVE (Proposed by design: Linux injection strategy — operator approves dependency set (P1-P0-3))
+RESULT: PASS — all ADRs Accepted except declared by-design exceptions: 0009 0013 

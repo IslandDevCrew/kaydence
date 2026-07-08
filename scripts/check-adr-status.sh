@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # check-adr-status.sh — P0-G7 gate.
 #
-# Every ADR must be Accepted before P0 closes, with ONE by-design exception:
+# Every ADR must be Accepted before P0 closes, with declared by-design exceptions:
 # ADR-0009 (Relay pairing/crypto) stays Proposed until the operator's crypto
-# design review, which gates the P4-1 build. (ADR-0012 visual identity was a
-# second exception 2026-07-08 while Proposed; removed same day on operator
-# acceptance.) This script passes when every ADR except the declared
-# exceptions is Accepted.
+# design review, which gates the P4-1 build; ADR-0013 (Linux injection strategy)
+# stays Proposed until the operator approves its dependency set (P1-P0-3 spike).
+# (ADR-0012 visual identity was a third exception 2026-07-08 while Proposed;
+# removed same day on operator acceptance.) This script passes when every ADR
+# except the declared exceptions is Accepted.
 #
 # Portable to bash 3.2 (macOS default): no associative arrays, no mapfile.
 #   usage: bash scripts/check-adr-status.sh
@@ -16,9 +17,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIR="$ROOT/docs/decisions"
 
 # ADR numbers allowed to be non-Accepted (space-separated), + reasons in one place.
-PROPOSED_OK=" 0009 "
+PROPOSED_OK=" 0009 0013 "
 reason_for() { case "$1" in
   0009) echo "Relay crypto — critical decision path; operator review gates P4-1" ;;
+  0013) echo "Linux injection strategy — operator approves dependency set (P1-P0-3)" ;;
   *)    echo "" ;;
 esac; }
 
