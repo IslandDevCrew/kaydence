@@ -7,7 +7,7 @@
     "summary": "Five logo directions plus ten screen-family boards, each rendered for macOS, Windows, and Linux (30 OS-specific views) sharing one interface system. Generated with Codex from Plan of Attack v3, the Whisper-Ahead v2 interaction, and the monorepo PRD/ARCHITECTURE/ROADMAP, then adopted as the canonical UI/UX/visual source of truth for every screen built from P1 onward. Screen layout is fixed by the boards; the only free-tier per-OS variation is the selection accent (macOS aqua / Windows cobalt / Linux emerald).",
     "report": "/Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html",
     "assets": "assets/brand/ (logos/ + screens/, 15 PNGs) — vendored in-repo by P1-D1 on 2026-07-08, shasum-verified against the upstream pack in /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/. Index: docs/design/README.md",
-    "openDecision": "Operator selects the winning logo (1 of 5) -> ADR-0012 flips to Accepted. Recommendation on the table (P1-D2, 2026-07-08): Option 1 K Waveform (best small-size app icon; voice->caret->text story; merge-gold echo), runner-up Option 4 Wordmark Forward (best site header). Option 3 disqualified for primary use (embeds third-party OS marks). Full review: docs/decisions/0012-visual-identity.md. Screens use a placeholder mark until the pick; the winner drops into the reserved slot without layout change.",
+    "openDecision": "RESOLVED 2026-07-08 (ADR-0012 Accepted): dual-asset identity — Option 1 K Waveform is the sole product mark (app icon, favicon, tray monochrome variant, installers, all isolated use); Option 4 Wordmark Forward is the Kaydence wordmark/site header with its serif as brand display type only. Binding rules: strict role separation (never substitute or compose the two as twin logos); Option 4's icon variant retired; serif never inside the app UI. Options 2/5 remain secondary art (privacy seal; Relay fleet illustration); Option 3 rejected (embeds third-party OS marks). The Option 1 mark fills the reserved slot on every screen.",
     "osLanes": [
       { "lane": "macOS", "accent": "Aqua selection accent", "varies": "Selections, active tab, focus ring, small status strokes.", "doNotVary": "Information architecture, product states, prediction blue, merge gold." },
       { "lane": "Windows", "accent": "Cobalt selection accent", "varies": "Selections, active controls, Windows permission/injection copy.", "doNotVary": "Layout, spacing, control density, feature hierarchy." },
@@ -20,14 +20,15 @@
       "Destructive Conductor actions always require an explicit confirm gate.",
       "Never imply cloud sync for core features; Harbor is an optional hosted service only, and every Harbor service has a self-hostable path.",
       "All controls keyboard-reachable, readable at high OS scaling, with no text overlap at narrow desktop widths.",
-      "Default, light, and dark modes exist for every OS; only the single free-tier accent differs by OS lane; premium theme expansion may add colors later without changing layout."
+      "Default, light, and dark modes exist for every OS; only the single free-tier accent differs by OS lane; premium theme expansion may add colors later without changing layout.",
+      "Identity (ADR-0012): Option 1 K Waveform is the only mark; Option 4 is the only wordmark (site/marketing serif only). Never substitute or pair them as twin logos; no serif inside the app UI; no second icon. Violations fail the phase fidelity gates."
     ],
     "logoOptions": [
-      { "id": 1, "name": "K Waveform", "note": "K-shaped voice/caret mark in teal and blue; closest to an everyday app-icon direction." },
-      { "id": 2, "name": "Protected Path", "note": "Circular voice-path/seal for the privacy-first promise without becoming a security-tool logo." },
-      { "id": 3, "name": "Relay Monogram", "note": "Cross-device K monogram that leans into Relay and the three-desktop story." },
-      { "id": 4, "name": "Wordmark Forward", "note": "Typography-led identity suited to a polished productivity app and public site header." },
-      { "id": 5, "name": "Voice Constellation", "note": "Three-node local-fleet mark hinting at Mac/Windows/Linux continuity (premium feel)." }
+      { "id": 1, "name": "K Waveform", "note": "SELECTED (ADR-0012): the sole product mark — app icon, favicon, tray monochrome variant, installers, all isolated use. Voice->caret->text story; merge-gold echo." },
+      { "id": 2, "name": "Protected Path", "note": "Secondary art: the privacy seal (site privacy page, 'local-only' badge). Not the primary mark." },
+      { "id": 3, "name": "Relay Monogram", "note": "REJECTED for shipping assets — embeds Windows flag + Tux (third-party marks). Interlock concept may inform Relay feature art only." },
+      { "id": 4, "name": "Wordmark Forward", "note": "SELECTED (ADR-0012): the Kaydence wordmark/site header; serif = brand display type for site/marketing only. Its standalone icon variant is retired." },
+      { "id": 5, "name": "Voice Constellation", "note": "Secondary art: Relay fleet illustration (board 04, marketing). Not the primary mark." }
     ],
     "screenFamilies": [
       { "id": "01", "name": "Main Dictation Cockpit", "phase": "P1", "note": "Active recording, waveform, elapsed time, engine, target app, cleanup dial, local-only status, WAL recovery, recent transcript." },
@@ -127,12 +128,12 @@
         },
         {
           "id": "P0-G7",
-          "title": "ADRs accepted (0001-0008, 0010, 0011); 0009 + 0012 Proposed by design",
+          "title": "ADRs accepted (0001-0008, 0010-0012); 0009 Proposed by design",
           "command": "bash scripts/check-adr-status.sh",
           "status": "passed",
           "evidence": "ops/mission/evidence/P0-G7-adr-status-2026-07-08.txt",
-          "lastRun": "2026-07-08T01:00:00Z",
-          "notes": "check-adr-status.sh returns 0: 10 of 12 ADRs Accepted; two declared by-design exceptions stay Proposed — ADR-0009 (Relay crypto; operator review gates P4-1) and ADR-0012 (visual identity; operator logo pick, task P1-D2). Gate encodes both exceptions, so it passes."
+          "lastRun": "2026-07-08T01:30:00Z",
+          "notes": "check-adr-status.sh returns 0: 11 of 12 ADRs Accepted incl. ADR-0012 (visual identity, operator-selected 2026-07-08); ADR-0009 (Relay crypto) is again the single declared by-design exception (operator crypto review gates P4-1)."
         }
       ],
       "tasks": [
@@ -247,7 +248,7 @@
         { "id": "P1-P0-7", "title": "PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page)", "status": "pending", "dependsOn": ["P0-T6"], "pr": null, "notes": "Non-negotiable #1. audit-network.sh gate." },
         { "id": "P1-P0-8", "title": "PRD P0-8 60-second first run (install -> model download -> first dictation <=60s, one settings screen)", "status": "pending", "dependsOn": ["P1-P0-1", "P1-P0-2", "P1-P0-3", "P1-P0-4"], "pr": null, "notes": "Pitfall P10. UI conforms to screen-family 10 (First Run & License)." },
         { "id": "P1-D1", "title": "Vendor Visual System v1 into the monorepo: copy logos/ + the 10 screen-family boards from /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/ into assets/brand/ + docs/design/, and add a design-reference index mapping each screen family -> its board -> the phase that builds it (P1-G4/P2-G3/P3-G4/P4-G-SCREENS)", "status": "done", "dependsOn": ["P0-T2"], "pr": { "number": null, "url": "local:p1-d1", "mergedAt": "2026-07-08" }, "notes": "DONE. 15 PNGs (5 logos + 10 boards, 18MB) copied byte-identical — all shasums verified vs upstream. Index at docs/design/README.md maps family -> board -> phase -> fidelity gate. All gate commands + prompt pack + designDirection.assets repointed to assets/brand/. Evidence: ops/mission/evidence/P1-D1-vendor-2026-07-08.txt." },
-        { "id": "P1-D2", "title": "Operator selects the winning logo (1 of 5) -> lock as the app icon + public-site header across macOS/Windows/Linux; author ADR-0012 (visual identity + OS accent lanes)", "status": "in_progress", "dependsOn": [], "pr": null, "notes": "RECOMMENDATION PREPARED 2026-07-08, AWAITING OPERATOR PICK. All 5 options reviewed against the boards (docs/decisions/0012-visual-identity.md): recommend Option 1 K Waveform (purpose-built icon, voice->caret->text story, merge-gold echo); runner-up Option 4 Wordmark Forward (stronger site header, premium). Option 3 disqualified for primary use — embeds Windows flag + Tux (trademark risk); options 2/5 kept as secondary art. ADR-0012 drafted PROPOSED with decision blank; check-adr-status.sh carries 0012 as by-design exception (P0-G7 re-run PASS, evidence P0-G7-adr-status-2026-07-08.txt). HALTED for operator selection per JUDGE-AUDITOR." }
+        { "id": "P1-D2", "title": "Operator selects the winning logo -> lock the visual identity across macOS/Windows/Linux; author ADR-0012 (visual identity + OS accent lanes)", "status": "done", "dependsOn": [], "pr": { "number": null, "url": "local:p1-d2", "mergedAt": "2026-07-08" }, "notes": "DONE — OPERATOR SELECTED the dual-asset hybrid (2026-07-08): Option 1 K Waveform = sole product mark (app icon, favicon, tray monochrome variant, installers, isolated use); Option 4 Wordmark Forward = the Kaydence wordmark/site header, serif as brand display type only. Three binding unification rules in ADR-0012 (Accepted): strict role separation; Option 4's icon variant retired; serif never inside the app UI. Options 2/5 preserved as secondary art; Option 3 rejected (embeds third-party OS marks). 0012 removed from check-adr-status exceptions; P0-G7 re-run PASS (11 of 12 Accepted, only 0009 waived). Multi-resolution asset production (icns/ico/hicolor + tray template) lands with P3 installer work." }
       ]
     },
     {
@@ -410,7 +411,7 @@
     { "label": "Cross-device continuity (Relay)", "baseline": "cloud-only or none", "current": "n/a", "target": "<=500ms added on LAN, E2E, zero cloud", "direction": "down" },
     { "label": "Agent-command safety (Conductor)", "baseline": "no comparable product", "current": "n/a", "target": "confirm-gate 100%; 0 auto-exec destructive", "direction": "up" },
     { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "1 / 3 (macOS local; Win+Linux need CI)", "target": "3 / 3 incl. Wayland", "direction": "up" },
-    { "label": "ADRs accepted (0009 + 0012 Proposed by design)", "baseline": "8", "current": "10 of 12", "target": "12 (0009 after crypto review; 0012 after logo pick)", "direction": "up" },
+    { "label": "ADRs accepted (0009 Proposed by design)", "baseline": "8", "current": "11 of 12", "target": "12 (0009 after crypto review)", "direction": "up" },
     { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "7", "target": "7", "direction": "up" },
     { "label": "Standing-gate scripts present", "baseline": "1 (bench-prediction)", "current": "4 (+bench, audit-network, check-adr)", "target": "5 (+release)", "direction": "up" },
     { "label": "Visual system (logos + screen families)", "baseline": "none", "current": "5 logos + 10 family boards (30 OS views) locked", "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS", "direction": "up" }
@@ -433,12 +434,13 @@
     { "number": null, "title": "P0-T5 Linux CI system deps (3-OS matrix wired)", "url": "local:p0-t5", "phase": "P0", "mergedAt": "2026-07-07" },
     { "number": null, "title": "Visual System v1 locked — 5 logo directions + 10 screen-family boards (30 OS views) generated (Codex) and adopted as the build reference set; screen-fidelity gates wired into P1–P4", "url": "local:design-direction-lock", "phase": "design", "mergedAt": "2026-07-08" },
     { "number": null, "title": "P1-D1 Visual pack vendored in-repo (assets/brand/, 15 PNGs shasum-verified) + design-reference index (docs/design/README.md); fidelity-gate paths repointed", "url": "local:p1-d1", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-D2 prep — ADR-0012 (visual identity) drafted Proposed with full 5-logo review; recommendation Option 1 K Waveform, runner-up Option 4; check-adr-status gate carries 0012 exception (P0-G7 re-run PASS)", "url": "local:p1-d2-prep", "phase": "P1", "mergedAt": "2026-07-08" }
+    { "number": null, "title": "P1-D2 prep — ADR-0012 (visual identity) drafted Proposed with full 5-logo review; recommendation Option 1 K Waveform, runner-up Option 4; check-adr-status gate carries 0012 exception (P0-G7 re-run PASS)", "url": "local:p1-d2-prep", "phase": "P1", "mergedAt": "2026-07-08" },
+    { "number": null, "title": "P1-D2 DONE — operator locked the dual-asset identity (Option 1 mark + Option 4 wordmark, three unification rules); ADR-0012 Accepted; gate exception removed (P0-G7 PASS, 11/12)", "url": "local:p1-d2", "phase": "P1", "mergedAt": "2026-07-08" }
   ],
   "resume": {
     "activePhase": "P0",
     "nextActions": [
-      "DESIGN LOCKED (2026-07-08): Visual System v1 is the build reference — 5 logo directions + 10 screen-family boards × 3 OS = 30 views (see designDirection in state.json and the report at /Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html). P1-D1 DONE 2026-07-08: pack vendored to assets/brand/ (15 PNGs shasum-verified), index at docs/design/README.md, all gate paths in-repo. Remaining: (a) build each screen to its family board with OS accent as the only free-tier variation, (b) operator picks the winning logo (1 of 5) → ADR-0012 (P1-D2). Every phase has a screen-family fidelity gate (P1-G4, P2-G3, P3-G4, P4-G-SCREENS).",
+      "DESIGN LOCKED (2026-07-08): Visual System v1 is the build reference — 5 logo directions + 10 screen-family boards × 3 OS = 30 views (see designDirection in state.json and the report at /Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html). P1-D1 + P1-D2 DONE 2026-07-08: pack vendored to assets/brand/ with index at docs/design/README.md, and the identity is LOCKED (ADR-0012 Accepted) — Option 1 K Waveform is the sole product mark, Option 4 the wordmark/site header, three binding unification rules. Build each screen to its family board with the Option 1 mark in the reserved slot; OS accent stays the only free-tier variation. Every phase has a screen-family fidelity gate (P1-G4, P2-G3, P3-G4, P4-G-SCREENS). Multi-resolution icon production (icns/ico/hicolor + tray template from the Option 1 mark) lands with P3 installer work.",
       "P0 is 6/7 tasks done. The Tauri scaffold compiles and ALL locally-runnable gates are green on macOS: cargo fmt/clippy/test, frontend tsc+eslint, audit-network, ADR-status. Merges: bootstrap, ADRs, v3 docs, gate scripts, Handy study, scaffold.",
       "LAST P0 TASK — P0-T5: add the Linux system-deps step to CI (ubuntu: libwebkit2gtk-4.1-dev, libgtk-3-dev, libayatana-appindicator3-dev, librsvg2-dev, patchelf; + gtk-layer-shell per ADR-0004). Matrix already includes ubuntu-latest. Cannot be verified on this macOS host.",
       "Then P0 is blocked only by its exit gates P0-G5 (cargo tauri dev opens on Win+Linux) and P0-G6 (3-OS CI green) — both waived-pending-infra: need a GitHub remote+Actions or the physical reference machines. This is the natural P0->P1 operator checkpoint.",
@@ -461,7 +463,7 @@
       "Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.",
       "Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.",
       "Visual System v1 (designDirection) is the LOCKED UI/UX source of truth: build each screen to its screen-family board (assets/brand/screens/kaydence-screen-family-NN.png). The only per-OS variation is the free-tier selection accent (macOS aqua / Windows cobalt / Linux emerald). The shared invariants — nav order, 8px card radius, prediction-blue, amber-gold merge pulse, destructive confirm gate, no cloud-sync copy on core screens — never vary; treat a change to them as a critical decision path that HALTS for operator go + ADR.",
-      "Every phase from P1 carries a screen-family fidelity gate: the phase's screens are design-reviewed against their boards (plus the keyboard/a11y checklist) before the phase closes. Logo choice is a separate operator decision (1 of 5) that locks via ADR-0012; screen layout may proceed with a placeholder mark until then.",
+      "Every phase from P1 carries a screen-family fidelity gate: the phase's screens are design-reviewed against their boards (plus the keyboard/a11y checklist) before the phase closes. Identity is LOCKED (ADR-0012 Accepted 2026-07-08): Option 1 mark everywhere the logo stands alone; Option 4 wordmark for site/marketing headers only; the three unification rules are brand invariants checked at the fidelity gates.",
       "Never weaken a non-negotiable to pass a gate — that is itself a blocking defect."
     ]
   }

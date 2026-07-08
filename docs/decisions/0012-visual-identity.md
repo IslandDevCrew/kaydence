@@ -1,7 +1,7 @@
 # ADR-0012: Visual identity — logo selection + OS accent lanes
 
-- **Status:** Proposed <!-- OPERATOR DECISION PENDING: becomes Accepted when the operator selects the winning logo (task P1-D2). Declared by-design exception in scripts/check-adr-status.sh until then, same mechanism as ADR-0009. -->
-- **Date:** 2026-07-08
+- **Status:** Accepted <!-- Operator selected 2026-07-08 (task P1-D2): the dual-asset hybrid — Option 1 mark + Option 4 wordmark. Removed from the check-adr-status.sh exception list on acceptance. -->
+- **Date:** 2026-07-08 (proposed and accepted)
 - **PRD items affected:** every UI-bearing item from P1 on (P0-1..P0-8, P1-*, P2-*, P4-*);
   public-site header; installer/dock/taskbar/tray iconography on all three OSes
 
@@ -20,12 +20,33 @@ JUDGE-AUDITOR policy.
 
 ## Decision
 
-**PENDING OPERATOR SELECTION.** The operator picks one of the five options below; on
-selection this ADR flips to Accepted, the option number is recorded here, and the mark
-replaces the placeholder in the reserved slot across all screens + the public site.
+**OPERATOR SELECTED (2026-07-08): the dual-asset hybrid — Option 1 as the mark,
+Option 4 as the wordmark.** A two-asset identity system (mark + wordmark), the standard
+pattern for mature products, unified by shared DNA both assets already carry: the
+waveform motif (through the amber caret in Option 1; inside the K counter in Option 4)
+and the single palette (teal→blue ramp + the gold accent that is also the merge-pulse
+token).
 
-**Recommendation (prepared 2026-07-08, task P1-D2): Option 1 — K Waveform**, with
-Option 4 — Wordmark Forward as runner-up.
+**Asset roles:**
+
+- **Option 1 — K Waveform** is the **sole product mark**: app icon (all three OSes),
+  favicon, tray/menu-bar (as a simplified monochrome/template variant), installer tile,
+  HUD badge, and every isolated-logo use.
+- **Option 4 — Wordmark Forward** exists **only as the full "Kaydence" wordmark
+  lockup**: public-site header, docs masthead, marketing headlines. Its serif is the
+  **brand display face** for site/marketing headlines only.
+
+**Unification rules (binding):**
+
+1. **Strict role separation.** Neither asset ever substitutes for the other; the mark
+   and the wordmark are never composed side-by-side as two "logos" in one lockup.
+2. **Option 4's icon variant is retired.** The serif-K-on-light-tile icon from that
+   board must not ship anywhere — one mark only.
+3. **Typography boundary.** The serif never appears inside the product UI; the app
+   stays on the sans type system shown in the screen-family boards.
+
+The Option 1 mark replaces the placeholder in the reserved slot across all screens;
+recommendation analysis below retained as the decision record.
 
 ### Review of all five options (against the boards and the three-OS reality)
 
@@ -53,7 +74,8 @@ is possible later without reopening this ADR, since both share the palette.
 2. Option 3's embedded third-party OS marks are rejected for any shipping asset.
 3. Options 2 and 5 remain available as secondary illustrations (privacy seal; Relay
    fleet art) — usage there does not require reopening this ADR.
-4. Until Accepted, all screens use a neutral placeholder mark in the reserved slot.
+4. ~~Until Accepted, all screens use a neutral placeholder mark in the reserved slot.~~
+   Resolved on acceptance: the Option 1 mark fills the reserved slot.
 
 ## Alternatives considered
 
@@ -73,6 +95,8 @@ is possible later without reopening this ADR, since both share the palette.
 - **Harder:** the winner must be produced as proper multi-resolution assets
   (macOS .icns incl. 16/32/128/256/512@2x, Windows .ico, Linux hicolor PNG set +
   symbolic tray variant) — that asset-production task lands with the P3 installer work.
-- **Maintained:** `scripts/check-adr-status.sh` carries 0012 as a by-design Proposed
-  exception until selection; flipping to Accepted removes it from the exception list
-  (the reverse edit of what added it).
+- **Maintained:** the three unification rules above are brand invariants — treat a
+  violation (serif in the app UI, a second icon, mark/wordmark substitution) as a
+  design-review failure at the phase fidelity gates. `scripts/check-adr-status.sh`
+  carried 0012 as a by-design exception while Proposed; removed on acceptance
+  (2026-07-08), leaving 0009 as the only declared exception.

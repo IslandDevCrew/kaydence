@@ -10,5 +10,5 @@
   0009   WAIVE (Proposed by design: Relay crypto — critical decision path; operator review gates P4-1)
   0010   OK    (Accepted)
   0011   OK    (Accepted)
-  0012   WAIVE (Proposed by design: Visual identity — operator selects the winning logo (task P1-D2))
-RESULT: PASS — all ADRs Accepted except declared by-design exceptions: 0009 0012 
+  0012   OK    (Accepted)
+RESULT: PASS — all ADRs Accepted except declared by-design exceptions: 0009 
