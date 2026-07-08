@@ -1,0 +1,52 @@
+Kaydence cpal native-rate -> rubato -> 16 kHz WAL evidence
+Date: 2026-07-08 18:15 CDT / 2026-07-08T18:15:22-0500
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Added rubato 1.x and audioadapter-buffers 2.x for drain-thread resampling.
+  Cargo resolved rubato to 1.0.1 under the repo's Rust 1.80 baseline.
+- Input config selection still prefers native 16 kHz PCM when the device offers
+  it. If not, it falls back to a supported PCM input rate, preferring common
+  device rates in this order: 48 kHz, 44.1 kHz, 32 kHz, then range max.
+- The realtime cpal callback remains unchanged in spirit: downmix interleaved
+  PCM to f32 mono and try_push into the lock-free ring buffer. It does not
+  resample, allocate, lock, log, write files, or call ASR.
+- The drain thread now owns the sample-rate normalization step. It passes
+  16 kHz input straight through and uses a rubato fixed-input FFT resampler for
+  every other native device rate before appending to the WAL.
+- Resampled sessions flush a final zero-padded partial chunk on stop so the
+  tail favors preserving the last syllable over trimming too aggressively.
+- Ring capacity now follows the native input rate for a two-second buffer,
+  while the WAL remains fixed at the existing 16 kHz contract.
+
+Fresh tests added:
+- audio::tests::input_config_prefers_native_wal_rate_when_available
+- audio::tests::input_config_falls_back_to_common_device_rate
+- audio::tests::input_config_rejects_non_pcm_ranges
+- audio::tests::drain_resamples_native_input_rate_to_wal_rate
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml audio:: --lib:
+  PASS, 14 audio/WAL tests
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 44 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 46 total backend tests PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings:
+  PASS after boxing the large resampling enum variant caught by clippy
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design
+  Proposed exception
+- ./script/build_and_run.sh build: PASS
+- ./script/build_and_run.sh --verify: PASS on macOS; Tauri dev process stayed
+  alive long enough for process verification, then was cleaned up. A broad
+  pgrep afterward matched only the Codex app's own node process, not Kaydence.
+
+Important boundary:
+- This slice makes the production mic path tolerant of devices that cannot open
+  exactly at 16 kHz.
+- It does not yet prove a manual RightAlt press records real microphone samples
+  on this Mac or on Windows/Linux reference machines.
+- VAD and ASR feed remain future P1 slices; WAL still precedes those stages.

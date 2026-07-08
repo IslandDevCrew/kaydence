@@ -3,18 +3,20 @@
 //!
 //! `wal` is real (P1, PRD P0-4): write-ahead persistence + crash recovery.
 //! cpal capture now feeds a lock-free ring buffer; the drain thread owns WAL
-//! writes. VAD and the rubato fallback for devices that cannot open 16 kHz PCM
-//! land next.
+//! writes and resamples native device rates back to the 16 kHz WAL contract.
+//! VAD lands next.
 #![allow(dead_code)]
 
 pub mod wal;
 
 use crate::events::{SessionEvent, SessionId};
+use audioadapter_buffers::direct::InterleavedSlice;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use ringbuf::{
     traits::{Consumer, Producer, Split},
     HeapCons, HeapProd, HeapRb,
 };
+use rubato::{Fft, FixedSync, Indexing, Resampler};
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::sync::{
@@ -28,6 +30,7 @@ use ulid::Ulid;
 const INPUT_RING_SECONDS: usize = 2;
 const DRAIN_CHUNK_SAMPLES: usize = 1024;
 const DRAIN_IDLE_SLEEP: Duration = Duration::from_millis(5);
+const FALLBACK_INPUT_SAMPLE_RATES: [cpal::SampleRate; 3] = [48_000, 44_100, 32_000];
 
 /// Metadata for a capture whose WAL was finalized and is ready for downstream
 /// recognition/history.
@@ -73,7 +76,7 @@ pub enum CaptureRuntimeError {
     Io(#[from] std::io::Error),
     #[error("no default input device")]
     NoInputDevice,
-    #[error("no supported input config can produce {0} Hz PCM")]
+    #[error("no supported input config can feed {0} Hz WAL PCM")]
     NoSupportedInputConfig(u32),
     #[error("unsupported input sample format: {0}")]
     UnsupportedSampleFormat(cpal::SampleFormat),
@@ -83,8 +86,22 @@ pub enum CaptureRuntimeError {
     BuildInputStream(#[from] cpal::BuildStreamError),
     #[error("play input stream: {0}")]
     PlayInputStream(#[from] cpal::PlayStreamError),
+    #[error("resampler construction: {0}")]
+    ResamplerConstruction(#[from] rubato::ResamplerConstructionError),
+    #[error("input drain: {0}")]
+    Drain(#[from] DrainError),
     #[error("input drain thread panicked")]
     DrainThreadPanicked,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum DrainError {
+    #[error("wal: {0}")]
+    Wal(#[from] wal::WalError),
+    #[error("resample: {0}")]
+    Resample(#[from] rubato::ResampleError),
+    #[error("audio adapter: {0}")]
+    Adapter(#[from] audioadapter_buffers::SizeError),
 }
 
 struct ActiveWalSession {
@@ -125,7 +142,7 @@ struct MicCaptureSession {
     stream: Option<cpal::Stream>,
     stop: Arc<AtomicBool>,
     dropped_input_samples: Arc<AtomicU64>,
-    drain_thread: Option<JoinHandle<Result<wal::WalWriter, wal::WalError>>>,
+    drain_thread: Option<JoinHandle<Result<wal::WalWriter, DrainError>>>,
 }
 
 impl MicCaptureSession {
@@ -135,7 +152,8 @@ impl MicCaptureSession {
     ) -> Result<Self, CaptureRuntimeError> {
         let stop = Arc::new(AtomicBool::new(false));
         let dropped_input_samples = Arc::clone(&prepared.dropped_input_samples);
-        let drain_thread = spawn_drain_thread(prepared.consumer, writer, Arc::clone(&stop));
+        let drain = WalDrain::new(prepared.source_sample_rate)?;
+        let drain_thread = spawn_drain_thread(prepared.consumer, writer, Arc::clone(&stop), drain);
         let session = Self {
             stream: Some(prepared.stream),
             stop,
@@ -178,6 +196,7 @@ struct PreparedMicInput {
     stream: cpal::Stream,
     consumer: HeapCons<f32>,
     dropped_input_samples: Arc<AtomicU64>,
+    source_sample_rate: cpal::SampleRate,
 }
 
 impl PreparedMicInput {
@@ -190,7 +209,8 @@ impl PreparedMicInput {
         let sample_format = supported.sample_format();
         let config = supported.config();
         let channels = usize::from(config.channels);
-        let rb = HeapRb::<f32>::new((wal::SAMPLE_RATE as usize) * INPUT_RING_SECONDS);
+        let source_sample_rate = config.sample_rate;
+        let rb = HeapRb::<f32>::new((source_sample_rate as usize) * INPUT_RING_SECONDS);
         let (producer, consumer) = rb.split();
         let dropped_input_samples = Arc::new(AtomicU64::new(0));
         let stream = build_input_stream(
@@ -206,6 +226,7 @@ impl PreparedMicInput {
             stream,
             consumer,
             dropped_input_samples,
+            source_sample_rate,
         })
     }
 }
@@ -386,16 +407,42 @@ impl CaptureSample for u64 {
 fn choose_input_config(
     device: &cpal::Device,
 ) -> Result<cpal::SupportedStreamConfig, CaptureRuntimeError> {
+    choose_input_config_from_ranges(device.supported_input_configs()?)
+}
+
+fn choose_input_config_from_ranges(
+    ranges: impl IntoIterator<Item = cpal::SupportedStreamConfigRange>,
+) -> Result<cpal::SupportedStreamConfig, CaptureRuntimeError> {
     let target_rate = wal::SAMPLE_RATE;
-    let mut candidates = device
-        .supported_input_configs()?
+    let ranges = ranges
+        .into_iter()
         .filter(|range| supported_pcm_sample_format(range.sample_format()))
+        .collect::<Vec<_>>();
+
+    let mut exact_candidates = ranges
+        .iter()
         .filter_map(|range| range.try_with_sample_rate(target_rate))
         .collect::<Vec<_>>();
-    candidates.sort_by_key(|config| {
+    exact_candidates.sort_by_key(|config| {
         (
             config.channels() != 1,
             sample_format_priority(config.sample_format()),
+            config.channels(),
+        )
+    });
+    if let Some(config) = exact_candidates.into_iter().next() {
+        return Ok(config);
+    }
+
+    let mut candidates = ranges
+        .into_iter()
+        .map(recommended_fallback_input_config)
+        .collect::<Vec<_>>();
+    candidates.sort_by_key(|config| {
+        (
+            fallback_sample_rate_priority(config.sample_rate()),
+            sample_format_priority(config.sample_format()),
+            config.channels() != 1,
             config.channels(),
         )
     });
@@ -405,6 +452,24 @@ fn choose_input_config(
         .ok_or(CaptureRuntimeError::NoSupportedInputConfig(
             wal::SAMPLE_RATE,
         ))
+}
+
+fn recommended_fallback_input_config(
+    range: cpal::SupportedStreamConfigRange,
+) -> cpal::SupportedStreamConfig {
+    FALLBACK_INPUT_SAMPLE_RATES
+        .into_iter()
+        .find_map(|sample_rate| range.try_with_sample_rate(sample_rate))
+        .unwrap_or_else(|| range.with_max_sample_rate())
+}
+
+fn fallback_sample_rate_priority(sample_rate: cpal::SampleRate) -> (u8, u32) {
+    let common_rate_rank = FALLBACK_INPUT_SAMPLE_RATES
+        .iter()
+        .position(|rate| *rate == sample_rate)
+        .map(|index| index as u8)
+        .unwrap_or(u8::MAX);
+    (common_rate_rank, sample_rate.abs_diff(wal::SAMPLE_RATE))
 }
 
 fn supported_pcm_sample_format(sample_format: cpal::SampleFormat) -> bool {
@@ -532,13 +597,14 @@ fn spawn_drain_thread(
     mut consumer: HeapCons<f32>,
     mut writer: wal::WalWriter,
     stop: Arc<AtomicBool>,
-) -> JoinHandle<Result<wal::WalWriter, wal::WalError>> {
+    mut drain: WalDrain,
+) -> JoinHandle<Result<wal::WalWriter, DrainError>> {
     thread::spawn(move || {
         let mut scratch = vec![0.0; DRAIN_CHUNK_SAMPLES];
         loop {
             let n = consumer.pop_slice(&mut scratch);
             if n > 0 {
-                writer.append(&scratch[..n])?;
+                drain.append(&mut writer, &scratch[..n])?;
                 continue;
             }
 
@@ -548,8 +614,115 @@ fn spawn_drain_thread(
 
             thread::sleep(DRAIN_IDLE_SLEEP);
         }
+        drain.finish(&mut writer)?;
         Ok(writer)
     })
+}
+
+enum WalDrain {
+    Passthrough,
+    Resampling(Box<ResamplingWalDrain>),
+}
+
+impl WalDrain {
+    fn new(source_sample_rate: cpal::SampleRate) -> Result<Self, CaptureRuntimeError> {
+        if source_sample_rate == wal::SAMPLE_RATE {
+            return Ok(Self::Passthrough);
+        }
+
+        Ok(Self::Resampling(Box::new(ResamplingWalDrain::new(
+            source_sample_rate,
+        )?)))
+    }
+
+    fn append(&mut self, writer: &mut wal::WalWriter, samples: &[f32]) -> Result<(), DrainError> {
+        match self {
+            Self::Passthrough => writer.append(samples).map_err(DrainError::Wal),
+            Self::Resampling(drain) => drain.append(writer, samples),
+        }
+    }
+
+    fn finish(&mut self, writer: &mut wal::WalWriter) -> Result<(), DrainError> {
+        match self {
+            Self::Passthrough => Ok(()),
+            Self::Resampling(drain) => drain.finish(writer),
+        }
+    }
+}
+
+struct ResamplingWalDrain {
+    resampler: Fft<f32>,
+    input_buffer: Vec<f32>,
+    output_buffer: Vec<f32>,
+    processed_any: bool,
+}
+
+impl ResamplingWalDrain {
+    fn new(
+        source_sample_rate: cpal::SampleRate,
+    ) -> Result<Self, rubato::ResamplerConstructionError> {
+        let resampler = Fft::<f32>::new(
+            source_sample_rate as usize,
+            wal::SAMPLE_RATE as usize,
+            DRAIN_CHUNK_SAMPLES,
+            2,
+            1,
+            FixedSync::Input,
+        )?;
+        Ok(Self {
+            resampler,
+            input_buffer: Vec::with_capacity(DRAIN_CHUNK_SAMPLES * 2),
+            output_buffer: Vec::new(),
+            processed_any: false,
+        })
+    }
+
+    fn append(&mut self, writer: &mut wal::WalWriter, samples: &[f32]) -> Result<(), DrainError> {
+        self.input_buffer.extend_from_slice(samples);
+        while self.input_buffer.len() >= self.resampler.input_frames_next() {
+            self.process_next(writer, None)?;
+        }
+        Ok(())
+    }
+
+    fn finish(&mut self, writer: &mut wal::WalWriter) -> Result<(), DrainError> {
+        if self.processed_any || !self.input_buffer.is_empty() {
+            self.process_next(writer, Some(self.input_buffer.len()))?;
+        }
+        Ok(())
+    }
+
+    fn process_next(
+        &mut self,
+        writer: &mut wal::WalWriter,
+        partial_len: Option<usize>,
+    ) -> Result<(), DrainError> {
+        let input_frames = partial_len.unwrap_or_else(|| self.resampler.input_frames_next());
+        let output_frames = self.resampler.output_frames_next();
+        self.output_buffer.resize(output_frames, 0.0);
+
+        let input = InterleavedSlice::new(&self.input_buffer, 1, input_frames)?;
+        let mut output = InterleavedSlice::new_mut(&mut self.output_buffer, 1, output_frames)?;
+        let indexing = partial_len.map(|partial_len| Indexing {
+            input_offset: 0,
+            output_offset: 0,
+            partial_len: Some(partial_len),
+            active_channels_mask: None,
+        });
+        let (input_consumed, output_written) =
+            self.resampler
+                .process_into_buffer(&input, &mut output, indexing.as_ref())?;
+
+        writer.append(&self.output_buffer[..output_written])?;
+        let consumed = if partial_len.is_some() {
+            self.input_buffer.len()
+        } else {
+            input_consumed.min(self.input_buffer.len())
+        };
+        self.input_buffer.drain(..consumed);
+        self.processed_any = true;
+        Ok(())
+    }
 }
 
 /// Placeholder entry point for the capture stage. Returns the event(s) it
@@ -570,6 +743,68 @@ mod tests {
         ));
         let _ = std::fs::remove_dir_all(&dir);
         dir
+    }
+
+    fn input_range(
+        channels: cpal::ChannelCount,
+        min_sample_rate: cpal::SampleRate,
+        max_sample_rate: cpal::SampleRate,
+        sample_format: cpal::SampleFormat,
+    ) -> cpal::SupportedStreamConfigRange {
+        cpal::SupportedStreamConfigRange::new(
+            channels,
+            min_sample_rate,
+            max_sample_rate,
+            cpal::SupportedBufferSize::Unknown,
+            sample_format,
+        )
+    }
+
+    #[test]
+    fn input_config_prefers_native_wal_rate_when_available() {
+        let config = choose_input_config_from_ranges([
+            input_range(2, 48_000, 48_000, cpal::SampleFormat::F32),
+            input_range(
+                1,
+                wal::SAMPLE_RATE,
+                wal::SAMPLE_RATE,
+                cpal::SampleFormat::I16,
+            ),
+        ])
+        .unwrap();
+
+        assert_eq!(config.sample_rate(), wal::SAMPLE_RATE);
+        assert_eq!(config.channels(), 1);
+        assert_eq!(config.sample_format(), cpal::SampleFormat::I16);
+    }
+
+    #[test]
+    fn input_config_falls_back_to_common_device_rate() {
+        let config = choose_input_config_from_ranges([
+            input_range(1, 96_000, 96_000, cpal::SampleFormat::F32),
+            input_range(2, 44_100, 48_000, cpal::SampleFormat::I16),
+        ])
+        .unwrap();
+
+        assert_eq!(config.sample_rate(), 48_000);
+        assert_eq!(config.channels(), 2);
+        assert_eq!(config.sample_format(), cpal::SampleFormat::I16);
+    }
+
+    #[test]
+    fn input_config_rejects_non_pcm_ranges() {
+        let err = choose_input_config_from_ranges([input_range(
+            1,
+            48_000,
+            48_000,
+            cpal::SampleFormat::I24,
+        )])
+        .unwrap_err();
+
+        assert!(matches!(
+            err,
+            CaptureRuntimeError::NoSupportedInputConfig(rate) if rate == wal::SAMPLE_RATE
+        ));
     }
 
     #[test]
@@ -669,13 +904,34 @@ mod tests {
         drop(producer);
         let stop = Arc::new(AtomicBool::new(true));
 
-        let handle = spawn_drain_thread(consumer, writer, stop);
+        let drain = WalDrain::new(wal::SAMPLE_RATE).unwrap();
+        let handle = spawn_drain_thread(consumer, writer, stop, drain);
         let writer = handle.join().unwrap().unwrap();
 
         assert_eq!(writer.samples_written(), 3);
         let path = writer.finalize().unwrap();
         let recovered = wal::recover(&path).unwrap();
         assert_eq!(recovered.samples, 3);
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn drain_resamples_native_input_rate_to_wal_rate() {
+        let app_data = tmp();
+        let dir = app_data.join("sessions");
+        let mut writer = wal::WalWriter::create(&dir, "01RESAMPLE").unwrap();
+        let mut drain = WalDrain::new(48_000).unwrap();
+        let samples = vec![0.25f32; 4_800];
+
+        drain.append(&mut writer, &samples).unwrap();
+        drain.finish(&mut writer).unwrap();
+
+        let samples_written = writer.samples_written();
+        assert!(samples_written > 1_200);
+        assert!(samples_written < 2_200);
+        let path = writer.finalize().unwrap();
+        let recovered = wal::recover(&path).unwrap();
+        assert_eq!(recovered.samples, samples_written);
         let _ = std::fs::remove_dir_all(app_data);
     }
 }
