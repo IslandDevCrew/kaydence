@@ -1,8 +1,13 @@
 # ADR-0008: Naming (Kaydence) and pricing (one-time, no subscription)
 
-- **Status:** Accepted
+- **Status:** Accepted (naming) · pricing section **superseded by ADR-0010** (2026-07-07)
 - **Date:** 2026-06-19
 - **PRD items affected:** PRD §6
+
+> **Note (2026-07-07):** The naming decision below stands. The pricing decision
+> (one-time ~$59–79, single tier) is superseded by **ADR-0010**, which keeps the
+> one-time/no-subscription spine but adds the Core/Pro/Captain tiers and the
+> optional self-hostable Harbor services line. Read 0010 for the current pricing.
 
 ## Context
 "Cadence" carries a hard software trademark conflict (Cadence Design Systems,
