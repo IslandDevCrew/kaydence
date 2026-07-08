@@ -27,3 +27,8 @@
 - pnpm-11 friction: build-script approval blocked `pnpm install`/`run` (esbuild). Resolved via root package.json onlyBuiltDependencies + rebuild; added scripts/check-frontend.sh as the robust P0-G4 gate (runs local tsc/eslint binaries).
 - audit-network caught a second self-bug: `surf` (HTTP crate) substring-matched "Surface" in events.rs -> false positive. Tightened patterns to `::` call-forms; re-verified it still FAILs on a planted reqwest:: call.
 - P0 now blocked only by exit gates G5 (tauri dev on Win/Linux) + G6 (3-OS CI) — waived-pending-infra on this macOS-only host. Natural P0->P1 operator checkpoint after P0-T5.
+
+## 2026-07-07T04:30Z — session 1 (P0 boundary)
+- Merged P0-T5 (Linux CI system deps). ALL 7 P0 tasks done. 7 mission merges total this session.
+- P0 phase set to BLOCKED — infra only. Every locally-runnable gate is green on macOS (fmt/clippy/test, frontend, audit-network, adr-status). Exit gates G5 (tauri dev Win/Linux) + G6 (3-OS CI) can't close without a GitHub remote+Actions or the reference machines (operator chose local-only).
+- HALTING at the P0->P1 phase boundary per BUILD-LOOP for operator go. P1 (MVP dictation) begins the platform-critical feature work (capture/ASR/injection) — highest risk is Win UIA + Linux Wayland injection, which this host can't verify.
