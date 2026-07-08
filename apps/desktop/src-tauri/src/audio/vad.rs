@@ -56,6 +56,15 @@ pub trait VadDetector {
     fn is_speech(&mut self, frame: &[f32]) -> bool;
 }
 
+impl<T> VadDetector for &mut T
+where
+    T: VadDetector + ?Sized,
+{
+    fn is_speech(&mut self, frame: &[f32]) -> bool {
+        (**self).is_speech(frame)
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct EnergyVad {
     threshold_rms: f32,

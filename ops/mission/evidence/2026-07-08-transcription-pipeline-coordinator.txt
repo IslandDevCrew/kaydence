@@ -1,0 +1,47 @@
+Kaydence transcription pipeline coordinator evidence
+Date: 2026-07-08 18:29 CDT / 2026-07-08T18:29:50-0500
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Added `pipeline::TranscriptionPipeline` as the coordinator between existing
+  stage-owned pieces:
+  1. finalized WAL readback
+  2. VAD speech gating
+  3. ASR engine stack invocation
+  4. typed `SessionEvent` output
+- The coordinator always emits `AudioPersisted` before engine events.
+- Silence-only captures return the persisted-audio event and do not call ASR.
+- Speech segments become separate `AsrRequest`s with sample rate, start sample,
+  samples, and dictionary hints preserved.
+- Added a blanket `VadDetector` implementation for `&mut T` so stateful future
+  detectors can be borrowed into a per-capture gate without moving the detector
+  out of the pipeline.
+
+Fresh tests added:
+- pipeline::tests::persisted_audio_event_precedes_engine_events_for_speech
+- pipeline::tests::silence_only_capture_does_not_call_engine
+- pipeline::tests::separated_speech_segments_create_separate_engine_requests
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml pipeline:: --lib:
+  PASS, 3 pipeline tests
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 62 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 64 total backend tests PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings:
+  PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design
+  Proposed exception
+- ./script/build_and_run.sh build: PASS
+- ./script/build_and_run.sh --verify: PASS on macOS; Tauri dev process stayed
+  alive long enough for process verification, then was cleaned up.
+
+Important boundary:
+- This is the real coordination seam, but it still uses scripted test engines.
+- No production Parakeet, Whisper, BYOK, or Silero runtime adapter is wired yet.
+- The live hotkey path still stops after WAL finalization until a production
+  engine stack exists.
