@@ -42,12 +42,12 @@
       { "id": "09", "name": "Analytics & Performance", "phase": "P3", "note": "Zero-edit rate, prediction acceptance, words saved, latency p50/p95, RAM, model, cleanup impact, exportable local report." },
       { "id": "10", "name": "First Run & License", "phase": "P1", "note": "ASR engine, permissions, hotkey, cleanup default, Whisper-Ahead, privacy confirmation, Free/Pro/Captain/Harbor choices; 60-second setup." }
     ],
-    "promptPack": "prompts/VISUAL-BUILD-PROMPT-PACK.md — fable-safe, scoped prompts for resuming the visual-driven build against these boards."
+    "promptPack": "prompts/VISUAL-BUILD-PROMPT-PACK.md — fable-safe, scoped prompts for resuming the visual-driven build against these boards. Build prompt for the P1 input layer: prompts/P1-CAPTURE-INJECTION-PROMPT.md (hotkey capture + universal injection, all 3 OS)."
   },
   "mission": {
     "name": "Kaydence — Plan of Attack v3",
     "tagline": "Speak anywhere. Ship clean text. Never leak, never lose, never lag.",
-    "repo": "local-only (no remote configured)",
+    "repo": "https://github.com/IslandDevCrew/kaydence (origin; 3-OS Actions CI live since 2026-07-08)",
     "repoPath": "/Users/IDC2.5/Kaydence/kaydence",
     "defaultBranch": "main",
     "planDoc": "/Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html",
@@ -61,7 +61,7 @@
     "merge": "auto",
     "branchPrefix": "mission/",
     "maxPrLines": 400,
-    "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. No git remote configured, so 'PR' = local mission/ branch merged to main; GitHub 3-OS CI cannot run here (macOS-only host). Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test (3-OS via CI), npm run check, scripts/bench.sh --check (once it lands), scripts/audit-network.sh (network-adjacent changes). Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
+    "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence with 3-OS Actions CI is LIVE (2026-07-08) — CI is the Win/Linux trust anchor; push after merge and confirm the run. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test (3-OS via CI), npm run check, scripts/bench.sh --check (once it lands), scripts/audit-network.sh (network-adjacent changes). Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
   },
   "phases": [
     {
@@ -69,7 +69,7 @@
       "title": "Toolchain & law",
       "goal": "Bootstrap Tauri on all three OSes, stand up the 3-OS CI matrix (macOS + Windows + Linux), complete the Handy study pass (ADR-0004), reconcile the repo docs from v2 to v3, and get ADRs 1-10 accepted. Exit: `cargo tauri dev` opens on all three OSes; CI green.",
       "status": "blocked",
-      "blockedReason": "All 7 P0 tasks done and every locally-runnable gate is green on macOS. The two EXIT gates — P0-G5 (cargo tauri dev opens on Win+Linux) and P0-G6 (3-OS CI green) — cannot close on this macOS-only host with no git remote. Blocked on infra ONLY: a GitHub remote+Actions or the physical reference machines. Not blocked on any code work.",
+      "blockedReason": "7/7 tasks done; every locally-runnable gate green on macOS. INFRA ARRIVED 2026-07-08: GitHub remote + 3-OS Actions CI are live. First runs failed (pnpm-11 approvals + missing icon.ico) — both fixed on main. P0-G6 closes on the first green 3-OS run; P0-G5 (windowed cargo tauri dev on Win+Linux) remains the only piece still needing the reference machines. P1 proceeds in parallel per plan.",
       "sessionsEstimate": "1-2 weeks",
       "gates": [
         {
@@ -199,7 +199,7 @@
       "id": "P1",
       "title": "MVP dictation",
       "goal": "Hotkey -> capture -> WAL -> VAD -> local ASR (Parakeet CPU + Whisper GPU) -> native injection on Mac/Win/Linux (Wayland spike early — highest platform risk) -> history. Raw mode daily-drivable; crash-recovery and short-utterance suites green.",
-      "status": "pending",
+      "status": "in_progress",
       "sessionsEstimate": "~3 weeks",
       "gates": [
         {
@@ -243,7 +243,7 @@
         { "id": "P1-P0-1", "title": "PRD P0-1 Global hotkey (push-to-talk + toggle; min-capture 250ms; tail buffer 300ms)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "Pitfall P1." },
         { "id": "P1-P0-2", "title": "PRD P0-2 Local ASR dual path (Parakeet V3 CPU + Whisper large-v3-turbo GPU; model picker; hw auto-recommend)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "Model registry — critical path." },
         { "id": "P1-P0-3", "title": "PRD P0-3 Universal injection Mac+Win+Linux (AX / UIA+SendInput / X11+Wayland; clipboard fallback snapshot-restore <=200ms; secure-field refusal)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "CRITICAL PATH (platform). Non-negotiable #8. Wayland is the highest platform risk — spike early." },
-        { "id": "P1-P0-4", "title": "PRD P0-4 Write-ahead audio persistence + SQLite history (audio on disk before ASR; survives crash)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "Non-negotiable #2." },
+        { "id": "P1-P0-4", "title": "PRD P0-4 Write-ahead audio persistence + SQLite history (audio on disk before ASR; survives crash)", "status": "done", "dependsOn": ["P0-T3"], "pr": { "number": 1, "url": "https://github.com/IslandDevCrew/kaydence/pull/1", "mergedAt": "2026-07-08" }, "notes": "DONE (built by the WAL session as commit 4f1b27c + PR #1; landed on main 2026-07-08 riding the design-branch merges). crash_recovery suite 2/2 PASS on macOS (child_writer_process, killing_the_writer_mid_dictation_loses_no_flushed_audio) — evidence CI-GREEN-2026-07-08.txt. P1-G1 stays open until the suite is green on all three CI legs. Non-negotiable #2." },
         { "id": "P1-P0-6", "title": "PRD P0-6 Latency budgets met + enforced by scripts/bench.sh in CI", "status": "pending", "dependsOn": ["P0-T6"], "pr": null, "notes": "Root AGENTS §5." },
         { "id": "P1-P0-7", "title": "PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page)", "status": "pending", "dependsOn": ["P0-T6"], "pr": null, "notes": "Non-negotiable #1. audit-network.sh gate." },
         { "id": "P1-P0-8", "title": "PRD P0-8 60-second first run (install -> model download -> first dictation <=60s, one settings screen)", "status": "pending", "dependsOn": ["P1-P0-1", "P1-P0-2", "P1-P0-3", "P1-P0-4"], "pr": null, "notes": "Pitfall P10. UI conforms to screen-family 10 (First Run & License)." },
@@ -417,8 +417,7 @@
     { "label": "Visual system (logos + screen families)", "baseline": "none", "current": "5 logos + 10 family boards (30 OS views) locked", "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS", "direction": "up" }
   ],
   "risks": [
-    { "title": "macOS-only execution host — Windows + Linux gates cannot close here", "severity": "high", "note": "cargo tauri dev on Win/Linux, 3-OS cargo test, and Wayland injection tests all require the reference machines or GitHub Actions. This session can only verify the macOS leg. All 3-OS exit gates stay open pending that infra." },
-    { "title": "No git remote / no CI — auto-merge + 3-OS CI policy degraded", "severity": "high", "note": "The mission's merge policy assumes GitHub PRs + Actions as the trust anchor. Locally we get branches merged to main with macOS-only evidence; the CI trust anchor is absent until a remote is configured." },
+    { "title": "3-OS CI live but not yet green — first runs failed on pnpm-11 + missing icon.ico", "severity": "medium", "note": "Remote origin=IslandDevCrew/kaydence + Actions stood up 2026-07-08 (was the top-2 high risks: no remote, macOS-only host). Both first-run failures diagnosed and fixed (allowBuilds approval; icon set from the ADR-0012 mark). P0-G6 closes on the first green 3-OS run of main; P0-G5 (windowed tauri dev on Win/Linux) still needs the reference machines or a display-enabled runner." },
     { "title": "v2 -> v3 documentation drift", "severity": "high", "note": "Repo AGENTS.md (#5 = macOS+Windows), PRD (stops at P2-13), ROADMAP (P4=Expansion), ADRs (stop at 0008) all predate the v3 plan. The plan asserts ADR-0009/0010 and PRD P4-1..P4-9 are 'committed' — they are not in the repo. P0-T1/P0-T7 reconcile this; several sub-steps are critical decision paths." },
     { "title": "Gemma 3 1B license (Gemma Terms, not Apache)", "severity": "medium", "note": "models/registry.json flags license_review_required. Legal review before any paid build bundles it (ADR-0007/0010). Download-on-demand only; never bundle unreviewed." },
     { "title": "Relay pairing/crypto design", "severity": "medium", "note": "ADR-0009 keys/rotation/device-revocation design must pass operator review before the P4-1 build starts. Far off, but the gate is load-bearing for the flagship separation." },
@@ -435,11 +434,15 @@
     { "number": null, "title": "Visual System v1 locked — 5 logo directions + 10 screen-family boards (30 OS views) generated (Codex) and adopted as the build reference set; screen-fidelity gates wired into P1–P4", "url": "local:design-direction-lock", "phase": "design", "mergedAt": "2026-07-08" },
     { "number": null, "title": "P1-D1 Visual pack vendored in-repo (assets/brand/, 15 PNGs shasum-verified) + design-reference index (docs/design/README.md); fidelity-gate paths repointed", "url": "local:p1-d1", "phase": "P1", "mergedAt": "2026-07-08" },
     { "number": null, "title": "P1-D2 prep — ADR-0012 (visual identity) drafted Proposed with full 5-logo review; recommendation Option 1 K Waveform, runner-up Option 4; check-adr-status gate carries 0012 exception (P0-G7 re-run PASS)", "url": "local:p1-d2-prep", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-D2 DONE — operator locked the dual-asset identity (Option 1 mark + Option 4 wordmark, three unification rules); ADR-0012 Accepted; gate exception removed (P0-G7 PASS, 11/12)", "url": "local:p1-d2", "phase": "P1", "mergedAt": "2026-07-08" }
+    { "number": null, "title": "P1-D2 DONE — operator locked the dual-asset identity (Option 1 mark + Option 4 wordmark, three unification rules); ADR-0012 Accepted; gate exception removed (P0-G7 PASS, 11/12)", "url": "local:p1-d2", "phase": "P1", "mergedAt": "2026-07-08" },
+    { "number": 1, "title": "P1-P0-4 WAL + crash recovery (WAL session, PR #1) — landed on main via the design-branch merge train", "url": "https://github.com/IslandDevCrew/kaydence/pull/1", "phase": "P1", "mergedAt": "2026-07-08" },
+    { "number": null, "title": "Merge train to main (operator go): design-direction-lock, p1-d1-vendor, p1-d2-adr0012, ci-green-pnpm-icon — four --no-ff merges; identity + boards + CI fixes all on main", "url": "local:merge-train-2026-07-08", "phase": "P1", "mergedAt": "2026-07-08" }
   ],
   "resume": {
-    "activePhase": "P0",
+    "activePhase": "P1",
     "nextActions": [
+      "P1 IS ACTIVE. Next build targets: P1-P0-1 global hotkey (adopt Handy's TranscriptionCoordinator: single thread + 30ms debounce, min-capture 250ms, tail 300ms — Pitfall P1) and P1-P0-3 universal injection (CRITICAL PATH; Wayland spike FIRST — highest platform risk; then macOS AX, Win UIA+SendInput; clipboard fallback snapshot-restore <=200ms; secure-field refusal). Use prompts/P1-CAPTURE-INJECTION-PROMPT.md — the fable-safe build prompt for both tasks. Each new dependency (global-shortcut plugin, platform crates) = audit-network allowlist + ADR note per policy.",
+      "CI: push main and confirm the 3-OS run goes green -> close P0-G6 with the run URL as evidence. PR #1 auto-resolves merged (its commit is on main).",
       "DESIGN LOCKED (2026-07-08): Visual System v1 is the build reference — 5 logo directions + 10 screen-family boards × 3 OS = 30 views (see designDirection in state.json and the report at /Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html). P1-D1 + P1-D2 DONE 2026-07-08: pack vendored to assets/brand/ with index at docs/design/README.md, and the identity is LOCKED (ADR-0012 Accepted) — Option 1 K Waveform is the sole product mark, Option 4 the wordmark/site header, three binding unification rules. Build each screen to its family board with the Option 1 mark in the reserved slot; OS accent stays the only free-tier variation. Every phase has a screen-family fidelity gate (P1-G4, P2-G3, P3-G4, P4-G-SCREENS). Multi-resolution icon production (icns/ico/hicolor + tray template from the Option 1 mark) lands with P3 installer work.",
       "P0 is 6/7 tasks done. The Tauri scaffold compiles and ALL locally-runnable gates are green on macOS: cargo fmt/clippy/test, frontend tsc+eslint, audit-network, ADR-status. Merges: bootstrap, ADRs, v3 docs, gate scripts, Handy study, scaffold.",
       "LAST P0 TASK — P0-T5: add the Linux system-deps step to CI (ubuntu: libwebkit2gtk-4.1-dev, libgtk-3-dev, libayatana-appindicator3-dev, librsvg2-dev, patchelf; + gtk-layer-shell per ADR-0004). Matrix already includes ubuntu-latest. Cannot be verified on this macOS host.",
@@ -448,8 +451,8 @@
       "When adding real ASR/audio deps in P1 (cpal, ort, whisper.cpp, vad-rs), each is a critical-path dependency add -> audit-network allowlist + ADR per the ADR-0004 study."
     ],
     "blockers": [
-      "macOS-only host: P0-G3 (3-OS test), P0-G5 (tauri dev on Win/Linux), P0-G6 (3-OS CI) cannot be closed without the reference machines or a GitHub remote with Actions.",
-      "No GitHub remote configured — no CI trust anchor and no real PRs; auto-merge is local-only.",
+      "P0-G6 awaits the first green 3-OS CI run of main (fixes for both first-run failures pushed 2026-07-08).",
+      "P0-G5 (windowed cargo tauri dev on Win/Linux) still needs the physical reference machines — headless CI can't verify a window opens.",
       "P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.",
       "Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).",
       "ADR-0009 (Relay crypto) operator review required before the P4-1 build.",
