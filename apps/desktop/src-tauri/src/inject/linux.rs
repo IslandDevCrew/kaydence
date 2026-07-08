@@ -43,7 +43,7 @@ mod tests {
     #[test]
     fn non_editable_is_no_target() {
         assert_eq!(
-            role_to_field_kind(atspi::Role::PushButton, false),
+            role_to_field_kind(atspi::Role::Label, false),
             FieldKind::NoTarget
         );
     }
