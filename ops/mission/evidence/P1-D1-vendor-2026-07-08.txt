@@ -1,0 +1,49 @@
+P1-D1 — Vendor Visual System v1 into the monorepo
+Date: 2026-07-08  |  Branch: mission/p1-d1-vendor-visual-pack
+Source: /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack
+Destination: assets/brand/{logos,screens}/  |  Index: docs/design/README.md
+
+== Checksum verification (shasum, source vs vendored) ==
+RESULT: PASS — all 15 files byte-identical
+
+727ac8256912b3d7141040163402a5c45d2d374d  logos/kaydence-logo-option-1.png
+bf38f2f0f110bd971a530495bb13d38d3a797451  logos/kaydence-logo-option-2.png
+a7de2216f53b929606f87b78058a4285d6fb64e2  logos/kaydence-logo-option-3.png
+6cffd0a77351593af3495345ec249de76ab46cea  logos/kaydence-logo-option-4.png
+9f41d68c1a4f6a00031fa21858fbca29f7335098  logos/kaydence-logo-option-5.png
+121b21b319baa166d454f3b3f0d7e21d9f3fca82  screens/kaydence-screen-family-01.png
+08ed0e945aa13085d31d8e57b0d0416cd9a7532c  screens/kaydence-screen-family-02.png
+060ee3d16f035ece1a31b8bae801112494b6b000  screens/kaydence-screen-family-03.png
+0e69bb1623f0f4c4a28ee2187f4c38953c9a8bfc  screens/kaydence-screen-family-04.png
+bf6ebeb281b90d033547437882058df8ef71fd9a  screens/kaydence-screen-family-05.png
+043f8ccac2c121e51d0dd770f43e4b19eed4d3ff  screens/kaydence-screen-family-06.png
+bfb1c0d366fc5e91ce57e50eeaf6280de0b3861e  screens/kaydence-screen-family-07.png
+5f10e8667b020fe5d88ae188c922928c00b511ca  screens/kaydence-screen-family-08.png
+8c99c07f2f3a2e288952c90f38c998b9100ea781  screens/kaydence-screen-family-09.png
+9c9f091425284b6a3579f0c4da1751da99efa558  screens/kaydence-screen-family-10.png
+
+== Vendored listing ==
+assets/brand/logos:
+total 8056
+drwxr-xr-x@ 7 IDC2.5  staff     224 Jul  8 03:22 .
+drwxr-xr-x@ 4 IDC2.5  staff     128 Jul  8 03:22 ..
+-rw-r--r--@ 1 IDC2.5  staff  726383 Jul  8 03:22 kaydence-logo-option-1.png
+-rw-r--r--@ 1 IDC2.5  staff  880801 Jul  8 03:22 kaydence-logo-option-2.png
+-rw-r--r--@ 1 IDC2.5  staff  810830 Jul  8 03:22 kaydence-logo-option-3.png
+-rw-r--r--@ 1 IDC2.5  staff  865685 Jul  8 03:22 kaydence-logo-option-4.png
+-rw-r--r--@ 1 IDC2.5  staff  828496 Jul  8 03:22 kaydence-logo-option-5.png
+
+assets/brand/screens:
+total 29008
+drwxr-xr-x@ 12 IDC2.5  staff      384 Jul  8 03:22 .
+drwxr-xr-x@  4 IDC2.5  staff      128 Jul  8 03:22 ..
+-rw-r--r--@  1 IDC2.5  staff  1207214 Jul  8 03:22 kaydence-screen-family-01.png
+-rw-r--r--@  1 IDC2.5  staff  1511931 Jul  8 03:22 kaydence-screen-family-02.png
+-rw-r--r--@  1 IDC2.5  staff  1398646 Jul  8 03:22 kaydence-screen-family-03.png
+-rw-r--r--@  1 IDC2.5  staff  1388557 Jul  8 03:22 kaydence-screen-family-04.png
+-rw-r--r--@  1 IDC2.5  staff  1583305 Jul  8 03:22 kaydence-screen-family-05.png
+-rw-r--r--@  1 IDC2.5  staff  1520163 Jul  8 03:22 kaydence-screen-family-06.png
+-rw-r--r--@  1 IDC2.5  staff  1589696 Jul  8 03:22 kaydence-screen-family-07.png
+-rw-r--r--@  1 IDC2.5  staff  1481158 Jul  8 03:22 kaydence-screen-family-08.png
+-rw-r--r--@  1 IDC2.5  staff  1837731 Jul  8 03:22 kaydence-screen-family-09.png
+-rw-r--r--@  1 IDC2.5  staff  1307242 Jul  8 03:22 kaydence-screen-family-10.png
