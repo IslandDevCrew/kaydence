@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useMemo, useState } from "react";
 
 const markUrl = new URL(
   "../../../assets/brand/logos/kaydence-logo-option-1.png",
@@ -30,6 +31,88 @@ interface ChecklistItem {
   label: string;
   status: "Ready" | "Needs hardware" | "Next";
 }
+
+interface AppSnapshot {
+  app_name: string;
+  app_identifier: string;
+  settings: {
+    hotkey: {
+      mode: "push_to_talk" | "toggle";
+      primary_binding: string;
+      secondary_dial_override_binding: string;
+    };
+    capture: {
+      min_capture_ms: number;
+      tail_buffer_ms: number;
+      debounce_ms: number;
+    };
+    engine: {
+      default_local_asr: "parakeet_cpu" | "whisper_gpu";
+      auto_recommend_by_hardware: boolean;
+    };
+    cleanup: {
+      default_dial: "raw" | "light" | "full";
+      full_requires_explicit_opt_in: boolean;
+    };
+    injection: {
+      unknown_focus_policy: "warn_and_allow" | "refuse";
+      prefer_clipboard_fallback: boolean;
+    };
+    privacy: {
+      history_retention_days: number;
+      local_context_enabled: boolean;
+      local_ocr_enabled: boolean;
+    };
+    first_run: {
+      model_ready: boolean;
+      microphone_permission_ready: boolean;
+      input_permission_ready: boolean;
+      hotkey_registered: boolean;
+      first_dictation_completed: boolean;
+    };
+  };
+}
+
+const previewSnapshot: AppSnapshot = {
+  app_name: "Kaydence",
+  app_identifier: "io.kaydence.app",
+  settings: {
+    hotkey: {
+      mode: "push_to_talk",
+      primary_binding: "RightAlt",
+      secondary_dial_override_binding: "Shift+RightAlt",
+    },
+    capture: {
+      min_capture_ms: 250,
+      tail_buffer_ms: 300,
+      debounce_ms: 30,
+    },
+    engine: {
+      default_local_asr: "parakeet_cpu",
+      auto_recommend_by_hardware: true,
+    },
+    cleanup: {
+      default_dial: "light",
+      full_requires_explicit_opt_in: true,
+    },
+    injection: {
+      unknown_focus_policy: "warn_and_allow",
+      prefer_clipboard_fallback: false,
+    },
+    privacy: {
+      history_retention_days: 30,
+      local_context_enabled: false,
+      local_ocr_enabled: false,
+    },
+    first_run: {
+      model_ready: false,
+      microphone_permission_ready: false,
+      input_permission_ready: false,
+      hotkey_registered: false,
+      first_dictation_completed: false,
+    },
+  },
+};
 
 const lanes: LaneSpec[] = [
   {
@@ -70,7 +153,7 @@ const navItems: NavItem[] = [
 
 const metrics: Metric[] = [
   { label: "Raw latency", value: "ready", detail: "bench gate wired" },
-  { label: "Crash recovery", value: "28/28", detail: "local tests green" },
+  { label: "Crash recovery", value: "33/33", detail: "local tests green" },
   { label: "Network audit", value: "0", detail: "unreviewed call sites" },
   { label: "Remote", value: "404", detail: "local-first recovery" },
 ];
@@ -86,10 +169,46 @@ const checklist: ChecklistItem[] = [
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
   const [activeLane, setActiveLane] = useState<OsLane>("mac");
+  const [snapshot, setSnapshot] = useState<AppSnapshot>(previewSnapshot);
+  const [snapshotSource, setSnapshotSource] = useState<"backend" | "preview">("preview");
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
   );
+  const hotkeyMode =
+    snapshot.settings.hotkey.mode === "push_to_talk" ? "Push-to-talk" : "Toggle";
+  const cleanupDefault = snapshot.settings.cleanup.default_dial;
+  const engineLabel =
+    snapshot.settings.engine.default_local_asr === "parakeet_cpu"
+      ? "Parakeet CPU"
+      : "Whisper GPU";
+  const unknownFocus =
+    snapshot.settings.injection.unknown_focus_policy === "warn_and_allow"
+      ? "Warn on opaque focus"
+      : "Refuse opaque focus";
+  const privacyLabel = snapshot.settings.privacy.local_context_enabled
+    ? "Local context on"
+    : "Local context off";
+
+  useEffect(() => {
+    let active = true;
+    void invoke<AppSnapshot>("app_snapshot")
+      .then((nextSnapshot) => {
+        if (active) {
+          setSnapshot(nextSnapshot);
+          setSnapshotSource("backend");
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSnapshot(previewSnapshot);
+          setSnapshotSource("preview");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <main
@@ -100,7 +219,7 @@ export function App(): JSX.Element {
         <div className="brand-lockup">
           <img className="brand-mark" src={markUrl} alt="" />
           <div>
-            <strong>Kaydence</strong>
+            <strong>{snapshot.app_name}</strong>
             <span>Local voice platform</span>
           </div>
         </div>
@@ -122,7 +241,10 @@ export function App(): JSX.Element {
           <span className="status-dot" aria-hidden="true" />
           <div>
             <strong>Local only</strong>
-            <p>No telemetry. No accounts. No cloud sync for core features.</p>
+            <p>
+              No telemetry. {snapshot.settings.privacy.history_retention_days}-day local
+              history. {privacyLabel}.
+            </p>
           </div>
         </div>
       </aside>
@@ -132,6 +254,7 @@ export function App(): JSX.Element {
           <div>
             <p className="eyebrow">P1 recovery build</p>
             <h1>Dictation cockpit</h1>
+            <span className="snapshot-source">{snapshotSource} config</span>
           </div>
           <div className="lane-switcher" aria-label="Operating system lane">
             {lanes.map((candidate) => (
@@ -181,11 +304,11 @@ export function App(): JSX.Element {
               </div>
               <div>
                 <span>Engine</span>
-                <strong>Parakeet CPU</strong>
+                <strong>{engineLabel}</strong>
               </div>
               <div>
-                <span>Target</span>
-                <strong>Cursor</strong>
+                <span>Hotkey</span>
+                <strong>{snapshot.settings.hotkey.primary_binding}</strong>
               </div>
             </div>
 
@@ -206,11 +329,18 @@ export function App(): JSX.Element {
               </div>
             </div>
             <div className="segmented" role="group" aria-label="Cleanup level">
-              <button type="button">Raw</button>
-              <button className="selected" type="button">Light</button>
-              <button type="button">Full</button>
+              <button className={cleanupDefault === "raw" ? "selected" : ""} type="button">
+                Raw
+              </button>
+              <button className={cleanupDefault === "light" ? "selected" : ""} type="button">
+                Light
+              </button>
+              <button className={cleanupDefault === "full" ? "selected" : ""} type="button">
+                Full
+              </button>
             </div>
             <ul className="rule-list">
+              <li>{hotkeyMode} on {snapshot.settings.hotkey.primary_binding}</li>
               <li>Filler removal enabled</li>
               <li>Self-correction collapse enabled</li>
               <li>Full rewrite requires opt-in</li>
@@ -236,8 +366,8 @@ export function App(): JSX.Element {
                 <strong>{lane.permission}</strong>
               </div>
               <div>
-                <span>Fallback</span>
-                <strong>Clipboard restore</strong>
+                <span>Unknown focus</span>
+                <strong>{unknownFocus}</strong>
               </div>
             </div>
           </article>

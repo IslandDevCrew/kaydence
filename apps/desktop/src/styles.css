@@ -158,6 +158,17 @@ button {
   font-size: 1.72rem;
 }
 
+.snapshot-source {
+  display: inline-flex;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 800;
+  padding: 3px 8px;
+}
+
 .panel h2 {
   font-size: 1.05rem;
 }

@@ -1,0 +1,41 @@
+Kaydence frontend app_snapshot invoke evidence
+Date: 2026-07-08 17:41 CDT / 2026-07-08T22:41Z
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Added official Tauri v2 JavaScript API dependency @tauri-apps/api.
+- Wired React shell to call invoke<AppSnapshot>("app_snapshot") from
+  @tauri-apps/api/core, matching Tauri v2 docs.
+- Kept a local preview fallback for browser/Vite smoke tests outside the Tauri
+  runtime. Product truth remains Rust-owned; React only renders the snapshot.
+
+Dependency note:
+- @tauri-apps/api is the official frontend API package for Tauri command calls.
+- No new application network surface was added.
+- audit-network.sh remained green with 0 network-capable call sites.
+
+Fresh gates:
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 31 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 33 total backend tests PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design Proposed exception
+- ./script/build_and_run.sh build: PASS
+
+Browser/render smoke:
+- Dev server: pnpm --filter kaydence-desktop dev --host 127.0.0.1
+- Browser: Playwright using system Google Chrome
+- URL: http://127.0.0.1:1420/
+- Result: PASS
+  - h1: Dictation cockpit
+  - config source: preview config
+  - engine: Parakeet CPU
+  - hotkey: RightAlt
+  - nav items: 10
+  - console/page errors: []
+
+Notes:
+- Vite dist artifacts created during build/smoke verification were removed after
+  the gate run; source files are the durable change.

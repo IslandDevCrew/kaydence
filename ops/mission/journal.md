@@ -145,3 +145,9 @@
 - Added `app_snapshot` as a Tauri command in `lib.rs`, giving the presentation layer a backend-owned config source without moving product logic into React.
 - Added five settings tests (defaults, JSON round-trip, bad schema/empty hotkey validation, privacy validation, first-run readiness), raising backend coverage to 33 total tests.
 - Fresh evidence saved at `ops/mission/evidence/2026-07-08-p1-settings-snapshot.txt`: fmt PASS, clippy PASS, backend tests PASS (33 incl. crash recovery), frontend check PASS, audit-network PASS, ADR status PASS, and `./script/build_and_run.sh build` PASS. No new deps, no network surface.
+
+## 2026-07-08T22:41Z — Codex P1 slice (frontend consumes backend snapshot)
+- Added the official Tauri v2 frontend API package `@tauri-apps/api` and wired the React shell to call `invoke<AppSnapshot>("app_snapshot")` from `@tauri-apps/api/core`, matching current Tauri v2 docs. This gives the UI a real backend-owned config source while keeping product logic in Rust.
+- Kept a local preview fallback for ordinary Vite/browser smoke tests outside the Tauri runtime. The fallback mirrors the Rust defaults but is explicitly marked `preview config` in the UI; in Tauri, the command can switch the badge to `backend config`.
+- UI now renders snapshot-derived app name, engine, hotkey binding, cleanup default, retention/context posture, and unknown-focus policy instead of hardcoded display constants.
+- Evidence saved at `ops/mission/evidence/2026-07-08-frontend-app-snapshot-invoke.txt`: backend tests PASS (33), frontend check PASS, audit-network PASS (0 sites), ADR status PASS, `./script/build_and_run.sh build` PASS, and browser smoke PASS in system Chrome with zero console/page errors.
