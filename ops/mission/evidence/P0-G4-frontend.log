@@ -1,0 +1,9 @@
+P0-G4 frontend gate — 2026-07-07 (macOS, node 26, pnpm 11.1.2)
+pnpm install: exit 0 (esbuild build allowlisted in root package.json)
+pnpm --dir apps/desktop run check (tsc --noEmit && eslint --max-warnings 0): exit 0
+scripts/check-frontend.sh: PASS
+--- check output ---
+Scope: all 2 workspace projects
+
+Done in 264ms using pnpm v11.1.2
+$ tsc --noEmit && eslint . --max-warnings 0

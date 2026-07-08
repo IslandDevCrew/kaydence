@@ -1,0 +1,27 @@
+[package]
+name = "kaydence"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Kaydence — local-first cross-platform AI dictation."
+default-run = "kaydence"
+
+[lib]
+name = "kaydence_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+ulid = { version = "1", features = ["serde"] }
+
+[features]
+# Feature-gated network surfaces stay OFF by default (non-negotiable #1).
+byok = []
+relay = []

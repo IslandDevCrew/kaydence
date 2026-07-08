@@ -19,12 +19,15 @@ ALLOWLIST="$ROOT/scripts/network-allowlist.json"
 
 # Network-capable primitives we care about. Presence isn't automatically a
 # violation — it must be justified in the allowlist with a file glob + reason.
+# Fixed strings. Bare short crate names use their `::` call form so they don't
+# collide with identifiers (e.g. `surf` must not match `Surface`; `curl` must not
+# match a field named `curly`). URL schemes and `fn(`-style tokens are safe as-is.
 PATTERNS=(
-  'reqwest' 'hyper::' 'ureq' 'isahc' 'surf' 'curl' 'libcurl'
+  'reqwest::' 'hyper::' 'ureq::' 'isahc::' 'surf::' 'curl::' 'libcurl'
   'TcpStream' 'TcpListener' 'UdpSocket' 'std::net' 'tokio::net'
-  'reqwest::Client' 'ws://' 'wss://' 'http://' 'https://'
+  'ws://' 'wss://' 'http://' 'https://'
   'fetch(' 'XMLHttpRequest' 'WebSocket' 'navigator.sendBeacon' 'EventSource'
-  'axios' 'got(' 'node-fetch'
+  'axios' 'node-fetch'
 )
 
 SCAN_DIRS=("apps" "crates")

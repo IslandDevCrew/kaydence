@@ -1,0 +1,8 @@
+{
+  "name": "kaydence-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

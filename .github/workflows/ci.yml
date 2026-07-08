@@ -15,6 +15,9 @@ jobs:
         with: { components: rustfmt, clippy }
       - uses: actions/setup-node@v4
         with: { node-version: lts/* }
+      - name: enable pnpm
+        run: corepack enable
+        shell: bash
       # --- Rust backend ---
       - name: fmt
         run: cargo fmt --all -- --check
@@ -25,13 +28,13 @@ jobs:
       - name: test
         run: cargo test --all
         working-directory: apps/desktop/src-tauri
-      # --- Frontend ---
+      # --- Frontend (pnpm workspace) ---
       - name: install
-        run: npm ci
-        working-directory: apps/desktop
+        shell: bash
+        run: pnpm install --frozen-lockfile
       - name: typecheck + lint
-        run: npm run check
-        working-directory: apps/desktop
+        shell: bash
+        run: bash scripts/check-frontend.sh
       # --- Gates (bash on all three runners incl. Windows Git Bash) ---
       - name: network audit (non-negotiable #1)
         shell: bash
