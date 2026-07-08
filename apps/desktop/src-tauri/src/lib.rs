@@ -20,6 +20,7 @@ pub mod engine;
 pub mod history;
 pub mod hotkeys;
 pub mod inject;
+pub mod models;
 pub mod pipeline;
 pub mod prediction;
 pub mod profiles;

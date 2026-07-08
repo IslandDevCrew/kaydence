@@ -1,0 +1,68 @@
+Kaydence model registry readiness slice
+Date: 2026-07-08
+Commit: pending at evidence capture
+
+Intent
+- Add a local-only model registry contract for Kaydence runtime artifacts.
+- Parse models/registry.json as the source of truth for ASR, VAD, cleanup, and
+  prediction model metadata.
+- Verify local artifacts with SHA-256 before declaring them ready.
+- Fail closed while registry checksums are TODO placeholders.
+- Do not add any download path or network surface in this slice.
+
+Implementation summary
+- Added apps/desktop/src-tauri/src/models/mod.rs.
+- Added ModelRegistry::load/from_json with schema-version and duplicate-id
+  validation.
+- Added ModelEntry::artifact_path with plain-filename enforcement to reject
+  path traversal and nested/absolute artifact paths.
+- Added ModelEntry::verify_artifact:
+  - returns PlaceholderChecksum when sha256 is missing or not 64 hex chars;
+  - returns Missing only after checksum metadata is usable;
+  - streams file content through SHA-256 and returns Ready only on exact match;
+  - returns ChecksumMismatch on mismatch.
+- Added first-run helper for recommended ASR/VAD artifact verification.
+- Added sha2 dependency for local hashing only.
+
+Registry state observed
+- models/registry.json parses successfully.
+- Recommended first-run candidates include:
+  - ASR: parakeet-v3, whisper-large-v3-turbo
+  - VAD: silero-vad
+- Current registry checksums remain TODO placeholders, so model readiness fails
+  closed by design until integration fills real artifact hashes.
+- Current model sources are also TODO placeholders; no download behavior was
+  introduced.
+
+Verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  Result: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml models:: --lib
+  Result: PASS, 7 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  Result: PASS, 69 lib tests + 2 crash-recovery tests
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  Result: PASS
+- npm test
+  Result: NOT A PROJECT GATE; root package has no test script
+- npm --prefix apps/desktop run check
+  Result: PASS
+- npm --prefix apps/desktop run build
+  Result: PASS
+- bash scripts/audit-network.sh --check
+  Result: PASS, 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  Result: PASS, all ADRs accepted except declared ADR-0009 waiver
+- ./script/build_and_run.sh build
+  Result: PASS
+- ./script/build_and_run.sh --verify
+  Result: PASS
+
+Post-verify cleanup
+- Confirmed no kaydence / cargo tauri dev / vite --host processes remained.
+- Removed generated apps/desktop/dist build artifacts from the working tree.
+
+Next boundary
+- Fill real model sources and SHA-256 values, then wire production adapters for
+  Silero VAD, Parakeet/Whisper local ASR, and BYOK fallback without weakening
+  the zero-egress default.
