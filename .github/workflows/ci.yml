@@ -5,7 +5,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]   # non-negotiable #5 — permanent
+        # non-negotiable #5 (ADR-0011) — 3-OS, permanent. Linux needs display-server +
+        # injection deps; Wayland/X11 injection tests run headless where possible.
+        os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

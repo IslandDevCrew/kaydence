@@ -87,9 +87,18 @@ modules allowed `#[cfg(target_os)]` blocks, each behind a trait:
 - Windows: UI Automation `ValuePattern`/`TextPattern` insertion; `SendInput`
   fallback; `GetForegroundWindow` + process name for profiles; RegisterHotKey
   / Raw Input for hotkeys.
+- Linux (ADR-0011, first-class): **two display-server backends** behind the same
+  `inject/` trait. **X11** — XTest key synthesis; `_NET_ACTIVE_WINDOW` + WM_CLASS
+  for frontmost-app profiles; XGrabKey for hotkeys. **Wayland** — virtual-keyboard
+  / input-method protocols (`zwp_virtual_keyboard_v1`, input-method-v2) and the
+  desktop portals (`org.freedesktop.portal.*`, `GlobalShortcuts`) where a
+  compositor exposes them; app detection via the portal / compositor where
+  permitted, else a documented degraded mode. Wayland is the highest platform
+  risk — spiked early in P1.
 
-The clipboard fallback is shared: snapshot → set → paste keystroke → restore,
-bounded at 200 ms, with the snapshot kept until restore confirms.
+The clipboard fallback is shared across all three OSes: snapshot → set → paste
+keystroke → restore, bounded at 200 ms, with the snapshot kept until restore
+confirms.
 
 ## 6. Cleanup stage design (the differentiator — treat as core IP)
 
@@ -163,3 +172,29 @@ emit/consume events only.
 `prediction_events` (extends `history/`): tokens, mode, surface, source, app, ts.
 Aggregations power a local dashboard (words merged, offered-vs-merged acceptance,
 by app, model). Local-only, exportable, deletable.
+
+## 9. Flagship trio (P4 — ADR-0009, PRD P4-1..P4-9)
+
+Three post-beta modules, each structurally dependent on the local-first core so a
+cloud incumbent cannot copy them without abandoning its architecture. All obey the
+event-contract coupling rule (§4) and the privacy line (non-negotiable #1).
+
+- **`voiceprint/` — on-device personalization (P4-1..P4-5).** Three layers:
+  corrections auto-learn into the dictionary (explicit confirm); the prediction
+  model is periodically **LoRA fine-tuned locally** on the user's merged/edited
+  history (idle/charging schedule, kill switch, one-tap reset, opt-in only);
+  proper nouns get acoustic biasing at recognition. The trained artifact is the
+  user's — exportable, inspectable, deletable, and carried E2E via Relay. Gate
+  (P4-5): a *measured* acceptance-rate lift vs. baseline or it does not advertise.
+- **`relay/` — cross-device continuity (P4-6, P4-7; ADR-0009).** mDNS discovery +
+  SAS short-code pairing; Noise_XX E2E transport; CRDT sync of dictionary /
+  profiles / Voiceprint / analytics; optional self-hostable rendezvous for
+  off-network. Gate (P4-2): ≤500 ms added latency on LAN, E2E, zero cloud.
+  Crypto design is a critical decision path — operator review before build.
+- **`conductor/` — voice control plane (P4-8, P4-9).** Built-in MCP server + agent
+  targets (Claude Code, Cursor, terminals, custom); per-agent profiles + command
+  grammars; spoken command palette; **fleet mode** via Relay (speak on the Mac,
+  drive the agent on the Windows NUC). Absolute safety invariant: destructive
+  spoken actions (delete/send/pay/deploy) **never auto-execute** — every one
+  requires explicit confirm. Gate (P4-8): confirm-gate suite 100%; a single
+  auto-executed destructive command is a release blocker.

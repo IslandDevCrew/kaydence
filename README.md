@@ -1,6 +1,6 @@
 # Kaydence (working title — domain: kaydence.io)
 
-Local-first, cross-platform AI dictation for macOS and Windows.
+Local-first, cross-platform AI dictation for macOS, Windows, and Linux.
 One hotkey → speak → clean text in any app. Private by architecture.
 Plus **Whisper-Ahead**: local predictive completion that stays off the line
 you're speaking on.

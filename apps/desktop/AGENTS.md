@@ -12,13 +12,13 @@ renders state and forwards intents; Rust owns truth. IPC surface = Tauri
 commands (intents in) + the `SessionEvent` stream (state out), mirrored to TS
 via generated types — never hand-write the TS event types.
 
-## Permissions choreography (first-run, both OSes)
+## Permissions choreography (first-run, all three OSes)
 - macOS: Microphone, Accessibility, Input Monitoring — request in that order,
   each with a plain-language why-screen; the app must remain useful enough to
   finish onboarding if a permission is deferred.
 - Windows: microphone privacy setting; no elevation required ever.
 
 ## Definition of done here
-Feature works on both OSes, first-run flow unbroken (P0-8: 60s to first
+Feature works on all three OSes, first-run flow unbroken (P0-8: 60s to first
 dictation), no new permissions without PRD trace, HUD overlay verified against
 fullscreen apps and multi-monitor setups.
