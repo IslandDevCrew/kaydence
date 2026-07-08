@@ -1,0 +1,10 @@
+node_modules/
+target/
+dist/
+*.gguf
+*.onnx
+*.bin
+models/*.gguf
+models/*.onnx
+models/weights/
+.DS_Store

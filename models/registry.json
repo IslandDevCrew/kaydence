@@ -1,0 +1,88 @@
+{
+  "_comment": "Model registry. No weights in git. App downloads on demand and verifies sha256 before load. sha256 values are PLACEHOLDERS — fill from the published artifact at integration time. ≥2 viable local ASR models at all times (ADR-0002); prediction models per ADR-0007.",
+  "schema_version": 1,
+  "models": [
+    {
+      "id": "parakeet-v3",
+      "task": "asr",
+      "lane": "cpu",
+      "runtime": "onnxruntime",
+      "file": "parakeet-v3-int8.onnx",
+      "sha256": "TODO",
+      "size_mb": 600,
+      "license": "Apache-2.0",
+      "min_hw": "any",
+      "recommended": true,
+      "sources": ["TODO_primary", "TODO_mirror"]
+    },
+    {
+      "id": "whisper-large-v3-turbo",
+      "task": "asr",
+      "lane": "gpu",
+      "runtime": "whisper.cpp",
+      "file": "ggml-large-v3-turbo-q5_0.bin",
+      "sha256": "TODO",
+      "size_mb": 1600,
+      "license": "MIT",
+      "min_hw": "metal_or_dgpu",
+      "recommended": true,
+      "sources": ["TODO_primary", "TODO_mirror"]
+    },
+    {
+      "id": "silero-vad",
+      "task": "vad",
+      "runtime": "onnxruntime",
+      "file": "silero_vad.onnx",
+      "sha256": "TODO",
+      "size_mb": 2,
+      "license": "MIT",
+      "min_hw": "any",
+      "recommended": true,
+      "sources": ["TODO_primary"]
+    },
+    {
+      "id": "qwen2.5-1.5b",
+      "task": "prediction",
+      "lane": "apple_silicon",
+      "runtime": "llama.cpp",
+      "file": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "sha256": "TODO",
+      "size_mb": 1100,
+      "license": "Apache-2.0",
+      "min_hw": "apple_silicon_or_gpu",
+      "recommended": true,
+      "default_for": ["macos"],
+      "sources": ["TODO_primary", "TODO_mirror"]
+    },
+    {
+      "id": "gemma3-1b",
+      "task": "prediction",
+      "lane": "windows_mid",
+      "runtime": "llama.cpp",
+      "file": "gemma-3-1b-it-q4_k_m.gguf",
+      "sha256": "TODO",
+      "size_mb": 850,
+      "license": "Gemma-Terms",
+      "license_review_required": true,
+      "min_hw": "any",
+      "recommended": true,
+      "default_for": ["windows_mid"],
+      "note": "Gemma Terms, not Apache. Legal review before commercial bundling. Download on demand; do not bundle.",
+      "sources": ["TODO_primary", "TODO_mirror"]
+    },
+    {
+      "id": "qwen3-0.6b",
+      "task": "prediction",
+      "lane": "cpu_floor",
+      "runtime": "llama.cpp",
+      "file": "qwen3-0.6b-q4_k_m.gguf",
+      "sha256": "TODO",
+      "size_mb": 480,
+      "license": "Apache-2.0",
+      "min_hw": "any",
+      "recommended": true,
+      "default_for": ["low_end", "cpu_only_windows"],
+      "sources": ["TODO_primary", "TODO_mirror"]
+    }
+  ]
+}
