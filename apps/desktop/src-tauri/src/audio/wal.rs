@@ -116,6 +116,13 @@ pub struct Recovered {
     pub samples: u64,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct WalSamples {
+    pub path: PathBuf,
+    pub sample_rate: u32,
+    pub samples: Vec<f32>,
+}
+
 /// Patch a (possibly crash-truncated) WAL file's header from its actual length
 /// so it is playable, returning the recovered sample count. Idempotent.
 pub fn recover(path: &Path) -> Result<Recovered, WalError> {
@@ -136,6 +143,10 @@ pub fn recover(path: &Path) -> Result<Recovered, WalError> {
             path.display()
         )));
     }
+    file.seek(SeekFrom::Start(0))?;
+    let mut header = [0u8; HEADER_LEN as usize];
+    file.read_exact(&mut header)?;
+    validate_recoverable_header_shape(path, &header)?;
     // Truncate any torn trailing byte (i16 samples are 2 bytes).
     let data_len = (actual_len - HEADER_LEN) & !1;
     file.set_len(HEADER_LEN + data_len)?;
@@ -145,6 +156,30 @@ pub fn recover(path: &Path) -> Result<Recovered, WalError> {
     Ok(Recovered {
         path: path.to_path_buf(),
         samples: data_len / 2,
+    })
+}
+
+/// Recover and read a WAL file back into the engine-facing 16 kHz mono f32
+/// boundary. This is intentionally separate from `WalWriter`: ASR consumes only
+/// audio that has already landed on disk.
+pub fn read_samples(path: &Path) -> Result<WalSamples, WalError> {
+    let recovered = recover(path)?;
+    let bytes = std::fs::read(path)?;
+    validate_wav_header(path, &bytes)?;
+    let data_len = u32::from_le_bytes(bytes[40..44].try_into().unwrap()) as usize;
+    let samples = bytes[HEADER_LEN as usize..HEADER_LEN as usize + data_len]
+        .chunks_exact(2)
+        .map(|chunk| {
+            let sample = i16::from_le_bytes([chunk[0], chunk[1]]);
+            (sample as f32 / i16::MAX as f32).clamp(-1.0, 1.0)
+        })
+        .collect::<Vec<_>>();
+
+    debug_assert_eq!(samples.len() as u64, recovered.samples);
+    Ok(WalSamples {
+        path: recovered.path,
+        sample_rate: SAMPLE_RATE,
+        samples,
     })
 }
 
@@ -188,6 +223,86 @@ fn wav_header(data_len: u32) -> [u8; 44] {
     h[36..40].copy_from_slice(b"data");
     h[40..44].copy_from_slice(&data_len.to_le_bytes());
     h
+}
+
+fn validate_wav_header(path: &Path, bytes: &[u8]) -> Result<(), WalError> {
+    if bytes.len() < HEADER_LEN as usize {
+        return Err(WalError::NotRecoverable(format!(
+            "{}: {} bytes is shorter than a WAV header",
+            path.display(),
+            bytes.len()
+        )));
+    }
+
+    if &bytes[0..4] != b"RIFF" || &bytes[8..12] != b"WAVE" || &bytes[12..16] != b"fmt " {
+        return Err(WalError::NotRecoverable(format!(
+            "{}: missing canonical WAV header",
+            path.display()
+        )));
+    }
+    if &bytes[36..40] != b"data" {
+        return Err(WalError::NotRecoverable(format!(
+            "{}: missing data chunk",
+            path.display()
+        )));
+    }
+
+    let pcm = u16::from_le_bytes(bytes[20..22].try_into().unwrap());
+    let channels = u16::from_le_bytes(bytes[22..24].try_into().unwrap());
+    let sample_rate = u32::from_le_bytes(bytes[24..28].try_into().unwrap());
+    let bits = u16::from_le_bytes(bytes[34..36].try_into().unwrap());
+    let data_len = u32::from_le_bytes(bytes[40..44].try_into().unwrap()) as usize;
+    if pcm != 1 || channels != CHANNELS || sample_rate != SAMPLE_RATE || bits != BITS_PER_SAMPLE {
+        return Err(WalError::NotRecoverable(format!(
+            "{}: unsupported WAV format pcm={} channels={} rate={} bits={}",
+            path.display(),
+            pcm,
+            channels,
+            sample_rate,
+            bits
+        )));
+    }
+    if HEADER_LEN as usize + data_len != bytes.len() {
+        return Err(WalError::NotRecoverable(format!(
+            "{}: data length {} does not match file length {}",
+            path.display(),
+            data_len,
+            bytes.len()
+        )));
+    }
+    Ok(())
+}
+
+fn validate_recoverable_header_shape(
+    path: &Path,
+    header: &[u8; HEADER_LEN as usize],
+) -> Result<(), WalError> {
+    if &header[0..4] != b"RIFF"
+        || &header[8..12] != b"WAVE"
+        || &header[12..16] != b"fmt "
+        || &header[36..40] != b"data"
+    {
+        return Err(WalError::NotRecoverable(format!(
+            "{}: missing canonical WAV header",
+            path.display()
+        )));
+    }
+
+    let pcm = u16::from_le_bytes(header[20..22].try_into().unwrap());
+    let channels = u16::from_le_bytes(header[22..24].try_into().unwrap());
+    let sample_rate = u32::from_le_bytes(header[24..28].try_into().unwrap());
+    let bits = u16::from_le_bytes(header[34..36].try_into().unwrap());
+    if pcm != 1 || channels != CHANNELS || sample_rate != SAMPLE_RATE || bits != BITS_PER_SAMPLE {
+        return Err(WalError::NotRecoverable(format!(
+            "{}: unsupported WAV format pcm={} channels={} rate={} bits={}",
+            path.display(),
+            pcm,
+            channels,
+            sample_rate,
+            bits
+        )));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -282,6 +397,41 @@ mod tests {
         drop(w);
         let r = recover(&path).unwrap();
         assert_eq!(r.samples as usize, n);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_samples_recovers_and_decodes_wal_for_engine_input() {
+        let dir = tmp();
+        let expected = [-1.0f32, -0.5, 0.0, 0.5, 1.0];
+        let mut w = WalWriter::create(&dir, "01READ").unwrap();
+        w.append(&expected).unwrap();
+        let path = w.path().to_path_buf();
+        drop(w); // no finalize: read_samples must recover before reading
+
+        let decoded = read_samples(&path).unwrap();
+
+        assert_eq!(decoded.path, path);
+        assert_eq!(decoded.sample_rate, SAMPLE_RATE);
+        assert_eq!(decoded.samples.len(), expected.len());
+        for (actual, expected) in decoded.samples.iter().zip(expected) {
+            assert!((actual - expected).abs() < 0.001);
+        }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_samples_rejects_wrong_wav_shape() {
+        let dir = tmp();
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("bad.wav");
+        let mut header = wav_header(0);
+        header[22..24].copy_from_slice(&2u16.to_le_bytes());
+        std::fs::write(&path, header).unwrap();
+
+        let err = read_samples(&path).unwrap_err();
+
+        assert!(matches!(err, WalError::NotRecoverable(_)));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

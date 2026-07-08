@@ -25,6 +25,24 @@ pub struct AsrRequest {
     pub dictionary_hints: Vec<String>,
 }
 
+impl AsrRequest {
+    pub fn new(
+        id: SessionId,
+        sample_rate: u32,
+        start_sample: u64,
+        samples: Vec<f32>,
+        dictionary_hints: Vec<String>,
+    ) -> Self {
+        Self {
+            id,
+            sample_rate,
+            start_sample,
+            samples,
+            dictionary_hints,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PartialTranscript {
     pub text: String,
@@ -206,13 +224,13 @@ mod tests {
     }
 
     fn request(id: SessionId) -> AsrRequest {
-        AsrRequest {
+        AsrRequest::new(
             id,
-            sample_rate: 16_000,
-            start_sample: 0,
-            samples: vec![0.1, 0.2, 0.1],
-            dictionary_hints: vec!["Kaydence".to_string()],
-        }
+            16_000,
+            0,
+            vec![0.1, 0.2, 0.1],
+            vec!["Kaydence".to_string()],
+        )
     }
 
     #[derive(Clone)]
@@ -279,6 +297,18 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[test]
+    fn request_constructor_preserves_audio_boundary_metadata() {
+        let id = session_id();
+        let request = AsrRequest::new(id, 16_000, 4_000, vec![0.1, -0.1], vec!["IDC".into()]);
+
+        assert_eq!(request.id, id);
+        assert_eq!(request.sample_rate, 16_000);
+        assert_eq!(request.start_sample, 4_000);
+        assert_eq!(request.samples, vec![0.1, -0.1]);
+        assert_eq!(request.dictionary_hints, vec!["IDC"]);
     }
 
     #[test]

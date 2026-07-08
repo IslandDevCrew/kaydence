@@ -1,0 +1,44 @@
+Kaydence WAL readback -> engine request bridge evidence
+Date: 2026-07-08 18:27 CDT / 2026-07-08T18:27:07-0500
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Added `audio::wal::read_samples`, which recovers a WAL file first and then
+  decodes the canonical 16 kHz mono i16 WAV back into engine-facing f32 samples.
+- Added `WalSamples` with path, sample rate, and decoded samples.
+- Tightened `recover()` so it still patches stale/torn lengths but no longer
+  normalizes an invalid WAV shape into Kaydence's canonical header. Wrong PCM
+  shape is rejected instead.
+- Added `AsrRequest::new` so future coordinator code can preserve the audio
+  boundary metadata when handing VAD speech samples to an engine adapter.
+
+Fresh tests added:
+- audio::wal::tests::read_samples_recovers_and_decodes_wal_for_engine_input
+- audio::wal::tests::read_samples_rejects_wrong_wav_shape
+- engine::tests::request_constructor_preserves_audio_boundary_metadata
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml 'audio::wal::tests::read_samples' --lib:
+  PASS after tightening recovery shape validation
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml 'engine::tests::request_constructor' --lib:
+  PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 59 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 61 total backend tests PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings:
+  PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design
+  Proposed exception
+- ./script/build_and_run.sh build: PASS
+- ./script/build_and_run.sh --verify: PASS on macOS; Tauri dev process stayed
+  alive long enough for process verification, then was cleaned up.
+
+Important boundary:
+- This slice creates the disk-to-engine audio read path. It does not yet run
+  VAD over finalized captures or invoke a model adapter.
+- WAL still remains the first sink for audio. ASR consumers read only samples
+  that have landed on disk and survived recovery/format validation.
