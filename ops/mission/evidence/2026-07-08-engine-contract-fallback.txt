@@ -1,0 +1,56 @@
+Kaydence ASR engine contract and fallback evidence
+Date: 2026-07-08 18:22 CDT / 2026-07-08T18:22:49-0500
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Replaced the engine-only placeholder surface with a dependency-free ASR
+  contract:
+  - `AsrRequest`
+  - `AsrTranscript`
+  - streaming `PartialTranscript`
+  - `AsrEngine` trait
+  - `EngineLane` values for BYOK cloud, local GPU, and local CPU
+  - `EngineStack` fallback runner
+- Added transcript-to-`SessionEvent` mapping:
+  - partials emit before `RawFinal`
+  - raw final output is preserved verbatim
+  - empty finals are rejected
+  - high no-speech probability rejects likely hallucinated finals
+- Added fallback behavior per ADR-0002 / engine AGENTS:
+  - try BYOK cloud if configured
+  - fall back to local GPU
+  - fall back to local CPU
+  - report terminal failure only after configured engines fail
+- No model runtime dependency was added. Parakeet, Whisper, and BYOK adapters
+  remain future implementation slices.
+
+Fresh tests added:
+- engine::tests::transcript_maps_partials_before_raw_final
+- engine::tests::fallback_chain_uses_local_cpu_after_cloud_timeout_and_gpu_unavailable
+- engine::tests::no_speech_probability_rejects_final
+- engine::tests::empty_transcript_is_rejected
+- engine::tests::all_engines_failed_reports_terminal_failure
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml engine:: --lib:
+  PASS, 5 engine tests
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 56 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 58 total backend tests PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings:
+  PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design
+  Proposed exception
+- ./script/build_and_run.sh build: PASS
+- ./script/build_and_run.sh --verify: PASS on macOS; Tauri dev process stayed
+  alive long enough for process verification, then was cleaned up.
+
+Important boundary:
+- This slice proves the ASR contract and fallback policy, not model inference.
+- No audio is transcribed yet; no Parakeet/Whisper/BYOK adapter has been wired.
+- The next engine slice can now target `AsrEngine` without changing event
+  contracts.
