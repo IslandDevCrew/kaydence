@@ -1,0 +1,44 @@
+P0-T6 gate scripts — verification, 2026-07-07
+host: Darwin 25.5.0 arm64; GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)
+
+### check-adr-status.sh
+== ADR status check ==
+  0001   OK    (Accepted)
+  0002   OK    (Accepted)
+  0003   OK    (Accepted)
+  0004   OK    (Accepted)
+  0005   OK    (Accepted)
+  0006   OK    (Accepted)
+  0007   OK    (Accepted)
+  0008   OK    (Accepted)
+  0009   WAIVE (Proposed by design: Relay crypto — critical decision path; operator review gates P4-1)
+  0010   OK    (Accepted)
+  0011   OK    (Accepted)
+RESULT: PASS — all ADRs Accepted except declared by-design exceptions: 0009 
+exit=0
+
+### audit-network.sh (current tree, empty)
+== Kaydence network audit ==
+root: /Users/IDC2.5/Kaydence/kaydence
+no Rust/TS source under apps crates yet — nothing to audit (clean pass).
+RESULT: PASS (0 network call sites; 0 unreviewed)
+exit=0
+
+### bench.sh --check (pre-scaffold)
+== bench.sh ==
+no built --bench binary at: /Users/IDC2.5/Kaydence/kaydence/apps/desktop/src-tauri/target/release/kaydence
+Build the app first (P0-T2+), then this gate measures vs root AGENTS §5:
+{
+  "hotkey_to_capture_ms": 50,
+  "partial_lag_ms": 300,
+  "release_to_inject_gpu_ms": 700,
+  "release_to_inject_cpu_ms": 1200,
+  "light_cleanup_added_ms": 800,
+  "prediction_guess_ms": 400,
+  "idle_ram_mb": 250,
+  "idle_cpu_pct": 1
+}
+RESULT: SKIP (no build to bench) — gate not measurable until the pipeline exists.
+exit=3 (3=not-measurable-yet)
+
+### audit-network.sh synthetic FAIL test: VERIFIED exit=1 on an unreviewed std::net call outside the allowlist; PASS exit=0 for allowlisted engine/byok. (see session transcript)

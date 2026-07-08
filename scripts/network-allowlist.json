@@ -1,0 +1,34 @@
+{
+  "_comment": "Reviewed network surfaces (non-negotiable #1). audit-network.sh fails on any network-capable call site whose path does not match a 'file' glob here. Every entry needs an ADR reference and a user-toggle note. Empty by default — the app ships with zero egress; features add entries only with an ADR + a settings kill switch.",
+  "schema_version": 1,
+  "allow": [
+    {
+      "file": "engine/byok",
+      "reason": "P1-5 BYOK ASR lanes (Groq/Deepgram) — opt-in, user-configured endpoint only, per-lane kill switch.",
+      "adr": "ADR-0002",
+      "toggle": "settings.byok.asr.enabled (default false)",
+      "status": "planned"
+    },
+    {
+      "file": "cleanup/byok",
+      "reason": "P1-5 BYOK cleanup (OpenAI-compatible / local Ollama) — opt-in, user endpoint only, kill switch.",
+      "adr": "ADR-0003",
+      "toggle": "settings.byok.cleanup.enabled (default false)",
+      "status": "planned"
+    },
+    {
+      "file": "models/download",
+      "reason": "On-demand model downloads from configured mirrors, checksum-verified (no weights in git).",
+      "adr": "ADR-0002",
+      "toggle": "implicit on first model fetch; mirrors in models/registry.json",
+      "status": "planned"
+    },
+    {
+      "file": "relay",
+      "reason": "P4 Relay — E2E-encrypted device-to-device sync + optional self-hostable rendezvous. Egress only to paired peers or the user's rendezvous endpoint.",
+      "adr": "ADR-0009",
+      "toggle": "settings.relay.enabled (default false); pairing required",
+      "status": "planned (ADR-0009 Proposed — build gated on operator crypto review)"
+    }
+  ]
+}
