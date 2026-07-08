@@ -1,0 +1,14 @@
+== ADR status check ==
+  0001   OK    (Accepted)
+  0002   OK    (Accepted)
+  0003   OK    (Accepted)
+  0004   OK    (Accepted)
+  0005   OK    (Accepted)
+  0006   OK    (Accepted)
+  0007   OK    (Accepted)
+  0008   OK    (Accepted)
+  0009   WAIVE (Proposed by design: Relay crypto — critical decision path; operator review gates P4-1)
+  0010   OK    (Accepted)
+  0011   OK    (Accepted)
+  0012   OK    (Accepted)
+RESULT: PASS — all ADRs Accepted except declared by-design exceptions: 0009 
