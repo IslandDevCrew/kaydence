@@ -73,3 +73,9 @@
 - Authored prompts/P1-CAPTURE-INJECTION-PROMPT.md — the fable-safe build prompt for P1-P0-1 (hotkey capture: TranscriptionCoordinator single-thread+30ms debounce, PTT+toggle, 250ms/300ms, WAL-before-ASR) and P1-P0-3 (universal injection: Wayland-spike-FIRST, then X11/macOS-AX/Win-UIA, one TextInjector trait, clipboard snapshot-restore <=200ms, and secure-field refusal as a hard per-OS tested invariant). Security bar written as tested invariants; every dep/platform decision routed through audit-network + ADR + operator HALT.
 - Icon note: the icons committed are a DEV-GRADE programmatic crop of the Option 1 board (good enough to make CI + the app window correct); production-grade multi-res icon polish + Linux hicolor/tray template stays with P3 installers per ADR-0012.
 - Next: push main -> confirm first green 3-OS run -> close P0-G6 with the run URL. Then run the P1 prompt (P1-P0-1 and the P1-P0-3 Wayland spike).
+
+## 2026-07-08T09:27Z — session 2 (P0-G6 CLOSED — first 3-OS CI green)
+- Pushed main (281d897); CI run 28931588048 came back GREEN on all three legs: macos 2m20s, ubuntu 5m31s, windows 9m48s. This is the P0 exit gate that had been the mission's #1 blocker since bootstrap.
+- Closed P0-G6 (3-OS CI) and P0-G3 (3-OS backend test — now actually verified on Win+Linux, not just macOS) with evidence ops/mission/evidence/P0-G6-3os-green-2026-07-08.txt (run URL + SHA + per-leg timings). Metric "Platform parity (CI legs green)" 1/3 -> 3/3.
+- P0 is down to a SINGLE open item: P0-G5 (windowed `cargo tauri dev` visually confirmed on Win+Linux), which is a hardware check headless CI cannot do — needs the reference machines. Everything else in P0 is green. Blocked-reason + blockers reduced accordingly.
+- Net: the two long-standing "high" infra risks (no remote; macOS-only host) are gone; one medium hardware check remains. The repo now builds, tests, and gates green on all three OSes on every push. Clear runway for the P1 input-layer build.

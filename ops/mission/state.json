@@ -69,7 +69,7 @@
       "title": "Toolchain & law",
       "goal": "Bootstrap Tauri on all three OSes, stand up the 3-OS CI matrix (macOS + Windows + Linux), complete the Handy study pass (ADR-0004), reconcile the repo docs from v2 to v3, and get ADRs 1-10 accepted. Exit: `cargo tauri dev` opens on all three OSes; CI green.",
       "status": "blocked",
-      "blockedReason": "7/7 tasks done; every locally-runnable gate green on macOS. INFRA ARRIVED 2026-07-08: GitHub remote + 3-OS Actions CI are live. First runs failed (pnpm-11 approvals + missing icon.ico) — both fixed on main. P0-G6 closes on the first green 3-OS run; P0-G5 (windowed cargo tauri dev on Win+Linux) remains the only piece still needing the reference machines. P1 proceeds in parallel per plan.",
+      "blockedReason": "7/7 tasks done. 6 of 7 gates PASS incl. P0-G6 (3-OS CI GREEN, run 28931588048, 2026-07-08) and P0-G3 (3-OS test via CI). ONLY P0-G5 remains — windowed `cargo tauri dev` visually confirmed on Win+Linux — which needs the physical reference machines (headless CI can't verify a window opens). Down from two high infra risks to one hardware check; P1 is active in parallel.",
       "sessionsEstimate": "1-2 weeks",
       "gates": [
         {
@@ -95,9 +95,9 @@
           "title": "cargo test --all (backend)",
           "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all",
           "status": "passed",
-          "evidence": "ops/mission/evidence/P0-T2-backend-gates-2026-07-07.txt",
-          "lastRun": "2026-07-07T03:40:00Z",
-          "notes": "PASS macOS: 4/4 event tests. Win+Linux via CI (waived-pending-infra)."
+          "evidence": "ops/mission/evidence/P0-G6-3os-green-2026-07-08.txt",
+          "lastRun": "2026-07-08T09:26:27Z",
+          "notes": "PASS on all three OS legs via CI run 28931588048 (was macOS-only; Win+Linux now verified). Includes the WAL crash_recovery suite."
         },
         {
           "id": "P0-G4",
@@ -121,10 +121,10 @@
           "id": "P0-G6",
           "title": "3-OS CI matrix green (macOS + Windows + Linux) on the current HEAD",
           "command": "gh run list --branch main --limit 1",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "Requires a GitHub remote + Actions. None configured. CI yaml is currently 2-OS (macOS+Windows); Linux leg must be added (P0-T5). Blocker until remote exists."
+          "status": "passed",
+          "evidence": "ops/mission/evidence/P0-G6-3os-green-2026-07-08.txt",
+          "lastRun": "2026-07-08T09:26:27Z",
+          "notes": "PASS — run 28931588048 GREEN on all three legs (macos 2m20s, ubuntu 5m31s, windows 9m48s) at HEAD 281d897. Closed after fixing the two first-run failures (pnpm-11 allowBuilds approval; Windows icon.ico from the ADR-0012 mark). CI is now the standing Win/Linux trust anchor."
         },
         {
           "id": "P0-G7",
@@ -410,7 +410,7 @@
     { "label": "Prediction: pause -> guess", "baseline": "Mac-only (Cotypist MLX)", "current": "n/a", "target": "<=400ms, 3-OS (llama.cpp)", "direction": "down" },
     { "label": "Cross-device continuity (Relay)", "baseline": "cloud-only or none", "current": "n/a", "target": "<=500ms added on LAN, E2E, zero cloud", "direction": "down" },
     { "label": "Agent-command safety (Conductor)", "baseline": "no comparable product", "current": "n/a", "target": "confirm-gate 100%; 0 auto-exec destructive", "direction": "up" },
-    { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "1 / 3 (macOS local; Win+Linux need CI)", "target": "3 / 3 incl. Wayland", "direction": "up" },
+    { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "3 / 3 (CI green 2026-07-08)", "target": "3 / 3 incl. Wayland", "direction": "up" },
     { "label": "ADRs accepted (0009 Proposed by design)", "baseline": "8", "current": "11 of 12", "target": "12 (0009 after crypto review)", "direction": "up" },
     { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "7", "target": "7", "direction": "up" },
     { "label": "Standing-gate scripts present", "baseline": "1 (bench-prediction)", "current": "4 (+bench, audit-network, check-adr)", "target": "5 (+release)", "direction": "up" },
@@ -442,7 +442,7 @@
     "activePhase": "P1",
     "nextActions": [
       "P1 IS ACTIVE. Next build targets: P1-P0-1 global hotkey (adopt Handy's TranscriptionCoordinator: single thread + 30ms debounce, min-capture 250ms, tail 300ms — Pitfall P1) and P1-P0-3 universal injection (CRITICAL PATH; Wayland spike FIRST — highest platform risk; then macOS AX, Win UIA+SendInput; clipboard fallback snapshot-restore <=200ms; secure-field refusal). Use prompts/P1-CAPTURE-INJECTION-PROMPT.md — the fable-safe build prompt for both tasks. Each new dependency (global-shortcut plugin, platform crates) = audit-network allowlist + ADR note per policy.",
-      "CI: push main and confirm the 3-OS run goes green -> close P0-G6 with the run URL as evidence. PR #1 auto-resolves merged (its commit is on main).",
+      "CI: DONE — 3-OS run 28931588048 GREEN 2026-07-08; P0-G6 + P0-G3 closed with evidence. Keep every future push green; CI is the Win/Linux trust anchor now.",
       "DESIGN LOCKED (2026-07-08): Visual System v1 is the build reference — 5 logo directions + 10 screen-family boards × 3 OS = 30 views (see designDirection in state.json and the report at /Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html). P1-D1 + P1-D2 DONE 2026-07-08: pack vendored to assets/brand/ with index at docs/design/README.md, and the identity is LOCKED (ADR-0012 Accepted) — Option 1 K Waveform is the sole product mark, Option 4 the wordmark/site header, three binding unification rules. Build each screen to its family board with the Option 1 mark in the reserved slot; OS accent stays the only free-tier variation. Every phase has a screen-family fidelity gate (P1-G4, P2-G3, P3-G4, P4-G-SCREENS). Multi-resolution icon production (icns/ico/hicolor + tray template from the Option 1 mark) lands with P3 installer work.",
       "P0 is 6/7 tasks done. The Tauri scaffold compiles and ALL locally-runnable gates are green on macOS: cargo fmt/clippy/test, frontend tsc+eslint, audit-network, ADR-status. Merges: bootstrap, ADRs, v3 docs, gate scripts, Handy study, scaffold.",
       "LAST P0 TASK — P0-T5: add the Linux system-deps step to CI (ubuntu: libwebkit2gtk-4.1-dev, libgtk-3-dev, libayatana-appindicator3-dev, librsvg2-dev, patchelf; + gtk-layer-shell per ADR-0004). Matrix already includes ubuntu-latest. Cannot be verified on this macOS host.",
@@ -451,8 +451,7 @@
       "When adding real ASR/audio deps in P1 (cpal, ort, whisper.cpp, vad-rs), each is a critical-path dependency add -> audit-network allowlist + ADR per the ADR-0004 study."
     ],
     "blockers": [
-      "P0-G6 awaits the first green 3-OS CI run of main (fixes for both first-run failures pushed 2026-07-08).",
-      "P0-G5 (windowed cargo tauri dev on Win/Linux) still needs the physical reference machines — headless CI can't verify a window opens.",
+      "P0-G5 (windowed cargo tauri dev on Win/Linux) still needs the physical reference machines — headless CI can't verify a window opens. This is now the ONLY open P0 exit gate (P0-G6 3-OS CI closed GREEN 2026-07-08).",
       "P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.",
       "Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).",
       "ADR-0009 (Relay crypto) operator review required before the P4-1 build.",
