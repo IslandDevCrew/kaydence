@@ -20,3 +20,10 @@
 - audit-network.sh caught its own bug under test: patterns like 'fetch(' broke ERE alternation so grep errored and `|| true` swallowed it into a false PASS — a privacy gate silently passing. Switched to fixed-string (-F -e); verified it now FAILs on a planted std::net call. Also fixed bash-3.2 portability (macOS default: no `declare -A`/`mapfile`) across all three scripts.
 - Handy study surprise: Handy already ships Linux (gtk-layer-shell + vulkan) — validates ADR-0011. Big adopt = TranscriptionCoordinator (single thread + 30ms debounce) as the answer to hotkey-race Pitfall P1. Big lesson = pyke ONNX AVX2 static-init crash on pre-Haswell CPUs (matters for our Win CPU-first Parakeet lane).
 - Next: P0-T2 Tauri scaffold (critical path; heavy install). macOS build/test legs verifiable here; Win/Linux + tauri-dev stay waived-pending-infra.
+
+## 2026-07-07T04:00Z — session 1 (P0 scaffold)
+- Merged P0-T2 (Tauri 2.11.5 scaffold: Cargo+pnpm workspaces, React/TS/Vite front) + P0-T3 (SessionEvent contract in events.rs, 11 module stubs). 6/7 P0 tasks done.
+- Verified crates.io + npm reachable; full `cargo check --all-targets` compiles (425 pkgs) on macOS. All local gates green: fmt/clippy (fixed derivable_impls)/test 4/4, frontend tsc+eslint, audit-network, adr-status.
+- pnpm-11 friction: build-script approval blocked `pnpm install`/`run` (esbuild). Resolved via root package.json onlyBuiltDependencies + rebuild; added scripts/check-frontend.sh as the robust P0-G4 gate (runs local tsc/eslint binaries).
+- audit-network caught a second self-bug: `surf` (HTTP crate) substring-matched "Surface" in events.rs -> false positive. Tightened patterns to `::` call-forms; re-verified it still FAILs on a planted reqwest:: call.
+- P0 now blocked only by exit gates G5 (tauri dev on Win/Linux) + G6 (3-OS CI) — waived-pending-infra on this macOS-only host. Natural P0->P1 operator checkpoint after P0-T5.

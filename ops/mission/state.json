@@ -10,7 +10,7 @@
     "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
     "status": "active",
     "started": "2026-07-07",
-    "updated": "2026-07-07T02:45:00Z",
+    "updated": "2026-07-07T04:00:00Z",
     "sessionCount": 1
   },
   "policies": {
@@ -31,37 +31,37 @@
           "id": "P0-G1",
           "title": "cargo fmt clean (backend)",
           "command": "cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "No Cargo workspace exists yet — command will fail until the Tauri app is scaffolded (P0-T2)."
+          "status": "passed",
+          "evidence": "ops/mission/evidence/P0-T2-backend-gates-2026-07-07.txt",
+          "lastRun": "2026-07-07T03:40:00Z",
+          "notes": "PASS on macOS leg. Windows+Linux legs require CI (waived-pending-infra)."
         },
         {
           "id": "P0-G2",
           "title": "cargo clippy -D warnings (backend)",
           "command": "cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": ""
+          "status": "passed",
+          "evidence": "ops/mission/evidence/P0-T2-backend-gates-2026-07-07.txt",
+          "lastRun": "2026-07-07T03:40:00Z",
+          "notes": "PASS on macOS leg (fixed derivable_impls). Win+Linux via CI."
         },
         {
           "id": "P0-G3",
           "title": "cargo test --all (backend)",
           "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "Locally verifiable on macOS only; Windows + Linux legs require CI runners (blocker)."
+          "status": "passed",
+          "evidence": "ops/mission/evidence/P0-T2-backend-gates-2026-07-07.txt",
+          "lastRun": "2026-07-07T03:40:00Z",
+          "notes": "PASS macOS: 4/4 event tests. Win+Linux via CI (waived-pending-infra)."
         },
         {
           "id": "P0-G4",
-          "title": "npm run check (frontend typecheck + lint)",
-          "command": "npm --prefix apps/desktop run check",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": ""
+          "title": "frontend typecheck + lint (tsc --noEmit + eslint)",
+          "command": "bash scripts/check-frontend.sh",
+          "status": "passed",
+          "evidence": "ops/mission/evidence/P0-G4-frontend.log",
+          "lastRun": "2026-07-07T03:50:00Z",
+          "notes": "PASS. Gate is check-frontend.sh (runs local tsc+eslint binaries) — robust vs pnpm-11 build-approval friction. pnpm run check also green after esbuild allowlisted in root package.json."
         },
         {
           "id": "P0-G5",
@@ -103,18 +103,18 @@
         {
           "id": "P0-T2",
           "title": "Scaffold Tauri 2.x app (React+TS) into apps/desktop, preserving src-tauri/src/<module>/ dirs and every AGENTS.md; wire pnpm-workspace.yaml + Cargo workspace (apps/desktop/src-tauri + crates/*)",
-          "status": "pending",
+          "status": "done",
           "dependsOn": ["P0-T1"],
-          "pr": null,
-          "notes": "SCAFFOLD.md steps 1-2. CRITICAL PATH — introduces the entire dependency set (new deps). Per SCAFFOLD.md step 3: cpal, ort, whisper.cpp FFI, silero-vad, rusqlite, thiserror, ulid, global-hotkey."
+          "pr": { "number": null, "url": "local:efdf6f7", "mergedAt": "2026-07-07" },
+          "notes": "DONE (macOS leg verified). tauri 2.11.5 workspace + React/TS/Vite + pnpm lockfile. cargo check --all-targets PASS (425 pkgs), fmt/clippy/test green, pnpm run check green. Base deps (serde/thiserror/ulid) only so far; heavy ASR/audio deps (cpal/ort/whisper.cpp/vad-rs) land per-target in P1 per the ADR-0004 Cargo matrix. Win/Linux legs waived-pending-infra."
         },
         {
           "id": "P0-T3",
           "title": "Create mod.rs stubs per backend module exposing the typed SessionEvent contract (docs/ARCHITECTURE.md §4) with todo!() bodies, so the event contract compiles before feature work",
-          "status": "pending",
+          "status": "done",
           "dependsOn": ["P0-T2"],
-          "pr": null,
-          "notes": "SCAFFOLD.md step 6. Event-contract definition is a critical path (JUDGE-AUDITOR #7)."
+          "pr": { "number": null, "url": "local:efdf6f7", "mergedAt": "2026-07-07" },
+          "notes": "DONE. events.rs = typed SessionEvent (§4 + §6b prediction events) + 4 unit tests (serde round-trip, secure-field hold, dial default, id routing) — verified in isolation AND in-crate. 11 module mod.rs stubs expose the contract with todo!() bodies. Divergence: at_ms:u64 instead of Instant (serializable) — documented."
         },
         {
           "id": "P0-T4",
@@ -320,16 +320,16 @@
     }
   ],
   "metrics": [
-    { "label": "Product code (Rust+TS lines)", "baseline": "0", "current": "0", "target": ">0 buildable app", "direction": "up" },
+    { "label": "Product code (Rust+TS lines)", "baseline": "0", "current": "~500 (scaffold compiles)", "target": "buildable app", "direction": "up" },
     { "label": "Idle footprint (RAM, ASR resident)", "baseline": "~800 MB (Wispr Electron)", "current": "n/a", "target": "<=250 MB", "direction": "down" },
     { "label": "Release -> injected, local (Raw)", "baseline": "2-5 s (Handy)", "current": "n/a", "target": "<=700ms GPU / <=1200ms CPU", "direction": "down" },
     { "label": "Zero-edit rate at Light cleanup", "baseline": "raw output", "current": "n/a", "target": ">=95% golden corpus", "direction": "up" },
     { "label": "Prediction: pause -> guess", "baseline": "Mac-only (Cotypist MLX)", "current": "n/a", "target": "<=400ms, 3-OS (llama.cpp)", "direction": "down" },
     { "label": "Cross-device continuity (Relay)", "baseline": "cloud-only or none", "current": "n/a", "target": "<=500ms added on LAN, E2E, zero cloud", "direction": "down" },
     { "label": "Agent-command safety (Conductor)", "baseline": "no comparable product", "current": "n/a", "target": "confirm-gate 100%; 0 auto-exec destructive", "direction": "up" },
-    { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "0 / 3", "target": "3 / 3 incl. Wayland", "direction": "up" },
+    { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "1 / 3 (macOS local; Win+Linux need CI)", "target": "3 / 3 incl. Wayland", "direction": "up" },
     { "label": "ADRs accepted (0009 Proposed by design)", "baseline": "8", "current": "10", "target": "10", "direction": "up" },
-    { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "4", "target": "7", "direction": "up" },
+    { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "6", "target": "7", "direction": "up" },
     { "label": "Standing-gate scripts present", "baseline": "1 (bench-prediction)", "current": "4 (+bench, audit-network, check-adr)", "target": "5 (+release)", "direction": "up" }
   ],
   "risks": [
@@ -345,16 +345,17 @@
     { "number": null, "title": "v3 ADRs 0009 (Relay, Proposed) / 0010 (pricing) / 0011 (Linux 3-OS)", "url": "local:4848306", "phase": "P0", "mergedAt": "2026-07-07" },
     { "number": null, "title": "v2->v3 doc reconciliation (3-OS constitution/PRD/ROADMAP/architecture/CI)", "url": "local:3a0572e", "phase": "P0", "mergedAt": "2026-07-07" },
     { "number": null, "title": "P0-T6 standing-gate scripts (audit-network working, bench, check-adr-status)", "url": "local:0258de3", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "P0-T4 Handy study -> ADR-0004 adopt/redesign notes", "url": "local:p0-t4", "phase": "P0", "mergedAt": "2026-07-07" }
+    { "number": null, "title": "P0-T4 Handy study -> ADR-0004 adopt/redesign notes", "url": "local:p0-t4", "phase": "P0", "mergedAt": "2026-07-07" },
+    { "number": null, "title": "P0-T2/T3 Tauri scaffold + SessionEvent contract (macOS gates green)", "url": "local:efdf6f7", "phase": "P0", "mergedAt": "2026-07-07" }
   ],
   "resume": {
     "activePhase": "P0",
     "nextActions": [
-      "DONE so far in P0: T1 (v3 docs), T7 (ADRs 0009/0010/0011), T6 (gate scripts, audit-network verified working), T4 (Handy study -> ADR-0004). 4/7 P0 tasks. P0-G7 gate passes.",
-      "NEXT — P0-T2 scaffold the Tauri 2.x app. Approach validated by the Handy study: React+TS front; Cargo workspace (apps/desktop/src-tauri + crates/*) + pnpm-workspace.yaml; deps cpal/rubato/hound, vad-rs, transcribe-rs(onnx)+transcribe-cpp per-platform target matrix (macOS metal / Win-x64+Linux vulkan / Win-arm static), rusqlite bundled, specta+tauri-specta for SessionEvent->TS, enigo as inject fallback. CRITICAL PATH (full dependency set) — needs `cargo install tauri-cli` (heavy compile) or a hand-wired Cargo/Tauri project; verify each dep on crates.io.",
-      "Then P0-T3 — mod.rs stubs per backend module emitting the typed SessionEvent (ARCHITECTURE §4) with todo!() bodies so the event contract compiles; then P0-T5 wire Linux system deps into CI (gtk/webkit2gtk, ORT).",
-      "P0 EXIT (P0-G5 tauri dev 3-OS, P0-G6 3-OS CI) stays waived-pending-infra on this macOS-only host. The scaffold's macOS `cargo build`/`cargo test` legs ARE verifiable here; Win/Linux legs are not.",
-      "Scaffold caveat: `cargo install tauri-cli` is a long compile and the sandbox may block network for package managers — if it stalls or is blocked, park P0-T2 with an infra blocker rather than thrash."
+      "P0 is 6/7 tasks done. The Tauri scaffold compiles and ALL locally-runnable gates are green on macOS: cargo fmt/clippy/test, frontend tsc+eslint, audit-network, ADR-status. Merges: bootstrap, ADRs, v3 docs, gate scripts, Handy study, scaffold.",
+      "LAST P0 TASK — P0-T5: add the Linux system-deps step to CI (ubuntu: libwebkit2gtk-4.1-dev, libgtk-3-dev, libayatana-appindicator3-dev, librsvg2-dev, patchelf; + gtk-layer-shell per ADR-0004). Matrix already includes ubuntu-latest. Cannot be verified on this macOS host.",
+      "Then P0 is blocked only by its exit gates P0-G5 (cargo tauri dev opens on Win+Linux) and P0-G6 (3-OS CI green) — both waived-pending-infra: need a GitHub remote+Actions or the physical reference machines. This is the natural P0->P1 operator checkpoint.",
+      "P1 START (on go): P1-P0-3 injection is the highest platform risk — spike Windows UIA + Linux Wayland early (ROADMAP). P1-P0-1 hotkey adopts Handy's TranscriptionCoordinator (single thread + 30ms debounce, Pitfall P1). Both are CRITICAL PATHS (platform code) -> ADR + gate.",
+      "When adding real ASR/audio deps in P1 (cpal, ort, whisper.cpp, vad-rs), each is a critical-path dependency add -> audit-network allowlist + ADR per the ADR-0004 study."
     ],
     "blockers": [
       "macOS-only host: P0-G3 (3-OS test), P0-G5 (tauri dev on Win/Linux), P0-G6 (3-OS CI) cannot be closed without the reference machines or a GitHub remote with Actions.",
