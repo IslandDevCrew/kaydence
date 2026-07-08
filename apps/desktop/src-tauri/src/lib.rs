@@ -39,12 +39,21 @@ struct HotkeyRuntime {
 #[cfg(desktop)]
 impl HotkeyRuntime {
     fn new(app_data_dir: impl Into<std::path::PathBuf>) -> Self {
+        Self::with_recorder(audio::WalCaptureRuntime::new(app_data_dir))
+    }
+
+    #[cfg(test)]
+    fn new_wal_only(app_data_dir: impl Into<std::path::PathBuf>) -> Self {
+        Self::with_recorder(audio::WalCaptureRuntime::new_wal_only(app_data_dir))
+    }
+
+    fn with_recorder(recorder: audio::WalCaptureRuntime) -> Self {
         Self {
             coordinator: hotkeys::CaptureCoordinator::new(
                 hotkeys::HotkeyMode::PushToTalk,
                 hotkeys::CaptureConfig::default(),
             ),
-            recorder: audio::WalCaptureRuntime::new(app_data_dir),
+            recorder,
         }
     }
 
@@ -225,7 +234,7 @@ mod tests {
     #[test]
     fn hotkey_runtime_finalizes_wal_after_tail_tick() {
         let app_data = tmp();
-        let mut runtime = HotkeyRuntime::new(&app_data);
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data);
 
         assert_eq!(
             runtime
@@ -257,7 +266,7 @@ mod tests {
     #[test]
     fn hotkey_runtime_discards_short_tap_wal() {
         let app_data = tmp();
-        let mut runtime = HotkeyRuntime::new(&app_data);
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data);
 
         runtime
             .handle_signal(hotkeys::Signal::Press { at_ms: 0 })

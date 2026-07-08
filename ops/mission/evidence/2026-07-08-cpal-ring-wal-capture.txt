@@ -1,0 +1,44 @@
+Kaydence cpal -> ring -> WAL capture evidence
+Date: 2026-07-08 18:03 CDT / 2026-07-08T23:03Z
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Added cpal 0.17.x and ringbuf 0.5 as local, non-network audio dependencies.
+  cpal resolves to 0.17.3 under the repo's Rust 1.80 baseline.
+- Production WalCaptureRuntime::new now prepares a default cpal input stream on
+  StartCapture. The stream is not played until after the WAL header is created.
+- The realtime input callback only downmixes interleaved PCM frames to f32 mono
+  and pushes into a lock-free SPSC ring buffer with try_push. It does not lock,
+  allocate, log, write files, or call into ASR.
+- A drain thread owns the WalWriter and appends ring-buffer samples to disk.
+  FinalizeCapture stops the stream, joins the drain, patches/fsyncs the WAV
+  header, and reports dropped input sample count.
+- Tests use WalCaptureRuntime::new_wal_only so CI never depends on microphone
+  permission, while production HotkeyRuntime::new uses the default mic path.
+
+Fresh tests added:
+- audio::tests::input_callback_downmixes_without_blocking_and_counts_overflow
+- audio::tests::drain_thread_appends_ring_samples_to_wal
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 40 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 42 total backend tests PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings: PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design Proposed exception
+- ./script/build_and_run.sh build: PASS
+- ./script/build_and_run.sh --verify: PASS on macOS; Tauri dev process stayed
+  alive long enough for process verification, then was cleaned up.
+
+Important boundary:
+- This slice builds the production mic stream and proves the ring-to-WAL drain
+  without requiring live mic access in CI.
+- It does not yet prove a manual RightAlt press records real microphone samples
+  on this Mac or on Windows/Linux reference machines.
+- The current mic path chooses a supported 16 kHz PCM input config; a rubato
+  resampling fallback remains a follow-up for devices that cannot open 16 kHz.
+- VAD and ASR feed remain future P1 slices; WAL still precedes those stages.
