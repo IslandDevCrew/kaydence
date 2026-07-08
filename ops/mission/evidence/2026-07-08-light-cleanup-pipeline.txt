@@ -1,0 +1,63 @@
+Kaydence deterministic Light cleanup + pipeline CleanFinal slice
+Date: 2026-07-08
+Commit: pending at evidence capture
+
+Intent
+- Replace the cleanup stub with the first dependency-free rule-engine floor.
+- Preserve Raw as untouched and bypassed at the pipeline boundary.
+- Emit CleanFinal after RawFinal when the cleanup dial is Light or Full.
+- Do not add a model call, network path, or Full rewrite behavior in this slice.
+
+Implementation summary
+- Added cleanup::CleanedTranscript.
+- Added cleanup::clean_text:
+  - Raw returns the input untouched.
+  - Light applies deterministic filler removal, adjacent repeated-word dedupe,
+    spoken punctuation, spoken newlines, capitalization, final punctuation, and
+    simple self-correction collapse.
+  - Full currently uses the same deterministic floor without authoring; the
+    profile rewrite/LLM pass remains a future adapter.
+- Added cleanup::clean_final_event:
+  - Raw emits no CleanFinal.
+  - Light/Full emit SessionEvent::CleanFinal with the original SessionId.
+- Updated TranscriptionPipeline to append CleanFinal immediately after RawFinal.
+- Added TranscriptionPipeline::with_cleanup_dial for tests and future settings
+  wiring.
+
+Focused verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml cleanup:: --lib
+  Result: PASS, 6 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml pipeline:: --lib
+  Result: PASS, 4 passed
+
+Full verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  Result: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  Result: PASS, 76 lib tests + 2 crash-recovery tests
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  Result: PASS
+- npm --prefix apps/desktop run check
+  Result: PASS
+- npm --prefix apps/desktop run build
+  Result: PASS
+- bash scripts/audit-network.sh --check
+  Result: PASS, 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  Result: PASS, all ADRs accepted except declared ADR-0009 waiver
+- ./script/build_and_run.sh build
+  Result: PASS
+- ./script/build_and_run.sh --verify
+  Result: PASS
+
+Post-verify cleanup
+- Confirmed no kaydence / cargo tauri dev / vite --host processes remained.
+- Removed generated apps/desktop/dist build artifacts from the working tree.
+
+Remaining boundaries
+- Wire the selected cleanup dial from persisted/user settings into the runtime
+  pipeline.
+- Add the constrained local/BYOK LLM pass with overlap rejection.
+- Persist both raw and cleaned text into history once the history store lands.
+- Continue native injection implementations; CleanFinal is now available for
+  the injection stage to consume.

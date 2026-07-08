@@ -8,8 +8,9 @@ use crate::audio::{
     self,
     vad::{SpeechGate, SpeechGateConfig, VadDetector},
 };
+use crate::cleanup;
 use crate::engine::{AsrError, AsrRequest, EngineStack};
-use crate::events::SessionEvent;
+use crate::events::{CleanupDial, SessionEvent};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PipelineError {
@@ -24,6 +25,7 @@ pub struct TranscriptionPipeline<D> {
     vad_config: SpeechGateConfig,
     engines: EngineStack,
     dictionary_hints: Vec<String>,
+    cleanup_dial: CleanupDial,
 }
 
 impl<D> TranscriptionPipeline<D>
@@ -36,11 +38,17 @@ where
             vad_config,
             engines,
             dictionary_hints: Vec::new(),
+            cleanup_dial: CleanupDial::Light,
         }
     }
 
     pub fn with_dictionary_hints(mut self, dictionary_hints: Vec<String>) -> Self {
         self.dictionary_hints = dictionary_hints;
+        self
+    }
+
+    pub fn with_cleanup_dial(mut self, cleanup_dial: CleanupDial) -> Self {
+        self.cleanup_dial = cleanup_dial;
         self
     }
 
@@ -65,7 +73,18 @@ where
                 self.dictionary_hints.clone(),
             );
             let run = self.engines.transcribe(&request)?;
-            events.extend(run.events);
+            for event in run.events {
+                let clean_event = match &event {
+                    SessionEvent::RawFinal { id, text } => {
+                        cleanup::clean_final_event(*id, text, self.cleanup_dial)
+                    }
+                    _ => None,
+                };
+                events.push(event);
+                if let Some(clean_event) = clean_event {
+                    events.push(clean_event);
+                }
+            }
         }
         Ok(events)
     }
@@ -76,7 +95,7 @@ mod tests {
     use super::*;
     use crate::audio::{vad::EnergyVad, wal};
     use crate::engine::{AsrEngine, AsrTranscript, EngineLane};
-    use crate::events::SessionId;
+    use crate::events::{CleanupDial, SessionId};
     use std::collections::VecDeque;
     use std::sync::{Arc, Mutex};
     use ulid::Ulid;
@@ -160,11 +179,11 @@ mod tests {
     }
 
     #[test]
-    fn persisted_audio_event_precedes_engine_events_for_speech() {
+    fn persisted_audio_event_precedes_engine_and_clean_events_for_speech() {
         let (summary, app_data) = summary_for_samples(&[0.0, 0.0, 0.5, 0.5]);
         let requests = Arc::new(Mutex::new(Vec::new()));
         let mut pipeline = pipeline(
-            vec![Ok(AsrTranscript::raw("hello Kaydence"))],
+            vec![Ok(AsrTranscript::raw("um hello captain"))],
             Arc::clone(&requests),
         );
 
@@ -175,7 +194,15 @@ mod tests {
             events[1],
             SessionEvent::RawFinal {
                 id: summary.id,
-                text: "hello Kaydence".to_string()
+                text: "um hello captain".to_string()
+            }
+        );
+        assert_eq!(
+            events[2],
+            SessionEvent::CleanFinal {
+                id: summary.id,
+                text: "Hello captain.".to_string(),
+                dial: CleanupDial::Light
             }
         );
         let seen = requests.lock().unwrap();
@@ -217,7 +244,7 @@ mod tests {
 
         let events = pipeline.process_capture(&summary).unwrap();
 
-        assert_eq!(events.len(), 3);
+        assert_eq!(events.len(), 5);
         assert_eq!(
             events[1],
             SessionEvent::RawFinal {
@@ -227,9 +254,25 @@ mod tests {
         );
         assert_eq!(
             events[2],
+            SessionEvent::CleanFinal {
+                id: summary.id,
+                text: "First.".to_string(),
+                dial: CleanupDial::Light
+            }
+        );
+        assert_eq!(
+            events[3],
             SessionEvent::RawFinal {
                 id: summary.id,
                 text: "second".to_string()
+            }
+        );
+        assert_eq!(
+            events[4],
+            SessionEvent::CleanFinal {
+                id: summary.id,
+                text: "Second.".to_string(),
+                dial: CleanupDial::Light
             }
         );
         let seen = requests.lock().unwrap();
@@ -237,6 +280,31 @@ mod tests {
         assert_eq!(seen[0].samples.len(), 2);
         assert_eq!(seen[1].start_sample, 2);
         assert_eq!(seen[1].samples.len(), 6);
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn raw_cleanup_dial_bypasses_clean_final_events() {
+        let (summary, app_data) = summary_for_samples(&[0.0, 0.0, 0.5, 0.5]);
+        let requests = Arc::new(Mutex::new(Vec::new()));
+        let mut pipeline = pipeline(
+            vec![Ok(AsrTranscript::raw("um untouched raw"))],
+            Arc::clone(&requests),
+        )
+        .with_cleanup_dial(CleanupDial::Raw);
+
+        let events = pipeline.process_capture(&summary).unwrap();
+
+        assert_eq!(
+            events,
+            vec![
+                summary.audio_persisted_event(),
+                SessionEvent::RawFinal {
+                    id: summary.id,
+                    text: "um untouched raw".to_string(),
+                }
+            ]
+        );
         let _ = std::fs::remove_dir_all(app_data);
     }
 }
