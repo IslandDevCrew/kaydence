@@ -6,9 +6,10 @@ debounce, the secondary per-invocation dial-override chord, conflict detection
 with OS/app shortcuts, and emitting start/stop intents to the session manager.
 
 ## Invariants
-1. **Timing discipline (pitfall P1):** debounce 50 ms; a press shorter than
-   the 250 ms minimum capture window still produces a full session (audio/
-   handles pre-roll/tail — never "cancel" a short press here).
+1. **Timing discipline (pitfall P1):** debounce 30 ms; a press shorter than
+   the 250 ms minimum capture window is treated as an accidental tap and
+   discarded before downstream processing; release still carries a 300 ms tail
+   buffer so real speech is not clipped.
 2. Push-to-talk: key-down starts, key-up stops. Toggle: same key starts/stops
    with a hard 5-minute auto-stop safety. Both modes always available;
    default push-to-talk.
