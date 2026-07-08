@@ -7,7 +7,7 @@
     "summary": "Five logo directions plus ten screen-family boards, each rendered for macOS, Windows, and Linux (30 OS-specific views) sharing one interface system. Generated with Codex from Plan of Attack v3, the Whisper-Ahead v2 interaction, and the monorepo PRD/ARCHITECTURE/ROADMAP, then adopted as the canonical UI/UX/visual source of truth for every screen built from P1 onward. Screen layout is fixed by the boards; the only free-tier per-OS variation is the selection accent (macOS aqua / Windows cobalt / Linux emerald).",
     "report": "/Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html",
     "assets": "assets/brand/ (logos/ + screens/, 15 PNGs) — vendored in-repo by P1-D1 on 2026-07-08, shasum-verified against the upstream pack in /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/. Index: docs/design/README.md",
-    "openDecision": "Operator selects the winning logo (1 of 5), which locks as the app icon and public-site header across all three OS lanes and is captured in ADR-0012 (visual identity). Screen layout work may proceed with a placeholder mark in parallel — the winning logo drops into the same reserved slot without changing any layout.",
+    "openDecision": "Operator selects the winning logo (1 of 5) -> ADR-0012 flips to Accepted. Recommendation on the table (P1-D2, 2026-07-08): Option 1 K Waveform (best small-size app icon; voice->caret->text story; merge-gold echo), runner-up Option 4 Wordmark Forward (best site header). Option 3 disqualified for primary use (embeds third-party OS marks). Full review: docs/decisions/0012-visual-identity.md. Screens use a placeholder mark until the pick; the winner drops into the reserved slot without layout change.",
     "osLanes": [
       { "lane": "macOS", "accent": "Aqua selection accent", "varies": "Selections, active tab, focus ring, small status strokes.", "doNotVary": "Information architecture, product states, prediction blue, merge gold." },
       { "lane": "Windows", "accent": "Cobalt selection accent", "varies": "Selections, active controls, Windows permission/injection copy.", "doNotVary": "Layout, spacing, control density, feature hierarchy." },
@@ -127,12 +127,12 @@
         },
         {
           "id": "P0-G7",
-          "title": "ADRs accepted (0001-0008, 0010, 0011); 0009 Proposed by design",
+          "title": "ADRs accepted (0001-0008, 0010, 0011); 0009 + 0012 Proposed by design",
           "command": "bash scripts/check-adr-status.sh",
           "status": "passed",
-          "evidence": "ops/mission/evidence/P0-T6-scripts-2026-07-07.txt",
-          "lastRun": "2026-07-07T02:30:00Z",
-          "notes": "check-adr-status.sh returns 0: 10 of 11 ADRs Accepted; ADR-0009 (Relay crypto) is the one declared by-design exception (Proposed — operator crypto review gates P4-1). Gate encodes the exception, so it passes."
+          "evidence": "ops/mission/evidence/P0-G7-adr-status-2026-07-08.txt",
+          "lastRun": "2026-07-08T01:00:00Z",
+          "notes": "check-adr-status.sh returns 0: 10 of 12 ADRs Accepted; two declared by-design exceptions stay Proposed — ADR-0009 (Relay crypto; operator review gates P4-1) and ADR-0012 (visual identity; operator logo pick, task P1-D2). Gate encodes both exceptions, so it passes."
         }
       ],
       "tasks": [
@@ -247,7 +247,7 @@
         { "id": "P1-P0-7", "title": "PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page)", "status": "pending", "dependsOn": ["P0-T6"], "pr": null, "notes": "Non-negotiable #1. audit-network.sh gate." },
         { "id": "P1-P0-8", "title": "PRD P0-8 60-second first run (install -> model download -> first dictation <=60s, one settings screen)", "status": "pending", "dependsOn": ["P1-P0-1", "P1-P0-2", "P1-P0-3", "P1-P0-4"], "pr": null, "notes": "Pitfall P10. UI conforms to screen-family 10 (First Run & License)." },
         { "id": "P1-D1", "title": "Vendor Visual System v1 into the monorepo: copy logos/ + the 10 screen-family boards from /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/ into assets/brand/ + docs/design/, and add a design-reference index mapping each screen family -> its board -> the phase that builds it (P1-G4/P2-G3/P3-G4/P4-G-SCREENS)", "status": "done", "dependsOn": ["P0-T2"], "pr": { "number": null, "url": "local:p1-d1", "mergedAt": "2026-07-08" }, "notes": "DONE. 15 PNGs (5 logos + 10 boards, 18MB) copied byte-identical — all shasums verified vs upstream. Index at docs/design/README.md maps family -> board -> phase -> fidelity gate. All gate commands + prompt pack + designDirection.assets repointed to assets/brand/. Evidence: ops/mission/evidence/P1-D1-vendor-2026-07-08.txt." },
-        { "id": "P1-D2", "title": "Operator selects the winning logo (1 of 5) -> lock as the app icon + public-site header across macOS/Windows/Linux; author ADR-0012 (visual identity + OS accent lanes)", "status": "pending", "dependsOn": [], "pr": null, "notes": "OPERATOR GATE — critical decision path (visual identity). Screen layout may proceed with a placeholder mark in the reserved slot until locked; the winning logo drops in without changing layout." }
+        { "id": "P1-D2", "title": "Operator selects the winning logo (1 of 5) -> lock as the app icon + public-site header across macOS/Windows/Linux; author ADR-0012 (visual identity + OS accent lanes)", "status": "in_progress", "dependsOn": [], "pr": null, "notes": "RECOMMENDATION PREPARED 2026-07-08, AWAITING OPERATOR PICK. All 5 options reviewed against the boards (docs/decisions/0012-visual-identity.md): recommend Option 1 K Waveform (purpose-built icon, voice->caret->text story, merge-gold echo); runner-up Option 4 Wordmark Forward (stronger site header, premium). Option 3 disqualified for primary use — embeds Windows flag + Tux (trademark risk); options 2/5 kept as secondary art. ADR-0012 drafted PROPOSED with decision blank; check-adr-status.sh carries 0012 as by-design exception (P0-G7 re-run PASS, evidence P0-G7-adr-status-2026-07-08.txt). HALTED for operator selection per JUDGE-AUDITOR." }
       ]
     },
     {
@@ -410,7 +410,7 @@
     { "label": "Cross-device continuity (Relay)", "baseline": "cloud-only or none", "current": "n/a", "target": "<=500ms added on LAN, E2E, zero cloud", "direction": "down" },
     { "label": "Agent-command safety (Conductor)", "baseline": "no comparable product", "current": "n/a", "target": "confirm-gate 100%; 0 auto-exec destructive", "direction": "up" },
     { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "1 / 3 (macOS local; Win+Linux need CI)", "target": "3 / 3 incl. Wayland", "direction": "up" },
-    { "label": "ADRs accepted (0009 Proposed by design)", "baseline": "8", "current": "10", "target": "10", "direction": "up" },
+    { "label": "ADRs accepted (0009 + 0012 Proposed by design)", "baseline": "8", "current": "10 of 12", "target": "12 (0009 after crypto review; 0012 after logo pick)", "direction": "up" },
     { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "7", "target": "7", "direction": "up" },
     { "label": "Standing-gate scripts present", "baseline": "1 (bench-prediction)", "current": "4 (+bench, audit-network, check-adr)", "target": "5 (+release)", "direction": "up" },
     { "label": "Visual system (logos + screen families)", "baseline": "none", "current": "5 logos + 10 family boards (30 OS views) locked", "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS", "direction": "up" }
@@ -432,7 +432,8 @@
     { "number": null, "title": "P0-T2/T3 Tauri scaffold + SessionEvent contract (macOS gates green)", "url": "local:efdf6f7", "phase": "P0", "mergedAt": "2026-07-07" },
     { "number": null, "title": "P0-T5 Linux CI system deps (3-OS matrix wired)", "url": "local:p0-t5", "phase": "P0", "mergedAt": "2026-07-07" },
     { "number": null, "title": "Visual System v1 locked — 5 logo directions + 10 screen-family boards (30 OS views) generated (Codex) and adopted as the build reference set; screen-fidelity gates wired into P1–P4", "url": "local:design-direction-lock", "phase": "design", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-D1 Visual pack vendored in-repo (assets/brand/, 15 PNGs shasum-verified) + design-reference index (docs/design/README.md); fidelity-gate paths repointed", "url": "local:p1-d1", "phase": "P1", "mergedAt": "2026-07-08" }
+    { "number": null, "title": "P1-D1 Visual pack vendored in-repo (assets/brand/, 15 PNGs shasum-verified) + design-reference index (docs/design/README.md); fidelity-gate paths repointed", "url": "local:p1-d1", "phase": "P1", "mergedAt": "2026-07-08" },
+    { "number": null, "title": "P1-D2 prep — ADR-0012 (visual identity) drafted Proposed with full 5-logo review; recommendation Option 1 K Waveform, runner-up Option 4; check-adr-status gate carries 0012 exception (P0-G7 re-run PASS)", "url": "local:p1-d2-prep", "phase": "P1", "mergedAt": "2026-07-08" }
   ],
   "resume": {
     "activePhase": "P0",
