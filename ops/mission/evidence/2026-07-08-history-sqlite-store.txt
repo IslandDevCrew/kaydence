@@ -1,0 +1,56 @@
+Kaydence SQLite history store slice
+Date: 2026-07-08
+Commit: pending at evidence capture
+
+Intent
+- Replace the history stub with a local SQLite store for P0-4.
+- Persist every SessionEvent as an append-only JSON event stream.
+- Maintain a query-friendly session summary with audio path, raw text, clean
+  text, cleanup dial, injection method, held reason, and failure state.
+- Preserve available text even when a session is held or failed.
+- Keep this local-only; no telemetry, accounts, or network surface.
+
+Implementation summary
+- Added rusqlite with bundled SQLite, matching docs/ARCHITECTURE.md persistence
+  direction and improving Windows handoff portability.
+- Added HistoryStore::open, open_at, and open_in_memory.
+- Added forward migration table, sessions table, session_events table, indexes,
+  and PRAGMA user_version = 1.
+- Added HistoryStore::record_event / record_events.
+- Added HistoryStore::get_session, list_recent, and events_for_session.
+- Added summary aggregation for multi-segment RawFinal/CleanFinal streams.
+- Added state capture for Injected, Held, and Failed events.
+
+Focused verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml history:: --lib
+  Result: PASS, 5 passed
+
+Full verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  Result: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  Result: PASS, 81 lib tests + 2 crash-recovery tests
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  Result: PASS
+- npm --prefix apps/desktop run check
+  Result: PASS
+- npm --prefix apps/desktop run build
+  Result: PASS
+- bash scripts/audit-network.sh --check
+  Result: PASS, 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  Result: PASS, all ADRs accepted except declared ADR-0009 waiver
+- ./script/build_and_run.sh build
+  Result: PASS
+- ./script/build_and_run.sh --verify
+  Result: PASS
+
+Post-verify cleanup
+- Confirmed no kaydence / cargo tauri dev / vite --host processes remained.
+- Removed generated apps/desktop/dist build artifacts from the working tree.
+
+Remaining boundaries
+- Wire HistoryStore into the runtime path after pipeline events are produced.
+- Add retention sweep, purge/export, fixture migration ladder, and orphaned WAL
+  recovery surfacing.
+- Feed history summaries into the frontend history browser and recover-last HUD.
