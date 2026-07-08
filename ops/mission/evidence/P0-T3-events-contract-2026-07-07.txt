@@ -1,0 +1,13 @@
+P0-T3 — SessionEvent contract verification, 2026-07-07 (macOS, cargo 1.95)
+Isolated crate (serde + serde_json + ulid, no tauri) built from the real
+apps/desktop/src-tauri/src/events.rs:
+
+running 4 tests
+test tests::light_is_the_default_dial ... ok
+test tests::session_id_routes_across_every_variant ... ok
+test tests::secure_field_holds_rather_than_injects ... ok
+test tests::normal_flow_sequence_serializes_round_trip ... ok
+test result: ok. 4 passed; 0 failed.
+
+=> The typed SessionEvent contract (ARCHITECTURE §4/§6b) compiles and
+   round-trips through serde with the tagged representation the frontend keys on.

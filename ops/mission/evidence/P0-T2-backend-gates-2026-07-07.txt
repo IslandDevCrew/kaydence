@@ -1,0 +1,6 @@
+P0-T2/T3 backend gates — 2026-07-07 (macOS, cargo 1.95, tauri 2.11.5)
+cargo check --all-targets: PASS (425 pkgs; see P0-T2-cargo-check.log)
+cargo fmt --check: exit 0
+cargo clippy -D warnings: exit  (fixed derivable_impls on CleanupDial)
+cargo test --all: exit  (4 event-contract tests pass)
+NOTE: macOS leg only. Windows + Linux legs require CI/reference machines (waived-pending-infra).
