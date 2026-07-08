@@ -10,7 +10,7 @@
     "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
     "status": "active",
     "started": "2026-07-07",
-    "updated": "2026-07-07T01:30:00Z",
+    "updated": "2026-07-07T02:45:00Z",
     "sessionCount": 1
   },
   "policies": {
@@ -85,10 +85,10 @@
           "id": "P0-G7",
           "title": "ADRs accepted (0001-0008, 0010, 0011); 0009 Proposed by design",
           "command": "bash scripts/check-adr-status.sh",
-          "status": "waived",
-          "evidence": "ops/mission/evidence/P0-G7-adr-status-2026-07-07.txt",
-          "lastRun": "2026-07-07T01:20:00Z",
-          "notes": "WAIVED-BY-DESIGN: 10 of 11 ADRs Accepted. ADR-0009 (Relay crypto) is intentionally Proposed — it is a critical decision path that HALTS for operator design review before the P4-1 build, so it cannot be Accepted at P0. All others Accepted. check-adr-status.sh to be added with the P0-T6 scripts."
+          "status": "passed",
+          "evidence": "ops/mission/evidence/P0-T6-scripts-2026-07-07.txt",
+          "lastRun": "2026-07-07T02:30:00Z",
+          "notes": "check-adr-status.sh returns 0: 10 of 11 ADRs Accepted; ADR-0009 (Relay crypto) is the one declared by-design exception (Proposed — operator crypto review gates P4-1). Gate encodes the exception, so it passes."
         }
       ],
       "tasks": [
@@ -119,10 +119,10 @@
         {
           "id": "P0-T4",
           "title": "Handy source study pass — record adopt/redesign notes in ADR-0004 (Tauri config, cpal capture, whisper.cpp+Parakeet ONNX wiring, VAD, tray/hotkey plumbing)",
-          "status": "pending",
+          "status": "done",
           "dependsOn": [],
-          "pr": null,
-          "notes": "ADR-0004 exists as a file; needs the study notes filled and Accepted."
+          "pr": { "number": null, "url": "local:p0-t4", "mergedAt": "2026-07-07" },
+          "notes": "DONE. Read cjpais/Handy@v0.9.0. ADOPT: TranscriptionCoordinator (single-thread+30ms debounce, answers Pitfall P1), specta/tauri-specta type-gen, per-platform ASR Cargo target matrix, gtk-layer-shell (Linux overlay). REDESIGN: native-first injection (vs enigo/paste, Pitfall P2), cleanup dial, avoid git-fork deps. Captured pyke-ONNX AVX2 pre-Haswell startup-crash lesson for the Win CPU-first Parakeet lane. Handy already ships Linux -> validates ADR-0011."
         },
         {
           "id": "P0-T5",
@@ -134,11 +134,11 @@
         },
         {
           "id": "P0-T6",
-          "title": "Add scripts/bench.sh and scripts/audit-network.sh skeletons (referenced by standing gates and CI comments) with --check modes",
-          "status": "pending",
-          "dependsOn": ["P0-T2"],
-          "pr": null,
-          "notes": "Only scripts/bench-prediction.sh exists. bench.sh (footprint/latency) and audit-network.sh (privacy egress) are named by the plan's standing gates but absent."
+          "title": "Add scripts/bench.sh, scripts/audit-network.sh, scripts/check-adr-status.sh (standing gates) with --check modes",
+          "status": "done",
+          "dependsOn": [],
+          "pr": { "number": null, "url": "local:0258de3", "mergedAt": "2026-07-07" },
+          "notes": "DONE. audit-network.sh is a WORKING gate (fixed-string scan vs network-allowlist.json; verified FAIL on a planted std::net call, PASS on empty/allowlisted). bench.sh --check skeleton (exit 3 = not-measurable pre-build). check-adr-status.sh (P0-G7, comment-safe). All bash-3.2 portable. CI wires all three (shell: bash). Note: dependsOn P0-T2 was dropped — these are pure scripts, buildable now."
         },
         {
           "id": "P0-T7",
@@ -329,7 +329,8 @@
     { "label": "Agent-command safety (Conductor)", "baseline": "no comparable product", "current": "n/a", "target": "confirm-gate 100%; 0 auto-exec destructive", "direction": "up" },
     { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "0 / 3", "target": "3 / 3 incl. Wayland", "direction": "up" },
     { "label": "ADRs accepted (0009 Proposed by design)", "baseline": "8", "current": "10", "target": "10", "direction": "up" },
-    { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "2", "target": "7", "direction": "up" }
+    { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "4", "target": "7", "direction": "up" },
+    { "label": "Standing-gate scripts present", "baseline": "1 (bench-prediction)", "current": "4 (+bench, audit-network, check-adr)", "target": "5 (+release)", "direction": "up" }
   ],
   "risks": [
     { "title": "macOS-only execution host — Windows + Linux gates cannot close here", "severity": "high", "note": "cargo tauri dev on Win/Linux, 3-OS cargo test, and Wayland injection tests all require the reference machines or GitHub Actions. This session can only verify the macOS leg. All 3-OS exit gates stay open pending that infra." },
@@ -342,16 +343,18 @@
   "prLog": [
     { "number": null, "title": "Bootstrap mission-control state (v3)", "url": "local:80a8028", "phase": "P0", "mergedAt": "2026-07-07" },
     { "number": null, "title": "v3 ADRs 0009 (Relay, Proposed) / 0010 (pricing) / 0011 (Linux 3-OS)", "url": "local:4848306", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "v2->v3 doc reconciliation (3-OS constitution/PRD/ROADMAP/architecture/CI)", "url": "local:3a0572e", "phase": "P0", "mergedAt": "2026-07-07" }
+    { "number": null, "title": "v2->v3 doc reconciliation (3-OS constitution/PRD/ROADMAP/architecture/CI)", "url": "local:3a0572e", "phase": "P0", "mergedAt": "2026-07-07" },
+    { "number": null, "title": "P0-T6 standing-gate scripts (audit-network working, bench, check-adr-status)", "url": "local:0258de3", "phase": "P0", "mergedAt": "2026-07-07" },
+    { "number": null, "title": "P0-T4 Handy study -> ADR-0004 adopt/redesign notes", "url": "local:p0-t4", "phase": "P0", "mergedAt": "2026-07-07" }
   ],
   "resume": {
     "activePhase": "P0",
     "nextActions": [
-      "P0-T1 (docs v3 reconciliation) and P0-T7 (ADRs 0009/0010/0011) are DONE and merged. Operator ratified Linux-first-class, local-only, and pricing.",
-      "NEXT: P0-T6 — add scripts/bench.sh (footprint/latency --check) + scripts/audit-network.sh (privacy egress) + scripts/check-adr-status.sh skeletons. Pure scripts, no app needed; unblocks standing-gate wiring. Low risk, do first.",
-      "Then P0-T4 — Handy source study (github.com/cjpais/Handy src-tauri: cpal capture, whisper.cpp + Parakeet ONNX, Silero VAD, tray/hotkey). Record adopt/redesign notes in ADR-0004 and mark it Accepted. Needs network to clone Handy; if offline, park with a blocker.",
-      "Then P0-T2 — scaffold Tauri 2.x (React+TS) into apps/desktop preserving src-tauri/src/<module>/ dirs + every AGENTS.md; wire pnpm-workspace.yaml + Cargo workspace. CRITICAL PATH (full dependency set per SCAFFOLD.md step 3). Then P0-T3 (mod.rs stubs emitting SessionEvent, todo!() bodies) so the event contract compiles.",
-      "P0 EXIT (P0-G5/G6) — cargo tauri dev on 3 OSes + 3-OS CI green — cannot close on this macOS-only host; those legs stay waived-pending-infra until a GitHub remote/Actions or the reference machines exist."
+      "DONE so far in P0: T1 (v3 docs), T7 (ADRs 0009/0010/0011), T6 (gate scripts, audit-network verified working), T4 (Handy study -> ADR-0004). 4/7 P0 tasks. P0-G7 gate passes.",
+      "NEXT — P0-T2 scaffold the Tauri 2.x app. Approach validated by the Handy study: React+TS front; Cargo workspace (apps/desktop/src-tauri + crates/*) + pnpm-workspace.yaml; deps cpal/rubato/hound, vad-rs, transcribe-rs(onnx)+transcribe-cpp per-platform target matrix (macOS metal / Win-x64+Linux vulkan / Win-arm static), rusqlite bundled, specta+tauri-specta for SessionEvent->TS, enigo as inject fallback. CRITICAL PATH (full dependency set) — needs `cargo install tauri-cli` (heavy compile) or a hand-wired Cargo/Tauri project; verify each dep on crates.io.",
+      "Then P0-T3 — mod.rs stubs per backend module emitting the typed SessionEvent (ARCHITECTURE §4) with todo!() bodies so the event contract compiles; then P0-T5 wire Linux system deps into CI (gtk/webkit2gtk, ORT).",
+      "P0 EXIT (P0-G5 tauri dev 3-OS, P0-G6 3-OS CI) stays waived-pending-infra on this macOS-only host. The scaffold's macOS `cargo build`/`cargo test` legs ARE verifiable here; Win/Linux legs are not.",
+      "Scaffold caveat: `cargo install tauri-cli` is a long compile and the sandbox may block network for package managers — if it stalls or is blocked, park P0-T2 with an infra blocker rather than thrash."
     ],
     "blockers": [
       "macOS-only host: P0-G3 (3-OS test), P0-G5 (tauri dev on Win/Linux), P0-G6 (3-OS CI) cannot be closed without the reference machines or a GitHub remote with Actions.",

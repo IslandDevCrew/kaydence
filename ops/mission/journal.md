@@ -14,3 +14,9 @@
 - ADR-0009 stays PROPOSED by design — Relay crypto is a critical decision path that halts for operator review before the P4-1 build. P0-G7 gate marked waived-by-design (10/11 accepted).
 - Surprise: the v3 plan cites ADR-0009/0010 + PRD P4-1..P4-9 as already 'committed', but they existed only in the plan HTML — authored them here so repo == plan.
 - Next: P0-T6 scripts (bench/audit-network/check-adr-status), then P0-T4 Handy study (needs network), then P0-T2 Tauri scaffold (critical path). P0 exit gates (tauri dev + CI on Win/Linux) stay waived-pending-infra on this macOS-only host.
+
+## 2026-07-07T02:45Z — session 1 (P0 tooling + study)
+- Merged P0-T6 (gate scripts) and P0-T4 (Handy study). 4/7 P0 tasks done; P0-G7 passes.
+- audit-network.sh caught its own bug under test: patterns like 'fetch(' broke ERE alternation so grep errored and `|| true` swallowed it into a false PASS — a privacy gate silently passing. Switched to fixed-string (-F -e); verified it now FAILs on a planted std::net call. Also fixed bash-3.2 portability (macOS default: no `declare -A`/`mapfile`) across all three scripts.
+- Handy study surprise: Handy already ships Linux (gtk-layer-shell + vulkan) — validates ADR-0011. Big adopt = TranscriptionCoordinator (single thread + 30ms debounce) as the answer to hotkey-race Pitfall P1. Big lesson = pyke ONNX AVX2 static-init crash on pre-Haswell CPUs (matters for our Win CPU-first Parakeet lane).
+- Next: P0-T2 Tauri scaffold (critical path; heavy install). macOS build/test legs verifiable here; Win/Linux + tauri-dev stay waived-pending-infra.
