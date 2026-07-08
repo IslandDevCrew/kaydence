@@ -107,6 +107,12 @@ impl CaptureCoordinator {
         self.state
     }
 
+    /// Abort the current session after a runtime start failure. Normal stop
+    /// paths should still flow through [`Signal`] so timing invariants apply.
+    pub fn reset(&mut self) {
+        self.state = CaptureState::Idle;
+    }
+
     /// Process one signal; returns the runtime action and updates state.
     pub fn step(&mut self, sig: Signal) -> Action {
         use CaptureState::*;
@@ -259,5 +265,16 @@ mod tests {
                                                 // a fresh press at 350 must not start a second capture mid-finalize
         assert_eq!(c.step(Signal::Press { at_ms: 350 }), Action::None);
         assert!(matches!(c.state(), CaptureState::Finalizing { .. }));
+    }
+
+    #[test]
+    fn runtime_can_reset_after_start_failure() {
+        let mut c = ptt();
+        assert_eq!(c.step(Signal::Press { at_ms: 0 }), Action::StartCapture);
+
+        c.reset();
+
+        assert_eq!(c.state(), CaptureState::Idle);
+        assert_eq!(c.step(Signal::Press { at_ms: 500 }), Action::StartCapture);
     }
 }

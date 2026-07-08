@@ -1,0 +1,48 @@
+Kaydence hotkey -> WAL runtime bridge evidence
+Date: 2026-07-08 17:53 CDT / 2026-07-08T22:53Z
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Added audio::WalCaptureRuntime, the minimal runtime owner for one active
+  app-data sessions/{ulid}.wav WAL file per dictation.
+- StartCapture now opens and fsyncs an identifiable WAV/WAL header immediately.
+- DiscardCapture now removes the short-tap WAL before downstream processing.
+- FinalizeCapture now patches/fsyncs the WAL header and produces an
+  AudioPersisted SessionEvent payload for downstream history/engine wiring.
+- Added a tiny CaptureCoordinator::reset hook so a runtime start failure cannot
+  leave the pure hotkey state machine stuck in Capturing.
+- Replaced console-only global-shortcut action logging with a shared
+  HotkeyRuntime that maps RightAlt press/release/tail-tick into the WAL runtime.
+- Added a tail-timer tick thread so a valid push-to-talk release actually
+  finalizes after the 300 ms tail buffer.
+
+Fresh tests added:
+- audio::tests::start_capture_creates_a_wal_session_under_app_data
+- audio::tests::finalize_capture_patches_and_reports_the_wal
+- audio::tests::discard_capture_removes_the_short_tap_wal
+- audio::tests::double_start_is_refused_while_wal_is_active
+- hotkeys::tests::runtime_can_reset_after_start_failure
+- tests::hotkey_runtime_finalizes_wal_after_tail_tick
+- tests::hotkey_runtime_discards_short_tap_wal
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 38 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 40 total backend tests PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings: PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design Proposed exception
+- ./script/build_and_run.sh build: PASS
+- ./script/build_and_run.sh --verify: PASS on macOS; Tauri dev process stayed
+  alive long enough for process verification, then was cleaned up.
+
+Important boundary:
+- This closes the previous "StartCapture/FinalizeCapture are console-only"
+  caveat by connecting hotkey actions to WAL file lifecycle.
+- It still does not claim real microphone samples are captured; cpal/ring-buffer
+  draining into WalWriter::append is the next P1 audio slice.
+- Real RightAlt press/release behavior still needs manual OS-level validation on
+  macOS, Windows, and Linux reference machines.
