@@ -21,6 +21,15 @@ serde_json = "1"
 thiserror = "2"
 ulid = { version = "1", features = ["serde"] }
 
+# Linux text injection (P1-P0-3, ADR-0013). AT-SPI = native insert + the
+# secure-field signal (non-negotiable #8). atspi uses zbus/async-io; pollster
+# drives it synchronously without pulling a tokio runtime into the inject path.
+# NOT a network surface — audit-network stays green.
+[target.'cfg(target_os = "linux")'.dependencies]
+atspi = "0.30"
+pollster = "0.4"
+zbus = "5"
+
 [features]
 # Feature-gated network surfaces stay OFF by default (non-negotiable #1).
 byok = []

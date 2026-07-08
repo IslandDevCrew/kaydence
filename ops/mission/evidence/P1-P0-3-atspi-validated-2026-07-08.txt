@@ -1,0 +1,15 @@
+P1-P0-3 Linux injection — AT-SPI stack validated on the reference VM — 2026-07-08
+VM: UTM Debian 12 GNOME/Wayland, ARM64 (192.168.64.4).
+Added deps (ADR-0013, cfg target_os=linux): atspi 0.30, pollster 0.4, zbus 5.
+  (Pure Rust over D-Bus — NOT a network surface; audit-network stays PASS. atspi
+   needs no libatspi C dev libs, so CI's Ubuntu leg builds it with no extra apt.)
+Build: cargo build --bin atspi-selftest -> Finished (atspi-common/proxies/connection
+  0.14, zbus 5.17 all compiled on ARM64 Debian).
+Run (DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus):
+  [atspi-selftest] connecting to the AT-SPI accessibility bus...
+  [atspi-selftest] connected.
+  [atspi-selftest] desktop root role = DesktopFrame
+  [atspi-selftest] PASS — AT-SPI plumbing works on this machine.
+Proves: connect -> AccessibleProxy -> live method round-trip against real GNOME.
+This is the foundation for secure-field role reads + EditableText insertion (same
+proxy pattern), which is the next iteration + operator-observed live validation.
