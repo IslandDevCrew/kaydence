@@ -1,0 +1,13 @@
+P0-G5 Linux leg — cargo tauri dev opens a window — 2026-07-08
+VM: UTM Debian 12 GNOME/Wayland (192.168.64.4), ARM64. Launched in tmux session 'kdev'.
+After the beforeDevCommand fix (pnpm --filter kaydence-desktop dev):
+  - vite dev server UP on :1420 (VITE_UP)
+  - app binary running: /home/debian/kaydence/target/debug/kaydence (PID 22500, stable)
+  - GTK software-rendering fallback (no GPU in VM) — benign; window renders via llvmpipe.
+Log excerpt:
+       Running BeforeDevCommand (`pnpm --filter kaydence-desktop dev`)
+       Running DevCommand (`cargo  run --no-default-features --color always --`)
+  [1m[96m    Building[0m [=======================> ] 435/438: kaydence(build)             [1m[96m    Building[0m [=======================> ] 436/438: kaydence                    [1m[96m    Building[0m [=======================> ] 437/438: kaydence(bin)               [K[1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 10.17s
+  [1m[92m     Running[0m `/home/debian/kaydence/target/debug/kaydence`
+  ** (kaydence:22500): WARNING **: 04:10:51.716: Disabled hardware acceleration because GTK failed to initialize GL: Unable to create a GL context.
+Status: window PROCESS confirmed running headlessly over SSH; operator visually confirms on the VM's GNOME screen to close the gate.
