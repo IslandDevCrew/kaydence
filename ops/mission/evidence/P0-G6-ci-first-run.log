@@ -1,0 +1,4496 @@
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  * Run dtolnay/rust-toolchain@stable
+  * Run actions/setup-node@v4
+  * enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  * Run dtolnay/rust-toolchain@stable
+  * Run actions/setup-node@v4
+  * enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  * Run actions/setup-node@v4
+  * enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  * Run actions/setup-node@v4
+  * enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  * Run actions/setup-node@v4
+  * enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push less than a minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  * linux deps
+  * fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 1 minute ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 2 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (macos-latest) (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  * Complete job
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 3 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 4 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 5 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* main ci · 28913537682
+Triggered via push about 5 minutes ago
+
+JOBS
+* build-test (ubuntu-latest) (ID 85775675637)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  ✓ linux deps
+  ✓ fmt
+  ✓ clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+* build-test (windows-latest) (ID 85775675640)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  * clippy
+  * test
+  * install
+  * typecheck + lint
+  * network audit (non-negotiable
+  * ADR status (P0-G7)
+  * latency budget (root §5)
+  * Post Run actions/setup-node@v4
+  * Post Run actions/checkout@v4
+X build-test (macos-latest) in 3m6s (ID 85775675679)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run actions/setup-node@v4
+  ✓ enable pnpm
+  - linux deps
+  ✓ fmt
+  ✓ clippy
+  ✓ test
+  X install
+  - typecheck + lint
+  - network audit (non-negotiable
+  - ADR status (P0-G7)
+  - latency budget (root §5)
+  - Post Run actions/setup-node@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build-test (macos-latest): .github#2
+
+X Process completed with exit code 1.
+build-test (macos-latest): .github#26
+
+! Unexpected input(s) 'clippy', valid inputs are ['toolchain', 'targets', 'target', 'components']
+build-test (macos-latest): .github#1
+
+- The macos-latest label will migrate to macOS 26 beginning June 15, 2026. For more information see https://github.com/actions/runner-images/issues/14167
+build-test (macos-latest): .github#1
+

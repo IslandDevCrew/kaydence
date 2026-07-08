@@ -1,15 +1,17 @@
-//! Capture: mic -> lock-free ring buffer -> WAL file -> Silero VAD. Emits AudioPersisted (non-negotiable #2).
+//! Capture: mic -> lock-free ring buffer -> WAL file -> Silero VAD. Emits
+//! AudioPersisted (non-negotiable #2).
 //!
-//! Stub (P0-T3). Exposes the typed `SessionEvent` contract with `todo!()`
-//! bodies so the event contract compiles before feature work (SCAFFOLD.md §6).
-//! Implement per this module's `AGENTS.md`. No stage imports another's internals
-//! — communicate only via `SessionEvent`.
+//! `wal` is real (P1, PRD P0-4): write-ahead persistence + crash recovery.
+//! Capture (cpal) and VAD land next; the cpal callback only feeds the ring
+//! buffer (invariant 1) — the capture task drains it into the WAL.
 #![allow(dead_code)]
+
+pub mod wal;
 
 use crate::events::SessionEvent;
 
-/// Placeholder entry point for the `audio` stage. Returns the event(s) it emits
-/// once implemented.
+/// Placeholder entry point for the capture stage. Returns the event(s) it
+/// emits once implemented.
 pub fn stage() -> SessionEvent {
-    todo!("audio: implement per apps/desktop/src-tauri/src/audio/AGENTS.md")
+    todo!("audio: implement capture per apps/desktop/src-tauri/src/audio/AGENTS.md")
 }

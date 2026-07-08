@@ -1,5 +1,48 @@
 {
   "version": 1,
+  "designDirection": {
+    "status": "locked",
+    "title": "Kaydence Visual System v1 — the build-agent reference set",
+    "lockedOn": "2026-07-08",
+    "summary": "Five logo directions plus ten screen-family boards, each rendered for macOS, Windows, and Linux (30 OS-specific views) sharing one interface system. Generated with Codex from Plan of Attack v3, the Whisper-Ahead v2 interaction, and the monorepo PRD/ARCHITECTURE/ROADMAP, then adopted as the canonical UI/UX/visual source of truth for every screen built from P1 onward. Screen layout is fixed by the boards; the only free-tier per-OS variation is the selection accent (macOS aqua / Windows cobalt / Linux emerald).",
+    "report": "/Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html",
+    "assets": "/Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/ (logos/ + screens/) — currently in a separate repo; vendored into this monorepo by task P1-D1",
+    "openDecision": "Operator selects the winning logo (1 of 5), which locks as the app icon and public-site header across all three OS lanes and is captured in ADR-0012 (visual identity). Screen layout work may proceed with a placeholder mark in parallel — the winning logo drops into the same reserved slot without changing any layout.",
+    "osLanes": [
+      { "lane": "macOS", "accent": "Aqua selection accent", "varies": "Selections, active tab, focus ring, small status strokes.", "doNotVary": "Information architecture, product states, prediction blue, merge gold." },
+      { "lane": "Windows", "accent": "Cobalt selection accent", "varies": "Selections, active controls, Windows permission/injection copy.", "doNotVary": "Layout, spacing, control density, feature hierarchy." },
+      { "lane": "Linux", "accent": "Emerald selection accent", "varies": "Selections, active controls, X11/Wayland and portal status cues.", "doNotVary": "Shared module model, table structure, screen-family order." }
+    ],
+    "invariants": [
+      "One consistent left navigation across every screen: Dictate, Whisper-Ahead, Cleanup, Relay, Voiceprint, Conductor, Privacy, Dictionary, Analytics, Setup.",
+      "Card radius stays 8px; components are compact cards, tables, segmented controls, toggles, icon buttons, status badges, small charts, and native OS permission panels.",
+      "Prediction suggestions render blue in every theme; an accepted prediction pulses amber-gold for roughly 0.5s then settles to normal text.",
+      "Destructive Conductor actions always require an explicit confirm gate.",
+      "Never imply cloud sync for core features; Harbor is an optional hosted service only, and every Harbor service has a self-hostable path.",
+      "All controls keyboard-reachable, readable at high OS scaling, with no text overlap at narrow desktop widths.",
+      "Default, light, and dark modes exist for every OS; only the single free-tier accent differs by OS lane; premium theme expansion may add colors later without changing layout."
+    ],
+    "logoOptions": [
+      { "id": 1, "name": "K Waveform", "note": "K-shaped voice/caret mark in teal and blue; closest to an everyday app-icon direction." },
+      { "id": 2, "name": "Protected Path", "note": "Circular voice-path/seal for the privacy-first promise without becoming a security-tool logo." },
+      { "id": 3, "name": "Relay Monogram", "note": "Cross-device K monogram that leans into Relay and the three-desktop story." },
+      { "id": 4, "name": "Wordmark Forward", "note": "Typography-led identity suited to a polished productivity app and public site header." },
+      { "id": 5, "name": "Voice Constellation", "note": "Three-node local-fleet mark hinting at Mac/Windows/Linux continuity (premium feel)." }
+    ],
+    "screenFamilies": [
+      { "id": "01", "name": "Main Dictation Cockpit", "phase": "P1", "note": "Active recording, waveform, elapsed time, engine, target app, cleanup dial, local-only status, WAL recovery, recent transcript." },
+      { "id": "02", "name": "Whisper-Ahead HUD", "phase": "P3", "note": "Mic-tracked prediction lane, 5s/10s/20s timing, blue suggestion state, amber-gold counted merge pulse, Tab/Shift-Tab accept." },
+      { "id": "03", "name": "Cleanup & Injection", "phase": "P1 (inject) → P2 (dial)", "note": "Raw/Light/Full cleanup rules and OS injection paths: AX API, UI Automation + SendInput, X11, Wayland portals." },
+      { "id": "04", "name": "Relay", "phase": "P4", "note": "Device pairing, mDNS discovery, six-digit code, E2E status, CRDT sync, revocation, optional Harbor rendezvous." },
+      { "id": "05", "name": "Voiceprint", "phase": "P4", "note": "Correction learning, acoustic biasing, local training schedule, export/delete/reset, acceptance-rate lift." },
+      { "id": "06", "name": "Conductor", "phase": "P4", "note": "Voice routing for agents, MCP status, command grammar, fleet target, explicit confirm gates for destructive actions." },
+      { "id": "07", "name": "Privacy & Context", "phase": "P1 (posture) → P3 (context)", "note": "No transmission/persistence, secure-field blocks, Tier 1 accessibility read, Tier 2 local OCR, network-audit status." },
+      { "id": "08", "name": "Dictionary & Profiles", "phase": "P2 (dictionary) → P3 (profiles)", "note": "Terms, snippets, import, correction history, per-app profiles, output rules, engine preference, Relay conflict sync." },
+      { "id": "09", "name": "Analytics & Performance", "phase": "P3", "note": "Zero-edit rate, prediction acceptance, words saved, latency p50/p95, RAM, model, cleanup impact, exportable local report." },
+      { "id": "10", "name": "First Run & License", "phase": "P1", "note": "ASR engine, permissions, hotkey, cleanup default, Whisper-Ahead, privacy confirmation, Free/Pro/Captain/Harbor choices; 60-second setup." }
+    ],
+    "promptPack": "prompts/VISUAL-BUILD-PROMPT-PACK.md — fable-safe, scoped prompts for resuming the visual-driven build against these boards."
+  },
   "mission": {
     "name": "Kaydence — Plan of Attack v3",
     "tagline": "Speak anywhere. Ship clean text. Never leak, never lose, never lag.",
@@ -10,8 +53,8 @@
     "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
     "status": "active",
     "started": "2026-07-07",
-    "updated": "2026-07-07T04:30:00Z",
-    "sessionCount": 1
+    "updated": "2026-07-08T00:00:00Z",
+    "sessionCount": 2
   },
   "policies": {
     "merge": "auto",
@@ -184,6 +227,15 @@
           "evidence": null,
           "lastRun": null,
           "notes": "Root AGENTS §5. Requires scripts/bench.sh (P0-T6) + reference machines."
+        },
+        {
+          "id": "P1-G4",
+          "title": "Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup & Injection (injection paths + Raw), 07 Privacy & Context (no-transmission / secure-field posture), 10 First Run & License match their boards",
+          "command": "design-review: built screens vs assets/generated/kaydence-visual-pack/screens/kaydence-screen-family-{01,03,07,10}.png + keyboard/a11y checklist",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Manual design-review gate (like P0-G5): layout, left-nav order, 8px card radius, and product states come from the board; only the OS selection accent varies (aqua/cobalt/emerald). A scripts/check-visual-parity.sh structural linter (nav order present, radius + prediction-blue/merge-gold tokens defined, no cloud-sync copy on core screens) may be authored once the frontend lands — not yet, so this stays a human-verified gate. Logo may still be a placeholder mark until ADR-0012."
         }
       ],
       "tasks": [
@@ -193,7 +245,9 @@
         { "id": "P1-P0-4", "title": "PRD P0-4 Write-ahead audio persistence + SQLite history (audio on disk before ASR; survives crash)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "Non-negotiable #2." },
         { "id": "P1-P0-6", "title": "PRD P0-6 Latency budgets met + enforced by scripts/bench.sh in CI", "status": "pending", "dependsOn": ["P0-T6"], "pr": null, "notes": "Root AGENTS §5." },
         { "id": "P1-P0-7", "title": "PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page)", "status": "pending", "dependsOn": ["P0-T6"], "pr": null, "notes": "Non-negotiable #1. audit-network.sh gate." },
-        { "id": "P1-P0-8", "title": "PRD P0-8 60-second first run (install -> model download -> first dictation <=60s, one settings screen)", "status": "pending", "dependsOn": ["P1-P0-1", "P1-P0-2", "P1-P0-3", "P1-P0-4"], "pr": null, "notes": "Pitfall P10." }
+        { "id": "P1-P0-8", "title": "PRD P0-8 60-second first run (install -> model download -> first dictation <=60s, one settings screen)", "status": "pending", "dependsOn": ["P1-P0-1", "P1-P0-2", "P1-P0-3", "P1-P0-4"], "pr": null, "notes": "Pitfall P10. UI conforms to screen-family 10 (First Run & License)." },
+        { "id": "P1-D1", "title": "Vendor Visual System v1 into the monorepo: copy logos/ + the 10 screen-family boards from /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/ into assets/brand/ + docs/design/, and add a design-reference index mapping each screen family -> its board -> the phase that builds it (P1-G4/P2-G3/P3-G4/P4-G-SCREENS)", "status": "pending", "dependsOn": ["P0-T2"], "pr": null, "notes": "Makes the boards the in-repo build reference so the fidelity gates point at local files. Assets currently live in the separate Documents/Kaydence repo. Report-only copy — no layout invention." },
+        { "id": "P1-D2", "title": "Operator selects the winning logo (1 of 5) -> lock as the app icon + public-site header across macOS/Windows/Linux; author ADR-0012 (visual identity + OS accent lanes)", "status": "pending", "dependsOn": [], "pr": null, "notes": "OPERATOR GATE — critical decision path (visual identity). Screen layout may proceed with a placeholder mark in the reserved slot until locked; the winning logo drops in without changing layout." }
       ]
     },
     {
@@ -220,6 +274,15 @@
           "evidence": null,
           "lastRun": null,
           "notes": "Root AGENTS §5. PRD P1-1."
+        },
+        {
+          "id": "P2-G3",
+          "title": "Screen-family fidelity: 03 Cleanup & Injection (Raw/Light/Full dial complete) and 08 Dictionary & Profiles (dictionary + import) match their boards",
+          "command": "design-review: built screens vs assets/generated/kaydence-visual-pack/screens/kaydence-screen-family-{03,08}.png + keyboard/a11y checklist",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Manual design-review gate. The cleanup dial and dictionary/import surfaces must match board 03/08 (segmented Raw/Light/Full control, import affordances). Per-app profiles on board 08 land in P3 (P3-G4)."
         }
       ],
       "tasks": [
@@ -262,6 +325,15 @@
           "evidence": null,
           "lastRun": null,
           "notes": "Non-negotiable #1 / ADR-0006. PRD P2-12."
+        },
+        {
+          "id": "P3-G4",
+          "title": "Screen-family fidelity: 02 Whisper-Ahead HUD (blue lane, 5s/10s/20s ladder, amber-gold merge pulse, Tab/Shift-Tab), 08 per-app profiles, 09 Analytics & Performance, 07 Tier 1/Tier 2 context match their boards",
+          "command": "design-review: built screens vs assets/generated/kaydence-visual-pack/screens/kaydence-screen-family-{02,07,08,09}.png + keyboard/a11y checklist",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Manual design-review gate. Board 02 is the locked Whisper-Ahead interaction — prediction blue and the ~0.5s amber-gold merge pulse are invariants, not per-OS. Analytics board 09 is local-only/exportable with p50/p95 latency; no cloud."
         }
       ],
       "tasks": [
@@ -311,6 +383,15 @@
           "evidence": null,
           "lastRun": null,
           "notes": "P4-8 gate. A single auto-executed destructive (delete/send/pay/deploy) command is a release blocker."
+        },
+        {
+          "id": "P4-G-SCREENS",
+          "title": "Screen-family fidelity: 04 Relay, 05 Voiceprint, 06 Conductor match their boards (Conductor's explicit confirm gate is visible on every destructive action)",
+          "command": "design-review: built screens vs assets/generated/kaydence-visual-pack/screens/kaydence-screen-family-{04,05,06}.png + keyboard/a11y checklist",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Manual design-review gate for the flagship trio. Relay board 04 never implies cloud sync (Harbor is optional/self-hostable); Voiceprint board 05 shows export/delete/reset; Conductor board 06 shows the confirm gate — these mirror the P4 safety invariants, not just visuals."
         }
       ],
       "tasks": [
@@ -331,7 +412,8 @@
     { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "1 / 3 (macOS local; Win+Linux need CI)", "target": "3 / 3 incl. Wayland", "direction": "up" },
     { "label": "ADRs accepted (0009 Proposed by design)", "baseline": "8", "current": "10", "target": "10", "direction": "up" },
     { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "7", "target": "7", "direction": "up" },
-    { "label": "Standing-gate scripts present", "baseline": "1 (bench-prediction)", "current": "4 (+bench, audit-network, check-adr)", "target": "5 (+release)", "direction": "up" }
+    { "label": "Standing-gate scripts present", "baseline": "1 (bench-prediction)", "current": "4 (+bench, audit-network, check-adr)", "target": "5 (+release)", "direction": "up" },
+    { "label": "Visual system (logos + screen families)", "baseline": "none", "current": "5 logos + 10 family boards (30 OS views) locked", "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS", "direction": "up" }
   ],
   "risks": [
     { "title": "macOS-only execution host — Windows + Linux gates cannot close here", "severity": "high", "note": "cargo tauri dev on Win/Linux, 3-OS cargo test, and Wayland injection tests all require the reference machines or GitHub Actions. This session can only verify the macOS leg. All 3-OS exit gates stay open pending that infra." },
@@ -348,11 +430,13 @@
     { "number": null, "title": "P0-T6 standing-gate scripts (audit-network working, bench, check-adr-status)", "url": "local:0258de3", "phase": "P0", "mergedAt": "2026-07-07" },
     { "number": null, "title": "P0-T4 Handy study -> ADR-0004 adopt/redesign notes", "url": "local:p0-t4", "phase": "P0", "mergedAt": "2026-07-07" },
     { "number": null, "title": "P0-T2/T3 Tauri scaffold + SessionEvent contract (macOS gates green)", "url": "local:efdf6f7", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "P0-T5 Linux CI system deps (3-OS matrix wired)", "url": "local:p0-t5", "phase": "P0", "mergedAt": "2026-07-07" }
+    { "number": null, "title": "P0-T5 Linux CI system deps (3-OS matrix wired)", "url": "local:p0-t5", "phase": "P0", "mergedAt": "2026-07-07" },
+    { "number": null, "title": "Visual System v1 locked — 5 logo directions + 10 screen-family boards (30 OS views) generated (Codex) and adopted as the build reference set; screen-fidelity gates wired into P1–P4", "url": "local:design-direction-lock", "phase": "design", "mergedAt": "2026-07-08" }
   ],
   "resume": {
     "activePhase": "P0",
     "nextActions": [
+      "DESIGN LOCKED (2026-07-08): Visual System v1 is the build reference — 5 logo directions + 10 screen-family boards × 3 OS = 30 views (see designDirection in state.json and the report at /Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html). As P1 UI work proceeds: (a) vendor the pack into this monorepo (P1-D1), (b) build each screen to its family board with OS accent as the only free-tier variation, (c) operator picks the winning logo (1 of 5) → ADR-0012 (P1-D2). Every phase now has a screen-family fidelity gate (P1-G4, P2-G3, P3-G4, P4-G-SCREENS).",
       "P0 is 6/7 tasks done. The Tauri scaffold compiles and ALL locally-runnable gates are green on macOS: cargo fmt/clippy/test, frontend tsc+eslint, audit-network, ADR-status. Merges: bootstrap, ADRs, v3 docs, gate scripts, Handy study, scaffold.",
       "LAST P0 TASK — P0-T5: add the Linux system-deps step to CI (ubuntu: libwebkit2gtk-4.1-dev, libgtk-3-dev, libayatana-appindicator3-dev, librsvg2-dev, patchelf; + gtk-layer-shell per ADR-0004). Matrix already includes ubuntu-latest. Cannot be verified on this macOS host.",
       "Then P0 is blocked only by its exit gates P0-G5 (cargo tauri dev opens on Win+Linux) and P0-G6 (3-OS CI green) — both waived-pending-infra: need a GitHub remote+Actions or the physical reference machines. This is the natural P0->P1 operator checkpoint.",
@@ -374,6 +458,8 @@
       "A green Judge with a red Audit does not merge.",
       "Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.",
       "Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.",
+      "Visual System v1 (designDirection) is the LOCKED UI/UX source of truth: build each screen to its screen-family board (assets/generated/kaydence-visual-pack/screens/kaydence-screen-family-NN.png). The only per-OS variation is the free-tier selection accent (macOS aqua / Windows cobalt / Linux emerald). The shared invariants — nav order, 8px card radius, prediction-blue, amber-gold merge pulse, destructive confirm gate, no cloud-sync copy on core screens — never vary; treat a change to them as a critical decision path that HALTS for operator go + ADR.",
+      "Every phase from P1 carries a screen-family fidelity gate: the phase's screens are design-reviewed against their boards (plus the keyboard/a11y checklist) before the phase closes. Logo choice is a separate operator decision (1 of 5) that locks via ADR-0012; screen layout may proceed with a placeholder mark until then.",
       "Never weaken a non-negotiable to pass a gate — that is itself a blocking defect."
     ]
   }

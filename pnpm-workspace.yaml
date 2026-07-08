@@ -1,2 +1,7 @@
 packages:
   - "apps/*"
+
+# pnpm >= ~11.2 reads settings here (the package.json "pnpm" field is kept in
+# parallel for older versions; each side warn-ignores the other's copy).
+onlyBuiltDependencies:
+  - esbuild
