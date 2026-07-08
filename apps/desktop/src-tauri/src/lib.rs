@@ -6,6 +6,8 @@
 //! parallel local-only layer. Stages couple only through `events::SessionEvent`.
 
 #[cfg(desktop)]
+use std::path::PathBuf;
+#[cfg(desktop)]
 use std::sync::{Arc, Mutex};
 #[cfg(desktop)]
 use std::time::{Duration, Instant};
@@ -36,33 +38,50 @@ fn app_snapshot() -> settings::AppSnapshot {
 struct HotkeyRuntime {
     coordinator: hotkeys::CaptureCoordinator,
     recorder: audio::WalCaptureRuntime,
+    history: history::HistoryStore,
+}
+
+#[cfg(desktop)]
+#[derive(Debug, thiserror::Error)]
+enum HotkeyRuntimeError {
+    #[error("audio: {0}")]
+    Audio(#[from] audio::CaptureRuntimeError),
+    #[error("history: {0}")]
+    History(#[from] history::HistoryError),
 }
 
 #[cfg(desktop)]
 impl HotkeyRuntime {
-    fn new(app_data_dir: impl Into<std::path::PathBuf>) -> Self {
-        Self::with_recorder(audio::WalCaptureRuntime::new(app_data_dir))
+    fn new(app_data_dir: impl Into<PathBuf>) -> Result<Self, HotkeyRuntimeError> {
+        let app_data_dir = app_data_dir.into();
+        let recorder = audio::WalCaptureRuntime::new(app_data_dir.clone());
+        let history = history::HistoryStore::open(&app_data_dir)?;
+        Ok(Self::with_recorder(recorder, history))
     }
 
     #[cfg(test)]
-    fn new_wal_only(app_data_dir: impl Into<std::path::PathBuf>) -> Self {
-        Self::with_recorder(audio::WalCaptureRuntime::new_wal_only(app_data_dir))
+    fn new_wal_only(app_data_dir: impl Into<PathBuf>) -> Result<Self, HotkeyRuntimeError> {
+        let app_data_dir = app_data_dir.into();
+        let recorder = audio::WalCaptureRuntime::new_wal_only(app_data_dir.clone());
+        let history = history::HistoryStore::open(&app_data_dir)?;
+        Ok(Self::with_recorder(recorder, history))
     }
 
-    fn with_recorder(recorder: audio::WalCaptureRuntime) -> Self {
+    fn with_recorder(recorder: audio::WalCaptureRuntime, history: history::HistoryStore) -> Self {
         Self {
             coordinator: hotkeys::CaptureCoordinator::new(
                 hotkeys::HotkeyMode::PushToTalk,
                 hotkeys::CaptureConfig::default(),
             ),
             recorder,
+            history,
         }
     }
 
     fn handle_signal(
         &mut self,
         signal: hotkeys::Signal,
-    ) -> Result<Option<u64>, audio::CaptureRuntimeError> {
+    ) -> Result<Option<u64>, HotkeyRuntimeError> {
         let was_finalizing = matches!(
             self.coordinator.state(),
             hotkeys::CaptureState::Finalizing { .. }
@@ -77,7 +96,7 @@ impl HotkeyRuntime {
                     Ok(id) => id,
                     Err(err) => {
                         self.coordinator.reset();
-                        return Err(err);
+                        return Err(err.into());
                     }
                 };
                 println!(
@@ -88,12 +107,11 @@ impl HotkeyRuntime {
             }
             hotkeys::Action::FinalizeCapture => {
                 let summary = self.recorder.finalize_capture(at_ms)?;
+                let event = summary.audio_persisted_event();
+                self.history.record_event(&event)?;
                 println!(
                     "Kaydence audio persisted: event={:?} samples={} started_ms={} finalized_ms={}",
-                    summary.audio_persisted_event(),
-                    summary.samples_written,
-                    summary.started_ms,
-                    summary.finalized_ms
+                    event, summary.samples_written, summary.started_ms, summary.finalized_ms
                 );
             }
             hotkeys::Action::DiscardCapture => {
@@ -162,7 +180,7 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 
     let shortcut = Shortcut::new(None, Code::AltRight);
     let app_data_dir = app.path().app_data_dir()?;
-    let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir)));
+    let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir)?));
     let started = Instant::now();
     let handler_runtime = Arc::clone(&runtime);
 
@@ -236,7 +254,7 @@ mod tests {
     #[test]
     fn hotkey_runtime_finalizes_wal_after_tail_tick() {
         let app_data = tmp();
-        let mut runtime = HotkeyRuntime::new_wal_only(&app_data);
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data).unwrap();
 
         assert_eq!(
             runtime
@@ -261,14 +279,31 @@ mod tests {
         let path = app_data.join("sessions").join(format!("{}.wav", id.0));
         assert!(runtime.recorder.active_session_id().is_none());
         assert!(path.exists());
-        assert_eq!(&std::fs::read(path).unwrap()[0..4], b"RIFF");
+        assert_eq!(&std::fs::read(&path).unwrap()[0..4], b"RIFF");
+        assert!(app_data.join(history::HISTORY_DB_FILE).exists());
+
+        let session = runtime.history.get_session(id).unwrap().unwrap();
+        assert_eq!(session.audio_path.as_deref(), Some(path.to_str().unwrap()));
+        assert_eq!(session.event_count, 1);
+        assert_eq!(
+            runtime.history.events_for_session(id).unwrap(),
+            vec![audio::CaptureSessionSummary {
+                id,
+                wal_path: path,
+                samples_written: 0,
+                dropped_input_samples: 0,
+                started_ms: 0,
+                finalized_ms: 700
+            }
+            .audio_persisted_event()]
+        );
         let _ = std::fs::remove_dir_all(app_data);
     }
 
     #[test]
     fn hotkey_runtime_discards_short_tap_wal() {
         let app_data = tmp();
-        let mut runtime = HotkeyRuntime::new_wal_only(&app_data);
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data).unwrap();
 
         runtime
             .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
@@ -286,6 +321,7 @@ mod tests {
 
         assert!(runtime.recorder.active_session_id().is_none());
         assert!(!path.exists());
+        assert!(runtime.history.get_session(id).unwrap().is_none());
         let _ = std::fs::remove_dir_all(app_data);
     }
 }

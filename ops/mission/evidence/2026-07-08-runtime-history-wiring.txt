@@ -1,0 +1,59 @@
+Kaydence runtime history wiring slice
+Date: 2026-07-08
+Commit: pending at evidence capture
+
+Intent
+- Wire the new SQLite HistoryStore into the hotkey runtime.
+- Persist finalized WAL audio metadata immediately after capture finalization.
+- Keep discarded short taps out of history.
+- Surface history write failures through the runtime error path instead of
+  silently losing the safety-net record.
+
+Implementation summary
+- HotkeyRuntime now owns a HistoryStore alongside the WalCaptureRuntime.
+- HotkeyRuntime::new opens history.sqlite3 under the app-data directory.
+- HotkeyRuntime::new_wal_only opens the same store in tests.
+- FinalizeCapture records the CaptureSessionSummary::audio_persisted_event into
+  history before logging the persisted event.
+- Added HotkeyRuntimeError to carry both audio and history failures.
+- Extended runtime tests:
+  - finalized WAL creates history.sqlite3;
+  - history session records the WAL path and one AudioPersisted event;
+  - discarded short-tap WAL leaves no history session.
+
+Focused verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  Result: PASS, 2 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml history:: --lib
+  Result: PASS, 5 passed
+
+Full verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  Result: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  Result: PASS, 81 lib tests + 2 crash-recovery tests
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  Result: PASS
+- npm --prefix apps/desktop run check
+  Result: PASS
+- npm --prefix apps/desktop run build
+  Result: PASS
+- bash scripts/audit-network.sh --check
+  Result: PASS, 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  Result: PASS, all ADRs accepted except declared ADR-0009 waiver
+- ./script/build_and_run.sh build
+  Result: PASS
+- ./script/build_and_run.sh --verify
+  Result: PASS
+
+Post-verify cleanup
+- Confirmed no kaydence / cargo tauri dev / vite --host processes remained.
+- Removed generated apps/desktop/dist build artifacts from the working tree.
+
+Remaining boundaries
+- Bind target app at capture start and record Started once profiles/frontmost-app
+  detection lands.
+- Run finalized captures through VAD, ASR, cleanup, injection, and record the
+  complete event stream rather than only AudioPersisted.
+- Feed history summaries into the frontend history/recover-last surfaces.
