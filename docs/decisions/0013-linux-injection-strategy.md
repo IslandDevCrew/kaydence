@@ -62,6 +62,22 @@ session if available, macOS on the host, Windows via a real box. Evidence under 
 - **Refuse all opaque (non-AT-SPI) focus.** Rejected as default: it would break injection into
   many real apps. Offered as `Strict` mode instead, with the default disclosing the gap.
 
+## Amendment 2026-07-08 (validated on the GNOME VM)
+
+Live testing (`bin/atspi-selftest`) refined the ladder with evidence:
+
+- **AT-SPI is DETECTION, not the primary INSERTION path.** `EditableText.InsertText`
+  returns success but no-ops on modern GNOME apps (GTK4 gnome-text-editor *and* gedit 44).
+  So AT-SPI is used for the secure-field gate + focused-role reads (both validated), and
+  **keystroke synthesis is the primary insertion path**: uinput (validated available via
+  ydotool, daemonless) or the RemoteDesktop portal + libei. AT-SPI native insert stays as
+  a best-effort bonus for apps that honor it.
+- This does **not** weaken non-negotiable #8: detection (the refusal signal) is exactly
+  the part of AT-SPI that works. Where detection is unavailable (opaque client), the
+  Unknown-focus policy still governs (Lenient flags unverified / Strict refuses).
+- The end-to-end "types into the focused app" validation is operator-in-the-loop (Wayland
+  won't let a script move keyboard focus — the same isolation the whole ADR is about).
+
 ## Consequences
 
 - **Easier:** one `TextInjector` trait with the tested policy/selection/fallback core already

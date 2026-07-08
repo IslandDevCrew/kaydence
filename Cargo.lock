@@ -1863,6 +1863,7 @@ name = "kaydence"
 version = "0.1.0"
 dependencies = [
  "atspi",
+ "futures-lite",
  "pollster",
  "serde",
  "serde_json",
