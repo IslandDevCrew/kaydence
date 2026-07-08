@@ -18,6 +18,7 @@ jobs:
       - name: enable pnpm
         run: corepack enable
         shell: bash
+        env: { COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
       # --- Linux system deps (P0-T5, ADR-0011): Tauri 2.x webview + tray +
       #     gtk-layer-shell for the HUD overlay (ADR-0004 study). CANNOT be
       #     verified on the current macOS-only host — waived-pending-infra. ---
