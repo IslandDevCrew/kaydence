@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaydence — Plan of Attack v3 — State of the Union</title>
+<style>
+:root{color-scheme:dark;--bg:#070f1c;--paper:#0d1b2f;--paper-2:#10243b;--ink:#eef6ff;--muted:#a9bdd3;--line:rgba(169,189,211,.18);--accent:#58d7b3;--blue:#77b7ff;--amber:#ffd166;--red:#ff8f8f;--good:#8ef2c0}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at top left,rgba(88,215,179,.15),transparent 30rem),radial-gradient(circle at top right,rgba(119,183,255,.13),transparent 32rem),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif;line-height:1.55}
+main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:40px 0 60px}
+h1,h2,h3{margin:0;line-height:1.12}
+h1{font-size:clamp(2rem,5vw,3.8rem);letter-spacing:-.04em;max-width:900px;margin-top:10px}
+h2{margin-bottom:14px;font-size:clamp(1.4rem,2.6vw,2rem)}
+h3{font-size:1.02rem;color:#fff}
+p{margin:0}
+a{color:var(--blue)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;color:#dff7ef;overflow-wrap:anywhere}
+.eyebrow{color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+section{padding-top:34px}
+.hero{padding:20px 0 26px;border-bottom:1px solid var(--line)}
+.hero .tagline{max-width:760px;margin-top:14px;color:var(--muted);font-size:1.06rem}
+.chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin:2px 6px 2px 0;background:rgba(255,255,255,.05);color:var(--muted);font-size:.78rem;font-weight:800}
+.chip.green{color:var(--good);border-color:rgba(142,242,192,.4)}
+.chip.amber{color:var(--amber);border-color:rgba(255,209,102,.4)}
+.chip.red{color:var(--red);border-color:rgba(255,143,143,.4)}
+.chip.blue{color:var(--blue);border-color:rgba(119,183,255,.4)}
+.panel,.phase{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(16,36,59,.95),rgba(13,27,47,.95));box-shadow:0 18px 46px rgba(0,0,0,.25);padding:20px}
+.phase{margin-top:14px}
+.phase.active{border-color:rgba(88,215,179,.45)}
+.phase header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:8px}
+.bar{height:10px;border-radius:999px;background:rgba(255,255,255,.07);margin-top:12px;overflow:hidden}
+.bar .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--blue))}
+.bar.big{height:16px}
+ul.tasks,ul.bare{list-style:none;margin:12px 0 0;padding:0}
+ul.tasks li,ul.bare li{padding:8px 0;border-top:1px solid var(--line);color:var(--muted)}
+ul.tasks li:first-child,ul.bare li:first-child{border-top:0}
+ul.tasks .mark{margin-right:6px;color:var(--accent)}
+li.task-done{opacity:.75}
+li.task-blocked .mark{color:var(--red)}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.9rem}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:rgba(255,255,255,.05);color:#fff;font-size:.76rem;letter-spacing:.06em;text-transform:uppercase}
+td{color:var(--muted)}
+td b{color:#fff}
+.table-wrap{overflow-x:auto;border-radius:12px}
+.timeline{display:grid;gap:10px}
+.tl-item{display:grid;grid-template-columns:72px 1fr;gap:14px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:rgba(255,255,255,.035)}
+.tl-item time{color:var(--accent);font-size:.8rem;font-weight:900}
+.tl-item p{color:var(--muted)}
+details.resume{margin-top:14px;border:1px dashed rgba(88,215,179,.4);border-radius:12px;padding:10px 14px}
+details.resume summary{cursor:pointer;color:var(--accent);font-weight:800}
+.prompt-box{position:relative;margin-top:10px}
+.prompt-box pre{margin:0;border:1px solid var(--line);border-radius:10px;background:#081120;color:#dff7ef;padding:14px;font-size:.82rem;white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto}
+button.copy{position:absolute;top:8px;right:8px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.08);color:var(--ink);font-weight:700;padding:4px 12px;cursor:pointer}
+button.copy:hover{background:rgba(88,215,179,.2)}
+.footer{margin-top:40px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:.9rem}
+@media(max-width:900px){main{width:min(100% - 24px,760px)}.tl-item{grid-template-columns:56px 1fr}}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <p class="eyebrow">Mission Control &middot; State of the Union &middot; generated 2026-07-08 01:53Z</p>
+    <h1>Kaydence — Plan of Attack v3</h1>
+    <p class="tagline">Speak anywhere. Ship clean text. Never leak, never lose, never lag.</p>
+    <div style="margin-top:14px">
+      <span class="chip blue">mission: active</span>
+      <span class="chip green">active phase: P0</span>
+      <span class="chip blue">0/32 tasks</span>
+      <span class="chip amber">0/18 gates passed</span>
+      <span class="chip ">0 PRs merged</span>
+      <span class="chip ">sessions: 1</span>
+      <span class="chip ">updated: 2026-07-07T00:00:00Z</span>
+    </div>
+    <div class="bar big" role="img" aria-label="Overall progress 0%"><div class="fill" style="width:0%"></div></div>
+    <p class="small muted" style="margin-top:6px">Overall: 0% of tasks complete &middot; repo local-only (no remote configured) &middot; plan: /Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html</p>
+  </header>
+
+  <section aria-labelledby="coldstart">
+    <h2 id="coldstart">Cold-Start Prompt (any new session, zero context)</h2>
+    <div class="panel">
+      <div class="prompt-box"><button class="copy" type="button">Copy</button><pre>You are cold-starting the &quot;Kaydence — Plan of Attack v3&quot; mission with zero prior context.
+
+Local repo: /Users/IDC2.5/Kaydence/kaydence  (local-only (no remote configured), default branch main)
+Governing plan: /Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html
+Mission status: active — active phase: P0
+
+Mission conventions:
+  - One work unit = one branch (mission/&lt;phaseId&gt;-&lt;slug&gt;) = one merge; &lt;=400 changed lines.
+  - Run the internal loop per prompts/BUILD-LOOP.md (ORIENT-&gt;PLAN-&gt;BUILD-&gt;JUDGE-&gt;AUDIT-&gt;GATE) inside each task; mission-control governs phases/state/reporting above it.
+  - No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.
+  - A green Judge with a red Audit does not merge.
+  - Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.
+  - Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.
+  - Never weaken a non-negotiable to pass a gate — that is itself a blocking defect.
+
+Operating procedure:
+  Read ops/mission/state.json FIRST — it is the source of truth, not this prompt.
+  Verify reality matches state: git log --oneline -5, and re-run the active phase's gate commands.
+  Follow the loop: pick next unblocked task -&gt; branch mission/&lt;phase&gt;-&lt;slug&gt; -&gt; implement -&gt; run gates -&gt; PR -&gt; merge per policy 'auto' -&gt; update state.json -&gt; node ops/mission/render-sotu.mjs -&gt; commit state+journal+html.
+  Never hand-edit state-of-the-union.html. Never merge without fresh gate evidence in ops/mission/evidence/.
+  End of session: update resume.nextActions for a stranger, append journal entry, render, commit.</pre></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="metrics"><h2 id="metrics">Scoreboard: Baseline &rarr; Current &rarr; Target</h2>
+  <div class="table-wrap"><table><thead><tr><th>Metric</th><th>Baseline</th><th>Current</th><th>Target</th></tr></thead><tbody><tr><td><b>Product code (Rust+TS lines)</b></td><td>0</td><td><span class="chip green">0</span></td><td>&gt;0 buildable app</td></tr><tr><td><b>Idle footprint (RAM, ASR resident)</b></td><td>~800 MB (Wispr Electron)</td><td><span class="chip amber">n/a</span></td><td>&lt;=250 MB</td></tr><tr><td><b>Release -&gt; injected, local (Raw)</b></td><td>2-5 s (Handy)</td><td><span class="chip amber">n/a</span></td><td>&lt;=700ms GPU / &lt;=1200ms CPU</td></tr><tr><td><b>Zero-edit rate at Light cleanup</b></td><td>raw output</td><td><span class="chip amber">n/a</span></td><td>&gt;=95% golden corpus</td></tr><tr><td><b>Prediction: pause -&gt; guess</b></td><td>Mac-only (Cotypist MLX)</td><td><span class="chip amber">n/a</span></td><td>&lt;=400ms, 3-OS (llama.cpp)</td></tr><tr><td><b>Cross-device continuity (Relay)</b></td><td>cloud-only or none</td><td><span class="chip amber">n/a</span></td><td>&lt;=500ms added on LAN, E2E, zero cloud</td></tr><tr><td><b>Agent-command safety (Conductor)</b></td><td>no comparable product</td><td><span class="chip amber">n/a</span></td><td>confirm-gate 100%; 0 auto-exec destructive</td></tr><tr><td><b>Platform parity (CI legs green)</b></td><td>0 / 3 (Mac-first field; Linux unserved)</td><td><span class="chip amber">0 / 3</span></td><td>3 / 3 incl. Wayland</td></tr><tr><td><b>ADRs accepted (of 10)</b></td><td>8 present / 8 accepted</td><td><span class="chip amber">8</span></td><td>10</td></tr></tbody></table></div>
+  <p class="small muted" style="margin-top:6px">green = at/past target &middot; blue = moving toward target &middot; amber = unchanged &middot; red = moving away</p></section>
+  <section aria-labelledby="risks"><h2 id="risks">Risks &amp; Blockers</h2><div class="panel"><ul class="bare"><li><span class="chip red">blocker</span> macOS-only host: P0-G3 (3-OS test), P0-G5 (tauri dev on Win/Linux), P0-G6 (3-OS CI) cannot be closed without the reference machines or a GitHub remote with Actions.</li><li><span class="chip red">blocker</span> No GitHub remote configured — no CI trust anchor and no real PRs; auto-merge is local-only.</li><li><span class="chip red">blocker</span> P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.</li><li><span class="chip red">blocker</span> Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).</li><li><span class="chip red">blocker</span> ADR-0009 (Relay crypto) operator review required before the P4-1 build.</li><li><span class="chip red">blocker</span> Critical-path bootstrap items (P0-T1 non-negotiable #5 change, P0-T7 ADR-0009/0010) need explicit operator go per policy.</li><li><span class="chip red">high</span> <b>macOS-only execution host — Windows + Linux gates cannot close here</b> &mdash; <span class="muted">cargo tauri dev on Win/Linux, 3-OS cargo test, and Wayland injection tests all require the reference machines or GitHub Actions. This session can only verify the macOS leg. All 3-OS exit gates stay open pending that infra.</span></li><li><span class="chip red">high</span> <b>No git remote / no CI — auto-merge + 3-OS CI policy degraded</b> &mdash; <span class="muted">The mission's merge policy assumes GitHub PRs + Actions as the trust anchor. Locally we get branches merged to main with macOS-only evidence; the CI trust anchor is absent until a remote is configured.</span></li><li><span class="chip red">high</span> <b>v2 -&gt; v3 documentation drift</b> &mdash; <span class="muted">Repo AGENTS.md (#5 = macOS+Windows), PRD (stops at P2-13), ROADMAP (P4=Expansion), ADRs (stop at 0008) all predate the v3 plan. The plan asserts ADR-0009/0010 and PRD P4-1..P4-9 are 'committed' — they are not in the repo. P0-T1/P0-T7 reconcile this; several sub-steps are critical decision paths.</span></li><li><span class="chip amber">medium</span> <b>Gemma 3 1B license (Gemma Terms, not Apache)</b> &mdash; <span class="muted">models/registry.json flags license_review_required. Legal review before any paid build bundles it (ADR-0007/0010). Download-on-demand only; never bundle unreviewed.</span></li><li><span class="chip amber">medium</span> <b>Relay pairing/crypto design</b> &mdash; <span class="muted">ADR-0009 keys/rotation/device-revocation design must pass operator review before the P4-1 build starts. Far off, but the gate is load-bearing for the flagship separation.</span></li><li><span class="chip amber">medium</span> <b>Windows native injection (UIA per-app quirks) + Wayland injection</b> &mdash; <span class="muted">PRD risk + Pitfall P8. Wayland is the single highest platform risk in P1 — spike in week 2 (ROADMAP).</span></li></ul></div></section>
+
+  <section aria-labelledby="phases">
+    <h2 id="phases">Phases</h2>
+    <article class="phase active">
+      <header>
+        <span class="chip amber">in progress</span>
+        <h3>P0 &middot; Toolchain &amp; law</h3>
+        <span class="muted small">est. sessions: 1-2 weeks</span>
+      </header>
+      <p class="muted">Bootstrap Tauri on all three OSes, stand up the 3-OS CI matrix (macOS + Windows + Linux), complete the Handy study pass (ADR-0004), reconcile the repo docs from v2 to v3, and get ADRs 1-10 accepted. Exit: `cargo tauri dev` opens on all three OSes; CI green.</p>
+      <div class="bar"><div class="fill" style="width:0%"></div></div>
+      <p class="small muted">0/7 tasks &middot; 0%</p>
+      <ul class="tasks"><li class="task-pending"><span class="mark">&#9675;</span> <b>P0-T1</b> Reconcile repo docs v2 -&gt; v3 (add Linux as first-class to AGENTS.md non-negotiable #5; add P4 flagship-trio epics P4-1..P4-9 to PRD; update ROADMAP to v3 phase structure)<br><span class="muted small">CRITICAL PATH — reinterprets non-negotiable #5 (2-OS -&gt; 3-OS) and adds PRD epics. Needs ADR + operator go. Repo AGENTS.md/PRD/ROADMAP are all v2; the v3 plan supersedes them but the code repo has not been updated.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P0-T2</b> Scaffold Tauri 2.x app (React+TS) into apps/desktop, preserving src-tauri/src/&lt;module&gt;/ dirs and every AGENTS.md; wire pnpm-workspace.yaml + Cargo workspace (apps/desktop/src-tauri + crates/*)<br><span class="muted small">SCAFFOLD.md steps 1-2. CRITICAL PATH — introduces the entire dependency set (new deps). Per SCAFFOLD.md step 3: cpal, ort, whisper.cpp FFI, silero-vad, rusqlite, thiserror, ulid, global-hotkey.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P0-T3</b> Create mod.rs stubs per backend module exposing the typed SessionEvent contract (docs/ARCHITECTURE.md §4) with todo!() bodies, so the event contract compiles before feature work<br><span class="muted small">SCAFFOLD.md step 6. Event-contract definition is a critical path (JUDGE-AUDITOR #7).</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P0-T4</b> Handy source study pass — record adopt/redesign notes in ADR-0004 (Tauri config, cpal capture, whisper.cpp+Parakeet ONNX wiring, VAD, tray/hotkey plumbing)<br><span class="muted small">ADR-0004 exists as a file; needs the study notes filled and Accepted.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P0-T5</b> Extend CI matrix to 3-OS (add ubuntu-latest / Linux leg incl. Wayland+X11 injection test hooks) and wire fmt/clippy/test/npm-check on all three<br><span class="muted small">Current .github/workflows/ci.yml is [macos-latest, windows-latest]. v3 requires Linux. CRITICAL PATH (platform + CI surface).</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P0-T6</b> Add scripts/bench.sh and scripts/audit-network.sh skeletons (referenced by standing gates and CI comments) with --check modes<br><span class="muted small">Only scripts/bench-prediction.sh exists. bench.sh (footprint/latency) and audit-network.sh (privacy egress) are named by the plan's standing gates but absent.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P0-T7</b> Author ADR-0009 (Kaydence Relay pairing/crypto design) and ADR-0010 (pricing: one-time + Harbor) as Proposed; hold for operator review before Accepted<br><span class="muted small">CRITICAL PATH x2 — Relay crypto (ADR-0009) gates P4-1 build; pricing (ADR-0010) is a product/strategy decision. Both HALT for operator go per policy.</span></li></ul>
+      <div class="table-wrap"><table><thead><tr><th>Gate</th><th>Check</th><th>Command</th><th>Evidence</th><th>Last run</th></tr></thead><tbody><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>cargo fmt clean (backend)</b><br><span class="small">No Cargo workspace exists yet — command will fail until the Tauri app is scaffolded (P0-T2).</span></td>
+      <td><code>cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>cargo clippy -D warnings (backend)</b></td>
+      <td><code>cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>cargo test --all (backend)</b><br><span class="small">Locally verifiable on macOS only; Windows + Linux legs require CI runners (blocker).</span></td>
+      <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>npm run check (frontend typecheck + lint)</b></td>
+      <td><code>npm --prefix apps/desktop run check</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>cargo tauri dev opens a window on macOS + Windows + Linux</b><br><span class="small">Manual/human-verified per OS. Windows + Linux cannot be verified on this macOS-only host — needs the reference machines or CI with a display. This is the P0 exit gate.</span></td>
+      <td><code>cargo tauri dev</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>3-OS CI matrix green (macOS + Windows + Linux) on the current HEAD</b><br><span class="small">Requires a GitHub remote + Actions. None configured. CI yaml is currently 2-OS (macOS+Windows); Linux leg must be added (P0-T5). Blocker until remote exists.</span></td>
+      <td><code>gh run list --branch main --limit 1</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>ADRs 0001-0010 all marked Accepted</b><br><span class="small">ADR-0009 (Relay crypto) and ADR-0010 (pricing) do not exist yet; ADRs 0001-0008 present. Authoring 0009/0010 are critical decision paths — operator gate.</span></td>
+      <td><code>bash -c 'grep -RIL &quot;Status: Accepted&quot; docs/decisions/000[1-9]*.md docs/decisions/0010*.md; test -z &quot;$(grep -RIL \&quot;Status: Accepted\&quot; docs/decisions/000[1-9]*.md docs/decisions/0010*.md 2&gt;/dev/null)&quot;'</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr></tbody></table></div>
+      <details class="resume"><summary>Resume prompt for P0 (copy into a fresh session)</summary>
+        <div class="prompt-box"><button class="copy" type="button">Copy</button><pre>You are resuming the &quot;Kaydence — Plan of Attack v3&quot; mission at phase P0: Toolchain &amp; law.
+
+Mission: Speak anywhere. Ship clean text. Never leak, never lose, never lag.
+North star: Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.
+Repo: local-only (no remote configured) (local: /Users/IDC2.5/Kaydence/kaydence), default branch: main.
+Governing plan: /Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html
+
+Phase goal: Bootstrap Tauri on all three OSes, stand up the 3-OS CI matrix (macOS + Windows + Linux), complete the Handy study pass (ADR-0004), reconcile the repo docs from v2 to v3, and get ADRs 1-10 accepted. Exit: `cargo tauri dev` opens on all three OSes; CI green.
+Remaining tasks:
+  - [pending] P0-T1: Reconcile repo docs v2 -&gt; v3 (add Linux as first-class to AGENTS.md non-negotiable #5; add P4 flagship-trio epics P4-1..P4-9 to PRD; update ROADMAP to v3 phase structure) (CRITICAL PATH — reinterprets non-negotiable #5 (2-OS -&gt; 3-OS) and adds PRD epics. Needs ADR + operator go. Repo AGENTS.md/PRD/ROADMAP are all v2; the v3 plan supersedes them but the code repo has not been updated.)
+  - [pending] P0-T2: Scaffold Tauri 2.x app (React+TS) into apps/desktop, preserving src-tauri/src/&lt;module&gt;/ dirs and every AGENTS.md; wire pnpm-workspace.yaml + Cargo workspace (apps/desktop/src-tauri + crates/*) (SCAFFOLD.md steps 1-2. CRITICAL PATH — introduces the entire dependency set (new deps). Per SCAFFOLD.md step 3: cpal, ort, whisper.cpp FFI, silero-vad, rusqlite, thiserror, ulid, global-hotkey.)
+  - [pending] P0-T3: Create mod.rs stubs per backend module exposing the typed SessionEvent contract (docs/ARCHITECTURE.md §4) with todo!() bodies, so the event contract compiles before feature work (SCAFFOLD.md step 6. Event-contract definition is a critical path (JUDGE-AUDITOR #7).)
+  - [pending] P0-T4: Handy source study pass — record adopt/redesign notes in ADR-0004 (Tauri config, cpal capture, whisper.cpp+Parakeet ONNX wiring, VAD, tray/hotkey plumbing) (ADR-0004 exists as a file; needs the study notes filled and Accepted.)
+  - [pending] P0-T5: Extend CI matrix to 3-OS (add ubuntu-latest / Linux leg incl. Wayland+X11 injection test hooks) and wire fmt/clippy/test/npm-check on all three (Current .github/workflows/ci.yml is [macos-latest, windows-latest]. v3 requires Linux. CRITICAL PATH (platform + CI surface).)
+  - [pending] P0-T6: Add scripts/bench.sh and scripts/audit-network.sh skeletons (referenced by standing gates and CI comments) with --check modes (Only scripts/bench-prediction.sh exists. bench.sh (footprint/latency) and audit-network.sh (privacy egress) are named by the plan's standing gates but absent.)
+  - [pending] P0-T7: Author ADR-0009 (Kaydence Relay pairing/crypto design) and ADR-0010 (pricing: one-time + Harbor) as Proposed; hold for operator review before Accepted (CRITICAL PATH x2 — Relay crypto (ADR-0009) gates P4-1 build; pricing (ADR-0010) is a product/strategy decision. Both HALT for operator go per policy.)
+Gates not yet passed:
+  - [pending] cargo fmt clean (backend)  -&gt;  cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - [pending] cargo clippy -D warnings (backend)  -&gt;  cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - [pending] cargo test --all (backend)  -&gt;  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all
+  - [pending] npm run check (frontend typecheck + lint)  -&gt;  npm --prefix apps/desktop run check
+  - [pending] cargo tauri dev opens a window on macOS + Windows + Linux  -&gt;  cargo tauri dev
+  - [pending] 3-OS CI matrix green (macOS + Windows + Linux) on the current HEAD  -&gt;  gh run list --branch main --limit 1
+  - [pending] ADRs 0001-0010 all marked Accepted  -&gt;  bash -c 'grep -RIL &quot;Status: Accepted&quot; docs/decisions/000[1-9]*.md docs/decisions/0010*.md; test -z &quot;$(grep -RIL \&quot;Status: Accepted\&quot; docs/decisions/000[1-9]*.md docs/decisions/0010*.md 2&gt;/dev/null)&quot;'
+Next actions (from last session):
+  - AWAITING OPERATOR GO. Mission is bootstrapped (ops/mission/ seeded, renderer copied, SOTU rendered, baseline committed). Do not begin P0 build work until the operator says 'go'.
+  - On go: start P0-T1 (docs v2-&gt;v3 reconciliation) — but note it is a CRITICAL PATH (reinterprets non-negotiable #5 to 3-OS + adds PRD P4 epics); write the reconciliation ADR and confirm the operator's intent on Linux-first-class + pay-once/Harbor pricing before editing AGENTS.md/PRD/ROADMAP.
+  - Then P0-T7 (author ADR-0009 Relay crypto + ADR-0010 pricing as Proposed) — both HALT for operator review before Accepted.
+  - Then P0-T4 (Handy study -&gt; ADR-0004 notes) and P0-T2 (scaffold Tauri app: pnpm create tauri-app React+TS, merge into apps/desktop preserving module dirs + AGENTS.md, wire Cargo + pnpm workspaces). P0-T2 introduces the full dependency set — critical path.
+  - Decide the CI/remote question with the operator: configure a GitHub remote so the 3-OS matrix can run, or accept macOS-only local evidence with Win/Linux gates explicitly waived-pending-infra.
+Known blockers:
+  - macOS-only host: P0-G3 (3-OS test), P0-G5 (tauri dev on Win/Linux), P0-G6 (3-OS CI) cannot be closed without the reference machines or a GitHub remote with Actions.
+  - No GitHub remote configured — no CI trust anchor and no real PRs; auto-merge is local-only.
+  - P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.
+  - Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).
+  - ADR-0009 (Relay crypto) operator review required before the P4-1 build.
+  - Critical-path bootstrap items (P0-T1 non-negotiable #5 change, P0-T7 ADR-0009/0010) need explicit operator go per policy.
+Mission conventions:
+  - One work unit = one branch (mission/&lt;phaseId&gt;-&lt;slug&gt;) = one merge; &lt;=400 changed lines.
+  - Run the internal loop per prompts/BUILD-LOOP.md (ORIENT-&gt;PLAN-&gt;BUILD-&gt;JUDGE-&gt;AUDIT-&gt;GATE) inside each task; mission-control governs phases/state/reporting above it.
+  - No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.
+  - A green Judge with a red Audit does not merge.
+  - Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.
+  - Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.
+  - Never weaken a non-negotiable to pass a gate — that is itself a blocking defect.
+
+Operating procedure:
+  Read ops/mission/state.json FIRST — it is the source of truth, not this prompt.
+  Verify reality matches state: git log --oneline -5, and re-run the active phase's gate commands.
+  Follow the loop: pick next unblocked task -&gt; branch mission/&lt;phase&gt;-&lt;slug&gt; -&gt; implement -&gt; run gates -&gt; PR -&gt; merge per policy 'auto' -&gt; update state.json -&gt; node ops/mission/render-sotu.mjs -&gt; commit state+journal+html.
+  Never hand-edit state-of-the-union.html. Never merge without fresh gate evidence in ops/mission/evidence/.
+  End of session: update resume.nextActions for a stranger, append journal entry, render, commit.</pre></div>
+      </details>
+    </article><article class="phase">
+      <header>
+        <span class="chip ">pending</span>
+        <h3>P1 &middot; MVP dictation</h3>
+        <span class="muted small">est. sessions: ~3 weeks</span>
+      </header>
+      <p class="muted">Hotkey -&gt; capture -&gt; WAL -&gt; VAD -&gt; local ASR (Parakeet CPU + Whisper GPU) -&gt; native injection on Mac/Win/Linux (Wayland spike early — highest platform risk) -&gt; history. Raw mode daily-drivable; crash-recovery and short-utterance suites green.</p>
+      <div class="bar"><div class="fill" style="width:0%"></div></div>
+      <p class="small muted">0/7 tasks &middot; 0%</p>
+      <ul class="tasks"><li class="task-pending"><span class="mark">&#9675;</span> <b>P1-P0-1</b> PRD P0-1 Global hotkey (push-to-talk + toggle; min-capture 250ms; tail buffer 300ms)<br><span class="muted small">Pitfall P1.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P1-P0-2</b> PRD P0-2 Local ASR dual path (Parakeet V3 CPU + Whisper large-v3-turbo GPU; model picker; hw auto-recommend)<br><span class="muted small">Model registry — critical path.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P1-P0-3</b> PRD P0-3 Universal injection Mac+Win+Linux (AX / UIA+SendInput / X11+Wayland; clipboard fallback snapshot-restore &lt;=200ms; secure-field refusal)<br><span class="muted small">CRITICAL PATH (platform). Non-negotiable #8. Wayland is the highest platform risk — spike early.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P1-P0-4</b> PRD P0-4 Write-ahead audio persistence + SQLite history (audio on disk before ASR; survives crash)<br><span class="muted small">Non-negotiable #2.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P1-P0-6</b> PRD P0-6 Latency budgets met + enforced by scripts/bench.sh in CI<br><span class="muted small">Root AGENTS §5.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P1-P0-7</b> PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page)<br><span class="muted small">Non-negotiable #1. audit-network.sh gate.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P1-P0-8</b> PRD P0-8 60-second first run (install -&gt; model download -&gt; first dictation &lt;=60s, one settings screen)<br><span class="muted small">Pitfall P10.</span></li></ul>
+      <div class="table-wrap"><table><thead><tr><th>Gate</th><th>Check</th><th>Command</th><th>Evidence</th><th>Last run</th></tr></thead><tbody><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>crash_recovery suite green (100% audio recovery on kill -9 mid-dictation)</b><br><span class="small">Non-negotiable #2. PRD P0-4.</span></td>
+      <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>short_utterance suite green (0.3-1.5 s clips, 100%)</b><br><span class="small">Pitfall P1. PRD P0-1.</span></td>
+      <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml short_utterance</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>Latency + footprint budgets met in Raw mode (release-&gt;inject &lt;=700ms GPU / &lt;=1200ms CPU; idle RAM &lt;=250MB)</b><br><span class="small">Root AGENTS §5. Requires scripts/bench.sh (P0-T6) + reference machines.</span></td>
+      <td><code>bash scripts/bench.sh --check</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr></tbody></table></div>
+      <details class="resume"><summary>Resume prompt for P1 (copy into a fresh session)</summary>
+        <div class="prompt-box"><button class="copy" type="button">Copy</button><pre>You are resuming the &quot;Kaydence — Plan of Attack v3&quot; mission at phase P1: MVP dictation.
+
+Mission: Speak anywhere. Ship clean text. Never leak, never lose, never lag.
+North star: Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.
+Repo: local-only (no remote configured) (local: /Users/IDC2.5/Kaydence/kaydence), default branch: main.
+Governing plan: /Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html
+
+Phase goal: Hotkey -&gt; capture -&gt; WAL -&gt; VAD -&gt; local ASR (Parakeet CPU + Whisper GPU) -&gt; native injection on Mac/Win/Linux (Wayland spike early — highest platform risk) -&gt; history. Raw mode daily-drivable; crash-recovery and short-utterance suites green.
+Remaining tasks:
+  - [pending] P1-P0-1: PRD P0-1 Global hotkey (push-to-talk + toggle; min-capture 250ms; tail buffer 300ms) (Pitfall P1.)
+  - [pending] P1-P0-2: PRD P0-2 Local ASR dual path (Parakeet V3 CPU + Whisper large-v3-turbo GPU; model picker; hw auto-recommend) (Model registry — critical path.)
+  - [pending] P1-P0-3: PRD P0-3 Universal injection Mac+Win+Linux (AX / UIA+SendInput / X11+Wayland; clipboard fallback snapshot-restore &lt;=200ms; secure-field refusal) (CRITICAL PATH (platform). Non-negotiable #8. Wayland is the highest platform risk — spike early.)
+  - [pending] P1-P0-4: PRD P0-4 Write-ahead audio persistence + SQLite history (audio on disk before ASR; survives crash) (Non-negotiable #2.)
+  - [pending] P1-P0-6: PRD P0-6 Latency budgets met + enforced by scripts/bench.sh in CI (Root AGENTS §5.)
+  - [pending] P1-P0-7: PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page) (Non-negotiable #1. audit-network.sh gate.)
+  - [pending] P1-P0-8: PRD P0-8 60-second first run (install -&gt; model download -&gt; first dictation &lt;=60s, one settings screen) (Pitfall P10.)
+Gates not yet passed:
+  - [pending] crash_recovery suite green (100% audio recovery on kill -9 mid-dictation)  -&gt;  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery
+  - [pending] short_utterance suite green (0.3-1.5 s clips, 100%)  -&gt;  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml short_utterance
+  - [pending] Latency + footprint budgets met in Raw mode (release-&gt;inject &lt;=700ms GPU / &lt;=1200ms CPU; idle RAM &lt;=250MB)  -&gt;  bash scripts/bench.sh --check
+Mission conventions:
+  - One work unit = one branch (mission/&lt;phaseId&gt;-&lt;slug&gt;) = one merge; &lt;=400 changed lines.
+  - Run the internal loop per prompts/BUILD-LOOP.md (ORIENT-&gt;PLAN-&gt;BUILD-&gt;JUDGE-&gt;AUDIT-&gt;GATE) inside each task; mission-control governs phases/state/reporting above it.
+  - No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.
+  - A green Judge with a red Audit does not merge.
+  - Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.
+  - Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.
+  - Never weaken a non-negotiable to pass a gate — that is itself a blocking defect.
+
+Operating procedure:
+  Read ops/mission/state.json FIRST — it is the source of truth, not this prompt.
+  Verify reality matches state: git log --oneline -5, and re-run the active phase's gate commands.
+  Follow the loop: pick next unblocked task -&gt; branch mission/&lt;phase&gt;-&lt;slug&gt; -&gt; implement -&gt; run gates -&gt; PR -&gt; merge per policy 'auto' -&gt; update state.json -&gt; node ops/mission/render-sotu.mjs -&gt; commit state+journal+html.
+  Never hand-edit state-of-the-union.html. Never merge without fresh gate evidence in ops/mission/evidence/.
+  End of session: update resume.nextActions for a stranger, append journal entry, render, commit.</pre></div>
+      </details>
+    </article><article class="phase">
+      <header>
+        <span class="chip ">pending</span>
+        <h3>P2 &middot; The cleanup differentiator</h3>
+        <span class="muted small">est. sessions: ~3 weeks</span>
+      </header>
+      <p class="muted">Raw/Light/Full dial (rule engine + constrained local LLM), streaming partials, dictionary + Wispr/Glaido import, BYOK lanes with local fallback. Exit: &gt;=95% zero-edit at Light on the golden corpus; Wispr uninstalled from the operator's machines.</p>
+      <div class="bar"><div class="fill" style="width:0%"></div></div>
+      <p class="small muted">0/4 tasks &middot; 0%</p>
+      <ul class="tasks"><li class="task-pending"><span class="mark">&#9675;</span> <b>P2-P0-5</b> PRD P0-5 Cleanup dial Raw/Light/Full (rule engine -&gt; Light w/ small local model -&gt; Full LLM opt-in; per-invocation override)<br><span class="muted small">Non-negotiable #3. Prompt contract — critical path.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P2-P1-1</b> PRD P1-1 Streaming partial text (partials in HUD &lt;=300ms behind speech; final replaces atomically)<br><span class="muted small">Prereq for Whisper-Ahead (P3.5).</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P2-P1-2</b> PRD P1-2 Custom dictionary + import (Wispr Flow &amp; Glaido exports; terms boost ASR + cleanup)</li><li class="task-pending"><span class="mark">&#9675;</span> <b>P2-P1-5</b> PRD P1-5 BYOK cloud lanes (Groq/Deepgram ASR, OpenAI-compatible/Ollama cleanup; per-lane kill switch; local fallback chain)<br><span class="muted small">CRITICAL PATH — new network surfaces (egress). Non-negotiable #6 fallback + #1 audit.</span></li></ul>
+      <div class="table-wrap"><table><thead><tr><th>Gate</th><th>Check</th><th>Command</th><th>Evidence</th><th>Last run</th></tr></thead><tbody><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>&gt;=95% zero-edit rate at Light cleanup on the golden corpus</b><br><span class="small">PRD P0-5. Ladder target. Requires a committed golden corpus fixture.</span></td>
+      <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml golden_corpus_light</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>Light cleanup adds &lt;=800ms; streaming partials &lt;=300ms behind speech</b><br><span class="small">Root AGENTS §5. PRD P1-1.</span></td>
+      <td><code>bash scripts/bench.sh --check</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr></tbody></table></div>
+      <details class="resume"><summary>Resume prompt for P2 (copy into a fresh session)</summary>
+        <div class="prompt-box"><button class="copy" type="button">Copy</button><pre>You are resuming the &quot;Kaydence — Plan of Attack v3&quot; mission at phase P2: The cleanup differentiator.
+
+Mission: Speak anywhere. Ship clean text. Never leak, never lose, never lag.
+North star: Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.
+Repo: local-only (no remote configured) (local: /Users/IDC2.5/Kaydence/kaydence), default branch: main.
+Governing plan: /Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html
+
+Phase goal: Raw/Light/Full dial (rule engine + constrained local LLM), streaming partials, dictionary + Wispr/Glaido import, BYOK lanes with local fallback. Exit: &gt;=95% zero-edit at Light on the golden corpus; Wispr uninstalled from the operator's machines.
+Remaining tasks:
+  - [pending] P2-P0-5: PRD P0-5 Cleanup dial Raw/Light/Full (rule engine -&gt; Light w/ small local model -&gt; Full LLM opt-in; per-invocation override) (Non-negotiable #3. Prompt contract — critical path.)
+  - [pending] P2-P1-1: PRD P1-1 Streaming partial text (partials in HUD &lt;=300ms behind speech; final replaces atomically) (Prereq for Whisper-Ahead (P3.5).)
+  - [pending] P2-P1-2: PRD P1-2 Custom dictionary + import (Wispr Flow &amp; Glaido exports; terms boost ASR + cleanup)
+  - [pending] P2-P1-5: PRD P1-5 BYOK cloud lanes (Groq/Deepgram ASR, OpenAI-compatible/Ollama cleanup; per-lane kill switch; local fallback chain) (CRITICAL PATH — new network surfaces (egress). Non-negotiable #6 fallback + #1 audit.)
+Gates not yet passed:
+  - [pending] &gt;=95% zero-edit rate at Light cleanup on the golden corpus  -&gt;  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml golden_corpus_light
+  - [pending] Light cleanup adds &lt;=800ms; streaming partials &lt;=300ms behind speech  -&gt;  bash scripts/bench.sh --check
+Mission conventions:
+  - One work unit = one branch (mission/&lt;phaseId&gt;-&lt;slug&gt;) = one merge; &lt;=400 changed lines.
+  - Run the internal loop per prompts/BUILD-LOOP.md (ORIENT-&gt;PLAN-&gt;BUILD-&gt;JUDGE-&gt;AUDIT-&gt;GATE) inside each task; mission-control governs phases/state/reporting above it.
+  - No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.
+  - A green Judge with a red Audit does not merge.
+  - Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.
+  - Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.
+  - Never weaken a non-negotiable to pass a gate — that is itself a blocking defect.
+
+Operating procedure:
+  Read ops/mission/state.json FIRST — it is the source of truth, not this prompt.
+  Verify reality matches state: git log --oneline -5, and re-run the active phase's gate commands.
+  Follow the loop: pick next unblocked task -&gt; branch mission/&lt;phase&gt;-&lt;slug&gt; -&gt; implement -&gt; run gates -&gt; PR -&gt; merge per policy 'auto' -&gt; update state.json -&gt; node ops/mission/render-sotu.mjs -&gt; commit state+journal+html.
+  Never hand-edit state-of-the-union.html. Never merge without fresh gate evidence in ops/mission/evidence/.
+  End of session: update resume.nextActions for a stranger, append journal entry, render, commit.</pre></div>
+      </details>
+    </article><article class="phase">
+      <header>
+        <span class="chip ">pending</span>
+        <h3>P3 &middot; Daily-driver polish + Whisper-Ahead</h3>
+        <span class="muted small">est. sessions: ~4 weeks</span>
+      </header>
+      <p class="muted">Per-app profiles, snippets, correction-learning, signed installers for all three OSes; then the prediction layer (P2-7..P2-13): dual-line HUD, gold merge, timing ladder, inline fallback, local analytics. Prediction defaults locked from bench-prediction.sh on the two reference machines (ADR-0007).</p>
+      <div class="bar"><div class="fill" style="width:0%"></div></div>
+      <p class="small muted">0/11 tasks &middot; 0%</p>
+      <ul class="tasks"><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P1-3</b> PRD P1-3 Auto-learning corrections (edit within 30s -&gt; offer to learn into dictionary; explicit confirm, never silent)</li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P1-4</b> PRD P1-4 Per-app profiles (frontmost app detection -&gt; tone/format/cleanup-level/custom prompt)<br><span class="muted small">CRITICAL PATH — app detection is platform code + prompt contract.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P1-6</b> PRD P1-6 Snippets (spoken trigger expands to saved text)</li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-BENCH</b> Run bench-prediction.sh on both reference machines; lock per-platform default models into models/registry.json + ADR-0007 (before P3.5 ships)<br><span class="muted small">OPERATOR GATE — requires the two physical reference machines. Gemma 3 1B license review before any paid build bundles it (ADR-0007/0010).</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P2-7</b> PRD P2-7 Local prediction engine (llama.cpp/GGUF; per-platform default; &lt;=400ms; yields to dictation)<br><span class="muted small">Model registry — critical path.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P2-8</b> PRD P2-8 Surface A HUD dual-line (blue lane; Streaming + Paused-Merge 5s; only committed text injects)<br><span class="muted small">ADR-0005. Pitfall P11.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P2-9</b> PRD P2-9 Surface B inline fallback (non-overlay apps; streaming off; inline ghost after 10s pause; Tab accepts)<br><span class="muted small">ADR-0005. Pitfall P12.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P2-10</b> PRD P2-10 Merge + accept (say-or-select; Tab=word, Shift-Tab=phrase; ~0.5s gold pulse)<br><span class="muted small">ADR-0005.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P2-11</b> PRD P2-11 Local prediction analytics (prediction_events; words merged, acceptance rate, by app; local-only, exportable, deletable)</li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P2-12</b> PRD P2-12 Opt-in local context (Tier 1 accessibility read + Tier 2 on-device OCR; in-memory only; secure fields blocked)<br><span class="muted small">CRITICAL PATH — ADR-0006. Non-negotiable #1. Privacy tests mandatory.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P3-P2-13</b> PRD P2-13 Timing ladder (5s HUD / 10s inline / 20s auto-stop; all configurable)<br><span class="muted small">ADR-0005.</span></li></ul>
+      <div class="table-wrap"><table><thead><tr><th>Gate</th><th>Check</th><th>Command</th><th>Evidence</th><th>Last run</th></tr></thead><tbody><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>Prediction guess rendered &lt;=400ms (HUD, streaming); yields to dictation</b><br><span class="small">PRD P2-7. Ladder P3.5 target. Defaults locked from bench-prediction on M-series Mac + mid Windows laptop (ADR-0007).</span></td>
+      <td><code>bash scripts/bench-prediction.sh --check</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>Signed installers build (notarized .dmg, signed .msi, AppImage/.deb) for all three OSes</b><br><span class="small">PRD P1 polish + ROADMAP P3. Needs signing identities; scripts/release.sh to be authored.</span></td>
+      <td><code>bash scripts/release.sh --check</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>Prediction privacy tests green (no persistence/transmission of context)</b><br><span class="small">Non-negotiable #1 / ADR-0006. PRD P2-12.</span></td>
+      <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml context_privacy</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr></tbody></table></div>
+      <details class="resume"><summary>Resume prompt for P3 (copy into a fresh session)</summary>
+        <div class="prompt-box"><button class="copy" type="button">Copy</button><pre>You are resuming the &quot;Kaydence — Plan of Attack v3&quot; mission at phase P3: Daily-driver polish + Whisper-Ahead.
+
+Mission: Speak anywhere. Ship clean text. Never leak, never lose, never lag.
+North star: Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.
+Repo: local-only (no remote configured) (local: /Users/IDC2.5/Kaydence/kaydence), default branch: main.
+Governing plan: /Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html
+
+Phase goal: Per-app profiles, snippets, correction-learning, signed installers for all three OSes; then the prediction layer (P2-7..P2-13): dual-line HUD, gold merge, timing ladder, inline fallback, local analytics. Prediction defaults locked from bench-prediction.sh on the two reference machines (ADR-0007).
+Remaining tasks:
+  - [pending] P3-P1-3: PRD P1-3 Auto-learning corrections (edit within 30s -&gt; offer to learn into dictionary; explicit confirm, never silent)
+  - [pending] P3-P1-4: PRD P1-4 Per-app profiles (frontmost app detection -&gt; tone/format/cleanup-level/custom prompt) (CRITICAL PATH — app detection is platform code + prompt contract.)
+  - [pending] P3-P1-6: PRD P1-6 Snippets (spoken trigger expands to saved text)
+  - [pending] P3-BENCH: Run bench-prediction.sh on both reference machines; lock per-platform default models into models/registry.json + ADR-0007 (before P3.5 ships) (OPERATOR GATE — requires the two physical reference machines. Gemma 3 1B license review before any paid build bundles it (ADR-0007/0010).)
+  - [pending] P3-P2-7: PRD P2-7 Local prediction engine (llama.cpp/GGUF; per-platform default; &lt;=400ms; yields to dictation) (Model registry — critical path.)
+  - [pending] P3-P2-8: PRD P2-8 Surface A HUD dual-line (blue lane; Streaming + Paused-Merge 5s; only committed text injects) (ADR-0005. Pitfall P11.)
+  - [pending] P3-P2-9: PRD P2-9 Surface B inline fallback (non-overlay apps; streaming off; inline ghost after 10s pause; Tab accepts) (ADR-0005. Pitfall P12.)
+  - [pending] P3-P2-10: PRD P2-10 Merge + accept (say-or-select; Tab=word, Shift-Tab=phrase; ~0.5s gold pulse) (ADR-0005.)
+  - [pending] P3-P2-11: PRD P2-11 Local prediction analytics (prediction_events; words merged, acceptance rate, by app; local-only, exportable, deletable)
+  - [pending] P3-P2-12: PRD P2-12 Opt-in local context (Tier 1 accessibility read + Tier 2 on-device OCR; in-memory only; secure fields blocked) (CRITICAL PATH — ADR-0006. Non-negotiable #1. Privacy tests mandatory.)
+  - [pending] P3-P2-13: PRD P2-13 Timing ladder (5s HUD / 10s inline / 20s auto-stop; all configurable) (ADR-0005.)
+Gates not yet passed:
+  - [pending] Prediction guess rendered &lt;=400ms (HUD, streaming); yields to dictation  -&gt;  bash scripts/bench-prediction.sh --check
+  - [pending] Signed installers build (notarized .dmg, signed .msi, AppImage/.deb) for all three OSes  -&gt;  bash scripts/release.sh --check
+  - [pending] Prediction privacy tests green (no persistence/transmission of context)  -&gt;  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml context_privacy
+Mission conventions:
+  - One work unit = one branch (mission/&lt;phaseId&gt;-&lt;slug&gt;) = one merge; &lt;=400 changed lines.
+  - Run the internal loop per prompts/BUILD-LOOP.md (ORIENT-&gt;PLAN-&gt;BUILD-&gt;JUDGE-&gt;AUDIT-&gt;GATE) inside each task; mission-control governs phases/state/reporting above it.
+  - No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.
+  - A green Judge with a red Audit does not merge.
+  - Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.
+  - Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.
+  - Never weaken a non-negotiable to pass a gate — that is itself a blocking defect.
+
+Operating procedure:
+  Read ops/mission/state.json FIRST — it is the source of truth, not this prompt.
+  Verify reality matches state: git log --oneline -5, and re-run the active phase's gate commands.
+  Follow the loop: pick next unblocked task -&gt; branch mission/&lt;phase&gt;-&lt;slug&gt; -&gt; implement -&gt; run gates -&gt; PR -&gt; merge per policy 'auto' -&gt; update state.json -&gt; node ops/mission/render-sotu.mjs -&gt; commit state+journal+html.
+  Never hand-edit state-of-the-union.html. Never merge without fresh gate evidence in ops/mission/evidence/.
+  End of session: update resume.nextActions for a stranger, append journal entry, render, commit.</pre></div>
+      </details>
+    </article><article class="phase">
+      <header>
+        <span class="chip ">pending</span>
+        <h3>P4 &middot; The Flagship Trio</h3>
+        <span class="muted small">est. sessions: post-beta</span>
+      </header>
+      <p class="muted">Voiceprint first (extends learning already flowing), Relay second (crypto design review gates the build), Conductor third (MCP substrate -&gt; targets -&gt; confirm gates -&gt; fleet mode). Exit: all three daily-usable across the fleet; ladder targets hit; Harbor optional and unbuilt without blocking anything.</p>
+      <div class="bar"><div class="fill" style="width:0%"></div></div>
+      <p class="small muted">0/3 tasks &middot; 0%</p>
+      <ul class="tasks"><li class="task-pending"><span class="mark">&#9675;</span> <b>P4-VOICEPRINT</b> P4 Voiceprint — on-device personalization (dictionary auto-learn w/ confirm; local LoRA fine-tune on idle/charging w/ kill switch + reset; acoustic biasing for proper nouns; exportable/deletable; carries via Relay)<br><span class="muted small">PRD P4-1..P4-5 (to be authored in P0-T1). CRITICAL PATH — local training + model registry.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P4-RELAY</b> P4 Relay — cross-device continuity (mDNS discovery + pairing code; E2E-encrypted LAN; CRDT sync of dictionary/profiles/Voiceprint/analytics; optional self-hostable rendezvous relay off-network)<br><span class="muted small">PRD P4-6/P4-7 (to be authored). CRITICAL PATH — new network surface + crypto. ADR-0009 review + operator go HALT before build.</span></li><li class="task-pending"><span class="mark">&#9675;</span> <b>P4-CONDUCTOR</b> P4 Conductor — voice control plane (built-in MCP server; agent targets Claude Code/Cursor/terminals/custom; per-agent profiles + command grammars; spoken command palette; fleet mode via Relay; absolute confirm-gate on destructive actions)<br><span class="muted small">PRD P4-8/P4-9 (to be authored). CRITICAL PATH — new surfaces + safety invariant.</span></li></ul>
+      <div class="table-wrap"><table><thead><tr><th>Gate</th><th>Check</th><th>Command</th><th>Evidence</th><th>Last run</th></tr></thead><tbody><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>Voiceprint: measured acceptance-rate lift vs pre-Voiceprint baseline (or it does not advertise)</b><br><span class="small">P4-5 gate. Training opt-in only; budget capped; kill switch + one-tap reset.</span></td>
+      <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml voiceprint_lift</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>Relay: &lt;=500ms added latency on LAN, end-to-end encrypted, zero cloud</b><br><span class="small">P4-2 gate. Pairing/crypto design (ADR-0009) is a critical decision path — operator review BEFORE build.</span></td>
+      <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml relay_suite</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr><tr>
+      <td><span class="chip ">pending</span></td>
+      <td><b>Conductor: confirm-gate suite passes 100% — zero auto-executed destructive commands</b><br><span class="small">P4-8 gate. A single auto-executed destructive (delete/send/pay/deploy) command is a release blocker.</span></td>
+      <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml conductor_confirm_gate</code></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td></tr></tbody></table></div>
+      <details class="resume"><summary>Resume prompt for P4 (copy into a fresh session)</summary>
+        <div class="prompt-box"><button class="copy" type="button">Copy</button><pre>You are resuming the &quot;Kaydence — Plan of Attack v3&quot; mission at phase P4: The Flagship Trio.
+
+Mission: Speak anywhere. Ship clean text. Never leak, never lose, never lag.
+North star: Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.
+Repo: local-only (no remote configured) (local: /Users/IDC2.5/Kaydence/kaydence), default branch: main.
+Governing plan: /Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html
+
+Phase goal: Voiceprint first (extends learning already flowing), Relay second (crypto design review gates the build), Conductor third (MCP substrate -&gt; targets -&gt; confirm gates -&gt; fleet mode). Exit: all three daily-usable across the fleet; ladder targets hit; Harbor optional and unbuilt without blocking anything.
+Remaining tasks:
+  - [pending] P4-VOICEPRINT: P4 Voiceprint — on-device personalization (dictionary auto-learn w/ confirm; local LoRA fine-tune on idle/charging w/ kill switch + reset; acoustic biasing for proper nouns; exportable/deletable; carries via Relay) (PRD P4-1..P4-5 (to be authored in P0-T1). CRITICAL PATH — local training + model registry.)
+  - [pending] P4-RELAY: P4 Relay — cross-device continuity (mDNS discovery + pairing code; E2E-encrypted LAN; CRDT sync of dictionary/profiles/Voiceprint/analytics; optional self-hostable rendezvous relay off-network) (PRD P4-6/P4-7 (to be authored). CRITICAL PATH — new network surface + crypto. ADR-0009 review + operator go HALT before build.)
+  - [pending] P4-CONDUCTOR: P4 Conductor — voice control plane (built-in MCP server; agent targets Claude Code/Cursor/terminals/custom; per-agent profiles + command grammars; spoken command palette; fleet mode via Relay; absolute confirm-gate on destructive actions) (PRD P4-8/P4-9 (to be authored). CRITICAL PATH — new surfaces + safety invariant.)
+Gates not yet passed:
+  - [pending] Voiceprint: measured acceptance-rate lift vs pre-Voiceprint baseline (or it does not advertise)  -&gt;  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml voiceprint_lift
+  - [pending] Relay: &lt;=500ms added latency on LAN, end-to-end encrypted, zero cloud  -&gt;  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml relay_suite
+  - [pending] Conductor: confirm-gate suite passes 100% — zero auto-executed destructive commands  -&gt;  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml conductor_confirm_gate
+Mission conventions:
+  - One work unit = one branch (mission/&lt;phaseId&gt;-&lt;slug&gt;) = one merge; &lt;=400 changed lines.
+  - Run the internal loop per prompts/BUILD-LOOP.md (ORIENT-&gt;PLAN-&gt;BUILD-&gt;JUDGE-&gt;AUDIT-&gt;GATE) inside each task; mission-control governs phases/state/reporting above it.
+  - No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.
+  - A green Judge with a red Audit does not merge.
+  - Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.
+  - Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.
+  - Never weaken a non-negotiable to pass a gate — that is itself a blocking defect.
+
+Operating procedure:
+  Read ops/mission/state.json FIRST — it is the source of truth, not this prompt.
+  Verify reality matches state: git log --oneline -5, and re-run the active phase's gate commands.
+  Follow the loop: pick next unblocked task -&gt; branch mission/&lt;phase&gt;-&lt;slug&gt; -&gt; implement -&gt; run gates -&gt; PR -&gt; merge per policy 'auto' -&gt; update state.json -&gt; node ops/mission/render-sotu.mjs -&gt; commit state+journal+html.
+  Never hand-edit state-of-the-union.html. Never merge without fresh gate evidence in ops/mission/evidence/.
+  End of session: update resume.nextActions for a stranger, append journal entry, render, commit.</pre></div>
+      </details>
+    </article>
+  </section>
+
+  
+  <section aria-labelledby="journal"><h2 id="journal">Journal (latest first)</h2><div class="timeline"><article class="tl-item"><time>&#9998;</time><p><b>2026-07-07T00:00Z — session 1 (bootstrap)</b><br>- Bootstrapped mission-control on the docs-first Kaydence v3 scaffold (no prior ops/mission). git initialized; baseline commit of 49 tracked files.<br>- Seeded state.json from the v3 plan: 5 phases (P0 Toolchain, P1 MVP Dictation, P2 Cleanup, P3 Polish+Whisper-Ahead, P4 Flagship Trio), PRD IDs as task seeds, exit criteria as runnable gates.<br>- Reality check vs plan: repo has ZERO product code (44 md + 1 CI yml + registry.json + bench-prediction.sh). No Cargo/pnpm project, no tauri.conf. ADRs stop at 0008; PRD stops at P2-13; ROADMAP is v2 (P4=Expansion); AGENTS #5 = macOS+Windows. The v3 plan asserts ADR-0009/0010 + PRD P4-1..P4-9 as 'committed' — they are NOT in the repo. Recorded as v2-&gt;v3 drift risk; P0-T1/P0-T7 reconcile it (critical paths).<br>- Execution tier: inline/Agent (Tier 2-3) — user did not opt into Workflow orchestration. Host is macOS-only with no git remote: 3-OS CI + tauri-dev-on-Win/Linux gates cannot close here (blockers recorded).<br>- Surprise: the mission is genuinely at hour zero of P0 despite the plan's &quot;monorepo v3 committed&quot; framing — that count is the doc scaffold, not shippable code.<br>- Parked AWAITING OPERATOR GO before any P0 build work (P0-T1 and P0-T7 are critical decision paths).</p></article><article class="tl-item"><time>&#9998;</time><p><b># Kaydence Mission Journal</b><br></p></article></div></section>
+
+  <p class="footer">GENERATED by ops/mission/render-sotu.mjs from state.json — do not hand-edit.
+  To update: edit state.json, run <code>node ops/mission/render-sotu.mjs</code>, commit both.</p>
+</main>
+<script>
+document.querySelectorAll("button.copy").forEach((b) => {
+  b.addEventListener("click", async () => {
+    const text = b.parentElement.querySelector("pre").innerText;
+    try { await navigator.clipboard.writeText(text); b.textContent = "Copied!"; }
+    catch { const r = document.createRange(); r.selectNodeContents(b.parentElement.querySelector("pre")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Select+Ctrl C"; }
+    setTimeout(() => (b.textContent = "Copy"), 1600);
+  });
+});
+</script>
+</body>
+</html>

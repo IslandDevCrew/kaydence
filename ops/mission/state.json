@@ -1,0 +1,369 @@
+{
+  "version": 1,
+  "mission": {
+    "name": "Kaydence — Plan of Attack v3",
+    "tagline": "Speak anywhere. Ship clean text. Never leak, never lose, never lag.",
+    "repo": "local-only (no remote configured)",
+    "repoPath": "/Users/IDC2.5/Kaydence/kaydence",
+    "defaultBranch": "main",
+    "planDoc": "/Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html",
+    "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
+    "status": "active",
+    "started": "2026-07-07",
+    "updated": "2026-07-07T00:00:00Z",
+    "sessionCount": 1
+  },
+  "policies": {
+    "merge": "auto",
+    "branchPrefix": "mission/",
+    "maxPrLines": 400,
+    "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. No git remote configured, so 'PR' = local mission/ branch merged to main; GitHub 3-OS CI cannot run here (macOS-only host). Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test (3-OS via CI), npm run check, scripts/bench.sh --check (once it lands), scripts/audit-network.sh (network-adjacent changes). Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "title": "Toolchain & law",
+      "goal": "Bootstrap Tauri on all three OSes, stand up the 3-OS CI matrix (macOS + Windows + Linux), complete the Handy study pass (ADR-0004), reconcile the repo docs from v2 to v3, and get ADRs 1-10 accepted. Exit: `cargo tauri dev` opens on all three OSes; CI green.",
+      "status": "in_progress",
+      "sessionsEstimate": "1-2 weeks",
+      "gates": [
+        {
+          "id": "P0-G1",
+          "title": "cargo fmt clean (backend)",
+          "command": "cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "No Cargo workspace exists yet — command will fail until the Tauri app is scaffolded (P0-T2)."
+        },
+        {
+          "id": "P0-G2",
+          "title": "cargo clippy -D warnings (backend)",
+          "command": "cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": ""
+        },
+        {
+          "id": "P0-G3",
+          "title": "cargo test --all (backend)",
+          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Locally verifiable on macOS only; Windows + Linux legs require CI runners (blocker)."
+        },
+        {
+          "id": "P0-G4",
+          "title": "npm run check (frontend typecheck + lint)",
+          "command": "npm --prefix apps/desktop run check",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": ""
+        },
+        {
+          "id": "P0-G5",
+          "title": "cargo tauri dev opens a window on macOS + Windows + Linux",
+          "command": "cargo tauri dev",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Manual/human-verified per OS. Windows + Linux cannot be verified on this macOS-only host — needs the reference machines or CI with a display. This is the P0 exit gate."
+        },
+        {
+          "id": "P0-G6",
+          "title": "3-OS CI matrix green (macOS + Windows + Linux) on the current HEAD",
+          "command": "gh run list --branch main --limit 1",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Requires a GitHub remote + Actions. None configured. CI yaml is currently 2-OS (macOS+Windows); Linux leg must be added (P0-T5). Blocker until remote exists."
+        },
+        {
+          "id": "P0-G7",
+          "title": "ADRs 0001-0010 all marked Accepted",
+          "command": "bash -c 'grep -RIL \"Status: Accepted\" docs/decisions/000[1-9]*.md docs/decisions/0010*.md; test -z \"$(grep -RIL \\\"Status: Accepted\\\" docs/decisions/000[1-9]*.md docs/decisions/0010*.md 2>/dev/null)\"'",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "ADR-0009 (Relay crypto) and ADR-0010 (pricing) do not exist yet; ADRs 0001-0008 present. Authoring 0009/0010 are critical decision paths — operator gate."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "P0-T1",
+          "title": "Reconcile repo docs v2 -> v3 (add Linux as first-class to AGENTS.md non-negotiable #5; add P4 flagship-trio epics P4-1..P4-9 to PRD; update ROADMAP to v3 phase structure)",
+          "status": "pending",
+          "dependsOn": [],
+          "pr": null,
+          "notes": "CRITICAL PATH — reinterprets non-negotiable #5 (2-OS -> 3-OS) and adds PRD epics. Needs ADR + operator go. Repo AGENTS.md/PRD/ROADMAP are all v2; the v3 plan supersedes them but the code repo has not been updated."
+        },
+        {
+          "id": "P0-T2",
+          "title": "Scaffold Tauri 2.x app (React+TS) into apps/desktop, preserving src-tauri/src/<module>/ dirs and every AGENTS.md; wire pnpm-workspace.yaml + Cargo workspace (apps/desktop/src-tauri + crates/*)",
+          "status": "pending",
+          "dependsOn": ["P0-T1"],
+          "pr": null,
+          "notes": "SCAFFOLD.md steps 1-2. CRITICAL PATH — introduces the entire dependency set (new deps). Per SCAFFOLD.md step 3: cpal, ort, whisper.cpp FFI, silero-vad, rusqlite, thiserror, ulid, global-hotkey."
+        },
+        {
+          "id": "P0-T3",
+          "title": "Create mod.rs stubs per backend module exposing the typed SessionEvent contract (docs/ARCHITECTURE.md §4) with todo!() bodies, so the event contract compiles before feature work",
+          "status": "pending",
+          "dependsOn": ["P0-T2"],
+          "pr": null,
+          "notes": "SCAFFOLD.md step 6. Event-contract definition is a critical path (JUDGE-AUDITOR #7)."
+        },
+        {
+          "id": "P0-T4",
+          "title": "Handy source study pass — record adopt/redesign notes in ADR-0004 (Tauri config, cpal capture, whisper.cpp+Parakeet ONNX wiring, VAD, tray/hotkey plumbing)",
+          "status": "pending",
+          "dependsOn": [],
+          "pr": null,
+          "notes": "ADR-0004 exists as a file; needs the study notes filled and Accepted."
+        },
+        {
+          "id": "P0-T5",
+          "title": "Extend CI matrix to 3-OS (add ubuntu-latest / Linux leg incl. Wayland+X11 injection test hooks) and wire fmt/clippy/test/npm-check on all three",
+          "status": "pending",
+          "dependsOn": ["P0-T2"],
+          "pr": null,
+          "notes": "Current .github/workflows/ci.yml is [macos-latest, windows-latest]. v3 requires Linux. CRITICAL PATH (platform + CI surface)."
+        },
+        {
+          "id": "P0-T6",
+          "title": "Add scripts/bench.sh and scripts/audit-network.sh skeletons (referenced by standing gates and CI comments) with --check modes",
+          "status": "pending",
+          "dependsOn": ["P0-T2"],
+          "pr": null,
+          "notes": "Only scripts/bench-prediction.sh exists. bench.sh (footprint/latency) and audit-network.sh (privacy egress) are named by the plan's standing gates but absent."
+        },
+        {
+          "id": "P0-T7",
+          "title": "Author ADR-0009 (Kaydence Relay pairing/crypto design) and ADR-0010 (pricing: one-time + Harbor) as Proposed; hold for operator review before Accepted",
+          "status": "pending",
+          "dependsOn": [],
+          "pr": null,
+          "notes": "CRITICAL PATH x2 — Relay crypto (ADR-0009) gates P4-1 build; pricing (ADR-0010) is a product/strategy decision. Both HALT for operator go per policy."
+        }
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "MVP dictation",
+      "goal": "Hotkey -> capture -> WAL -> VAD -> local ASR (Parakeet CPU + Whisper GPU) -> native injection on Mac/Win/Linux (Wayland spike early — highest platform risk) -> history. Raw mode daily-drivable; crash-recovery and short-utterance suites green.",
+      "status": "pending",
+      "sessionsEstimate": "~3 weeks",
+      "gates": [
+        {
+          "id": "P1-G1",
+          "title": "crash_recovery suite green (100% audio recovery on kill -9 mid-dictation)",
+          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Non-negotiable #2. PRD P0-4."
+        },
+        {
+          "id": "P1-G2",
+          "title": "short_utterance suite green (0.3-1.5 s clips, 100%)",
+          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml short_utterance",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Pitfall P1. PRD P0-1."
+        },
+        {
+          "id": "P1-G3",
+          "title": "Latency + footprint budgets met in Raw mode (release->inject <=700ms GPU / <=1200ms CPU; idle RAM <=250MB)",
+          "command": "bash scripts/bench.sh --check",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Root AGENTS §5. Requires scripts/bench.sh (P0-T6) + reference machines."
+        }
+      ],
+      "tasks": [
+        { "id": "P1-P0-1", "title": "PRD P0-1 Global hotkey (push-to-talk + toggle; min-capture 250ms; tail buffer 300ms)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "Pitfall P1." },
+        { "id": "P1-P0-2", "title": "PRD P0-2 Local ASR dual path (Parakeet V3 CPU + Whisper large-v3-turbo GPU; model picker; hw auto-recommend)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "Model registry — critical path." },
+        { "id": "P1-P0-3", "title": "PRD P0-3 Universal injection Mac+Win+Linux (AX / UIA+SendInput / X11+Wayland; clipboard fallback snapshot-restore <=200ms; secure-field refusal)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "CRITICAL PATH (platform). Non-negotiable #8. Wayland is the highest platform risk — spike early." },
+        { "id": "P1-P0-4", "title": "PRD P0-4 Write-ahead audio persistence + SQLite history (audio on disk before ASR; survives crash)", "status": "pending", "dependsOn": ["P0-T3"], "pr": null, "notes": "Non-negotiable #2." },
+        { "id": "P1-P0-6", "title": "PRD P0-6 Latency budgets met + enforced by scripts/bench.sh in CI", "status": "pending", "dependsOn": ["P0-T6"], "pr": null, "notes": "Root AGENTS §5." },
+        { "id": "P1-P0-7", "title": "PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page)", "status": "pending", "dependsOn": ["P0-T6"], "pr": null, "notes": "Non-negotiable #1. audit-network.sh gate." },
+        { "id": "P1-P0-8", "title": "PRD P0-8 60-second first run (install -> model download -> first dictation <=60s, one settings screen)", "status": "pending", "dependsOn": ["P1-P0-1", "P1-P0-2", "P1-P0-3", "P1-P0-4"], "pr": null, "notes": "Pitfall P10." }
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "The cleanup differentiator",
+      "goal": "Raw/Light/Full dial (rule engine + constrained local LLM), streaming partials, dictionary + Wispr/Glaido import, BYOK lanes with local fallback. Exit: >=95% zero-edit at Light on the golden corpus; Wispr uninstalled from the operator's machines.",
+      "status": "pending",
+      "sessionsEstimate": "~3 weeks",
+      "gates": [
+        {
+          "id": "P2-G1",
+          "title": ">=95% zero-edit rate at Light cleanup on the golden corpus",
+          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml golden_corpus_light",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "PRD P0-5. Ladder target. Requires a committed golden corpus fixture."
+        },
+        {
+          "id": "P2-G2",
+          "title": "Light cleanup adds <=800ms; streaming partials <=300ms behind speech",
+          "command": "bash scripts/bench.sh --check",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Root AGENTS §5. PRD P1-1."
+        }
+      ],
+      "tasks": [
+        { "id": "P2-P0-5", "title": "PRD P0-5 Cleanup dial Raw/Light/Full (rule engine -> Light w/ small local model -> Full LLM opt-in; per-invocation override)", "status": "pending", "dependsOn": ["P1-P0-2"], "pr": null, "notes": "Non-negotiable #3. Prompt contract — critical path." },
+        { "id": "P2-P1-1", "title": "PRD P1-1 Streaming partial text (partials in HUD <=300ms behind speech; final replaces atomically)", "status": "pending", "dependsOn": ["P1-P0-2"], "pr": null, "notes": "Prereq for Whisper-Ahead (P3.5)." },
+        { "id": "P2-P1-2", "title": "PRD P1-2 Custom dictionary + import (Wispr Flow & Glaido exports; terms boost ASR + cleanup)", "status": "pending", "dependsOn": ["P1-P0-2"], "pr": null, "notes": "" },
+        { "id": "P2-P1-5", "title": "PRD P1-5 BYOK cloud lanes (Groq/Deepgram ASR, OpenAI-compatible/Ollama cleanup; per-lane kill switch; local fallback chain)", "status": "pending", "dependsOn": ["P2-P0-5"], "pr": null, "notes": "CRITICAL PATH — new network surfaces (egress). Non-negotiable #6 fallback + #1 audit." }
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Daily-driver polish + Whisper-Ahead",
+      "goal": "Per-app profiles, snippets, correction-learning, signed installers for all three OSes; then the prediction layer (P2-7..P2-13): dual-line HUD, gold merge, timing ladder, inline fallback, local analytics. Prediction defaults locked from bench-prediction.sh on the two reference machines (ADR-0007).",
+      "status": "pending",
+      "sessionsEstimate": "~4 weeks",
+      "gates": [
+        {
+          "id": "P3-G1",
+          "title": "Prediction guess rendered <=400ms (HUD, streaming); yields to dictation",
+          "command": "bash scripts/bench-prediction.sh --check",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "PRD P2-7. Ladder P3.5 target. Defaults locked from bench-prediction on M-series Mac + mid Windows laptop (ADR-0007)."
+        },
+        {
+          "id": "P3-G2",
+          "title": "Signed installers build (notarized .dmg, signed .msi, AppImage/.deb) for all three OSes",
+          "command": "bash scripts/release.sh --check",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "PRD P1 polish + ROADMAP P3. Needs signing identities; scripts/release.sh to be authored."
+        },
+        {
+          "id": "P3-G3",
+          "title": "Prediction privacy tests green (no persistence/transmission of context)",
+          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml context_privacy",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "Non-negotiable #1 / ADR-0006. PRD P2-12."
+        }
+      ],
+      "tasks": [
+        { "id": "P3-P1-3", "title": "PRD P1-3 Auto-learning corrections (edit within 30s -> offer to learn into dictionary; explicit confirm, never silent)", "status": "pending", "dependsOn": ["P2-P1-2"], "pr": null, "notes": "" },
+        { "id": "P3-P1-4", "title": "PRD P1-4 Per-app profiles (frontmost app detection -> tone/format/cleanup-level/custom prompt)", "status": "pending", "dependsOn": ["P2-P0-5"], "pr": null, "notes": "CRITICAL PATH — app detection is platform code + prompt contract." },
+        { "id": "P3-P1-6", "title": "PRD P1-6 Snippets (spoken trigger expands to saved text)", "status": "pending", "dependsOn": ["P2-P1-2"], "pr": null, "notes": "" },
+        { "id": "P3-BENCH", "title": "Run bench-prediction.sh on both reference machines; lock per-platform default models into models/registry.json + ADR-0007 (before P3.5 ships)", "status": "pending", "dependsOn": [], "pr": null, "notes": "OPERATOR GATE — requires the two physical reference machines. Gemma 3 1B license review before any paid build bundles it (ADR-0007/0010)." },
+        { "id": "P3-P2-7", "title": "PRD P2-7 Local prediction engine (llama.cpp/GGUF; per-platform default; <=400ms; yields to dictation)", "status": "pending", "dependsOn": ["P2-P1-1", "P3-BENCH"], "pr": null, "notes": "Model registry — critical path." },
+        { "id": "P3-P2-8", "title": "PRD P2-8 Surface A HUD dual-line (blue lane; Streaming + Paused-Merge 5s; only committed text injects)", "status": "pending", "dependsOn": ["P3-P2-7"], "pr": null, "notes": "ADR-0005. Pitfall P11." },
+        { "id": "P3-P2-9", "title": "PRD P2-9 Surface B inline fallback (non-overlay apps; streaming off; inline ghost after 10s pause; Tab accepts)", "status": "pending", "dependsOn": ["P3-P2-8"], "pr": null, "notes": "ADR-0005. Pitfall P12." },
+        { "id": "P3-P2-10", "title": "PRD P2-10 Merge + accept (say-or-select; Tab=word, Shift-Tab=phrase; ~0.5s gold pulse)", "status": "pending", "dependsOn": ["P3-P2-8"], "pr": null, "notes": "ADR-0005." },
+        { "id": "P3-P2-11", "title": "PRD P2-11 Local prediction analytics (prediction_events; words merged, acceptance rate, by app; local-only, exportable, deletable)", "status": "pending", "dependsOn": ["P3-P2-10"], "pr": null, "notes": "" },
+        { "id": "P3-P2-12", "title": "PRD P2-12 Opt-in local context (Tier 1 accessibility read + Tier 2 on-device OCR; in-memory only; secure fields blocked)", "status": "pending", "dependsOn": ["P3-P2-7"], "pr": null, "notes": "CRITICAL PATH — ADR-0006. Non-negotiable #1. Privacy tests mandatory." },
+        { "id": "P3-P2-13", "title": "PRD P2-13 Timing ladder (5s HUD / 10s inline / 20s auto-stop; all configurable)", "status": "pending", "dependsOn": ["P3-P2-8"], "pr": null, "notes": "ADR-0005." }
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "The Flagship Trio",
+      "goal": "Voiceprint first (extends learning already flowing), Relay second (crypto design review gates the build), Conductor third (MCP substrate -> targets -> confirm gates -> fleet mode). Exit: all three daily-usable across the fleet; ladder targets hit; Harbor optional and unbuilt without blocking anything.",
+      "status": "pending",
+      "sessionsEstimate": "post-beta",
+      "gates": [
+        {
+          "id": "P4-G-VOICEPRINT",
+          "title": "Voiceprint: measured acceptance-rate lift vs pre-Voiceprint baseline (or it does not advertise)",
+          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml voiceprint_lift",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "P4-5 gate. Training opt-in only; budget capped; kill switch + one-tap reset."
+        },
+        {
+          "id": "P4-G-RELAY",
+          "title": "Relay: <=500ms added latency on LAN, end-to-end encrypted, zero cloud",
+          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml relay_suite",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "P4-2 gate. Pairing/crypto design (ADR-0009) is a critical decision path — operator review BEFORE build."
+        },
+        {
+          "id": "P4-G-CONDUCTOR",
+          "title": "Conductor: confirm-gate suite passes 100% — zero auto-executed destructive commands",
+          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml conductor_confirm_gate",
+          "status": "pending",
+          "evidence": null,
+          "lastRun": null,
+          "notes": "P4-8 gate. A single auto-executed destructive (delete/send/pay/deploy) command is a release blocker."
+        }
+      ],
+      "tasks": [
+        { "id": "P4-VOICEPRINT", "title": "P4 Voiceprint — on-device personalization (dictionary auto-learn w/ confirm; local LoRA fine-tune on idle/charging w/ kill switch + reset; acoustic biasing for proper nouns; exportable/deletable; carries via Relay)", "status": "pending", "dependsOn": ["P3-P2-11"], "pr": null, "notes": "PRD P4-1..P4-5 (to be authored in P0-T1). CRITICAL PATH — local training + model registry." },
+        { "id": "P4-RELAY", "title": "P4 Relay — cross-device continuity (mDNS discovery + pairing code; E2E-encrypted LAN; CRDT sync of dictionary/profiles/Voiceprint/analytics; optional self-hostable rendezvous relay off-network)", "status": "pending", "dependsOn": ["P4-VOICEPRINT", "P0-T7"], "pr": null, "notes": "PRD P4-6/P4-7 (to be authored). CRITICAL PATH — new network surface + crypto. ADR-0009 review + operator go HALT before build." },
+        { "id": "P4-CONDUCTOR", "title": "P4 Conductor — voice control plane (built-in MCP server; agent targets Claude Code/Cursor/terminals/custom; per-agent profiles + command grammars; spoken command palette; fleet mode via Relay; absolute confirm-gate on destructive actions)", "status": "pending", "dependsOn": ["P4-RELAY"], "pr": null, "notes": "PRD P4-8/P4-9 (to be authored). CRITICAL PATH — new surfaces + safety invariant." }
+      ]
+    }
+  ],
+  "metrics": [
+    { "label": "Product code (Rust+TS lines)", "baseline": "0", "current": "0", "target": ">0 buildable app", "direction": "up" },
+    { "label": "Idle footprint (RAM, ASR resident)", "baseline": "~800 MB (Wispr Electron)", "current": "n/a", "target": "<=250 MB", "direction": "down" },
+    { "label": "Release -> injected, local (Raw)", "baseline": "2-5 s (Handy)", "current": "n/a", "target": "<=700ms GPU / <=1200ms CPU", "direction": "down" },
+    { "label": "Zero-edit rate at Light cleanup", "baseline": "raw output", "current": "n/a", "target": ">=95% golden corpus", "direction": "up" },
+    { "label": "Prediction: pause -> guess", "baseline": "Mac-only (Cotypist MLX)", "current": "n/a", "target": "<=400ms, 3-OS (llama.cpp)", "direction": "down" },
+    { "label": "Cross-device continuity (Relay)", "baseline": "cloud-only or none", "current": "n/a", "target": "<=500ms added on LAN, E2E, zero cloud", "direction": "down" },
+    { "label": "Agent-command safety (Conductor)", "baseline": "no comparable product", "current": "n/a", "target": "confirm-gate 100%; 0 auto-exec destructive", "direction": "up" },
+    { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "0 / 3", "target": "3 / 3 incl. Wayland", "direction": "up" },
+    { "label": "ADRs accepted (of 10)", "baseline": "8 present / 8 accepted", "current": "8", "target": "10", "direction": "up" }
+  ],
+  "risks": [
+    { "title": "macOS-only execution host — Windows + Linux gates cannot close here", "severity": "high", "note": "cargo tauri dev on Win/Linux, 3-OS cargo test, and Wayland injection tests all require the reference machines or GitHub Actions. This session can only verify the macOS leg. All 3-OS exit gates stay open pending that infra." },
+    { "title": "No git remote / no CI — auto-merge + 3-OS CI policy degraded", "severity": "high", "note": "The mission's merge policy assumes GitHub PRs + Actions as the trust anchor. Locally we get branches merged to main with macOS-only evidence; the CI trust anchor is absent until a remote is configured." },
+    { "title": "v2 -> v3 documentation drift", "severity": "high", "note": "Repo AGENTS.md (#5 = macOS+Windows), PRD (stops at P2-13), ROADMAP (P4=Expansion), ADRs (stop at 0008) all predate the v3 plan. The plan asserts ADR-0009/0010 and PRD P4-1..P4-9 are 'committed' — they are not in the repo. P0-T1/P0-T7 reconcile this; several sub-steps are critical decision paths." },
+    { "title": "Gemma 3 1B license (Gemma Terms, not Apache)", "severity": "medium", "note": "models/registry.json flags license_review_required. Legal review before any paid build bundles it (ADR-0007/0010). Download-on-demand only; never bundle unreviewed." },
+    { "title": "Relay pairing/crypto design", "severity": "medium", "note": "ADR-0009 keys/rotation/device-revocation design must pass operator review before the P4-1 build starts. Far off, but the gate is load-bearing for the flagship separation." },
+    { "title": "Windows native injection (UIA per-app quirks) + Wayland injection", "severity": "medium", "note": "PRD risk + Pitfall P8. Wayland is the single highest platform risk in P1 — spike in week 2 (ROADMAP)." }
+  ],
+  "prLog": [],
+  "resume": {
+    "activePhase": "P0",
+    "nextActions": [
+      "AWAITING OPERATOR GO. Mission is bootstrapped (ops/mission/ seeded, renderer copied, SOTU rendered, baseline committed). Do not begin P0 build work until the operator says 'go'.",
+      "On go: start P0-T1 (docs v2->v3 reconciliation) — but note it is a CRITICAL PATH (reinterprets non-negotiable #5 to 3-OS + adds PRD P4 epics); write the reconciliation ADR and confirm the operator's intent on Linux-first-class + pay-once/Harbor pricing before editing AGENTS.md/PRD/ROADMAP.",
+      "Then P0-T7 (author ADR-0009 Relay crypto + ADR-0010 pricing as Proposed) — both HALT for operator review before Accepted.",
+      "Then P0-T4 (Handy study -> ADR-0004 notes) and P0-T2 (scaffold Tauri app: pnpm create tauri-app React+TS, merge into apps/desktop preserving module dirs + AGENTS.md, wire Cargo + pnpm workspaces). P0-T2 introduces the full dependency set — critical path.",
+      "Decide the CI/remote question with the operator: configure a GitHub remote so the 3-OS matrix can run, or accept macOS-only local evidence with Win/Linux gates explicitly waived-pending-infra."
+    ],
+    "blockers": [
+      "macOS-only host: P0-G3 (3-OS test), P0-G5 (tauri dev on Win/Linux), P0-G6 (3-OS CI) cannot be closed without the reference machines or a GitHub remote with Actions.",
+      "No GitHub remote configured — no CI trust anchor and no real PRs; auto-merge is local-only.",
+      "P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.",
+      "Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).",
+      "ADR-0009 (Relay crypto) operator review required before the P4-1 build.",
+      "Critical-path bootstrap items (P0-T1 non-negotiable #5 change, P0-T7 ADR-0009/0010) need explicit operator go per policy."
+    ],
+    "conventions": [
+      "One work unit = one branch (mission/<phaseId>-<slug>) = one merge; <=400 changed lines.",
+      "Run the internal loop per prompts/BUILD-LOOP.md (ORIENT->PLAN->BUILD->JUDGE->AUDIT->GATE) inside each task; mission-control governs phases/state/reporting above it.",
+      "No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.",
+      "A green Judge with a red Audit does not merge.",
+      "Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.",
+      "Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.",
+      "Never weaken a non-negotiable to pass a gate — that is itself a blocking defect."
+    ]
+  }
+}
