@@ -115,7 +115,7 @@
           "status": "pending",
           "evidence": null,
           "lastRun": null,
-          "notes": "Manual/human-verified per OS. Windows + Linux cannot be verified on this macOS-only host — needs the reference machines or CI with a display. This is the P0 exit gate."
+          "notes": "BLOCKER FIXED 2026-07-08: beforeDevCommand ran `pnpm dev` at the workspace root (no `dev` script) — the real reason dev never opened. Fixed to `pnpm --filter kaydence-desktop dev`; verified on the Debian VM (vite ready on :1420). Linux: run `cd ~/kaydence && cargo tauri dev` in the VM's GNOME terminal to confirm the window (operator-observed, like macOS). macOS: run here. Windows: still needs a real box. Toolchain + build deps are installed on the Linux VM."
         },
         {
           "id": "P0-G6",
