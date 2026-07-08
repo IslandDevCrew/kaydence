@@ -30,6 +30,10 @@ atspi = "0.30"
 pollster = "0.4"
 zbus = "5"
 futures-lite = "2"
+# uinput keystroke synthesis — the validated primary insertion path on Wayland
+# (AT-SPI InsertText no-ops on modern GNOME; ADR-0013 amendment). Local device
+# I/O, not a network surface.
+evdev = "0.13"
 
 [features]
 # Feature-gated network surfaces stay OFF by default (non-negotiable #1).

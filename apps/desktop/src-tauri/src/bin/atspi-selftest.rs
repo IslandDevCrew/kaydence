@@ -28,6 +28,13 @@ fn main() {
                 let want = args.get(2).cloned().unwrap_or_default();
                 linux::run_read(want);
             }
+            Some("--type") => {
+                let text = args
+                    .get(2)
+                    .cloned()
+                    .unwrap_or_else(|| "Kaydence uinput OK".into());
+                linux::run_type(text);
+            }
             _ => linux::run(),
         }
     }
@@ -67,6 +74,41 @@ mod linux {
         if let Err(e) = pollster::block_on(read_field(&app_substr)) {
             eprintln!("[atspi-selftest] FAIL: {e}");
             std::process::exit(1);
+        }
+    }
+
+    /// Create the uinput virtual keyboard and type `text` into whatever holds
+    /// keyboard focus. Prints the keymap coverage + device node. Whether the
+    /// text lands is focus-dependent (operator-observed).
+    pub fn run_type(text: String) {
+        use kaydence_lib::inject::uinput::{typable_count, UinputKeyboard};
+        let typable = typable_count(&text);
+        println!(
+            "[type] {} of {} char(s) are typable on US-QWERTY",
+            typable,
+            text.chars().count()
+        );
+        let mut kbd = match UinputKeyboard::open() {
+            Ok(k) => k,
+            Err(e) => {
+                eprintln!(
+                    "[type] FAIL opening /dev/uinput: {e} (needs write access — udev/input group)"
+                );
+                std::process::exit(1);
+            }
+        };
+        match kbd.dev_nodes() {
+            Ok(nodes) => println!("[type] virtual keyboard created: {nodes:?}"),
+            Err(e) => println!("[type] (dev node query failed: {e})"),
+        }
+        // Give the compositor a moment to bind the new device before typing.
+        std::thread::sleep(std::time::Duration::from_millis(800));
+        match kbd.type_text(&text) {
+            Ok(n) => println!("[type] PASS — emitted {n} keystroke char(s) via uinput."),
+            Err(e) => {
+                eprintln!("[type] FAIL emitting: {e}");
+                std::process::exit(1);
+            }
         }
     }
 
@@ -223,6 +265,16 @@ mod linux {
         println!("[atspi-selftest] connected. Focus a text field to inject; focus a");
         println!("[atspi-selftest] password field to see it refused. (Ctrl-C to stop.)");
 
+        // The real integrated path: AT-SPI decides *whether* to inject
+        // (secure-field gate), uinput does the *typing* (AT-SPI InsertText
+        // no-ops on modern GNOME). ASCII-only marker (uinput is US-QWERTY).
+        const TYPED: &str = "[Kaydence] ";
+        let mut kbd = kaydence_lib::inject::uinput::UinputKeyboard::open().ok();
+        if kbd.is_none() {
+            println!("[atspi-selftest] (no /dev/uinput access — detection only; run the demo");
+            println!("[atspi-selftest]  script or add the udev rule to enable typing.)");
+        }
+
         let events = conn.event_stream();
         futures_lite::pin!(events);
         let mut inserted = 0u32;
@@ -259,29 +311,16 @@ mod linux {
                         "  REFUSED: secure/password field — not injecting (non-negotiable #8)."
                     );
                 }
-                FieldKind::Editable => {
-                    let text = TextProxy::builder(conn.connection())
-                        .destination(name.to_owned())?
-                        .path(path.to_owned())?
-                        .build()
-                        .await?;
-                    let caret = text.caret_offset().await.unwrap_or(0);
-                    let editable_proxy = EditableTextProxy::builder(conn.connection())
-                        .destination(name.to_owned())?
-                        .path(path.to_owned())?
-                        .build()
-                        .await?;
-                    match editable_proxy
-                        .insert_text(caret, MARKER, MARKER.chars().count() as i32)
-                        .await
-                    {
-                        Ok(_) => {
+                FieldKind::Editable => match kbd.as_mut() {
+                    Some(k) => match k.type_text(TYPED) {
+                        Ok(n) => {
                             inserted += 1;
-                            println!("  INSERTED {MARKER:?} via AT-SPI EditableText ({inserted}).");
+                            println!("  TYPED {TYPED:?} ({n} chars) via uinput ({inserted}).");
                         }
-                        Err(e) => println!("  insert failed: {e}"),
-                    }
-                }
+                        Err(e) => println!("  uinput type failed: {e}"),
+                    },
+                    None => println!("  editable, but no /dev/uinput access — would type here."),
+                },
                 FieldKind::NoTarget | FieldKind::Unknown => {
                     println!("  no injectable target.");
                 }
