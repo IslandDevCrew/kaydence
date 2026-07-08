@@ -7,3 +7,10 @@
 - Execution tier: inline/Agent (Tier 2-3) — user did not opt into Workflow orchestration. Host is macOS-only with no git remote: 3-OS CI + tauri-dev-on-Win/Linux gates cannot close here (blockers recorded).
 - Surprise: the mission is genuinely at hour zero of P0 despite the plan's "monorepo v3 committed" framing — that count is the doc scaffold, not shippable code.
 - Parked AWAITING OPERATOR GO before any P0 build work (P0-T1 and P0-T7 are critical decision paths).
+
+## 2026-07-07T01:30Z — session 1 (P0 law)
+- Operator GO: v3 supersedes v2; ratified Linux-first-class, local-only, pricing.
+- Merged P0-T7 (ADRs 0009 Relay-crypto [Proposed], 0010 pricing [Accepted], 0011 Linux/3-OS [Accepted]; 0008 pricing marked superseded) and P0-T1 (reconciled AGENTS/PRD/ROADMAP/ARCHITECTURE/ci.yml to v3 3-OS; added PRD §12 flagship epics P4-1..P4-9; de-2-OS'd 9 secondary docs). 3 merges on main.
+- ADR-0009 stays PROPOSED by design — Relay crypto is a critical decision path that halts for operator review before the P4-1 build. P0-G7 gate marked waived-by-design (10/11 accepted).
+- Surprise: the v3 plan cites ADR-0009/0010 + PRD P4-1..P4-9 as already 'committed', but they existed only in the plan HTML — authored them here so repo == plan.
+- Next: P0-T6 scripts (bench/audit-network/check-adr-status), then P0-T4 Handy study (needs network), then P0-T2 Tauri scaffold (critical path). P0 exit gates (tauri dev + CI on Win/Linux) stay waived-pending-infra on this macOS-only host.
