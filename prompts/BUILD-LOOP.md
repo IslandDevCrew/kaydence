@@ -47,7 +47,7 @@ start a unit you can't trace to a PRD ID or an approved issue.
 
 ### 5 · AUDIT  (evidence lens — "prove it")
 - Accept nothing on assertion. Attach the artifact for each claim:
-  - tests pass **on macOS and Windows** (CI matrix output)
+  - tests pass **on macOS, Windows, and Linux** (CI matrix output)
   - latency budgets measured if the hot path changed (`bench` / `bench-prediction`)
   - no new network calls (`audit-network.sh`) — or ADR + toggle + allowlist diff
   - relevant gate suites green (crash-recovery, short-utterance, event-sequences)

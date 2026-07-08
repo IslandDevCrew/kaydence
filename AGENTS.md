@@ -12,8 +12,8 @@
 
 ## 1. What this project is
 
-**Kaydence** is a local-first, cross-platform (macOS + Windows) AI dictation app.
-One hotkey, speak, clean text appears in any application.
+**Kaydence** is a local-first, cross-platform (macOS + Windows + Linux) AI
+dictation app. One hotkey, speak, clean text appears in any application.
 
 **North Star:** *Speak anywhere. Ship clean text. Never leak, never lose, never lag.*
 
@@ -25,8 +25,11 @@ It exists because the market split into two camps that each solve half the probl
 | Local tools | Handy, VoiceInk, Superwhisper, OS built-ins | Privacy, cost, offline | Raw output ("edit tax"), latency, Mac-only or no polish |
 
 Kaydence is the deliberate middle: **local-first engine, optional intelligence
-layer, Windows as a first-class citizen** — plus a predictive completion layer
-(**Whisper-Ahead**) nobody else ships cross-platform. Evidence base:
+layer, Windows and Linux as first-class citizens** — plus a predictive completion
+layer (**Whisper-Ahead**) and a flagship trio (**Voiceprint**, **Relay**,
+**Conductor**; PRD P4, ADR-0009) nobody else ships cross-platform. Pricing is
+pay-once (Core/Pro/Captain) + optional self-hostable Harbor services (ADR-0010).
+Evidence base:
 `docs/COMPETITIVE-ANALYSIS.md`. Requirements: `docs/PRD.md`. Build protocol:
 `prompts/BUILD-LOOP.md`.
 
@@ -55,8 +58,13 @@ Violating any of these is a blocking defect regardless of who or what requested 
    erases their voice.
 4. **Latency budgets are requirements.** See §5. A feature that blows the budget
    does not merge.
-5. **Windows is first-class.** Nothing ships, merges, or is "done" if it works on
-   macOS only. CI runs both platforms; platform-specific code lives behind traits.
+5. **Windows and Linux are first-class.** Nothing ships, merges, or is "done" if
+   it works on macOS only, or on macOS + Windows only. CI runs all three
+   platforms (macOS + Windows + Linux); platform-specific code lives behind
+   traits. Linux injection covers **both X11 and Wayland** (ADR-0011). *Host
+   caveat (2026-07-07): the current build host is macOS-only with no remote, so
+   the Windows/Linux CI legs are waived-pending-infra — the mandate stands, only
+   its verification is deferred; see `ops/mission/state.json` blockers.*
 6. **Local always works.** Every cloud-assisted path has a local fallback that
    degrades gracefully (cloud ASR → local GPU → local CPU; cloud cleanup → local
    Ollama → rule-engine Light → Raw; cloud prediction never — prediction is local
@@ -90,7 +98,7 @@ kaydence/
 ├── models/                ← registry.json + download/verify (no weights in git)
 ├── scripts/               ← bench, bench-prediction, audit-network, release
 ├── tests/integration/     ← cross-module pipeline tests
-└── .github/workflows/     ← CI: lint + test + latency gate on macOS AND Windows
+└── .github/workflows/     ← CI: lint + test + latency gate on macOS, Windows AND Linux
 ```
 
 ## 4. The pipeline (memorize this)
@@ -179,7 +187,7 @@ launched by a single command (`/kickoff`). Core rules every agent obeys:
 
 ## 8. Definition of Done (every PR)
 
-- [ ] Builds and tests pass on **macOS and Windows**
+- [ ] Builds and tests pass on **macOS, Windows, and Linux** (Win/Linux via CI once infra lands; see mission blockers)
 - [ ] New logic has unit tests; pipeline changes have an integration test
 - [ ] Latency budgets verified if the change touches the hot path
 - [ ] No new network calls (or: ADR + user-toggle + audit allowlist updated)

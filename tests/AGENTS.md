@@ -16,6 +16,6 @@ boundaries.
   bug is not fixed until its clip is in the corpus).
 
 ## Rules
-Tests run headless on CI for both OSes wherever feasible; injection tests that
+Tests run headless on CI for all three OSes wherever feasible; injection tests that
 need a real session run in the nightly job against a VM matrix. Flaky tests
 are quarantined within 24 h and fixed within a week — a flaky gate is no gate.

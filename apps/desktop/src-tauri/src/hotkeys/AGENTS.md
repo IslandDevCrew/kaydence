@@ -1,7 +1,7 @@
 # hotkeys/ — Global Shortcuts
 
 ## Owns
-Global hotkey registration (both OSes), push-to-talk vs toggle semantics,
+Global hotkey registration (all three OSes: macOS/Windows/Linux X11+Wayland), push-to-talk vs toggle semantics,
 debounce, the secondary per-invocation dial-override chord, conflict detection
 with OS/app shortcuts, and emitting start/stop intents to the session manager.
 

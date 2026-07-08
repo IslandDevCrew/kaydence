@@ -21,7 +21,7 @@ decision paths, phase boundaries, ambiguity, 3× failure) and print a `recap`.
 
 Hard rules: no authority without evidence (never "done" without the artifact);
 no critical path without an ADR + my explicit `go`; never weaken a non-negotiable
-to pass a gate; Windows is first-class.
+to pass a gate; Windows and Linux are first-class (3-OS, ADR-0011).
 
 Start the boot sequence now, then `recap` what you found and the proposed first
 work unit, and wait for my `go`.

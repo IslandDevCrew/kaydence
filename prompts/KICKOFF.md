@@ -31,7 +31,7 @@ AI dictation app. Drive the build to completion using the repo's own protocol.
   (test output, bench table, audit result).
 - Never cross a critical decision path without an ADR **and** my explicit `go`.
 - Never weaken a non-negotiable to pass a gate.
-- Windows is first-class — nothing is "done" macOS-only.
+- Windows and Linux are first-class (ADR-0011) — nothing is "done" macOS-only or Win-only.
 
 **My command vocabulary:** `proceed`/`go`, `recap`, `clarify`, `rewind`.
 

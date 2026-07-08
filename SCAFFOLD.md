@@ -25,4 +25,4 @@ CONTRIBUTING.md).
    contract compiles before any feature work begins.
 
 Definition of done for this file's job: `cargo tauri dev` opens a window on
-macOS and Windows; CI is green on both; ADRs 0001–0004 marked Accepted.
+macOS, Windows, and Linux; CI is green on all three; ADRs 0001–0004 marked Accepted. (Win/Linux legs waived-pending-infra on a macOS-only host — see ops/mission/state.json.)

@@ -1,46 +1,63 @@
-# Kaydence Roadmap
+# Kaydence Roadmap (v3 — 2026-06-21, committed 2026-07-07)
 
 Phases gate on exit criteria, not dates. Week counts assume one primary builder
 plus agent workflows, and a Fri-sunset → Sat-sunset weekly off-block — do not
-schedule releases or crunch against it.
+schedule releases or crunch against it. Ordered by risk reduction. The mission
+loop halts at every phase boundary for an operator `go`
+(`ops/mission/state.json` is the live tracker). Platform mandate is 3-OS
+(macOS + Windows + Linux; X11 + Wayland) per ADR-0011.
 
-## Phase 0 — Foundation (Week 1)
-Study Handy's source (Tauri config, cpal capture, whisper.cpp + Parakeet ONNX
-wiring, VAD integration, tray/hotkey plumbing). Write ADR-0004 notes on what we
-adopt vs. redesign. Bootstrap toolchain per `SCAFFOLD.md`. CI skeleton running
-fmt/clippy/test on macOS + Windows runners.
-**Exit:** `cargo tauri dev` opens a window on both OSes; CI green; ADRs 1–4 accepted.
+> **Supersedes the v2 roadmap.** v2 made this 2-OS and put Linux + the flagship
+> features in a vague "Expansion" phase. v3 makes Linux first-class from P0 and
+> commits the flagship trio as P4 (Voiceprint → Relay → Conductor).
 
-## Phase 1 — MVP parity (Weeks 2–4) → PRD P0-1..P0-4, P0-6..P0-8
+## Phase 0 — Toolchain & law (~1 week) · SCAFFOLD.md
+Bootstrap Tauri on all three OSes; stand up the 3-OS CI matrix (fmt/clippy/test +
+frontend check on macOS + Windows + Linux); Handy study pass (ADR-0004);
+reconcile the constitution/PRD/architecture to v3; ADRs 0001–0011 accepted
+(ADR-0009 stays Proposed until the Relay design review — see below).
+**Exit:** `cargo tauri dev` opens a window on all three OSes; CI green.
+
+## Phase 1 — MVP dictation (~3 weeks) → PRD P0-1..P0-4, P0-6..P0-8
 Hotkey → capture → WAL → VAD → local ASR (Parakeet CPU first, Whisper GPU second)
-→ injection (Mac AX, then Windows UIA — spike Windows injection in week 2, it is
-the highest-risk item) → history. Raw mode only. First-run flow + model download.
-**Exit:** daily-drivable raw dictation on both OSes; crash-recovery and
-short-utterance test suites pass; latency budgets met in Raw mode.
+→ native injection on Mac (AX), Windows (UIA — spike week 2, highest legacy risk)
+and Linux (**Wayland spike early — highest platform risk overall**) → history.
+Raw mode only. First-run flow + model download.
+**Exit:** daily-drivable raw dictation on all three OSes; crash-recovery and
+short-utterance suites pass; latency budgets met in Raw mode.
 
-## Phase 2 — The differentiator (Weeks 5–7) → P0-5, P1-1, P1-2, P1-5
-Cleanup dial (rule engine → Light w/ local LLM → Full), streaming partials in
-HUD, dictionary + Wispr/Glaido import, BYOK lanes with fallback chain.
+## Phase 2 — The cleanup differentiator (~3 weeks) → P0-5, P1-1, P1-2, P1-5
+Raw/Light/Full dial (rule engine → Light w/ local LLM → Full), streaming partials
+in the HUD, dictionary + Wispr/Glaido import, BYOK lanes with the local fallback
+chain.
 **Exit:** ≥95% zero-edit rate at Light on the golden corpus; Wispr Flow
-uninstalled from the primary user's machines.
+uninstalled from the operator's machines.
 
-## Phase 3 — Daily-driver polish (Weeks 8–10) → P1-3, P1-4, P1-6
-Per-app profiles, snippets, correction-learning, signed installers
-(notarized .dmg, signed .msi), latency hardening, diagnostics panel.
-**Exit:** a non-builder can install and succeed in 60 seconds; naming/trademark
-pass complete; public beta candidate.
+## Phase 3 — Daily-driver polish + Whisper-Ahead (~4 weeks) → P1-3, P1-4, P1-6 + P2-7..P2-13
+Per-app profiles, snippets, correction-learning, signed installers for all three
+OSes (notarized .dmg, signed .msi, AppImage/.deb), latency hardening, diagnostics
+panel. Then the prediction layer (P3.5): local prediction engine + per-platform
+model via `bench-prediction`; Surface A HUD dual-line (Streaming → Paused-Merge);
+merge matcher + Tab/Shift-Tab + gold pulse; Surface B inline fallback + surface
+router; opt-in `context/` (Tier 1 → Tier 2); local analytics + dashboard; the
+timing ladder.
+**Exit:** a non-builder installs and succeeds in 60 s; prediction is a daily-used
+assist on all three OSes within budget; merge acceptance rate measured; privacy
+tests (no persistence/transmission of context) pass; prediction defaults locked
+from `bench-prediction.sh` on the two reference machines (ADR-0007); Gemma license
+review closed before any paid build ships it; naming/trademark pass complete;
+public beta candidate.
 
-## Phase 4 — Expansion (post-beta) → P2-x
-Voice edit commands, MCP server for coding agents, file transcription,
-agentic text mode, Linux build, mobile exploration. Re-prioritize from beta feedback.
+## Phase 4 — The Flagship Trio (post-beta) → PRD P4-1..P4-9 · ADR-0009
+Sequenced by dependency: **Voiceprint first** (extends the learning already
+flowing from P1-3/P2-11), **Relay second** (the pairing/crypto design review
+gates the build — ADR-0009, operator gate), **Conductor third** (MCP substrate →
+agent targets → confirm gates → fleet mode via Relay).
+**Exit:** all three daily-usable across the fleet; ladder targets hit (Relay
+≤500 ms LAN E2E; Voiceprint measured acceptance lift; Conductor confirm-gate
+100%); Harbor optional and unbuilt without blocking anything.
 
-## Phase 3.5 — Whisper-Ahead milestone (predictive completion) → P2-7..P2-13
-Gated on Phase 2 (streaming partials + local-LLM lane solid) and Phase 3 (daily
-driver). Build order: (1) local prediction engine + per-platform model via
-`bench-prediction`; (2) Surface A HUD dual-line (Streaming, then Paused-Merge);
-(3) merge matcher + Tab/Shift-Tab + gold pulse; (4) Surface B inline fallback +
-surface router; (5) opt-in `context/` (Tier 1, then Tier 2); (6) local analytics
-+ dashboard; (7) the timing ladder.
-**Exit:** prediction is a daily-used assist on both OSes within budget; merge
-acceptance rate measured; privacy tests (no persistence/transmission of context)
-pass; Gemma license review closed before any paid build ships it.
+## Backlog (post-trio, re-prioritized from beta feedback) → residual P2-x
+Voice edit commands (P2-1), file transcription (P2-3), agentic text mode (P2-4),
+mobile exploration (P2-6). (MCP server P2-2 is subsumed by Conductor P4-8; Linux
+P2-5 promoted to first-class in P0.)
