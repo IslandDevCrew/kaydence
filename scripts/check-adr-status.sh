@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# check-adr-status.sh — P0-G7 gate.
+#
+# Every ADR must be Accepted before P0 closes, with ONE by-design exception:
+# ADR-0009 (Relay pairing/crypto) stays Proposed until the operator's crypto
+# design review, which gates the P4-1 build. This script passes when every ADR
+# except the declared exceptions is Accepted.
+#
+# Portable to bash 3.2 (macOS default): no associative arrays, no mapfile.
+#   usage: bash scripts/check-adr-status.sh
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DIR="$ROOT/docs/decisions"
+
+# ADR numbers allowed to be non-Accepted (space-separated), + reasons in one place.
+PROPOSED_OK=" 0009 "
+reason_for() { case "$1" in
+  0009) echo "Relay crypto — critical decision path; operator review gates P4-1" ;;
+  *)    echo "" ;;
+esac; }
+
+is_exception() { case "$PROPOSED_OK" in *" $1 "*) return 0;; *) return 1;; esac; }
+
+fail=0
+echo "== ADR status check =="
+for f in "$DIR"/0[0-9][0-9][0-9]-*.md; do
+  base="$(basename "$f")"
+  num="${base%%-*}"
+  [ "$num" = "0000" ] && continue   # template
+
+  # Status token = text after '**Status:**' and BEFORE any '<!--' comment.
+  # (ADR-0009's comment literally contains the word "Accepted" — must not match it.)
+  raw="$(grep -m1 -i 'Status:' "$f" || true)"
+  token="${raw%%<!--*}"
+
+  if printf '%s' "$token" | grep -qi 'Accepted'; then
+    printf '  %-6s OK    (Accepted)\n' "$num"
+  elif is_exception "$num"; then
+    printf '  %-6s WAIVE (Proposed by design: %s)\n' "$num" "$(reason_for "$num")"
+  else
+    printf '  %-6s FAIL  (not Accepted: %s)\n' "$num" "$(printf '%s' "$token" | sed 's/^[[:space:]]*//')"
+    fail=1
+  fi
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo "RESULT: FAIL — an ADR is not Accepted and not a declared exception." >&2
+  exit 1
+fi
+echo "RESULT: PASS — all ADRs Accepted except declared by-design exceptions:$PROPOSED_OK"
+exit 0

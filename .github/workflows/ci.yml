@@ -32,8 +32,14 @@ jobs:
       - name: typecheck + lint
         run: npm run check
         working-directory: apps/desktop
-      # --- Gates (enable as scripts land) ---
-      # - name: network audit (non-negotiable #1)
-      #   run: bash scripts/audit-network.sh
-      # - name: latency budget (root §5)
-      #   run: bash scripts/bench.sh --check
+      # --- Gates (bash on all three runners incl. Windows Git Bash) ---
+      - name: network audit (non-negotiable #1)
+        shell: bash
+        run: bash scripts/audit-network.sh
+      - name: ADR status (P0-G7)
+        shell: bash
+        run: bash scripts/check-adr-status.sh
+      - name: latency budget (root §5)
+        shell: bash
+        # exit 3 = not-measurable-yet (pre-build); only a real regression (exit 1) fails CI.
+        run: bash scripts/bench.sh --check || test $? -eq 3

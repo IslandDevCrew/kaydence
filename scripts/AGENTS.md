@@ -1,16 +1,23 @@
 # scripts/ — Tooling
 
-Planned inventory (create as phases need them; keep each runnable on macOS
-AND Windows — use cross-platform runners or paired .sh/.ps1):
+Inventory (create as phases need them; keep each runnable on macOS, Windows AND
+Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or paired
+.sh/.ps1):
 
-- `bench.sh` — drives the golden audio corpus through the pipeline, emits the
-  latency/WER table; CI compares against `bench-baseline.json` and fails on
-  >10% regression of any root-AGENTS §5 budget.
-- `audit-network.sh` — builds the app, greps the dependency graph and binary
-  for network-capable calls, diffs against the allowlist
-  (`network-allowlist.json`: model mirrors + user-configured BYOK endpoints
-  only). A new network surface failing this gate is a release blocker
-  (non-negotiable #1).
+- `bench.sh` — **present (P0-T6, skeleton)**. Drives the golden audio corpus
+  through the built pipeline, emits the latency table; `--check` compares against
+  root-AGENTS §5 budgets and fails on regression. Exit 3 = not-measurable-yet
+  (pre-build); CI treats 3 as skip, 1 as failure. Wires to the `--bench` binary
+  once the app builds (P0-T2+).
+- `audit-network.sh` — **present (P0-T6), a working gate**. Fixed-string scan of
+  the Rust/TS source for network-capable call sites, diffed against
+  `network-allowlist.json` (model mirrors + user-configured BYOK endpoints + Relay
+  peers only). Zero-source tree = clean pass. Any unreviewed surface = exit 1, a
+  release blocker (non-negotiable #1). Deeper binary/deps scan is a TODO for
+  post-build. Verified: FAILs on a planted `std::net` call outside the allowlist.
+- `check-adr-status.sh` — **present (P0-T6)**. P0-G7 gate: all ADRs Accepted
+  except declared by-design exceptions (ADR-0009 Relay stays Proposed until the
+  operator crypto review gates P4-1). Comment-safe status parse.
 - `gen-types` — Rust `SessionEvent`/Settings → TypeScript types.
 - `corpus/` tools — record/annotate golden transcripts (raw audio + expected
   Light output pairs).
