@@ -19,11 +19,18 @@ pub mod prediction;
 pub mod profiles;
 pub mod settings;
 
+/// Initial app/config snapshot for the presentation layer.
+#[tauri::command]
+fn app_snapshot() -> settings::AppSnapshot {
+    settings::AppSnapshot::default()
+}
+
 /// Run the Kaydence desktop app. Called by the thin `main.rs` binary.
 ///
 /// P0 scaffold: brings up the Tauri window only. Pipeline wiring lands in P1.
 pub fn run() {
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![app_snapshot])
         .run(tauri::generate_context!())
         .expect("error while running Kaydence");
 }

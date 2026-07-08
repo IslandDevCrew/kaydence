@@ -1,0 +1,38 @@
+Kaydence P1 settings snapshot evidence
+Date: 2026-07-08 17:36 CDT / 2026-07-08T22:36Z
+Host: macOS, local repo /Users/IDC2.5/Kaydence/kaydence
+
+Scope:
+- Replaced the settings P0 stub with typed Rust-owned settings defaults,
+  validation, first-run readiness, and a serializable AppSnapshot.
+- Added Tauri command app_snapshot so the presentation layer can request the
+  app/config snapshot without owning product truth.
+- No new dependencies and no network surface.
+
+Settings coverage:
+- APP_NAME and APP_IDENTIFIER remain the brand/config constants.
+- schema_version = 1.
+- Hotkey defaults: push-to-talk, RightAlt, Shift+RightAlt override.
+- Capture defaults: 250ms min capture, 300ms tail buffer, 30ms debounce.
+- Engine default: ParakeetCpu with hardware auto-recommend enabled.
+- Cleanup default: Light, Full requires explicit opt-in.
+- Injection default: unknown focus warns/allows, clipboard fallback not preferred.
+- Privacy default: 30-day retention, local context off, local OCR off.
+- First-run readiness requires model, microphone permission, input permission,
+  and hotkey registration.
+
+Fresh gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check: PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 31 lib tests PASS
+  - 2 crash_recovery integration tests PASS
+  - 33 total backend tests PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh --check: PASS, 0 network-capable call sites found
+- bash scripts/check-adr-status.sh: PASS, ADR-0009 is the single by-design Proposed exception
+- ./script/build_and_run.sh build: PASS
+
+Notes:
+- Vite dist artifacts created during build verification were removed after the
+  gate run; source files are the durable change.

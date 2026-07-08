@@ -139,3 +139,9 @@
 - Browser smoke: Vite dev server at 127.0.0.1:1420 rendered in system Chrome via Playwright. Verified h1 `Dictation cockpit`, active macOS lane, 10 nav items, 4 metric cards, favicon present, and zero console/page errors.
 - Added `script/build_and_run.sh` plus `.codex/environments/environment.toml` so Codex has a Run action for the Tauri app. Added `docs/CODEX_SUPER_GOAL_PROMPT.md`, `docs/WINDOWS_CODEX_HANDOFF_2026-07-08.md`, and `docs/KAYDENCE_CURRENT_STATE_OF_UNION_2026-07-08.md` to stabilize continuation and Windows handoff.
 - Cleaned Vite generated `dist/` artifacts after verification; source remains the durable change. Next high-leverage build remains P1 OS wiring: global-shortcut registration into the tested coordinator, macOS AX injection, Windows UIA/SendInput on real Windows, and Linux live demo closure.
+
+## 2026-07-08T22:36Z — Codex P1 slice (Rust-owned settings snapshot)
+- Advanced P1 without adding new platform dependencies: replaced the settings P0 stub with typed Rust-owned defaults, validation, first-run readiness, and a serializable `AppSnapshot`. Defaults now encode the product thesis: push-to-talk, Parakeet CPU, Light cleanup, Full opt-in, 250/300/30ms capture timing, 30-day retention, local context/OCR off, and unknown-focus warning policy for opaque clients.
+- Added `app_snapshot` as a Tauri command in `lib.rs`, giving the presentation layer a backend-owned config source without moving product logic into React.
+- Added five settings tests (defaults, JSON round-trip, bad schema/empty hotkey validation, privacy validation, first-run readiness), raising backend coverage to 33 total tests.
+- Fresh evidence saved at `ops/mission/evidence/2026-07-08-p1-settings-snapshot.txt`: fmt PASS, clippy PASS, backend tests PASS (33 incl. crash recovery), frontend check PASS, audit-network PASS, ADR status PASS, and `./script/build_and_run.sh build` PASS. No new deps, no network surface.
