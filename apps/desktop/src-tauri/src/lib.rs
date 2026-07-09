@@ -529,6 +529,23 @@ impl RuntimeSnapshot {
     }
 
     #[cfg(desktop)]
+    fn mark_first_dictation_completed(
+        &self,
+    ) -> Result<settings::AppSnapshot, settings::SettingsStoreError> {
+        self.update_first_run(|first_run| {
+            first_run.first_dictation_completed = true;
+        });
+
+        if let Some(store) = self.settings_store() {
+            let mut settings = store.load()?;
+            settings.first_dictation_completed = true;
+            store.save(&settings)?;
+        }
+
+        Ok(self.snapshot())
+    }
+
+    #[cfg(desktop)]
     fn set_settings_store(&self, app_data_dir: &Path) {
         *self
             .settings_store
@@ -543,6 +560,7 @@ impl RuntimeSnapshot {
             return Ok(());
         };
         let settings = store.load()?;
+        let first_dictation_completed = settings.first_dictation_completed;
         if let Some(model_id) = settings.selected_asr_model_id {
             let _ = self.apply_asr_selection(&model_id);
         }
@@ -552,6 +570,11 @@ impl RuntimeSnapshot {
         if let Some(binding) = settings.hotkey_primary_binding {
             let binding = settings::normalize_hotkey_binding(&binding)?;
             self.apply_hotkey_binding(&binding);
+        }
+        if first_dictation_completed {
+            self.update_first_run(|first_run| {
+                first_run.first_dictation_completed = true;
+            });
         }
         Ok(())
     }
@@ -1072,6 +1095,7 @@ struct HotkeyRuntime {
     injector: Box<dyn inject::TextInjector + Send>,
     unknown_field_policy: inject::UnknownFieldPolicy,
     prefer_clipboard: bool,
+    first_dictation_completion_pending: bool,
 }
 
 #[cfg(desktop)]
@@ -1144,6 +1168,7 @@ impl HotkeyRuntime {
             injector,
             unknown_field_policy: inject::UnknownFieldPolicy::default(),
             prefer_clipboard: false,
+            first_dictation_completion_pending: false,
         }
     }
 
@@ -1182,6 +1207,12 @@ impl HotkeyRuntime {
 
     fn is_idle(&self) -> bool {
         self.coordinator.state() == hotkeys::CaptureState::Idle
+    }
+
+    fn take_first_dictation_completion(&mut self) -> bool {
+        let completed = self.first_dictation_completion_pending;
+        self.first_dictation_completion_pending = false;
+        completed
     }
 
     fn handle_signal(
@@ -1260,7 +1291,12 @@ impl HotkeyRuntime {
                     },
                 });
                 if let Some(event) = injection_event {
+                    let completed_dictation =
+                        matches!(event, events::SessionEvent::Injected { .. });
                     self.history.record_event(&event)?;
+                    if completed_dictation {
+                        self.first_dictation_completion_pending = true;
+                    }
                     println!("Kaydence injection outcome: event={event:?}");
                 }
                 println!(
@@ -1431,19 +1467,30 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
                     ShortcutState::Released => Signal::Release { at_ms },
                 };
 
-                let tail_wake_ms = match handler_runtime.lock() {
+                let (tail_wake_ms, first_dictation_completed) = match handler_runtime.lock() {
                     Ok(mut runtime) => match runtime.handle_signal(signal) {
-                        Ok(tail_wake_ms) => tail_wake_ms,
+                        Ok(tail_wake_ms) => {
+                            (tail_wake_ms, runtime.take_first_dictation_completion())
+                        }
                         Err(err) => {
                             eprintln!("Kaydence hotkey runtime failed: {err}");
-                            None
+                            (None, false)
                         }
                     },
                     Err(_) => {
                         eprintln!("Kaydence hotkey runtime lock poisoned");
-                        None
+                        (None, false)
                     }
                 };
+
+                if first_dictation_completed {
+                    if let Err(err) = app
+                        .state::<RuntimeSnapshot>()
+                        .mark_first_dictation_completed()
+                    {
+                        eprintln!("Kaydence first dictation completion save failed: {err}");
+                    }
+                }
 
                 if let Some(ends_ms) = tail_wake_ms {
                     schedule_tail_tick(&handler_runtime, started, ends_ms);
@@ -1821,6 +1868,35 @@ mod tests {
             snapshot.settings.first_run.hotkey_registration_error,
             Some("shortcut already registered".to_string())
         );
+    }
+
+    #[test]
+    fn runtime_snapshot_persists_first_dictation_completion() {
+        let app_data = tmp();
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+
+        let snapshot = state.mark_first_dictation_completed().unwrap();
+
+        assert!(snapshot.settings.first_run.first_dictation_completed);
+        assert!(
+            settings::SettingsStore::new(&app_data)
+                .load()
+                .unwrap()
+                .first_dictation_completed
+        );
+
+        let rehydrated = RuntimeSnapshot::default();
+        rehydrated.set_settings_store(&app_data);
+        rehydrated.apply_persisted_user_settings().unwrap();
+        assert!(
+            rehydrated
+                .snapshot()
+                .settings
+                .first_run
+                .first_dictation_completed
+        );
+        let _ = std::fs::remove_dir_all(app_data);
     }
 
     #[test]
@@ -2627,6 +2703,8 @@ mod tests {
                 method: InjectMethod::Native,
             })
         );
+        assert!(runtime.take_first_dictation_completion());
+        assert!(!runtime.take_first_dictation_completion());
         let _ = std::fs::remove_dir_all(app_data);
     }
 
@@ -2666,6 +2744,7 @@ mod tests {
                 reason: HoldReason::FocusChanged,
             })
         );
+        assert!(!runtime.take_first_dictation_completion());
         let _ = std::fs::remove_dir_all(app_data);
     }
 

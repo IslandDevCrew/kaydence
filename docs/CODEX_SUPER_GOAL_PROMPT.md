@@ -31,29 +31,37 @@ Read first, in order:
 Current verified state:
 - GitHub remote access is restored; `IslandDevCrew/kaydence` resolves as a
   PRIVATE repo with ADMIN permission and `git fetch origin` succeeds.
-- Current remote baseline before the latency bench-gate slice: main at
-  `1694fe9` had green 3-OS Actions CI in run 29015166246.
+- Current verified remote baseline before the first-dictation-completion slice:
+  main at `d531a4c` had green 3-OS Actions CI in run 29016531062, completed
+  2026-07-09T12:10:29Z.
 - P0 is complete: 7/7 tasks and 7/7 gates, including windowed `cargo tauri dev`
   observed on macOS, Linux, and Windows.
 - P1 is active; P1-P0-7 privacy posture is done with evidence, P1-G1 is locally
   passed with a repaired real `crash_recovery` filter, and P1-G2 has a runnable
   capture/WAL short-utterance suite. P1-G2 remains pending for ASR golden clips.
-- Fresh local gates passed on 2026-07-09: cargo fmt, cargo clippy, cargo test
-  (184 lib tests + 2 crash-recovery tests + 5 short-utterance integration
-  tests), focused `cargo test ... crash_recovery`, focused `cargo test ...
-  short_utterance`, scripts/check-frontend.sh, scripts/check-privacy-posture.sh
-  --check, scripts/check-adr-status.sh, and pnpm --filter kaydence-desktop build.
+- Fresh local gates passed on 2026-07-09 for the first-dictation-completion
+  slice: cargo fmt, cargo clippy, cargo test (188 lib tests + 2
+  crash-recovery tests + 5 event-sequence tests + 5 short-utterance tests),
+  scripts/check-frontend.sh, scripts/check-privacy-posture.sh --check,
+  scripts/check-adr-status.sh, and scripts/bench.sh --check.
 - The `event_sequences` integration gate now exists and passed locally plus 3-OS
-  CI at `1694fe9` / run 29015166246. It covers
+  CI through `d531a4c` / run 29016531062. It covers
   the typed cross-module order for happy path, focus-change hold, secure-field
   hold, BYOK/GPU/local-CPU fallback, and the current Full cleanup rule-floor
   fallback before injection.
 - The latency bench gate has a working partial floor: `kaydence --bench` emits
   JSON before Tauri startup, and `scripts/bench.sh --check` enforces measured
-  Raw-path budgets in CI instead of skipping. Local PASS measured
-  hotkey_to_capture=6ms, partial_lag=120ms, release_to_inject_cpu=7ms, and
-  light_cleanup_added=1ms. P1-G3 remains pending for real ASR/GPU/idle-footprint
-  and reference-machine p95 evidence.
+  Raw-path budgets in CI instead of skipping. 3-OS CI run 29016531062 enforced
+  the bench step successfully; local follow-up PASS measured
+  hotkey_to_capture=8ms, partial_lag=120ms, release_to_inject_cpu=7ms, and
+  light_cleanup_added=1ms. P1-G3 remains pending for real
+  ASR/GPU/idle-footprint and reference-machine p95 evidence.
+- First-run completion truth is now backend-owned: first_dictation_completed is
+  persisted in app-data settings.json, hydrated into AppSnapshot on startup, and
+  set only after the hotkey runtime records a real SessionEvent::Injected
+  outcome. Held delivery paths, including focus-change before delivery, do not
+  mark setup complete. P1-P0-8 remains in progress for model download,
+  permission prompts, live first-dictation journey, and <=60s proof.
 - Frontend cockpit/setup shell is present and must remain presentation-only.
 - The Codex app Run action is wired to ./script/build_and_run.sh.
 - The hotkey runtime now honors persisted push-to-talk vs toggle mode. The
@@ -102,12 +110,16 @@ Operating rules:
   significant merges.
 
 Next best work:
-1. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict
-   validation on macOS, Windows, and Linux plus P1-G3 latency. The
+1. Continue P1-P0-8 first run: the final checklist step now has durable Rust
+   truth after a real injected dictation; next are model download/progress UI,
+   OS permission prompts, a live first-dictation journey, and <=60s reference
+   proof.
+2. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict
+   validation on macOS, Windows, and Linux plus ASR golden-clip proof. The
    global-shortcut plugin, WAL runtime path, persisted push-to-talk/toggle
    mode, allowlisted rebind UI/registration path, repaired crash_recovery
    filter, and capture/WAL short_utterance suite are already wired locally.
-2. Advance P1-P0-2 ASR readiness: replace TODO model hashes/sources with
+3. Advance P1-P0-2 ASR readiness: replace TODO model hashes/sources with
    reviewed artifacts, implement the network fetch/progress UI, and
    Parakeet/Whisper engine adapters. AppSnapshot already
    exposes ready/missing/blocked model states plus backend-owned ASR candidates,
@@ -124,15 +136,15 @@ Next best work:
    carries a PendingLocalAsrEngine keyed to the selected model/lane, so recordings
    persist audio then record a specific Recognize failure until real
    Parakeet/Whisper adapters are implemented.
-3. Continue injection backends behind TextInjector: Windows UIA+SendInput is
+4. Continue injection backends behind TextInjector: Windows UIA+SendInput is
    merged and live-validated; Linux AT-SPI/uinput still needs human-focus VM
    validation plus unicode-beyond-ASCII work; macOS AX/CGEvent/NSPasteboard has
    local evidence.
-4. Build first-run permission/setup and dictation cockpit against screen
+5. Build first-run permission/setup and dictation cockpit against screen
    families 01, 03, and 10; Screen Family 07 has a first source-backed privacy
    panel but still needs the eventual human design fidelity review with the rest
    of P1-G4.
-5. Watch GitHub after each push: confirm Actions starts on the pushed HEAD and
+6. Watch GitHub after each push: confirm Actions starts on the pushed HEAD and
    do not claim current-head 3-OS parity until the fresh CI run is green.
 
 Never mark complete until each PRD item/gate has current evidence proving it.

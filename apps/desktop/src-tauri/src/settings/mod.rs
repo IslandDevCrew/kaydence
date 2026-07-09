@@ -95,6 +95,8 @@ pub struct UserSettingsFile {
     pub hotkey_mode: Option<HotkeyModeSetting>,
     #[serde(default)]
     pub hotkey_primary_binding: Option<String>,
+    #[serde(default)]
+    pub first_dictation_completed: bool,
 }
 
 impl Default for UserSettingsFile {
@@ -104,6 +106,7 @@ impl Default for UserSettingsFile {
             selected_asr_model_id: None,
             hotkey_mode: None,
             hotkey_primary_binding: None,
+            first_dictation_completed: false,
         }
     }
 }
@@ -660,6 +663,24 @@ mod tests {
         assert!(fs::read_to_string(store.path())
             .unwrap()
             .contains("\"hotkey_primary_binding\": \"F13\""));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn settings_store_saves_first_dictation_completion() {
+        let dir = tmp();
+        let store = SettingsStore::new(&dir);
+        let settings = UserSettingsFile {
+            first_dictation_completed: true,
+            ..UserSettingsFile::default()
+        };
+
+        store.save(&settings).unwrap();
+
+        assert_eq!(store.load().unwrap(), settings);
+        assert!(fs::read_to_string(store.path())
+            .unwrap()
+            .contains("\"first_dictation_completed\": true"));
         let _ = fs::remove_dir_all(dir);
     }
 

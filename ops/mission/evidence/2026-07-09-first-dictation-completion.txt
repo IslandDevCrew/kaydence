@@ -1,0 +1,54 @@
+Kaydence P1 first-run slice: first dictation completion truth
+Date: 2026-07-09T12:16Z
+Worktree: /Users/IDC2.5/Kaydence/kaydence
+Pre-slice remote baseline: main d531a4c, 3-OS Actions run 29016531062 GREEN
+
+Implemented:
+- Added durable first_dictation_completed to app-data settings.json.
+- Hydrated first_dictation_completed into AppSnapshot on app startup/settings load.
+- Marked first_dictation_completed only after the hotkey runtime records a real
+  SessionEvent::Injected outcome.
+- Kept Held outcomes incomplete, including focus-change before delivery.
+
+Focused verification:
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot_persists_first_dictation_completion -- --nocapture
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime_injects_committed_text_when_backend_succeeds -- --nocapture
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime_holds_when_focus_changes_before_delivery -- --nocapture
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml settings_store_saves_first_dictation_completion -- --nocapture
+  RESULT: PASS
+
+Full local gates:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  RESULT: PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all
+  RESULT: PASS
+  Counts: 188 lib tests, 2 crash_recovery integration tests,
+  5 event_sequences integration tests, 5 short_utterance integration tests.
+- bash scripts/check-frontend.sh
+  RESULT: PASS (frontend typechecks + lints clean)
+- bash scripts/check-privacy-posture.sh --check
+  RESULT: PASS (README promises present; network audit clean; no screen-capture primitives)
+- bash scripts/check-adr-status.sh
+  RESULT: PASS (all ADRs Accepted except declared by-design exception 0009)
+- bash scripts/bench.sh --check
+  RESULT: PASS/PARTIAL
+  Metrics: hotkey_to_capture=8ms, partial_lag=120ms,
+  release_to_inject_cpu=7ms, light_cleanup_added=1ms.
+  Unmeasured: GPU release->inject, prediction guess, idle RAM/CPU,
+  real Parakeet/Whisper ASR, reference-machine p95.
+- jq empty ops/mission/state.json
+- node ops/mission/render-sotu.mjs
+  RESULT: PASS (rendered ops/mission/state-of-the-union.html)
+
+Honest boundary:
+- This advances PRD P0-8 by making the first successful dictation a durable
+  backend truth rather than a frontend-only checklist field.
+- P1-P0-8 is not done yet: model download flow, OS permission prompts, live
+  first-dictation user journey, and <=60s reference-machine proof remain.
+- This slice needs a fresh 3-OS Actions run after push before current-head
+  Win/Linux/macOS parity can be claimed.
