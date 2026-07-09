@@ -1,0 +1,35 @@
+Kaydence evidence: event_sequences gate
+Date: 2026-07-09T11:27Z
+Slice: P1 typed event-sequence hardening
+
+Change:
+- Added apps/desktop/src-tauri/tests/event_sequences.rs.
+- Covers the required cross-module event order from tests/AGENTS.md:
+  - happy path: Started -> AudioPersisted -> Partial -> RawFinal -> CleanFinal -> Injected
+  - focus-change hold: Started -> AudioPersisted -> RawFinal -> CleanFinal -> Held(FocusChanged)
+  - secure-field hold: Started -> AudioPersisted -> RawFinal -> CleanFinal -> Held(SecureField)
+  - engine fallback: BYOK timeout -> GPU unavailable -> local CPU success -> Injected
+  - current Full cleanup floor: RawFinal -> CleanFinal(Full rule floor) -> Injected, with no Clean failure
+
+Local gates:
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml event_sequences
+  PASS: 5 event_sequences integration tests.
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  PASS after formatting the new test file.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  PASS.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all
+  PASS: 184 lib tests, 2 crash_recovery integration tests, 5 event_sequences integration tests, 5 short_utterance integration tests, 0 doctests.
+- bash scripts/check-frontend.sh
+  PASS.
+- bash scripts/check-privacy-posture.sh --check
+  PASS: 0 network call sites; privacy README promises present; no banned screen-capture primitives.
+- bash scripts/check-adr-status.sh
+  PASS: all ADRs accepted except by-design ADR-0009 Proposed.
+
+Remote baseline before this slice:
+- main at 55e25b729c60ccd1890dfca49d9456f9995ef1c1 was green on macOS, Ubuntu, and Windows in GitHub Actions run 29013513964.
+- This event_sequences slice still requires a fresh 3-OS CI run after push before claiming current-head remote parity.
+
+Honest boundary:
+- This suite validates orchestration and safety-event order. It does not prove real Parakeet/Whisper recognition, golden ASR clips, Linux human-focus injection, or latency/footprint budgets.

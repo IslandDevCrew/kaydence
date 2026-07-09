@@ -31,8 +31,8 @@ Read first, in order:
 Current verified state:
 - GitHub remote access is restored; `IslandDevCrew/kaydence` resolves as a
   PRIVATE repo with ADMIN permission and `git fetch origin` succeeds.
-- Current remote baseline before this gate-hardening slice: main at `ae8c00b`
-  had green 3-OS Actions CI in run 29009328311.
+- Current remote baseline before the event-sequences slice: main at `55e25b7`
+  had green 3-OS Actions CI in run 29013513964.
 - P0 is complete: 7/7 tasks and 7/7 gates, including windowed `cargo tauri dev`
   observed on macOS, Linux, and Windows.
 - P1 is active; P1-P0-7 privacy posture is done with evidence, P1-G1 is locally
@@ -43,6 +43,11 @@ Current verified state:
   tests), focused `cargo test ... crash_recovery`, focused `cargo test ...
   short_utterance`, scripts/check-frontend.sh, scripts/check-privacy-posture.sh
   --check, scripts/check-adr-status.sh, and pnpm --filter kaydence-desktop build.
+- The `event_sequences` integration gate now exists and passes locally. It covers
+  the typed cross-module order for happy path, focus-change hold, secure-field
+  hold, BYOK/GPU/local-CPU fallback, and the current Full cleanup rule-floor
+  fallback before injection. Fresh CI is still required after the event-sequences
+  commit is pushed.
 - Frontend cockpit/setup shell is present and must remain presentation-only.
 - The Codex app Run action is wired to ./script/build_and_run.sh.
 - The hotkey runtime now honors persisted push-to-talk vs toggle mode. The

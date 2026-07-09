@@ -271,3 +271,9 @@
 - Fixed a gate-quality bug: `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery` previously ran 0 integration tests because the test names lacked the filter string. Renamed the crash-recovery tests so the documented command now runs the real 2-test kill/recover suite.
 - Added `apps/desktop/src-tauri/tests/short_utterance.rs`, a named capture/WAL suite for the implemented Pitfall-P1 contract: 0.3s push-to-talk, 1.5s toggle, <250ms discard/removal, and 0.3s/1.5s WAL recovery without truncation.
 - Evidence saved at `ops/mission/evidence/2026-07-09-short-utterance-gates.txt`. Local gates passed: fmt, clippy, focused crash_recovery, focused short_utterance, full backend tests (184 lib + 2 crash + 5 short), frontend check, privacy posture, ADR status, and pnpm build. Honest boundary: P1-G2 stays pending until real ASR adapters prove golden clips have zero empty/truncated finals.
+
+## 2026-07-09T11:27Z — Codex P1 event-sequence gate
+- Added `apps/desktop/src-tauri/tests/event_sequences.rs`, the cross-module hard gate required by `tests/AGENTS.md`.
+- The suite proves the typed order for happy path, focus-change hold, secure-field hold, engine fallback, and the current Full cleanup rule-floor fallback: target bind, WAL first, ASR output, cleanup, then exactly one delivery outcome.
+- Refreshed mission truth: the latest pre-slice remote baseline is Actions run `29013513964` at `55e25b7`, green on macOS, Ubuntu, and Windows. This event-sequence commit still needs its own fresh CI run after push.
+- Evidence saved at `ops/mission/evidence/2026-07-09-event-sequences-gate.txt`. Local gates passed: fmt, clippy, focused event_sequences, full backend tests (184 lib + 2 crash + 5 event + 5 short), frontend check, privacy posture, and ADR status. Honest boundary: this validates orchestration, not real Parakeet/Whisper recognition, golden ASR clips, Linux human-focus injection, or latency/footprint budgets.
