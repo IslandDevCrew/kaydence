@@ -927,6 +927,7 @@ button {
 
 .permission-action-outcome strong,
 .permission-action-outcome span,
+.permission-action-outcome code,
 .permission-action-outcome small {
   display: block;
   overflow-wrap: anywhere;
@@ -937,6 +938,17 @@ button {
   color: var(--muted);
   font-size: .78rem;
   line-height: 1.35;
+}
+
+.permission-action-outcome code {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-size: .72rem;
+  line-height: 1.35;
+  padding: 6px 7px;
+  white-space: pre-wrap;
 }
 
 .permission-item.status-ready em {

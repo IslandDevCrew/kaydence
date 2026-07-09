@@ -97,6 +97,9 @@ interface FirstRunPermissionActionOutcome {
   action_label: string;
   manual_step: string;
   proof_requirement: string;
+  proof_command: string | null;
+  expected_evidence: string;
+  ready_boundary: string;
 }
 
 type FirstRunNextStepKind =
@@ -791,6 +794,14 @@ export function App(): JSX.Element {
   function showPermissionAction(requirementId: string) {
     setPermissionActionPendingId(requirementId);
     setPermissionActionIssue(null);
+    setPermissionActionOutcome(null);
+
+    if (snapshotSource === "preview") {
+      setPermissionActionIssue("Open the desktop runtime to load permission proof guidance.");
+      setPermissionActionPendingId(null);
+      return;
+    }
+
     void invoke<FirstRunPermissionActionOutcome>("first_run_permission_action", {
       requirementId,
     })
@@ -1465,6 +1476,11 @@ export function App(): JSX.Element {
                     <strong>{permissionActionOutcome.label}</strong>
                     <span>{permissionActionOutcome.manual_step}</span>
                     <small>Proof: {permissionActionOutcome.proof_requirement}</small>
+                    {permissionActionOutcome.proof_command ? (
+                      <code>{permissionActionOutcome.proof_command}</code>
+                    ) : null}
+                    <small>Evidence: {permissionActionOutcome.expected_evidence}</small>
+                    <small>Ready boundary: {permissionActionOutcome.ready_boundary}</small>
                   </div>
                 ) : null}
                 {permissionActionIssue ? (

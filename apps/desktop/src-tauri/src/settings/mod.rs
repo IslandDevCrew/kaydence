@@ -562,6 +562,9 @@ pub struct FirstRunPermissionActionOutcome {
     pub action_label: String,
     pub manual_step: String,
     pub proof_requirement: String,
+    pub proof_command: Option<String>,
+    pub expected_evidence: String,
+    pub ready_boundary: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -979,6 +982,9 @@ pub fn first_run_permission_action(
         action_label: requirement.action_label,
         manual_step: requirement.action,
         proof_requirement: first_run_permission_proof(requirement_id).to_string(),
+        proof_command: first_run_permission_proof_command(requirement_id).map(str::to_string),
+        expected_evidence: first_run_permission_expected_evidence(requirement_id).to_string(),
+        ready_boundary: first_run_permission_ready_boundary(requirement_id).to_string(),
     })
 }
 
@@ -1022,6 +1028,60 @@ fn first_run_permission_proof_command(requirement_id: &str) -> Option<&'static s
             "cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml --bin atspi-selftest -- --type \"Kaydence uinput proof\"",
         ),
         _ => None,
+    }
+}
+
+fn first_run_permission_expected_evidence(requirement_id: &str) -> &'static str {
+    match requirement_id {
+        "microphone" => {
+            "A real capture writes non-empty app-data audio and the first-dictation journey can proceed."
+        }
+        "accessibility" => {
+            "A normal field accepts native insertion and a secure field produces a Held{SecureField} outcome."
+        }
+        "input_monitoring" => {
+            "The selected global hotkey reaches the runtime from the OS event stream while Kaydence is backgrounded."
+        }
+        "uia_focus" => {
+            "The UIA proof reports editable focus metadata and refuses password/secure fields on the Windows build."
+        }
+        "sendinput" => {
+            "The SendInput proof types the requested Unicode text into a normal field after secure-field gating."
+        }
+        "accessibility_bus" => {
+            "The AT-SPI selftest connects to the desktop bus and can inspect focused accessible objects."
+        }
+        "uinput" => {
+            "The Linux human-focus proof types into a normal field and refuses a password field before injection."
+        }
+        _ => "A platform-specific proof artifact records the checked OS requirement and expected user-visible outcome.",
+    }
+}
+
+fn first_run_permission_ready_boundary(requirement_id: &str) -> &'static str {
+    match requirement_id {
+        "microphone" => {
+            "Do not mark microphone ready until capture has produced persisted audio on the current OS build."
+        }
+        "accessibility" => {
+            "Do not mark Accessibility ready until native insertion and secure-field refusal are both observed."
+        }
+        "input_monitoring" => {
+            "Do not mark Input Monitoring ready until a real global hotkey trigger reaches the runtime."
+        }
+        "uia_focus" => {
+            "Do not mark UIA focus ready until the Windows selftest proves focus inspection and secure refusal."
+        }
+        "sendinput" => {
+            "Do not mark SendInput ready until fallback typing is proven after the secure-field gate."
+        }
+        "accessibility_bus" => {
+            "Do not mark AT-SPI ready until the desktop bus proof runs in the target Linux session."
+        }
+        "uinput" => {
+            "Do not mark uinput ready until operator-in-the-loop focus proof passes on the target Linux desktop."
+        }
+        _ => "Do not mark this requirement ready until an OS-specific proof artifact exists.",
     }
 }
 
@@ -1630,6 +1690,18 @@ mod tests {
         assert_eq!(outcome.action_label, requirement.action_label);
         assert!(!outcome.manual_step.trim().is_empty());
         assert!(!outcome.proof_requirement.trim().is_empty());
+        assert_eq!(
+            outcome.proof_command.as_deref(),
+            first_run_permission_proof_command(&requirement.id)
+        );
+        assert_eq!(
+            outcome.expected_evidence,
+            first_run_permission_expected_evidence(&requirement.id)
+        );
+        assert_eq!(
+            outcome.ready_boundary,
+            first_run_permission_ready_boundary(&requirement.id)
+        );
     }
 
     #[test]

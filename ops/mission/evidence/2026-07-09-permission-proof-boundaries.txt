@@ -1,0 +1,58 @@
+# Kaydence evidence — P1-P0-8 permission proof boundaries
+
+Timestamp: 2026-07-09T16:32Z
+Commit under test: local worktree on main at f61ab491bb9602abac3b2e13ed32872484804d7a plus uncommitted permission-boundary slice.
+
+## What changed
+
+- `first_run_permission_action` now returns backend-owned proof handoff metadata for each OS permission requirement:
+  - `proof_command`
+  - `expected_evidence`
+  - `ready_boundary`
+- Screen Family 10 renders the returned proof command, expected evidence, and ready boundary below the manual permission step.
+- Vite preview mode now refuses to call the native Tauri permission command and instead shows: `Open the desktop runtime to load permission proof guidance.`
+
+## Local gates
+
+- PASS: `cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check`
+- PASS: `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_permission_action`
+  - 2 passed, 0 failed.
+- PASS: `pnpm --dir apps/desktop run check`
+  - `tsc --noEmit && eslint . --max-warnings 0`
+- PASS: `cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings`
+- PASS: `bash scripts/check-privacy-posture.sh`
+  - 0 network-capable call sites, README privacy promises present, no screen-capture primitives.
+- PASS: `bash scripts/check-adr-status.sh`
+  - ADRs accepted except the declared ADR-0009 by-design exception.
+- PASS: `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets`
+  - 202 lib tests, 2 crash recovery tests, 5 event sequence tests, 5 short utterance tests passed.
+- PASS/PARTIAL: `bash scripts/bench.sh --check`
+  - Measured Raw-path metrics within budget.
+  - Still unmeasured: GPU release-to-inject, prediction guess, idle RAM/CPU, real ASR, reference-machine p95.
+- PASS: `pnpm --dir apps/desktop run build`
+- PASS: `./script/build_and_run.sh --verify`
+
+## Browser smoke
+
+- Preview server: `http://localhost:4173/`
+- In-app Browser check loaded the Kaydence preview with `preview config`.
+- Visible Setup P1 permission buttons: `Show microphone step`, `Show accessibility step`, `Show input step`.
+- Clicking `Show microphone step` produced the preview boundary note and no console errors:
+  - `Open the desktop runtime to load permission proof guidance.`
+- Screenshot evidence: `ops/mission/evidence/2026-07-09-permission-proof-preview.png`
+
+## Remote/GitHub truth
+
+- `origin` is `https://github.com/IslandDevCrew/kaydence.git`.
+- Active GitHub CLI account: `IslandDevCrew`.
+- Repo resolves as PRIVATE at `https://github.com/IslandDevCrew/kaydence`.
+- Local `HEAD` and `origin/main` both point at `f61ab491bb9602abac3b2e13ed32872484804d7a`.
+- Latest checked Actions run: `29033270673` at `f61ab491bb9602abac3b2e13ed32872484804d7a`.
+- Result: FAILURE before checkout on macOS, Windows, and Ubuntu. Each job had zero steps.
+- GitHub annotation:
+  - `The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings`
+- Last known green remote baseline remains Actions run `29031546518` at `ca602441699f44647b57bf25a1f49db8853c3417`, completed green on macOS, Ubuntu, and Windows at 2026-07-09T16:09:29Z.
+
+## Honest boundary
+
+This slice improves the build-agent/user handoff for permission proof. It does not claim live OS permission detection, does not open OS settings, does not mark any permission ready, does not prove first dictation, and does not close the <=60s reference-machine setup gate.

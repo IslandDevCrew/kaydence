@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T16:32Z — Codex P1 slice (permission proof boundaries + remote SOTU pause)
+- Confirmed private GitHub access is restored and current: `origin` points to `https://github.com/IslandDevCrew/kaydence.git`, active `gh` account is `IslandDevCrew`, the repo resolves as PRIVATE, and local `main` matches `origin/main` at `f61ab49`.
+- Added backend-owned permission proof handoff metadata to `first_run_permission_action`: optional proof command, expected evidence, and ready boundary. Screen Family 10 now renders the command/evidence/boundary so a user or build agent can see exactly what must be proven before a permission can become ready.
+- Added a preview-mode guard for permission action buttons. Browser/Vite preview now shows the desktop-runtime boundary note instead of attempting native Tauri IPC, keeping local UI smoke truthful.
+- Evidence saved at `ops/mission/evidence/2026-07-09-permission-proof-boundaries.txt` plus screenshot `ops/mission/evidence/2026-07-09-permission-proof-preview.png`. Local gates passed: fmt, focused permission-action tests, frontend check, clippy, privacy posture, ADR status, full Rust suite (202 lib + crash/event/short suites), bench PASS/PARTIAL, production build, desktop verify, and Browser smoke.
+- Remote CI boundary: latest Actions run `29033270673` for `f61ab49` still fails before checkout on macOS, Windows, and Ubuntu because GitHub reports failed account payments or a spending-limit increase requirement. Last known green 3-OS baseline remains `ca60244` / run `29031546518`. Pausing here with the refreshed State of the Union before continuing.
+
 ## 2026-07-09T16:19Z — Codex P1 slice (model download preflight)
 - Added a Rust-owned `first_run_model_download_preflight` command for P1-P0-2/P1-P0-8. It returns model id, task, lane, runtime, file, current first-run state/detail, availability, destination path, expected sha256, size, sources, license, blocked reason, operator action, and proof requirement.
 - Kept the boundary honest: the command is read-only, reuses the existing `ModelDownloadPlan`, does not fetch bytes, does not create files, and blocks placeholder hashes/sources instead of pretending a download is safe.
