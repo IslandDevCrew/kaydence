@@ -57,6 +57,13 @@ Browser smoke
   - ops/mission/evidence/2026-07-09-model-download-preflight-desktop.png
   - ops/mission/evidence/2026-07-09-model-download-preflight-narrow.png
 
+Remote CI
+- Commit: c63bc47 feat(p1): review model download preflight
+- GitHub Actions run: 29033116849
+- Result: BLOCKED before checkout on macOS, Windows, and Ubuntu.
+- Annotation: The jobs were not started because recent account payments have failed or the spending limit needs to be increased.
+- No CI job logs were produced and no runner executed the repository tests.
+
 Next boundaries
 - Replace TODO model hashes/sources with reviewed published artifacts before real downloads can be safe.
 - Add the actual fetch/progress UI only after the network surface is approved, toggled, and audit allowlisted.

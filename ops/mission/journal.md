@@ -5,6 +5,7 @@
 - Kept the boundary honest: the command is read-only, reuses the existing `ModelDownloadPlan`, does not fetch bytes, does not create files, and blocks placeholder hashes/sources instead of pretending a download is safe.
 - Wired Screen Family 10 required-model rows with a Review action and a compact preflight card. The existing Install path remains the reviewed local-artifact import path; real network fetch/progress is still a future critical decision path.
 - Evidence saved at `ops/mission/evidence/2026-07-09-model-download-preflight.txt` plus desktop/narrow screenshots. Local gates passed: fmt, focused preflight tests, frontend check, clippy, full Rust suite (202 lib + 2 crash + 5 event + 5 short), privacy/ADR gates, bench PASS/PARTIAL, production build, desktop verify/build, and Browser smoke at 1280x720 plus 390x844.
+- Remote CI for `c63bc47` did not start any runner jobs: Actions run `29033116849` failed before checkout on macOS, Windows, and Ubuntu because GitHub reported failed account payments or a spending-limit increase requirement. This is a remote-infra/billing block, not a test failure.
 - Honest boundary remains: live OS permission prompts/proof, approved network download/progress UI, real Parakeet/Whisper adapters, live first dictation, and <=60s reference-machine proof are still open.
 
 ## 2026-07-09T15:53Z — Codex P1 slice (first-run proof export)

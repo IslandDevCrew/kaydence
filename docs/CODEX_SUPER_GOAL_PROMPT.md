@@ -31,9 +31,14 @@ Read first, in order:
 Current verified state:
 - GitHub remote access is restored; `IslandDevCrew/kaydence` resolves as a
   PRIVATE repo with ADMIN permission and `git fetch origin` succeeds.
-- Current verified remote baseline before the first-run proof-export slice:
-  main at `5bd35e0` had green 3-OS Actions CI in run 29029907649, completed
-  2026-07-09T15:44:45Z on macOS, Ubuntu, and Windows.
+- Current verified remote baseline before the model-download-preflight slice:
+  main at `ca60244` had green 3-OS Actions CI in run 29031546518, completed
+  2026-07-09T16:09:28Z on macOS, Ubuntu, and Windows.
+- Current remote CI blocker: pushed commit `c63bc47` triggered Actions run
+  29033116849, but macOS, Windows, and Ubuntu failed before checkout because
+  GitHub reported failed account payments or a spending-limit increase
+  requirement. No runner executed repo tests. Fix billing/spending limit and
+  rerun before claiming 3-OS remote parity for `c63bc47`.
 - P0 is complete: 7/7 tasks and 7/7 gates, including windowed `cargo tauri dev`
   observed on macOS, Linux, and Windows.
 - P1 is active; P1-P0-7 privacy posture is done with evidence, P1-G1 is locally
@@ -174,8 +179,10 @@ Next best work:
    families 01, 03, and 10; Screen Family 07 has a first source-backed privacy
    panel but still needs the eventual human design fidelity review with the rest
    of P1-G4.
-6. Watch GitHub after each push: confirm Actions starts on the pushed HEAD and
-   do not claim current-head 3-OS parity until the fresh CI run is green.
+6. Watch GitHub after each push: confirm Actions starts on the pushed HEAD. If
+   GitHub blocks hosted runners for billing/spending-limit reasons, record that
+   as remote-infra blocked and do not claim current-head 3-OS parity until a
+   fresh CI run actually executes and passes.
 
 Never mark complete until each PRD item/gate has current evidence proving it.
 ```
