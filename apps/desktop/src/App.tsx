@@ -487,8 +487,7 @@ function privacyPosture(snapshot: AppSnapshot, lane: LaneSpec): PrivacyPostureIt
 
 function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
   const firstRun = snapshot.settings.first_run;
-  const permissionsReady =
-    firstRun.microphone_permission_ready && firstRun.input_permission_ready;
+  const permissionsReady = permissionRequirementsReady(firstRun.permission_requirements);
 
   return [
     {
@@ -605,6 +604,12 @@ function permissionSummary(requirements: FirstRunPermissionRequirement[]): strin
   return requirements.map((requirement) => requirement.label).join(" / ");
 }
 
+function permissionRequirementsReady(requirements: FirstRunPermissionRequirement[]): boolean {
+  return (
+    requirements.length > 0 && requirements.every((requirement) => requirement.state === "ready")
+  );
+}
+
 function statusClassName(status: string): string {
   return status.toLowerCase().replace(/\s+/g, "-");
 }
@@ -707,6 +712,7 @@ export function App(): JSX.Element {
   const nextStep = snapshot.settings.first_run.next_step;
   const firstRunReady =
     snapshot.settings.first_run.model_ready &&
+    permissionRequirementsReady(permissionRequirements) &&
     snapshot.settings.first_run.microphone_permission_ready &&
     snapshot.settings.first_run.input_permission_ready &&
     snapshot.settings.first_run.hotkey_registered;

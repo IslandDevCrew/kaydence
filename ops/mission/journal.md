@@ -1,5 +1,11 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T17:24Z — Codex P1 slice (first-run UI permission contract)
+- Aligned the React first-run checklist with the stricter backend readiness contract: the visible `Grant OS permissions` row now requires every rendered permission requirement row to be Ready, not just the coarse microphone/input booleans.
+- The setup action readiness flag now uses the same helper, preventing the UI from looking ready while Windows UIA/SendInput, Linux AT-SPI/uinput, or native secure-field proof rows still need hardware/review evidence.
+- Evidence saved at `ops/mission/evidence/2026-07-09-first-run-ui-permission-contract.txt` plus in-app browser screenshot `ops/mission/evidence/2026-07-09-first-run-ui-permission-contract-preview.png`. Local gates passed: frontend check, focused backend readiness test, in-app Browser smoke, production build, desktop verify, and clippy.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T17:19Z — Codex P1 slice (first-run ready permission contract)
 - Tightened `FirstRunStatus.ready_to_dictate()` so it cannot report ready from coarse model/mic/input/hotkey booleans alone.
 - Added an explicit `permission_requirements_ready()` invariant: top-level readiness now requires every Screen Family 10 permission row to be Ready, matching the checklist and exported proof JSON a user/build agent sees.

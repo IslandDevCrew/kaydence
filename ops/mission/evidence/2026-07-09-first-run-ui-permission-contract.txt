@@ -1,0 +1,46 @@
+Kaydence evidence - first-run UI permission contract
+Date: 2026-07-09T17:24Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Branch: main
+
+Scope
+- Aligned the React first-run checklist with the backend readiness contract.
+- The visible "Grant OS permissions" checklist row now uses the rendered permission requirement rows, not only the coarse microphone/input booleans.
+- The first-run action readiness flag in the UI now also requires every permission row to be Ready.
+
+Changed source files
+- apps/desktop/src/App.tsx
+
+Behavior
+- Added a presentation-only permissionRequirementsReady helper.
+- The helper returns true only when at least one permission requirement exists and every requirement state is ready.
+- firstRunChecklist uses that helper for the "Grant OS permissions" row.
+- firstRunReady uses that helper before showing the backend next-step action label.
+- This mirrors the stricter Rust FirstRunStatus.ready_to_dictate contract added in the previous slice.
+
+Honest boundary
+- No new OS permission detection was added.
+- This does not claim live OS proof.
+- It prevents the UI summary from looking ready while detailed rows still require hardware/review proof.
+- Remote CI for newer local commits is still blocked before checkout by GitHub Actions billing/spending-limit state.
+
+Verification commands and results
+- pnpm --dir apps/desktop run check
+  - PASS: tsc --noEmit && eslint . --max-warnings 0
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_ready_requires_permission_rows_not_only_coarse_flags
+  - PASS
+- Browser smoke in the in-app browser at http://localhost:1420/
+  - PASS: Screen Family 10 rendered, "Grant OS permissions" remained "Needs hardware" while default rows are review-gated, zero console/page errors
+  - Screenshot: ops/mission/evidence/2026-07-09-first-run-ui-permission-contract-preview.png
+- pnpm --dir apps/desktop run build
+  - PASS: tsc --noEmit && vite build
+- ./script/build_and_run.sh --verify
+  - PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+
+Generated build artifacts
+- pnpm build rewrote apps/desktop/dist/index.html and produced untracked hashed assets/favicon.
+- Those generated outputs were removed/restored before commit so the diff remains source + mission evidence only.
