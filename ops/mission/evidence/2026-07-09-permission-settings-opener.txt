@@ -1,0 +1,41 @@
+Kaydence evidence: P1-P0-8 permission settings opener
+Timestamp: 2026-07-09T17:38Z
+
+Scope
+- P1-P0-8 Screen Family 10 first-run permission guidance.
+- Backend permission action outcomes now include a platform-owned settings target when Kaydence has a stable OS settings panel to offer.
+- A new desktop command, `open_first_run_permission_settings`, attempts to open that target and returns an honest outcome. It does not mark any permission ready.
+- React renders a separate Open Settings action inside the permission proof card when the backend supplies a target. Requirements with no stable settings panel remain manual-only.
+
+Platform target coverage in this slice
+- macOS microphone: x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone
+- macOS accessibility: x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility
+- macOS input monitoring: x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent
+- Windows microphone: ms-settings:privacy-microphone
+- Windows UIA/SendInput and Linux AT-SPI/uinput remain manual proof surfaces because the existing contract requires selftests or operator-in-the-loop proof rather than a stable settings panel.
+
+Files changed
+- apps/desktop/src-tauri/src/settings/mod.rs
+- apps/desktop/src-tauri/src/lib.rs
+- apps/desktop/src/App.tsx
+- apps/desktop/src/styles.css
+
+Browser smoke
+- Vite preview at http://localhost:1420/ rendered the Screen Family 10 permission list.
+- Clicking `Show microphone step` in preview showed the desktop-runtime boundary instead of pretending native IPC ran.
+- Console/page errors: none.
+- Screenshot: ops/mission/evidence/2026-07-09-permission-settings-opener-preview.png
+
+Local gates
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_permission --lib
+- pnpm --dir apps/desktop run check
+- pnpm --dir apps/desktop run build
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- ./script/build_and_run.sh --verify
+
+Honest boundary
+- Opening an OS settings panel is convenience, not proof. Kaydence still requires the runtime proof boundary before marking permission rows ready.
+- This does not implement live permission detectors, approved model download/progress UI, real Parakeet/Whisper inference, or <=60s reference-machine proof.
+- This touches OS opener behavior, so the merge/push path still needs the project gate discipline and fresh 3-OS CI once GitHub Actions billing is fixed.

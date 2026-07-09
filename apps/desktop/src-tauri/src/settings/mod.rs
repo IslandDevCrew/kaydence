@@ -597,11 +597,24 @@ pub struct FirstRunPermissionActionOutcome {
     pub label: String,
     pub state: FirstRunPermissionState,
     pub action_label: String,
+    pub settings_target: Option<String>,
+    pub settings_open_label: Option<String>,
     pub manual_step: String,
     pub proof_requirement: String,
     pub proof_command: Option<String>,
     pub expected_evidence: String,
     pub ready_boundary: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunPermissionSettingsOpenOutcome {
+    pub requirement_id: String,
+    pub label: String,
+    pub opened: bool,
+    pub settings_target: Option<String>,
+    pub manual_step: String,
+    pub proof_requirement: String,
+    pub expected_evidence: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1058,11 +1071,66 @@ pub fn first_run_permission_action(
         label: requirement.label,
         state: requirement.state,
         action_label: requirement.action_label,
+        settings_target: first_run_permission_settings_target(requirement_id).map(str::to_string),
+        settings_open_label: first_run_permission_settings_open_label(requirement_id)
+            .map(str::to_string),
         manual_step: requirement.action,
         proof_requirement: first_run_permission_proof(requirement_id).to_string(),
         proof_command: first_run_permission_proof_command(requirement_id).map(str::to_string),
         expected_evidence: first_run_permission_expected_evidence(requirement_id).to_string(),
         ready_boundary: first_run_permission_ready_boundary(requirement_id).to_string(),
+    })
+}
+
+pub fn first_run_permission_settings_open_outcome(
+    requirement_id: &str,
+    opened: bool,
+) -> Result<FirstRunPermissionSettingsOpenOutcome, SettingsError> {
+    let action = first_run_permission_action(requirement_id)?;
+    Ok(FirstRunPermissionSettingsOpenOutcome {
+        requirement_id: action.requirement_id,
+        label: action.label,
+        opened,
+        settings_target: action.settings_target,
+        manual_step: action.manual_step,
+        proof_requirement: action.proof_requirement,
+        expected_evidence: action.expected_evidence,
+    })
+}
+
+pub fn first_run_permission_settings_target(requirement_id: &str) -> Option<&'static str> {
+    if cfg!(target_os = "macos") {
+        match requirement_id {
+            "microphone" => {
+                Some("x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")
+            }
+            "accessibility" => Some(
+                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+            ),
+            "input_monitoring" => {
+                Some("x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")
+            }
+            _ => None,
+        }
+    } else if cfg!(target_os = "windows") {
+        match requirement_id {
+            "microphone" => Some("ms-settings:privacy-microphone"),
+            _ => None,
+        }
+    } else {
+        None
+    }
+}
+
+fn first_run_permission_settings_open_label(requirement_id: &str) -> Option<&'static str> {
+    first_run_permission_settings_target(requirement_id).map(|_| {
+        if cfg!(target_os = "macos") {
+            "Open System Settings"
+        } else if cfg!(target_os = "windows") {
+            "Open Windows Settings"
+        } else {
+            "Open Settings"
+        }
     })
 }
 
@@ -1793,6 +1861,10 @@ mod tests {
         assert_eq!(outcome.label, requirement.label);
         assert_eq!(outcome.state, requirement.state);
         assert_eq!(outcome.action_label, requirement.action_label);
+        assert_eq!(
+            outcome.settings_target.as_deref(),
+            first_run_permission_settings_target(&requirement.id)
+        );
         assert!(!outcome.manual_step.trim().is_empty());
         assert!(!outcome.proof_requirement.trim().is_empty());
         assert_eq!(
@@ -1807,6 +1879,24 @@ mod tests {
             outcome.ready_boundary,
             first_run_permission_ready_boundary(&requirement.id)
         );
+    }
+
+    #[test]
+    fn first_run_permission_settings_open_outcome_does_not_mark_ready() {
+        let requirement = first_run_permission_requirements()
+            .into_iter()
+            .next()
+            .expect("platform contract has at least one requirement");
+        let outcome = first_run_permission_settings_open_outcome(&requirement.id, true).unwrap();
+
+        assert_eq!(outcome.requirement_id, requirement.id);
+        assert!(outcome.opened);
+        assert_eq!(
+            outcome.settings_target.as_deref(),
+            first_run_permission_settings_target(&requirement.id)
+        );
+        assert!(!outcome.proof_requirement.trim().is_empty());
+        assert!(!outcome.expected_evidence.trim().is_empty());
     }
 
     #[test]

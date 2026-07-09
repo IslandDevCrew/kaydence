@@ -95,11 +95,23 @@ interface FirstRunPermissionActionOutcome {
   label: string;
   state: FirstRunPermissionState;
   action_label: string;
+  settings_target: string | null;
+  settings_open_label: string | null;
   manual_step: string;
   proof_requirement: string;
   proof_command: string | null;
   expected_evidence: string;
   ready_boundary: string;
+}
+
+interface FirstRunPermissionSettingsOpenOutcome {
+  requirement_id: string;
+  label: string;
+  opened: boolean;
+  settings_target: string | null;
+  manual_step: string;
+  proof_requirement: string;
+  expected_evidence: string;
 }
 
 type FirstRunNextStepKind =
@@ -676,6 +688,12 @@ export function App(): JSX.Element {
   const [permissionActionOutcome, setPermissionActionOutcome] =
     useState<FirstRunPermissionActionOutcome | null>(null);
   const [permissionActionIssue, setPermissionActionIssue] = useState<string | null>(null);
+  const [permissionSettingsPendingId, setPermissionSettingsPendingId] = useState<string | null>(
+    null,
+  );
+  const [permissionSettingsOutcome, setPermissionSettingsOutcome] =
+    useState<FirstRunPermissionSettingsOpenOutcome | null>(null);
+  const [permissionSettingsIssue, setPermissionSettingsIssue] = useState<string | null>(null);
   const [firstRunActionNote, setFirstRunActionNote] = useState<string | null>(null);
   const [exportingFirstRunProof, setExportingFirstRunProof] = useState(false);
   const [firstRunProofExport, setFirstRunProofExport] =
@@ -876,6 +894,8 @@ export function App(): JSX.Element {
     setPermissionActionPendingId(requirementId);
     setPermissionActionIssue(null);
     setPermissionActionOutcome(null);
+    setPermissionSettingsIssue(null);
+    setPermissionSettingsOutcome(null);
 
     if (snapshotSource === "preview") {
       setPermissionActionIssue("Open the desktop runtime to load permission proof guidance.");
@@ -895,6 +915,32 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setPermissionActionPendingId(null);
+      });
+  }
+
+  function openPermissionSettings(requirementId: string) {
+    setPermissionSettingsPendingId(requirementId);
+    setPermissionSettingsIssue(null);
+    setPermissionSettingsOutcome(null);
+
+    if (snapshotSource === "preview") {
+      setPermissionSettingsIssue("Open the desktop runtime to open OS settings.");
+      setPermissionSettingsPendingId(null);
+      return;
+    }
+
+    void invoke<FirstRunPermissionSettingsOpenOutcome>("open_first_run_permission_settings", {
+      requirementId,
+    })
+      .then((outcome) => {
+        setPermissionSettingsOutcome(outcome);
+      })
+      .catch((error) => {
+        console.error("Kaydence permission settings open failed", error);
+        setPermissionSettingsIssue("OS settings could not be opened from Kaydence.");
+      })
+      .finally(() => {
+        setPermissionSettingsPendingId(null);
       });
   }
 
@@ -1586,12 +1632,42 @@ export function App(): JSX.Element {
                   <div className="permission-action-outcome" role="status">
                     <strong>{permissionActionOutcome.label}</strong>
                     <span>{permissionActionOutcome.manual_step}</span>
+                    {permissionActionOutcome.settings_target &&
+                    permissionActionOutcome.settings_open_label ? (
+                      <div className="permission-settings-open">
+                        <button
+                          className="mini-action"
+                          disabled={permissionSettingsPendingId !== null}
+                          onClick={() =>
+                            openPermissionSettings(permissionActionOutcome.requirement_id)
+                          }
+                          type="button"
+                        >
+                          {permissionSettingsPendingId === permissionActionOutcome.requirement_id
+                            ? "Opening"
+                            : permissionActionOutcome.settings_open_label}
+                        </button>
+                        <code>{permissionActionOutcome.settings_target}</code>
+                      </div>
+                    ) : (
+                      <small>Manual-only: no stable OS settings panel for this proof.</small>
+                    )}
                     <small>Proof: {permissionActionOutcome.proof_requirement}</small>
                     {permissionActionOutcome.proof_command ? (
                       <code>{permissionActionOutcome.proof_command}</code>
                     ) : null}
                     <small>Evidence: {permissionActionOutcome.expected_evidence}</small>
                     <small>Ready boundary: {permissionActionOutcome.ready_boundary}</small>
+                    {permissionSettingsOutcome ? (
+                      <small>
+                        {permissionSettingsOutcome.opened
+                          ? "Settings panel requested. Return here and run the proof before marking ready."
+                          : "Use the manual step above; this requirement has no stable settings target."}
+                      </small>
+                    ) : null}
+                    {permissionSettingsIssue ? (
+                      <small className="proof-export-issue">{permissionSettingsIssue}</small>
+                    ) : null}
                   </div>
                 ) : null}
                 {permissionActionIssue ? (

@@ -957,6 +957,18 @@ button {
   white-space: pre-wrap;
 }
 
+.permission-settings-open {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.permission-settings-open .mini-action {
+  min-width: 0;
+  white-space: nowrap;
+}
+
 .permission-item.status-ready em {
   color: color-mix(in srgb, var(--accent) 78%, #15313a);
 }

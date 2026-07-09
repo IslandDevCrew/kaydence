@@ -255,6 +255,83 @@ fn first_run_permission_action(
 }
 
 #[tauri::command]
+fn open_first_run_permission_settings(
+    requirement_id: String,
+) -> Result<settings::FirstRunPermissionSettingsOpenOutcome, String> {
+    let action =
+        settings::first_run_permission_action(&requirement_id).map_err(|err| err.to_string())?;
+
+    let Some(target) = action.settings_target.as_deref() else {
+        return settings::first_run_permission_settings_open_outcome(&requirement_id, false)
+            .map_err(|err| err.to_string());
+    };
+
+    #[cfg(desktop)]
+    {
+        open_os_settings_target(target)?;
+        settings::first_run_permission_settings_open_outcome(&requirement_id, true)
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = target;
+        settings::first_run_permission_settings_open_outcome(&requirement_id, false)
+            .map_err(|err| err.to_string())
+    }
+}
+
+#[cfg(desktop)]
+fn open_os_settings_target(target: &str) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let mut command = std::process::Command::new("/usr/bin/open");
+        command.arg(target);
+        run_settings_open_command(&mut command, target)
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let mut command = std::process::Command::new("cmd");
+        command.args(["/C", "start", "", target]);
+        run_settings_open_command(&mut command, target)
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let mut command = std::process::Command::new("xdg-open");
+        command.arg(target);
+        run_settings_open_command(&mut command, target)
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows", unix)))]
+    {
+        let _ = target;
+        Err(
+            "This platform does not expose a settings opener for first-run permissions."
+                .to_string(),
+        )
+    }
+}
+
+#[cfg(desktop)]
+fn run_settings_open_command(
+    command: &mut std::process::Command,
+    target: &str,
+) -> Result<(), String> {
+    let status = command
+        .status()
+        .map_err(|err| format!("Could not open OS settings target {target}: {err}"))?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!(
+            "OS settings target {target} exited with status {status}"
+        ))
+    }
+}
+
+#[tauri::command]
 fn refresh_first_run_runtime_proofs(
     state: tauri::State<'_, RuntimeSnapshot>,
     runtime: tauri::State<'_, HotkeyRuntimeHandle>,
@@ -2206,6 +2283,7 @@ pub fn run() {
             install_model_artifact,
             first_run_model_download_preflight,
             first_run_permission_action,
+            open_first_run_permission_settings,
             refresh_first_run_runtime_proofs,
             export_first_run_proof_plan,
             recent_history,

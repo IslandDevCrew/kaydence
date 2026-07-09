@@ -1,5 +1,11 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T17:38Z — Codex P1 slice (permission settings opener)
+- Added backend-owned settings targets to first-run permission guidance and a desktop command that can open the stable OS settings target when one exists.
+- Screen Family 10 now renders a separate Open Settings action inside the permission proof card; requirements without a stable settings panel remain manual-only. Opening settings never marks a permission row ready.
+- Evidence saved at `ops/mission/evidence/2026-07-09-permission-settings-opener.txt` plus in-app browser screenshot `ops/mission/evidence/2026-07-09-permission-settings-opener-preview.png`. Local gates passed: frontend check, fmt check, focused first-run permission tests, full Rust lib tests, Browser smoke, production build, desktop verify, and clippy.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T17:31Z — Codex P1 slice (first-run action label)
 - Aligned the bottom Screen Family 10 setup primary action with backend-owned `next_step.action_label` instead of showing the generic `Resolve Setup` label while first-run readiness is still false.
 - The next-step card action and bottom primary action now say the same thing in the current model-metadata state: `Review models`.
