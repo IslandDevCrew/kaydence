@@ -1,0 +1,56 @@
+Kaydence evidence - first-run ready permission contract
+Date: 2026-07-09T17:19Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Branch: main
+
+Scope
+- Tightened FirstRunStatus.ready_to_dictate so it cannot report ready from coarse booleans alone.
+- Top-level readiness now requires the same permission requirement rows that Screen Family 10 and FirstRunProofPlan expose to users and build agents.
+
+Changed source files
+- apps/desktop/src-tauri/src/settings/mod.rs
+
+Behavior
+- FirstRunStatus::ready_to_dictate now requires:
+  - model_ready
+  - all permission_requirements are Ready
+  - microphone_permission_ready
+  - input_permission_ready
+  - hotkey_registered
+- Added FirstRunStatus::permission_requirements_ready so the invariant is explicit and testable.
+- This prevents proof JSON or any consumer of ready_to_dictate from claiming readiness when OS-specific rows such as Accessibility, UIA, SendInput, AT-SPI, or uinput still need review/hardware proof.
+
+Honest boundary
+- This does not add live OS permission prompts or detectors.
+- It preserves the existing manual/review-gated OS proof contract while making top-level readiness stricter and consistent with the first-run checklist.
+- Remote CI for newer local commits is still blocked before checkout by GitHub Actions billing/spending-limit state.
+
+Verification commands and results
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_ready_requires_every_runtime_prerequisite
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_ready_requires_permission_rows_not_only_coarse_flags
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_proof_export_writes_json_under_app_data
+  - PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  - PASS: 212 lib tests, 2 crash_recovery tests, 5 event_sequences tests, 5 short_utterance tests
+- pnpm --dir apps/desktop run check
+  - PASS: tsc --noEmit && eslint . --max-warnings 0
+- bash scripts/check-privacy-posture.sh
+  - PASS: 0 network call sites, README privacy promises present, no screen-capture primitives
+- bash scripts/check-adr-status.sh
+  - PASS: all ADRs Accepted except declared by-design exception ADR-0009
+- bash scripts/bench.sh --check
+  - PASS/PARTIAL: measured Raw-path metrics within section 5 budgets; real ASR/GPU/idle footprint/reference p95 still unmeasured
+- pnpm --dir apps/desktop run build
+  - PASS: tsc --noEmit && vite build
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Generated build artifacts
+- pnpm build rewrote apps/desktop/dist/index.html and produced untracked hashed assets/favicon.
+- Those generated outputs were removed/restored before commit so the diff remains source + mission evidence only.

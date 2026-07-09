@@ -488,9 +488,18 @@ impl Default for FirstRunStatus {
 impl FirstRunStatus {
     pub fn ready_to_dictate(&self) -> bool {
         self.model_ready
+            && self.permission_requirements_ready()
             && self.microphone_permission_ready
             && self.input_permission_ready
             && self.hotkey_registered
+    }
+
+    pub fn permission_requirements_ready(&self) -> bool {
+        !self.permission_requirements.is_empty()
+            && self
+                .permission_requirements
+                .iter()
+                .all(|requirement| requirement.state == FirstRunPermissionState::Ready)
     }
 
     pub fn recompute_next_step(&mut self) {
@@ -1616,7 +1625,33 @@ mod tests {
         status.microphone_permission_ready = true;
         status.input_permission_ready = true;
         status.hotkey_registered = true;
+        assert!(!status.ready_to_dictate());
+        for requirement in &mut status.permission_requirements {
+            requirement.state = FirstRunPermissionState::Ready;
+        }
         assert!(status.ready_to_dictate());
+    }
+
+    #[test]
+    fn first_run_ready_requires_permission_rows_not_only_coarse_flags() {
+        let status = FirstRunStatus {
+            model_ready: true,
+            microphone_permission_ready: true,
+            input_permission_ready: true,
+            hotkey_registered: true,
+            permission_requirements: vec![FirstRunPermissionRequirement {
+                id: "uia_focus".to_string(),
+                label: "UI Automation".to_string(),
+                state: FirstRunPermissionState::NeedsReview,
+                detail: "Windows focus proof is still required.".to_string(),
+                action: "Run the UIA proof.".to_string(),
+                action_label: "Show UIA step".to_string(),
+            }],
+            ..FirstRunStatus::default()
+        };
+
+        assert!(!status.permission_requirements_ready());
+        assert!(!status.ready_to_dictate());
     }
 
     #[test]

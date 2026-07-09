@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T17:19Z — Codex P1 slice (first-run ready permission contract)
+- Tightened `FirstRunStatus.ready_to_dictate()` so it cannot report ready from coarse model/mic/input/hotkey booleans alone.
+- Added an explicit `permission_requirements_ready()` invariant: top-level readiness now requires every Screen Family 10 permission row to be Ready, matching the checklist and exported proof JSON a user/build agent sees.
+- This prevents Windows UIA/SendInput or Linux AT-SPI/uinput/native secure-field rows from being bypassed by a broad runtime proof flag.
+- Evidence saved at `ops/mission/evidence/2026-07-09-first-run-ready-permission-contract.txt`. Local gates passed: fmt, focused readiness/proof tests, clippy, full Rust suite (212 lib + crash/event/short suites), frontend check, privacy posture, ADR status, bench PASS/PARTIAL, production build, and desktop verify.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T17:11Z — Codex P1 slice (runtime permission proof refresh)
 - Added a backend-owned runtime proof refresh for first-run setup: real active global-shortcut events mark input proof, non-empty finalized capture audio marks microphone proof, and first-dictation completion syncs those runtime-proven rows.
 - Screen Family 10 now has a compact Refresh action beside Free selected. In the desktop runtime it drains pending hotkey proofs through `refresh_first_run_runtime_proofs`; in Vite preview it shows the desktop-runtime boundary instead of pretending native IPC ran.
