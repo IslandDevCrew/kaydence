@@ -74,12 +74,14 @@ impl RuntimeSnapshot {
 
     #[cfg(desktop)]
     fn refresh_model_readiness(&self, registry_path: &Path, models_dir: &Path) {
-        let (model_ready, model_readiness_error, required_models) =
-            first_run_model_readiness(registry_path, models_dir);
+        let readiness = first_run_model_readiness(registry_path, models_dir);
         self.update_first_run(|first_run| {
-            first_run.model_ready = model_ready;
-            first_run.model_readiness_error = model_readiness_error;
-            first_run.required_models = required_models;
+            first_run.model_ready = readiness.model_ready;
+            first_run.model_readiness_error = readiness.model_readiness_error;
+            first_run.required_models = readiness.required_models;
+            first_run.asr_candidates = readiness.asr_candidates;
+            first_run.recommended_asr_model_id = readiness.recommended_asr_model_id;
+            first_run.selected_asr_model_id = readiness.selected_asr_model_id;
         });
     }
 
@@ -89,6 +91,9 @@ impl RuntimeSnapshot {
             first_run.model_ready = false;
             first_run.model_readiness_error = Some(error);
             first_run.required_models.clear();
+            first_run.asr_candidates.clear();
+            first_run.recommended_asr_model_id = None;
+            first_run.selected_asr_model_id = None;
         });
     }
 
@@ -103,25 +108,51 @@ impl RuntimeSnapshot {
 }
 
 #[cfg(desktop)]
-fn first_run_model_readiness(
-    registry_path: &Path,
-    models_dir: &Path,
-) -> (bool, Option<String>, Vec<settings::FirstRunModelStatus>) {
+struct FirstRunModelReadiness {
+    model_ready: bool,
+    model_readiness_error: Option<String>,
+    required_models: Vec<settings::FirstRunModelStatus>,
+    asr_candidates: Vec<settings::FirstRunAsrCandidate>,
+    recommended_asr_model_id: Option<String>,
+    selected_asr_model_id: Option<String>,
+}
+
+#[cfg(desktop)]
+fn first_run_model_readiness(registry_path: &Path, models_dir: &Path) -> FirstRunModelReadiness {
     let registry = match models::ModelRegistry::load(registry_path) {
         Ok(registry) => registry,
         Err(err) => {
-            return (
-                false,
-                Some(format!("Model registry unavailable: {err}")),
-                Vec::new(),
-            );
+            return FirstRunModelReadiness {
+                model_ready: false,
+                model_readiness_error: Some(format!("Model registry unavailable: {err}")),
+                required_models: Vec::new(),
+                asr_candidates: Vec::new(),
+                recommended_asr_model_id: None,
+                selected_asr_model_id: None,
+            };
         }
     };
+    let platform_tag = first_run_platform_tag();
+    let recommended_asr = first_run_asr_recommendation(&registry, platform_tag);
+    let recommended_asr_model_id = recommended_asr.map(|model| model.id.clone());
+    let selected_asr_model_id = recommended_asr_model_id.clone();
 
     let required_models = registry
         .verify_required_first_run_models(models_dir)
         .into_iter()
         .map(|(model, status)| first_run_model_status(model, status))
+        .collect::<Vec<_>>();
+    let asr_candidates = registry
+        .recommended_for(models::ModelTask::Asr)
+        .into_iter()
+        .map(|model| {
+            first_run_asr_candidate(
+                model,
+                model.verify_artifact(models_dir),
+                recommended_asr_model_id.as_deref(),
+                platform_tag,
+            )
+        })
         .collect::<Vec<_>>();
 
     let model_ready = !required_models.is_empty()
@@ -130,7 +161,14 @@ fn first_run_model_readiness(
             .all(|model| model.state == settings::FirstRunModelState::Ready);
     let model_readiness_error = model_readiness_error(&required_models);
 
-    (model_ready, model_readiness_error, required_models)
+    FirstRunModelReadiness {
+        model_ready,
+        model_readiness_error,
+        required_models,
+        asr_candidates,
+        recommended_asr_model_id,
+        selected_asr_model_id,
+    }
 }
 
 #[cfg(desktop)]
@@ -175,6 +213,31 @@ fn first_run_model_status(
 }
 
 #[cfg(desktop)]
+fn first_run_asr_candidate(
+    model: &models::ModelEntry,
+    status: Result<models::ModelArtifactStatus, models::ModelRegistryError>,
+    recommended_asr_model_id: Option<&str>,
+    platform_tag: &str,
+) -> settings::FirstRunAsrCandidate {
+    let base = first_run_model_status(model, status);
+    let selected = recommended_asr_model_id == Some(model.id.as_str());
+
+    settings::FirstRunAsrCandidate {
+        id: model.id.clone(),
+        lane: model.lane.clone(),
+        runtime: model.runtime.clone(),
+        size_mb: model.size_mb,
+        min_hw: model.min_hw.clone(),
+        state: base.state,
+        detail: base.detail,
+        selected,
+        recommendation: selected.then(|| recommendation_reason(model, platform_tag).to_string()),
+        license: model.license.clone(),
+        license_review_required: model.license_review_required,
+    }
+}
+
+#[cfg(desktop)]
 fn model_readiness_error(models: &[settings::FirstRunModelStatus]) -> Option<String> {
     if models.is_empty() {
         return Some("No required first-run models are registered".to_string());
@@ -188,6 +251,48 @@ fn model_readiness_error(models: &[settings::FirstRunModelStatus]) -> Option<Str
     }
 
     None
+}
+
+#[cfg(desktop)]
+fn first_run_asr_recommendation<'a>(
+    registry: &'a models::ModelRegistry,
+    platform_tag: &str,
+) -> Option<&'a models::ModelEntry> {
+    let candidates = registry.recommended_for(models::ModelTask::Asr);
+    candidates
+        .iter()
+        .copied()
+        .find(|model| model.default_for.iter().any(|tag| tag == platform_tag))
+        .or_else(|| {
+            candidates.iter().copied().find(|model| {
+                model.lane.as_deref() == Some("cpu") || model.min_hw.eq_ignore_ascii_case("any")
+            })
+        })
+        .or_else(|| candidates.first().copied())
+}
+
+#[cfg(desktop)]
+fn recommendation_reason(model: &models::ModelEntry, platform_tag: &str) -> &'static str {
+    if model.default_for.iter().any(|tag| tag == platform_tag) {
+        "Recommended for this OS lane"
+    } else if model.lane.as_deref() == Some("cpu") || model.min_hw.eq_ignore_ascii_case("any") {
+        "CPU-safe first-run default"
+    } else {
+        "Recommended local ASR option"
+    }
+}
+
+#[cfg(desktop)]
+fn first_run_platform_tag() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "macos"
+    } else if cfg!(target_os = "windows") {
+        "windows"
+    } else if cfg!(target_os = "linux") {
+        "linux"
+    } else {
+        "desktop"
+    }
 }
 
 #[cfg(desktop)]
@@ -819,6 +924,20 @@ mod tests {
             .required_models
             .iter()
             .all(|model| model.state == settings::FirstRunModelState::Blocked));
+        assert_eq!(
+            first_run.recommended_asr_model_id.as_deref(),
+            Some("fixture-asr")
+        );
+        assert_eq!(
+            first_run.selected_asr_model_id.as_deref(),
+            Some("fixture-asr")
+        );
+        assert_eq!(first_run.asr_candidates.len(), 1);
+        assert!(first_run.asr_candidates[0].selected);
+        assert_eq!(
+            first_run.asr_candidates[0].recommendation.as_deref(),
+            Some("CPU-safe first-run default")
+        );
         let _ = std::fs::remove_dir_all(app_data);
     }
 
@@ -836,6 +955,10 @@ mod tests {
         assert_eq!(first_run.model_readiness_error, None);
         assert!(first_run
             .required_models
+            .iter()
+            .all(|model| model.state == settings::FirstRunModelState::Missing));
+        assert!(first_run
+            .asr_candidates
             .iter()
             .all(|model| model.state == settings::FirstRunModelState::Missing));
         let _ = std::fs::remove_dir_all(app_data);
@@ -862,7 +985,54 @@ mod tests {
             .required_models
             .iter()
             .all(|model| model.state == settings::FirstRunModelState::Ready));
+        assert!(first_run.model_ready);
+        assert!(first_run.asr_candidates[0].selected);
         let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn os_default_asr_recommendation_beats_cpu_fallback() {
+        let registry = models::ModelRegistry::from_json(
+            r#"{
+              "schema_version": 1,
+              "models": [
+                {
+                  "id": "cpu-safe",
+                  "task": "asr",
+                  "lane": "cpu",
+                  "runtime": "onnxruntime",
+                  "file": "cpu.onnx",
+                  "sha256": "TODO",
+                  "size_mb": 1,
+                  "license": "Apache-2.0",
+                  "min_hw": "any",
+                  "recommended": true
+                },
+                {
+                  "id": "mac-gpu",
+                  "task": "asr",
+                  "lane": "gpu",
+                  "runtime": "whisper.cpp",
+                  "file": "gpu.bin",
+                  "sha256": "TODO",
+                  "size_mb": 1,
+                  "license": "MIT",
+                  "min_hw": "metal_or_dgpu",
+                  "recommended": true,
+                  "default_for": ["macos"]
+                }
+              ]
+            }"#,
+        )
+        .unwrap();
+
+        let recommended = first_run_asr_recommendation(&registry, "macos").unwrap();
+
+        assert_eq!(recommended.id, "mac-gpu");
+        assert_eq!(
+            recommendation_reason(recommended, "macos"),
+            "Recommended for this OS lane"
+        );
     }
 
     #[test]

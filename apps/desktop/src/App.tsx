@@ -45,6 +45,20 @@ interface FirstRunModelStatus {
   license_review_required: boolean;
 }
 
+interface FirstRunAsrCandidate {
+  id: string;
+  lane: string | null;
+  runtime: string;
+  size_mb: number;
+  min_hw: string;
+  state: "ready" | "missing" | "blocked";
+  detail: string;
+  selected: boolean;
+  recommendation: string | null;
+  license: string;
+  license_review_required: boolean;
+}
+
 interface AppSnapshot {
   app_name: string;
   app_identifier: string;
@@ -80,6 +94,9 @@ interface AppSnapshot {
       model_ready: boolean;
       model_readiness_error: string | null;
       required_models: FirstRunModelStatus[];
+      asr_candidates: FirstRunAsrCandidate[];
+      recommended_asr_model_id: string | null;
+      selected_asr_model_id: string | null;
       microphone_permission_ready: boolean;
       input_permission_ready: boolean;
       hotkey_registered: boolean;
@@ -124,6 +141,9 @@ const previewSnapshot: AppSnapshot = {
       model_ready: false,
       model_readiness_error: null,
       required_models: [],
+      asr_candidates: [],
+      recommended_asr_model_id: null,
+      selected_asr_model_id: null,
       microphone_permission_ready: false,
       input_permission_ready: false,
       hotkey_registered: false,
@@ -225,10 +245,13 @@ export function App(): JSX.Element {
   const hotkeyMode =
     snapshot.settings.hotkey.mode === "push_to_talk" ? "Push-to-talk" : "Toggle";
   const cleanupDefault = snapshot.settings.cleanup.default_dial;
+  const asrCandidates = snapshot.settings.first_run.asr_candidates;
+  const selectedAsr = asrCandidates.find((candidate) => candidate.selected);
   const engineLabel =
-    snapshot.settings.engine.default_local_asr === "parakeet_cpu"
+    selectedAsr?.id ??
+    (snapshot.settings.engine.default_local_asr === "parakeet_cpu"
       ? "Parakeet CPU"
-      : "Whisper GPU";
+      : "Whisper GPU");
   const unknownFocus =
     snapshot.settings.injection.unknown_focus_policy === "warn_and_allow"
       ? "Warn on opaque focus"
@@ -445,6 +468,28 @@ export function App(): JSX.Element {
                 </li>
               ))}
             </ol>
+            {asrCandidates.length > 0 ? (
+              <div className="model-picker" aria-label="Local ASR model picker">
+                <div className="model-picker-heading">
+                  <span>Local ASR</span>
+                  <strong>{snapshot.settings.first_run.recommended_asr_model_id ?? "none"}</strong>
+                </div>
+                {asrCandidates.map((model) => (
+                  <button
+                    aria-pressed={model.selected}
+                    className={`model-option status-${model.state}${model.selected ? " selected" : ""}`}
+                    key={model.id}
+                    type="button"
+                  >
+                    <span>
+                      <strong>{model.id}</strong>
+                      <small>{model.recommendation ?? `${model.runtime} / ${model.min_hw}`}</small>
+                    </span>
+                    <em>{model.state}</em>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             {requiredModels.length > 0 ? (
               <div className="model-status-list" aria-label="Required local models">
                 {requiredModels.map((model) => (

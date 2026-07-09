@@ -245,6 +245,9 @@ pub struct FirstRunStatus {
     pub model_ready: bool,
     pub model_readiness_error: Option<String>,
     pub required_models: Vec<FirstRunModelStatus>,
+    pub asr_candidates: Vec<FirstRunAsrCandidate>,
+    pub recommended_asr_model_id: Option<String>,
+    pub selected_asr_model_id: Option<String>,
     pub microphone_permission_ready: bool,
     pub input_permission_ready: bool,
     pub hotkey_registered: bool,
@@ -270,6 +273,21 @@ pub struct FirstRunModelStatus {
     pub file: String,
     pub state: FirstRunModelState,
     pub detail: String,
+    pub license: String,
+    pub license_review_required: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunAsrCandidate {
+    pub id: String,
+    pub lane: Option<String>,
+    pub runtime: String,
+    pub size_mb: u64,
+    pub min_hw: String,
+    pub state: FirstRunModelState,
+    pub detail: String,
+    pub selected: bool,
+    pub recommendation: Option<String>,
     pub license: String,
     pub license_review_required: bool,
 }
@@ -378,7 +396,7 @@ mod tests {
         assert!(!status.ready_to_dictate());
         assert_eq!(
             serde_json::to_string(&status).unwrap(),
-            "{\"model_ready\":false,\"model_readiness_error\":null,\"required_models\":[],\"microphone_permission_ready\":false,\"input_permission_ready\":false,\"hotkey_registered\":false,\"hotkey_registration_error\":\"shortcut already registered\",\"first_dictation_completed\":false}"
+            "{\"model_ready\":false,\"model_readiness_error\":null,\"required_models\":[],\"asr_candidates\":[],\"recommended_asr_model_id\":null,\"selected_asr_model_id\":null,\"microphone_permission_ready\":false,\"input_permission_ready\":false,\"hotkey_registered\":false,\"hotkey_registration_error\":\"shortcut already registered\",\"first_dictation_completed\":false}"
         );
     }
 
@@ -400,5 +418,27 @@ mod tests {
 
         assert!(json.contains("\"state\":\"blocked\""));
         assert!(json.contains("\"id\":\"parakeet-v3\""));
+    }
+
+    #[test]
+    fn first_run_asr_candidate_serializes_selected_recommendation() {
+        let candidate = FirstRunAsrCandidate {
+            id: "parakeet-v3".to_string(),
+            lane: Some("cpu".to_string()),
+            runtime: "onnxruntime".to_string(),
+            size_mb: 600,
+            min_hw: "any".to_string(),
+            state: FirstRunModelState::Missing,
+            detail: "Download required before first dictation".to_string(),
+            selected: true,
+            recommendation: Some("CPU-safe first-run default".to_string()),
+            license: "Apache-2.0".to_string(),
+            license_review_required: false,
+        };
+
+        let json = serde_json::to_string(&candidate).unwrap();
+
+        assert!(json.contains("\"selected\":true"));
+        assert!(json.contains("CPU-safe first-run default"));
     }
 }

@@ -355,6 +355,82 @@ button {
   gap: 8px;
 }
 
+.model-picker {
+  display: grid;
+  gap: 8px;
+}
+
+.model-picker-heading,
+.model-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.model-picker-heading {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.model-picker-heading strong {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  text-align: right;
+  text-transform: none;
+}
+
+.model-option {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  padding: 9px 12px;
+  text-align: left;
+}
+
+.model-option.selected {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.model-option strong,
+.model-option small,
+.model-option em {
+  display: block;
+}
+
+.model-option strong {
+  overflow-wrap: anywhere;
+}
+
+.model-option small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.model-option em {
+  color: var(--muted);
+  font-size: .72rem;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.model-option.status-blocked em {
+  color: var(--danger);
+}
+
+.model-option:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  outline-offset: 2px;
+}
+
 .model-status {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(130px, .72fr);
