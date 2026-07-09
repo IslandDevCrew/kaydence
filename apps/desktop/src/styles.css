@@ -358,6 +358,18 @@ button {
   gap: 8px;
 }
 
+.history-export-note {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
+}
+
 .history-row {
   border-top: 1px solid var(--line);
   padding-top: 8px;

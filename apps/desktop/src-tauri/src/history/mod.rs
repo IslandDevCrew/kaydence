@@ -7,6 +7,7 @@
 use crate::events::{
     AppRef, CleanupDial, HoldReason, InjectMethod, SessionEvent, SessionId, Stage,
 };
+use crate::settings::APP_NAME;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 use std::{
@@ -18,6 +19,7 @@ use std::{
 
 pub const HISTORY_DB_FILE: &str = "history.sqlite3";
 pub const SCHEMA_VERSION: i64 = 1;
+pub const EXPORTS_DIR: &str = "exports";
 
 #[derive(Debug, thiserror::Error)]
 pub enum HistoryError {
@@ -41,6 +43,21 @@ pub struct DeleteSessionOutcome {
     pub deleted: bool,
     pub audio_removed: bool,
     pub audio_path: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ExportSessionOutcome {
+    pub exported: bool,
+    pub json_path: Option<String>,
+    pub text_path: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct HistorySessionExport {
+    schema_version: i64,
+    exported_ms: u64,
+    session: HistorySession,
+    events: Vec<SessionEvent>,
 }
 
 impl HistoryStore {
@@ -147,6 +164,42 @@ impl HistoryStore {
             deleted,
             audio_removed,
             audio_path,
+        })
+    }
+
+    pub fn export_session(
+        &self,
+        session_id: SessionId,
+        app_data_dir: &Path,
+    ) -> Result<ExportSessionOutcome, HistoryError> {
+        let Some(session) = self.get_session(session_id)? else {
+            return Ok(ExportSessionOutcome {
+                exported: false,
+                json_path: None,
+                text_path: None,
+            });
+        };
+        let events = self.events_for_session(session_id)?;
+        let export = HistorySessionExport {
+            schema_version: SCHEMA_VERSION,
+            exported_ms: now_ms()?.max(0) as u64,
+            session,
+            events,
+        };
+
+        let exports_dir = app_data_dir.join(EXPORTS_DIR);
+        fs::create_dir_all(&exports_dir)?;
+        let session_id = session_id_string(session_id);
+        let json_path = exports_dir.join(format!("{session_id}.json"));
+        let text_path = exports_dir.join(format!("{session_id}.txt"));
+
+        fs::write(&json_path, serde_json::to_string_pretty(&export)?)?;
+        fs::write(&text_path, render_session_text_export(&export))?;
+
+        Ok(ExportSessionOutcome {
+            exported: true,
+            json_path: Some(json_path.display().to_string()),
+            text_path: Some(text_path.display().to_string()),
         })
     }
 
@@ -627,6 +680,60 @@ fn remove_safe_session_audio(
     Ok(true)
 }
 
+fn render_session_text_export(export: &HistorySessionExport) -> String {
+    let session = &export.session;
+    let target_app = session
+        .target_app
+        .as_ref()
+        .map(|app| format!("{} ({})", app.name, app.id))
+        .unwrap_or_else(|| "Unknown app".to_string());
+    let status = session_status(session);
+    let audio_path = session.audio_path.as_deref().unwrap_or("No audio path");
+    let raw_text = session.raw_text.as_deref().unwrap_or("");
+    let clean_text = session.clean_text.as_deref().unwrap_or("");
+
+    let started_ms = session
+        .started_ms
+        .map(|value| value.to_string())
+        .unwrap_or_else(|| "Unknown".to_string());
+    let event_count = export.events.len();
+
+    format!(
+        "{APP_NAME} Local History Export\n\
+Session: {session_id}\n\
+Exported ms: {exported_ms}\n\
+Started ms: {started_ms}\n\
+Target app: {target_app}\n\
+Status: {status}\n\
+Audio: {audio_path}\n\
+Events: {event_count}\n\
+\n\
+Raw transcript:\n\
+{raw_text}\n\
+\n\
+Clean transcript:\n\
+{clean_text}\n",
+        session_id = session.id,
+        exported_ms = export.exported_ms,
+    )
+}
+
+fn session_status(session: &HistorySession) -> String {
+    if let Some(failure) = &session.failure {
+        return format!("Failed: {:?} - {}", failure.stage, failure.error);
+    }
+    if let Some(reason) = &session.held_reason {
+        return format!("Held: {reason:?}");
+    }
+    if let Some(method) = &session.injected_method {
+        return format!("Injected: {method:?}");
+    }
+    if session.audio_path.is_some() {
+        return "Audio saved".to_string();
+    }
+    "Started".to_string()
+}
+
 fn decode_optional_json<T>(value: Option<String>) -> Result<Option<T>, HistoryError>
 where
     T: serde::de::DeserializeOwned,
@@ -961,6 +1068,89 @@ mod tests {
 
         fs::remove_dir_all(app_data).unwrap();
         fs::remove_dir_all(external_dir).unwrap();
+    }
+
+    #[test]
+    fn export_session_writes_json_and_text_under_app_data() {
+        let id = sid(52);
+        let app_data = temp_app_data("export-session");
+        let sessions_dir = app_data.join("sessions");
+        fs::create_dir_all(&sessions_dir).unwrap();
+        let audio_path = sessions_dir.join(format!("{}.wav", id.0));
+        fs::write(&audio_path, b"fixture audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        store
+            .record_events(&[
+                SessionEvent::Started {
+                    id,
+                    target_app: app(),
+                    at_ms: 99,
+                },
+                SessionEvent::AudioPersisted {
+                    id,
+                    wal_path: audio_path.display().to_string(),
+                },
+                SessionEvent::RawFinal {
+                    id,
+                    text: "um export my history".to_string(),
+                },
+                SessionEvent::CleanFinal {
+                    id,
+                    text: "Export my history.".to_string(),
+                    dial: CleanupDial::Light,
+                },
+            ])
+            .unwrap();
+
+        let outcome = store.export_session(id, &app_data).unwrap();
+
+        let json_path = app_data.join(EXPORTS_DIR).join(format!("{}.json", id.0));
+        let text_path = app_data.join(EXPORTS_DIR).join(format!("{}.txt", id.0));
+        assert_eq!(
+            outcome,
+            ExportSessionOutcome {
+                exported: true,
+                json_path: Some(json_path.display().to_string()),
+                text_path: Some(text_path.display().to_string()),
+            }
+        );
+
+        let exported_json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(json_path).unwrap()).unwrap();
+        assert_eq!(exported_json["schema_version"], SCHEMA_VERSION);
+        assert_eq!(exported_json["session"]["id"], session_id_string(id));
+        assert_eq!(exported_json["session"]["raw_text"], "um export my history");
+        assert_eq!(exported_json["session"]["clean_text"], "Export my history.");
+        assert_eq!(exported_json["events"].as_array().unwrap().len(), 4);
+
+        let exported_text = fs::read_to_string(text_path).unwrap();
+        assert!(exported_text.contains(APP_NAME));
+        assert!(exported_text.contains("Example Editor"));
+        assert!(exported_text.contains(audio_path.to_str().unwrap()));
+        assert!(exported_text.contains("um export my history"));
+        assert!(exported_text.contains("Export my history."));
+
+        fs::remove_dir_all(app_data).unwrap();
+    }
+
+    #[test]
+    fn export_session_returns_false_for_missing_session() {
+        let app_data = temp_app_data("export-missing");
+        let store = HistoryStore::open(&app_data).unwrap();
+
+        let outcome = store.export_session(sid(53), &app_data).unwrap();
+
+        assert_eq!(
+            outcome,
+            ExportSessionOutcome {
+                exported: false,
+                json_path: None,
+                text_path: None,
+            }
+        );
+        assert!(!app_data.join(EXPORTS_DIR).exists());
+
+        fs::remove_dir_all(app_data).unwrap();
     }
 
     #[test]

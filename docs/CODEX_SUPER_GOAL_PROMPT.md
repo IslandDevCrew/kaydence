@@ -39,9 +39,10 @@ Current verified state:
 - Recent local history is visible in the cockpit via recent_history; per-session
   delete now removes the DB row plus safe app-data session audio after confirm.
   recent_history also surfaces untracked recoverable app-data WAVs as Capture
-  failures so crash-orphan audio is visible. Audio playback, export,
-  purge/delete-all, retention sweep, and recovered-audio re-transcription remain
-  follow-up history/recovery work.
+  failures so crash-orphan audio is visible. export_history_session now writes
+  JSON + text exports under app-data exports/. Audio playback, purge/delete-all,
+  retention sweep, and recovered-audio re-transcription remain follow-up
+  history/recovery work.
 
 Operating rules:
 - Work from evidence, not assertions.

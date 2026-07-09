@@ -140,6 +140,12 @@ interface HistorySession {
   event_count: number;
 }
 
+interface HistoryExportOutcome {
+  exported: boolean;
+  json_path: string | null;
+  text_path: string | null;
+}
+
 const previewSnapshot: AppSnapshot = {
   app_name: "Kaydence",
   app_identifier: "io.kaydence.app",
@@ -303,6 +309,9 @@ export function App(): JSX.Element {
   const [historySessions, setHistorySessions] = useState<HistorySession[]>(previewHistory);
   const [historyRefreshPending, setHistoryRefreshPending] = useState(false);
   const [deletingHistoryId, setDeletingHistoryId] = useState<string | null>(null);
+  const [exportingHistoryId, setExportingHistoryId] = useState<string | null>(null);
+  const [historyExportOutcome, setHistoryExportOutcome] =
+    useState<HistoryExportOutcome | null>(null);
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
@@ -426,6 +435,21 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setDeletingHistoryId(null);
+      });
+  }
+
+  function exportHistorySession(sessionId: string) {
+    setExportingHistoryId(sessionId);
+    setHistoryExportOutcome(null);
+    void invoke<HistoryExportOutcome>("export_history_session", { sessionId })
+      .then((outcome) => {
+        setHistoryExportOutcome(outcome);
+      })
+      .catch((error) => {
+        console.error("Kaydence history export failed", error);
+      })
+      .finally(() => {
+        setExportingHistoryId(null);
       });
   }
 
@@ -556,6 +580,13 @@ export function App(): JSX.Element {
               </div>
               {historySessions.length > 0 ? (
                 <div className="history-list">
+                  {historyExportOutcome ? (
+                    <p className="history-export-note">
+                      {historyExportOutcome.exported
+                        ? `Exported to ${historyExportOutcome.text_path ?? historyExportOutcome.json_path}`
+                        : "No matching local session to export."}
+                    </p>
+                  ) : null}
                   {historySessions.map((session) => (
                     <div className="history-row" key={session.id}>
                       <div className="history-row-main">
@@ -565,9 +596,18 @@ export function App(): JSX.Element {
                       <div className="history-row-actions">
                         <em>{historyStatus(session)}</em>
                         <button
+                          aria-label={`Export ${session.target_app?.name ?? "local history session"}`}
+                          className="mini-action"
+                          disabled={exportingHistoryId !== null || deletingHistoryId !== null}
+                          onClick={() => exportHistorySession(session.id)}
+                          type="button"
+                        >
+                          {exportingHistoryId === session.id ? "Exporting" : "Export"}
+                        </button>
+                        <button
                           aria-label={`Delete ${session.target_app?.name ?? "local history session"}`}
                           className="danger-action"
-                          disabled={deletingHistoryId !== null}
+                          disabled={deletingHistoryId !== null || exportingHistoryId !== null}
                           onClick={() => deleteHistorySession(session.id)}
                           type="button"
                         >

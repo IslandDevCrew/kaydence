@@ -178,6 +178,50 @@ fn delete_history_session(
     }
 }
 
+#[tauri::command]
+fn export_history_session(
+    app: tauri::AppHandle,
+    session_id: String,
+) -> Result<history::ExportSessionOutcome, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let session_id = parse_history_session_id(&session_id)?;
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        let mut store =
+            history::HistoryStore::open(&app_data_dir).map_err(|err| err.to_string())?;
+        recover_history_audio(&mut store, &app_data_dir).map_err(|err| err.to_string())?;
+        store
+            .export_session(session_id, &app_data_dir)
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = session_id;
+        Ok(history::ExportSessionOutcome {
+            exported: false,
+            json_path: None,
+            text_path: None,
+        })
+    }
+}
+
+fn parse_history_session_id(session_id: &str) -> Result<events::SessionId, String> {
+    let session_id = session_id.trim();
+    if session_id.is_empty() {
+        return Err("History session id cannot be empty".to_string());
+    }
+    ulid::Ulid::from_string(session_id)
+        .map(events::SessionId::new)
+        .map_err(|_| format!("Invalid history session id: {session_id}"))
+}
+
 #[derive(Debug)]
 struct RuntimeSnapshot {
     inner: Mutex<settings::AppSnapshot>,
@@ -934,7 +978,8 @@ pub fn run() {
             select_asr_model,
             refresh_model_readiness,
             recent_history,
-            delete_history_session
+            delete_history_session,
+            export_history_session
         ])
         .setup(|app| {
             #[cfg(desktop)]
