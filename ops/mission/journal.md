@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T16:57Z — Codex P1 slice (ASR runtime status snapshot + UI)
+- Promoted the selected ASR runtime boundary into the user/build-agent surfaces: `FirstRunStatus.asr_runtime`, `FirstRunProofPlan.asr_runtime`, recording meta, and the Screen Family 10 first-run panel now all show Pending / Blocked / VerifiedArtifact truth from Rust.
+- The visible status includes selected model id, lane, runtime, artifact path, artifact byte size, adapter readiness, detail, and proof requirement. Verified artifacts still render as adapter pending until a real ASR adapter emits transcript events.
+- Kept the surface scoped: no network model fetch, no Parakeet/Whisper inference claim, and no fake golden ASR output.
+- Evidence saved at `ops/mission/evidence/2026-07-09-asr-runtime-status-snapshot.txt`. Local gates passed: fmt, focused ASR snapshot/proof tests, frontend check, clippy, full Rust suite (207 lib + crash/event/short suites), privacy posture, ADR status, bench PASS/PARTIAL, production build, and desktop verify.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T16:45Z — Codex P1 slice (artifact-aware ASR runtime adapter lifecycle)
 - Added an artifact-aware local ASR runtime state: Pending selected model, Blocked selected model with reason, and VerifiedArtifact with model id, lane, runtime, artifact path, and byte size. The default hotkey runtime now resolves that state from the first-run ASR selection, the source-tree model registry, and app-data model artifacts.
 - Wired `select_asr_model`, `refresh_model_readiness`, and `install_model_artifact` to require an idle hotkey runtime before applying a new ASR adapter state to the active processor. Active captures refuse ASR swaps instead of changing the pipeline mid-dictation.

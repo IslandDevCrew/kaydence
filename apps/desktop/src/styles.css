@@ -386,7 +386,7 @@ button {
 
 .recording-meta {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
 }
 
 .recording-meta div,
@@ -1078,6 +1078,48 @@ button {
   color: var(--muted);
   font-size: .78rem;
   line-height: 1.35;
+}
+
+.asr-runtime-card {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 10px 12px;
+}
+
+.asr-runtime-card span,
+.asr-runtime-card strong,
+.asr-runtime-card small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.asr-runtime-card span {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.asr-runtime-card strong {
+  color: var(--gold);
+  font-size: .95rem;
+}
+
+.asr-runtime-card small {
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.asr-runtime-card.status-blocked strong {
+  color: var(--danger);
+}
+
+.asr-runtime-card.status-verified_artifact strong {
+  color: color-mix(in srgb, var(--accent) 80%, #15313a);
 }
 
 .proof-export-card {

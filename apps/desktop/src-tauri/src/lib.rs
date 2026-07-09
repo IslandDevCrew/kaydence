@@ -58,9 +58,13 @@ fn select_asr_model(
             .path()
             .app_data_dir()
             .map_err(|err| format!("App data directory unavailable: {err}"))?;
-        let snapshot = state
+        state
             .select_asr_model(&model_id)
             .map_err(|err| err.to_string())?;
+        let snapshot = state.refresh_asr_runtime_status(
+            &models::source_tree_registry_path(),
+            &app_data_dir.join("models"),
+        );
         apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime)
             .map_err(|err| err.to_string())?;
         Ok(snapshot)
@@ -896,7 +900,22 @@ impl RuntimeSnapshot {
             first_run.asr_candidates = readiness.asr_candidates;
             first_run.recommended_asr_model_id = readiness.recommended_asr_model_id;
             first_run.selected_asr_model_id = readiness.selected_asr_model_id;
+            let asr_state = selected_asr_runtime_state(first_run, registry_path, models_dir);
+            first_run.asr_runtime = first_run_asr_runtime_status(&asr_state);
         });
+    }
+
+    #[cfg(desktop)]
+    fn refresh_asr_runtime_status(
+        &self,
+        registry_path: &Path,
+        models_dir: &Path,
+    ) -> settings::AppSnapshot {
+        self.update_first_run(|first_run| {
+            let asr_state = selected_asr_runtime_state(first_run, registry_path, models_dir);
+            first_run.asr_runtime = first_run_asr_runtime_status(&asr_state);
+        });
+        self.snapshot()
     }
 
     #[cfg(desktop)]
@@ -909,7 +928,7 @@ impl RuntimeSnapshot {
         self.ensure_first_run_started_at(current_unix_ms())?;
         self.refresh_model_readiness(registry_path, &app_data_dir.join("models"));
         self.apply_persisted_user_settings()?;
-        Ok(self.snapshot())
+        Ok(self.refresh_asr_runtime_status(registry_path, &app_data_dir.join("models")))
     }
 
     #[cfg(desktop)]
@@ -1064,6 +1083,7 @@ impl RuntimeSnapshot {
             first_run.asr_candidates.clear();
             first_run.recommended_asr_model_id = None;
             first_run.selected_asr_model_id = None;
+            first_run.asr_runtime = settings::FirstRunAsrRuntimeStatus::default();
         });
     }
 
@@ -1113,9 +1133,15 @@ impl RuntimeSnapshot {
         }
 
         first_run.selected_asr_model_id = Some(model_id.to_string());
+        let mut selected_lane = None;
         for candidate in &mut first_run.asr_candidates {
             candidate.selected = candidate.id == model_id;
+            if candidate.selected {
+                selected_lane = candidate.lane.clone();
+            }
         }
+        first_run.asr_runtime =
+            first_run_pending_asr_runtime_status(Some(model_id.to_string()), selected_lane);
         first_run.recompute_next_step();
         Some(())
     }
@@ -1724,6 +1750,103 @@ fn apply_selected_asr_to_runtime(
         &models::source_tree_registry_path(),
         &app_data_dir.join("models"),
     ))
+}
+
+#[cfg(desktop)]
+fn first_run_pending_asr_runtime_status(
+    selected_model_id: Option<String>,
+    lane: Option<String>,
+) -> settings::FirstRunAsrRuntimeStatus {
+    settings::FirstRunAsrRuntimeStatus {
+        state: settings::FirstRunAsrRuntimeState::Pending,
+        selected_model_id,
+        lane,
+        runtime: None,
+        artifact_path: None,
+        artifact_size_bytes: None,
+        adapter_ready: false,
+        detail: "Local ASR runtime is waiting for model artifact verification.".to_string(),
+        proof_requirement:
+            "Refresh model readiness and load a real ASR adapter before claiming transcript output."
+                .to_string(),
+    }
+}
+
+#[cfg(desktop)]
+fn first_run_asr_runtime_status(
+    state: &engine::LocalAsrAdapterState,
+) -> settings::FirstRunAsrRuntimeStatus {
+    match state {
+        engine::LocalAsrAdapterState::Pending {
+            selected_model_id,
+            lane,
+        } => settings::FirstRunAsrRuntimeStatus {
+            state: settings::FirstRunAsrRuntimeState::Pending,
+            selected_model_id: selected_model_id.clone(),
+            lane: Some(engine_lane_snapshot_label(*lane).to_string()),
+            runtime: None,
+            artifact_path: None,
+            artifact_size_bytes: None,
+            adapter_ready: false,
+            detail: selected_model_id
+                .as_ref()
+                .map(|model_id| {
+                    format!(
+                        "Local ASR runtime is waiting for a verified artifact for {model_id}."
+                    )
+                })
+                .unwrap_or_else(|| {
+                    "Local ASR runtime is waiting for a selected model.".to_string()
+                }),
+            proof_requirement:
+                "A selected ASR model must verify under app-data models/ before inference can load."
+                    .to_string(),
+        },
+        engine::LocalAsrAdapterState::Blocked {
+            selected_model_id,
+            lane,
+            reason,
+        } => settings::FirstRunAsrRuntimeStatus {
+            state: settings::FirstRunAsrRuntimeState::Blocked,
+            selected_model_id: selected_model_id.clone(),
+            lane: Some(engine_lane_snapshot_label(*lane).to_string()),
+            runtime: None,
+            artifact_path: None,
+            artifact_size_bytes: None,
+            adapter_ready: false,
+            detail: format!("Selected ASR runtime is blocked: {reason}"),
+            proof_requirement:
+                "Resolve the selected model artifact or registry error before claiming local ASR readiness."
+                    .to_string(),
+        },
+        engine::LocalAsrAdapterState::VerifiedArtifact { spec } => {
+            settings::FirstRunAsrRuntimeStatus {
+                state: settings::FirstRunAsrRuntimeState::VerifiedArtifact,
+                selected_model_id: Some(spec.model_id.clone()),
+                lane: Some(engine_lane_snapshot_label(spec.lane).to_string()),
+                runtime: Some(spec.runtime.clone()),
+                artifact_path: Some(spec.artifact_path.display().to_string()),
+                artifact_size_bytes: Some(spec.artifact_size_bytes),
+                adapter_ready: false,
+                detail: format!(
+                    "Verified {} artifact is ready, but the ASR runtime adapter is not implemented yet.",
+                    spec.runtime
+                ),
+                proof_requirement:
+                    "Do not claim golden ASR output until a real adapter loads this artifact and emits transcript events."
+                        .to_string(),
+            }
+        }
+    }
+}
+
+#[cfg(desktop)]
+fn engine_lane_snapshot_label(lane: engine::EngineLane) -> &'static str {
+    match lane {
+        engine::EngineLane::LocalCpu => "cpu",
+        engine::EngineLane::LocalGpu => "gpu",
+        engine::EngineLane::ByokCloud => "byok_cloud",
+    }
 }
 
 #[cfg(desktop)]
@@ -2455,6 +2578,7 @@ mod tests {
         assert_eq!(exported["generated_at_ms"].as_u64(), Some(42_4242));
         assert_eq!(exported["app_name"].as_str(), Some(settings::APP_NAME));
         assert!(exported["next_step"]["kind"].is_string());
+        assert!(exported["asr_runtime"]["state"].is_string());
         assert_eq!(
             exported["proof_items"].as_array().unwrap().len(),
             outcome.item_count
@@ -2537,6 +2661,18 @@ mod tests {
             .all(|model| model.download_available
                 && model.download_size_mb == Some(1)
                 && model.download_source_count == 1));
+        assert_eq!(
+            first_run.asr_runtime.state,
+            settings::FirstRunAsrRuntimeState::Blocked
+        );
+        assert_eq!(
+            first_run.asr_runtime.selected_model_id.as_deref(),
+            Some("fixture-asr")
+        );
+        assert!(first_run
+            .asr_runtime
+            .detail
+            .contains("selected artifact is missing"));
         let _ = std::fs::remove_dir_all(app_data);
     }
 
@@ -2805,6 +2941,16 @@ mod tests {
             .all(|model| model.state == settings::FirstRunModelState::Ready));
         assert!(first_run.model_ready);
         assert!(first_run.asr_candidates[0].selected);
+        assert_eq!(
+            first_run.asr_runtime.state,
+            settings::FirstRunAsrRuntimeState::VerifiedArtifact
+        );
+        assert_eq!(first_run.asr_runtime.artifact_size_bytes, Some(3));
+        assert!(!first_run.asr_runtime.adapter_ready);
+        assert!(first_run
+            .asr_runtime
+            .proof_requirement
+            .contains("Do not claim golden ASR output"));
         let _ = std::fs::remove_dir_all(app_data);
     }
 
@@ -2899,6 +3045,15 @@ mod tests {
             .asr_candidates
             .iter()
             .any(|candidate| candidate.id == "fixture-gpu" && candidate.selected));
+        assert_eq!(
+            first_run.asr_runtime.selected_model_id.as_deref(),
+            Some("fixture-gpu")
+        );
+        assert_eq!(
+            first_run.asr_runtime.state,
+            settings::FirstRunAsrRuntimeState::Pending
+        );
+        assert_eq!(first_run.asr_runtime.lane.as_deref(), Some("gpu"));
         assert!(first_run
             .asr_candidates
             .iter()

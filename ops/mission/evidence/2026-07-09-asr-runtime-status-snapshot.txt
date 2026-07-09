@@ -1,0 +1,71 @@
+Kaydence evidence — ASR runtime status in snapshot/proof/UI
+Date: 2026-07-09T16:57Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Branch: main
+
+Scope
+- Exposed backend-owned first-run ASR runtime status in AppSnapshot.
+- Added the same ASR runtime status to FirstRunProofPlan exports.
+- Rendered the selected ASR runtime state in the recording meta strip and Screen Family 10 first-run panel.
+- Kept the runtime boundary honest: Pending, Blocked, and VerifiedArtifact are visible states, but adapter_ready remains false until a real Parakeet/Whisper adapter loads the verified artifact and emits transcript events.
+
+Changed source files
+- apps/desktop/src-tauri/src/settings/mod.rs
+- apps/desktop/src-tauri/src/lib.rs
+- apps/desktop/src/App.tsx
+- apps/desktop/src/styles.css
+
+Behavior
+- FirstRunStatus now carries asr_runtime with:
+  - state: pending | blocked | verified_artifact
+  - selected_model_id, lane, runtime, artifact_path, artifact_size_bytes
+  - adapter_ready, detail, proof_requirement
+- RuntimeSnapshot refreshes first_run.asr_runtime from the selected ASR model plus the source-tree registry and app-data model artifacts.
+- select_asr_model returns a snapshot whose ASR runtime status has been refreshed before the active runtime is applied.
+- FirstRunProofPlan includes asr_runtime, so exported proof JSON preserves the exact ASR runtime boundary.
+- The frontend renders:
+  - cockpit ASR runtime summary
+  - first-run selected-ASR-runtime card with model/lane/runtime/artifact/proof details
+  - stable responsive layout for the fourth recording-meta metric
+
+Honest boundary
+- No network model download was added.
+- No Parakeet or Whisper inference was claimed.
+- VerifiedArtifact means the artifact is verified and visible; it does not mean golden ASR output is implemented.
+- Real ASR adapters, WER/latency evidence, approved download/progress UI, and reviewed registry hashes/sources remain open.
+
+Verification commands and results
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all
+  - PASS
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_asr_runtime
+  - PASS: settings::tests::first_run_asr_runtime_status_serializes_boundary
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot_reports_missing_first_run_models
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot_marks_verified_first_run_models_ready
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml selecting_asr_model_updates_snapshot
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_proof_export_writes_json_under_app_data
+  - PASS
+- pnpm --dir apps/desktop run check
+  - PASS: tsc --noEmit && eslint . --max-warnings 0
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  - PASS: 207 lib tests, 2 crash_recovery tests, 5 event_sequences tests, 5 short_utterance tests
+- bash scripts/check-privacy-posture.sh
+  - PASS: 0 network call sites, README privacy promises present, no screen-capture primitives
+- bash scripts/check-adr-status.sh
+  - PASS: all ADRs Accepted except declared by-design exception ADR-0009
+- bash scripts/bench.sh --check
+  - PASS/PARTIAL: measured Raw-path metrics within section 5 budgets; real ASR/GPU/idle footprint/reference p95 still unmeasured
+- pnpm --dir apps/desktop run build
+  - PASS: tsc --noEmit && vite build
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Generated build artifacts
+- pnpm build rewrote apps/desktop/dist/index.html and produced untracked hashed assets/favicon.
+- Those generated outputs were removed/restored before commit so the diff remains source + mission evidence only.

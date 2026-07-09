@@ -155,6 +155,20 @@ interface FirstRunModelDownloadPreflight {
   proof_requirement: string;
 }
 
+type FirstRunAsrRuntimeState = "pending" | "blocked" | "verified_artifact";
+
+interface FirstRunAsrRuntimeStatus {
+  state: FirstRunAsrRuntimeState;
+  selected_model_id: string | null;
+  lane: string | null;
+  runtime: string | null;
+  artifact_path: string | null;
+  artifact_size_bytes: number | null;
+  adapter_ready: boolean;
+  detail: string;
+  proof_requirement: string;
+}
+
 interface HotkeyBindingOption {
   id: string;
   label: string;
@@ -200,6 +214,7 @@ interface AppSnapshot {
       asr_candidates: FirstRunAsrCandidate[];
       recommended_asr_model_id: string | null;
       selected_asr_model_id: string | null;
+      asr_runtime: FirstRunAsrRuntimeStatus;
       next_step: FirstRunNextStep;
       permission_requirements: FirstRunPermissionRequirement[];
       microphone_permission_ready: boolean;
@@ -325,6 +340,18 @@ const previewSnapshot: AppSnapshot = {
       asr_candidates: [],
       recommended_asr_model_id: null,
       selected_asr_model_id: null,
+      asr_runtime: {
+        state: "pending",
+        selected_model_id: null,
+        lane: null,
+        runtime: null,
+        artifact_path: null,
+        artifact_size_bytes: null,
+        adapter_ready: false,
+        detail: "Select and verify a local ASR model before runtime load.",
+        proof_requirement:
+          "A real ASR adapter must load a verified artifact and emit transcript events before first dictation can be claimed.",
+      },
       next_step: {
         kind: "model_metadata",
         target_id: null,
@@ -528,6 +555,31 @@ function setupTimingDetail(timing: FirstRunSetupTiming): string {
   return `${target} target starts when the desktop app opens with app data.`;
 }
 
+function asrRuntimeStateLabel(runtime: FirstRunAsrRuntimeStatus): string {
+  if (runtime.adapter_ready) {
+    return "Adapter ready";
+  }
+  switch (runtime.state) {
+    case "pending":
+      return "Waiting";
+    case "blocked":
+      return "Blocked";
+    case "verified_artifact":
+      return "Artifact ready";
+  }
+}
+
+function asrRuntimeArtifactDetail(runtime: FirstRunAsrRuntimeStatus): string | null {
+  if (!runtime.artifact_path) {
+    return null;
+  }
+  if (runtime.artifact_size_bytes === null) {
+    return runtime.artifact_path;
+  }
+  const sizeKb = Math.max(1, Math.ceil(runtime.artifact_size_bytes / 1024));
+  return `${runtime.artifact_path} (${sizeKb} KB)`;
+}
+
 function formatDuration(ms: number): string {
   const seconds = Math.max(0, Math.round(ms / 100) / 10);
   return `${seconds.toFixed(seconds % 1 === 0 ? 0 : 1)}s`;
@@ -632,6 +684,8 @@ export function App(): JSX.Element {
   const cleanupDefault = snapshot.settings.cleanup.default_dial;
   const asrCandidates = snapshot.settings.first_run.asr_candidates;
   const selectedAsr = asrCandidates.find((candidate) => candidate.selected);
+  const asrRuntime = snapshot.settings.first_run.asr_runtime;
+  const asrRuntimeArtifact = asrRuntimeArtifactDetail(asrRuntime);
   const engineLabel =
     selectedAsr?.id ??
     (snapshot.settings.engine.default_local_asr === "parakeet_cpu"
@@ -1130,6 +1184,10 @@ export function App(): JSX.Element {
                 <span>Hotkey</span>
                 <strong>{snapshot.settings.hotkey.primary_binding}</strong>
               </div>
+              <div>
+                <span>ASR runtime</span>
+                <strong>{asrRuntimeStateLabel(asrRuntime)}</strong>
+              </div>
             </div>
 
             <div className="transcript-card">
@@ -1416,6 +1474,21 @@ export function App(): JSX.Element {
               <span>60-second setup proof</span>
               <strong>{setupTimingLabel(setupTiming)}</strong>
               <small>{setupTimingDetail(setupTiming)}</small>
+            </div>
+            <div
+              className={`asr-runtime-card status-${asrRuntime.state}`}
+              aria-label="Selected ASR runtime status"
+            >
+              <span>Selected ASR runtime</span>
+              <strong>{asrRuntimeStateLabel(asrRuntime)}</strong>
+              <small>
+                {asrRuntime.selected_model_id ?? "No model selected"}
+                {asrRuntime.lane ? ` / ${asrRuntime.lane}` : ""}
+                {asrRuntime.runtime ? ` / ${asrRuntime.runtime}` : ""}
+              </small>
+              <small>{asrRuntime.detail}</small>
+              {asrRuntimeArtifact ? <small>Artifact: {asrRuntimeArtifact}</small> : null}
+              <small>Proof: {asrRuntime.proof_requirement}</small>
             </div>
             <div className="proof-export-card" aria-label="First-run proof export">
               <div>

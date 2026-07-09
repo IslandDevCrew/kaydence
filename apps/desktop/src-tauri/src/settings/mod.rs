@@ -450,6 +450,7 @@ pub struct FirstRunStatus {
     pub asr_candidates: Vec<FirstRunAsrCandidate>,
     pub recommended_asr_model_id: Option<String>,
     pub selected_asr_model_id: Option<String>,
+    pub asr_runtime: FirstRunAsrRuntimeStatus,
     pub next_step: FirstRunNextStep,
     pub permission_requirements: Vec<FirstRunPermissionRequirement>,
     pub microphone_permission_ready: bool,
@@ -469,6 +470,7 @@ impl Default for FirstRunStatus {
             asr_candidates: Vec::new(),
             recommended_asr_model_id: None,
             selected_asr_model_id: None,
+            asr_runtime: FirstRunAsrRuntimeStatus::default(),
             next_step: FirstRunNextStep::default(),
             permission_requirements: first_run_permission_requirements(),
             microphone_permission_ready: false,
@@ -726,6 +728,7 @@ pub struct FirstRunProofPlan {
     pub model_ready: bool,
     pub model_readiness_error: Option<String>,
     pub selected_asr_model_id: Option<String>,
+    pub asr_runtime: FirstRunAsrRuntimeStatus,
     pub required_models: Vec<FirstRunModelStatus>,
     pub asr_candidates: Vec<FirstRunAsrCandidate>,
     pub permission_requirements: Vec<FirstRunPermissionRequirement>,
@@ -787,6 +790,45 @@ pub struct FirstRunModelDownloadPreflight {
     pub proof_requirement: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunAsrRuntimeStatus {
+    pub state: FirstRunAsrRuntimeState,
+    pub selected_model_id: Option<String>,
+    pub lane: Option<String>,
+    pub runtime: Option<String>,
+    pub artifact_path: Option<String>,
+    pub artifact_size_bytes: Option<u64>,
+    pub adapter_ready: bool,
+    pub detail: String,
+    pub proof_requirement: String,
+}
+
+impl Default for FirstRunAsrRuntimeStatus {
+    fn default() -> Self {
+        Self {
+            state: FirstRunAsrRuntimeState::Pending,
+            selected_model_id: None,
+            lane: None,
+            runtime: None,
+            artifact_path: None,
+            artifact_size_bytes: None,
+            adapter_ready: false,
+            detail: "Select and verify a local ASR model before runtime load.".to_string(),
+            proof_requirement:
+                "A real ASR adapter must load a verified artifact and emit transcript events before first dictation can be claimed."
+                    .to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FirstRunAsrRuntimeState {
+    Pending,
+    Blocked,
+    VerifiedArtifact,
+}
+
 pub fn first_run_proof_plan(snapshot: &AppSnapshot, generated_at_ms: u64) -> FirstRunProofPlan {
     let first_run = &snapshot.settings.first_run;
     let mut proof_items = Vec::new();
@@ -820,6 +862,7 @@ pub fn first_run_proof_plan(snapshot: &AppSnapshot, generated_at_ms: u64) -> Fir
         model_ready: first_run.model_ready,
         model_readiness_error: first_run.model_readiness_error.clone(),
         selected_asr_model_id: first_run.selected_asr_model_id.clone(),
+        asr_runtime: first_run.asr_runtime.clone(),
         required_models: first_run.required_models.clone(),
         asr_candidates: first_run.asr_candidates.clone(),
         permission_requirements: first_run.permission_requirements.clone(),
@@ -1306,6 +1349,7 @@ mod tests {
         let snapshot = AppSnapshot::default();
         let json = serde_json::to_string(&snapshot).expect("snapshot serializes");
         assert!(json.contains(APP_NAME));
+        assert!(json.contains("\"asr_runtime\""));
         let decoded: AppSnapshot = serde_json::from_str(&json).expect("snapshot decodes");
         assert_eq!(decoded, snapshot);
     }
@@ -1826,5 +1870,26 @@ mod tests {
 
         assert!(json.contains("\"selected\":true"));
         assert!(json.contains("CPU-safe first-run default"));
+    }
+
+    #[test]
+    fn first_run_asr_runtime_status_serializes_boundary() {
+        let status = FirstRunAsrRuntimeStatus {
+            state: FirstRunAsrRuntimeState::VerifiedArtifact,
+            selected_model_id: Some("parakeet-v3".to_string()),
+            lane: Some("cpu".to_string()),
+            runtime: Some("onnxruntime".to_string()),
+            artifact_path: Some("/tmp/kaydence/parakeet.onnx".to_string()),
+            artifact_size_bytes: Some(1024),
+            adapter_ready: false,
+            detail: "Verified artifact is ready; adapter pending.".to_string(),
+            proof_requirement: "Real adapter must emit transcript events.".to_string(),
+        };
+
+        let json = serde_json::to_string(&status).unwrap();
+
+        assert!(json.contains("\"state\":\"verified_artifact\""));
+        assert!(json.contains("\"adapter_ready\":false"));
+        assert!(json.contains("parakeet-v3"));
     }
 }
