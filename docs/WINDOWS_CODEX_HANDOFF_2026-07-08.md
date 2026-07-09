@@ -1,5 +1,8 @@
 # Kaydence Windows Codex Handoff
 
+> Superseded by `docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md`. This file is kept
+> as historical evidence from the July 8 recovery pass.
+
 ## Purpose
 
 Continue the P1 build on a Windows machine without re-litigating the whole plan.
@@ -73,4 +76,3 @@ bash scripts/check-adr-status.sh
 
 Do not claim Windows parity from compile-only CI. The lane needs one real machine
 proof for window launch and injection behavior.
-

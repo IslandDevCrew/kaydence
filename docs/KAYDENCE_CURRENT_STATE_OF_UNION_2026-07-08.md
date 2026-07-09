@@ -1,5 +1,9 @@
 # Kaydence Current State Of Union
 
+> Superseded by the generated `ops/mission/state-of-the-union.html` and
+> `ops/mission/state.json`. This July 8 markdown file is retained as historical
+> recovery evidence only.
+
 Date: 2026-07-08
 
 ## Verdict
@@ -53,4 +57,3 @@ a placeholder until this Codex pass began turning the boards into the app shell.
    - Linux uinput/AT-SPI validation cleanup.
 4. Build the P1 screens against boards 01, 03, 07, and 10.
 5. Keep every "done" tied to evidence under `ops/mission/evidence/`.
-

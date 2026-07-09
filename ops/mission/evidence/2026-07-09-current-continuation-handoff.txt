@@ -1,0 +1,38 @@
+Kaydence evidence: current continuation handoff refresh
+Timestamp: 2026-07-09T17:42Z
+
+Scope
+- Refresh the Codex super-goal prompt and Windows Codex handoff so future sessions
+  continue from current repo truth instead of stale July 8 assumptions.
+
+Files changed
+- docs/CODEX_SUPER_GOAL_PROMPT.md
+- docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md
+- docs/WINDOWS_CODEX_HANDOFF_2026-07-08.md
+- docs/KAYDENCE_CURRENT_STATE_OF_UNION_2026-07-08.md
+
+Current truths captured
+- Private remote access is restored for IslandDevCrew/kaydence with ADMIN permission.
+- origin/main is f61ab49.
+- Local main is ahead of origin/main by 8 commits:
+  c64a2b7, 36f538d, f4e0853, bb2542f, e12b4fa, 0930d09, 8bef075, 6d64400.
+- Latest verified green remote baseline remains Actions run 29031546518 at ca60244.
+- Latest checked runs 29033116849 and 29033270673 are billing/spending-limit
+  failures before checkout, not repo test failures.
+- Windows injection is no longer pending: PR #2 merged and live Fable-box proof
+  exists. The new Windows handoff now focuses on rerunning proof after local
+  follow-up commits, Windows first-run permission proof, Screen Family 10,
+  hotkey/first-dictation proof, and later reference-machine timing.
+
+Validation
+- rg checks confirmed the new handoff references current commit/CI state.
+- node -e JSON.parse(...) passed for ops/mission/state.json after the mission
+  update.
+- node ops/mission/render-sotu.mjs regenerated the HTML report from state.json.
+- git diff --check passed.
+
+Honest boundary
+- This is a handoff/continuation artifact. It does not close product features by
+  itself and does not claim current-head 3-OS remote parity.
+- The July 8 markdown state/handoff files are retained only as historical
+  evidence and now say they are superseded.

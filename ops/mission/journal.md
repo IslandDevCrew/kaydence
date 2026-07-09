@@ -1,5 +1,11 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T17:42Z — Codex continuation slice (current handoff docs)
+- Refreshed `docs/CODEX_SUPER_GOAL_PROMPT.md` from current repo truth: private GitHub access restored, `origin/main` at `f61ab49`, local `main` ahead by 8 commits, latest green 3-OS baseline `ca60244` / run `29031546518`, and hosted Actions currently billing/spending-limit blocked before checkout.
+- Added `docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md` and marked the July 8 Windows handoff as superseded. The new handoff reflects that Windows injection is merged/proven and now focuses the Windows session on rerunning proof after local follow-up commits, Windows first-run permission proof, Screen Family 10, hotkey/first-dictation proof, and reference-machine timing.
+- Marked the July 8 markdown SOTU as historical evidence only; the generated `ops/mission/state-of-the-union.html` plus `ops/mission/state.json` remain the current state-of-truth pair.
+- Evidence saved at `ops/mission/evidence/2026-07-09-current-continuation-handoff.txt`. Local validation passed: handoff content search checks, state JSON parse, SOTU render, and diff whitespace check.
+
 ## 2026-07-09T17:38Z — Codex P1 slice (permission settings opener)
 - Added backend-owned settings targets to first-run permission guidance and a desktop command that can open the stable OS settings target when one exists.
 - Screen Family 10 now renders a separate Open Settings action inside the permission proof card; requirements without a stable settings panel remain manual-only. Opening settings never marks a permission row ready.
