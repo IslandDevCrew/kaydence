@@ -935,6 +935,9 @@ impl RuntimeSnapshot {
                 requirement.state = settings::FirstRunPermissionState::Ready;
                 requirement.detail = detail.to_string();
                 requirement.action = action.to_string();
+                if requirement_id == "input_monitoring" {
+                    first_run.input_permission_ready = true;
+                }
                 marked = true;
             }
         });
@@ -3036,6 +3039,43 @@ mod tests {
                 settings::FirstRunPermissionState::Ready
             );
             assert!(accessibility.detail.contains("test platform proof"));
+            assert!(!first_run.input_permission_ready);
+            assert!(!first_run.microphone_permission_ready);
+        }
+    }
+
+    #[test]
+    fn platform_permission_input_monitoring_proof_updates_input_readiness_only() {
+        let state = RuntimeSnapshot::default();
+
+        apply_platform_permission_proofs_to_snapshot(
+            &state,
+            &[inject::PlatformPermissionProof {
+                requirement_id: "input_monitoring",
+                detail: "Runtime proof observed: macOS Input Monitoring preflight grants listen-event access.",
+                action: "No action needed; Input Monitoring proof is recorded.",
+            }],
+        );
+
+        if cfg!(target_os = "macos") {
+            let first_run = state.snapshot().settings.first_run;
+            let input_monitoring = first_run
+                .permission_requirements
+                .iter()
+                .find(|requirement| requirement.id == "input_monitoring")
+                .unwrap();
+            assert_eq!(
+                input_monitoring.state,
+                settings::FirstRunPermissionState::Ready
+            );
+            assert!(input_monitoring
+                .detail
+                .contains("Input Monitoring preflight"));
+            assert!(first_run.input_permission_ready);
+            assert!(!first_run.microphone_permission_ready);
+            assert!(!first_run.ready_to_dictate());
+        } else {
+            let first_run = state.snapshot().settings.first_run;
             assert!(!first_run.input_permission_ready);
             assert!(!first_run.microphone_permission_ready);
         }

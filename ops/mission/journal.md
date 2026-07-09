@@ -1,9 +1,16 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T18:15Z — Codex P1 slice (macOS Input Monitoring proof refresh)
+- Added a no-prompt macOS Input Monitoring preflight through `IOHIDCheckAccess(kIOHIDRequestTypeListenEvent)` inside the macOS injector platform boundary.
+- `refresh_first_run_runtime_proofs` can now mark the first-run Input Monitoring row Ready when macOS reports listen-event access is granted. That proof also satisfies `input_permission_ready`; hotkey registration, microphone proof, model readiness, and first dictation remain separate gates.
+- Updated the first-run proof wording so the ready boundary accepts either the IOHID listen-event grant or a real global-hotkey runtime event, while Microphone still requires non-empty persisted capture audio.
+- Evidence saved at `ops/mission/evidence/2026-07-09-macos-input-monitoring-proof-refresh.txt`. Local gates passed: fmt check, focused permission tests (12), full Rust lib suite (225 tests), clippy with `-D warnings`, and frontend production build.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T18:08Z — Codex P1 slice (macOS Accessibility proof refresh)
 - Added a macOS Accessibility preflight through `AXIsProcessTrusted` inside the macOS injector platform boundary.
 - `refresh_first_run_runtime_proofs` now applies platform permission proofs after draining active hotkey/audio proofs; when macOS trusts this Kaydence process for Accessibility, the first-run Accessibility row becomes Ready with runtime proof detail.
-- Kept the readiness boundary honest: Microphone still needs non-empty persisted capture audio, Input Monitoring still needs a real hotkey event reaching the runtime, and native insertion/secure-field refusal proof remains separate.
+- Kept the readiness boundary honest: Microphone still needs non-empty persisted capture audio, Input Monitoring still needed live input proof at this checkpoint, and native insertion/secure-field refusal proof remained separate.
 - Evidence saved at `ops/mission/evidence/2026-07-09-macos-accessibility-proof-refresh.txt`. Local gates passed: fmt check, focused permission tests, full Rust lib suite (224 tests), clippy with `-D warnings`, frontend production build, and diff whitespace check.
 - Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
 

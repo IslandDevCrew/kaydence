@@ -1,0 +1,57 @@
+Kaydence evidence: macOS Input Monitoring proof refresh
+Generated: 2026-07-09T18:15Z
+
+Scope
+- Added a macOS Input Monitoring preflight through IOHIDCheckAccess inside the
+  macOS injector platform boundary.
+- The preflight checks kIOHIDRequestTypeListenEvent only; it does not call
+  IOHIDRequestAccess and does not prompt the user.
+- refresh_first_run_runtime_proofs already applies passive platform permission
+  proofs; when macOS reports listen-event access as granted, the first-run
+  Input Monitoring row becomes Ready with runtime proof detail.
+- The same platform proof also satisfies first_run.input_permission_ready,
+  because this row is the macOS input-permission gate. Hotkey registration,
+  model readiness, microphone proof, and first dictation still remain separate.
+- Microphone is not marked from this passive preflight. It still requires
+  stronger runtime evidence: non-empty persisted capture audio.
+
+Files changed
+- apps/desktop/src-tauri/src/inject/macos.rs
+- apps/desktop/src-tauri/src/lib.rs
+- apps/desktop/src-tauri/src/settings/mod.rs
+- ops/mission/state.json
+- ops/mission/journal.md
+- ops/mission/state-of-the-union.html
+
+Validation
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib permission
+  RESULT: PASS (12 focused tests)
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
+  RESULT: PASS (225 tests)
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- npm --prefix apps/desktop run build
+  RESULT: PASS (tsc --noEmit + vite build)
+- node -e "JSON.parse(require('fs').readFileSync('ops/mission/state.json','utf8'))"
+  RESULT: PASS
+- node ops/mission/render-sotu.mjs
+  RESULT: PASS
+- git diff --check
+  RESULT: PASS
+
+New coverage
+- platform_permission_input_monitoring_proof_updates_input_readiness_only
+
+Honest boundaries
+- This is a no-prompt permission preflight, not a permission prompt.
+- This does not prove native insertion or secure-field refusal by itself.
+- This does not mark Microphone ready.
+- This does not bypass hotkey registration or first-dictation proof.
+- Fresh remote 3-OS CI was not run because GitHub Actions hosted runners remain
+  blocked before checkout by the billing/spending-limit state. Latest known
+  green remote baseline remains ca60244 / run 29031546518.
+- The production build generated dist/ artifacts during validation; those
+  generated outputs were removed/restored before commit so the diff stays source
+  plus mission evidence.

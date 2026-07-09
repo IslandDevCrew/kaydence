@@ -8,7 +8,7 @@
 #![allow(dead_code)]
 
 use std::ffi::CStr;
-use std::os::raw::{c_char, c_void};
+use std::os::raw::{c_char, c_uint, c_void};
 use std::ptr;
 use std::thread;
 use std::time::Duration;
@@ -30,6 +30,8 @@ const CG_UNICODE_KEY_CODE: CGKeyCode = 0;
 const CG_V_KEY_CODE: CGKeyCode = 0x09;
 const CLIPBOARD_RESTORE_DELAY_MS: u64 = 20;
 const MAX_UNICHARS_PER_EVENT: usize = 512;
+const IOHID_REQUEST_TYPE_LISTEN_EVENT: IOHIDRequestType = 1;
+const IOHID_ACCESS_TYPE_GRANTED: IOHIDAccessType = 0;
 
 const ATTR_FOCUSED_UI_ELEMENT: &str = "AXFocusedUIElement";
 const ATTR_ROLE: &str = "AXRole";
@@ -49,6 +51,8 @@ type CFStringEncoding = u32;
 type CFStringRef = *const c_void;
 type CFTypeID = usize;
 type CFTypeRef = *const c_void;
+type IOHIDAccessType = c_uint;
+type IOHIDRequestType = c_uint;
 type UniChar = u16;
 type UniCharCount = usize;
 
@@ -102,6 +106,12 @@ extern "C" {
     fn cg_event_set_flags(event: CGEventRef, flags: CGEventFlags);
 }
 
+#[link(name = "IOKit", kind = "framework")]
+extern "C" {
+    #[link_name = "IOHIDCheckAccess"]
+    fn iohid_check_access(request_type: IOHIDRequestType) -> IOHIDAccessType;
+}
+
 #[link(name = "CoreFoundation", kind = "framework")]
 extern "C" {
     #[link_name = "CFGetTypeID"]
@@ -148,6 +158,11 @@ pub fn accessibility_permission_ready() -> bool {
     unsafe { ax_is_process_trusted() != 0 }
 }
 
+pub fn input_monitoring_permission_ready() -> bool {
+    // Preflight only; prompting remains owned by the first-run UI/settings path.
+    unsafe { iohid_check_access(IOHID_REQUEST_TYPE_LISTEN_EVENT) == IOHID_ACCESS_TYPE_GRANTED }
+}
+
 pub fn platform_permission_proofs() -> Vec<PlatformPermissionProof> {
     let mut proofs = Vec::new();
     if accessibility_permission_ready() {
@@ -156,6 +171,14 @@ pub fn platform_permission_proofs() -> Vec<PlatformPermissionProof> {
             detail:
                 "Runtime proof observed: macOS Accessibility preflight trusts this Kaydence process.",
             action: "No action needed; Accessibility proof is recorded for this runtime.",
+        });
+    }
+    if input_monitoring_permission_ready() {
+        proofs.push(PlatformPermissionProof {
+            requirement_id: "input_monitoring",
+            detail:
+                "Runtime proof observed: macOS Input Monitoring preflight grants listen-event access to this Kaydence process.",
+            action: "No action needed; Input Monitoring proof is recorded for this runtime.",
         });
     }
     proofs

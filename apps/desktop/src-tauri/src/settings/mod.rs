@@ -1162,7 +1162,7 @@ fn first_run_permission_proof(requirement_id: &str) -> &'static str {
             "Validate native insertion plus secure-field refusal on the current macOS build."
         }
         "input_monitoring" => {
-            "Register and trigger the selected global hotkey on the current macOS build."
+            "Verify macOS listen-event access through IOHIDCheckAccess or by triggering the selected global hotkey on the current build."
         }
         "uia_focus" => {
             "Run the Windows UIA focus self-test and confirm password fields are refused."
@@ -1205,7 +1205,7 @@ fn first_run_permission_expected_evidence(requirement_id: &str) -> &'static str 
             "A normal field accepts native insertion and a secure field produces a Held{SecureField} outcome."
         }
         "input_monitoring" => {
-            "The selected global hotkey reaches the runtime from the OS event stream while Kaydence is backgrounded."
+            "macOS reports listen-event access is granted, or the selected global hotkey reaches the runtime while Kaydence is backgrounded."
         }
         "uia_focus" => {
             "The UIA proof reports editable focus metadata and refuses password/secure fields on the Windows build."
@@ -1232,7 +1232,7 @@ fn first_run_permission_ready_boundary(requirement_id: &str) -> &'static str {
             "Do not mark Accessibility ready until native insertion and secure-field refusal are both observed."
         }
         "input_monitoring" => {
-            "Do not mark Input Monitoring ready until a real global hotkey trigger reaches the runtime."
+            "Do not mark Input Monitoring ready until IOHIDCheckAccess grants listen-event access or a real global hotkey trigger reaches the runtime."
         }
         "uia_focus" => {
             "Do not mark UIA focus ready until the Windows selftest proves focus inspection and secure refusal."
