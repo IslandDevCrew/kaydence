@@ -419,7 +419,7 @@ impl PrivacySettings {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FirstRunStatus {
     pub model_ready: bool,
     pub model_readiness_error: Option<String>,
@@ -427,11 +427,31 @@ pub struct FirstRunStatus {
     pub asr_candidates: Vec<FirstRunAsrCandidate>,
     pub recommended_asr_model_id: Option<String>,
     pub selected_asr_model_id: Option<String>,
+    pub permission_requirements: Vec<FirstRunPermissionRequirement>,
     pub microphone_permission_ready: bool,
     pub input_permission_ready: bool,
     pub hotkey_registered: bool,
     pub hotkey_registration_error: Option<String>,
     pub first_dictation_completed: bool,
+}
+
+impl Default for FirstRunStatus {
+    fn default() -> Self {
+        Self {
+            model_ready: false,
+            model_readiness_error: None,
+            required_models: Vec::new(),
+            asr_candidates: Vec::new(),
+            recommended_asr_model_id: None,
+            selected_asr_model_id: None,
+            permission_requirements: first_run_permission_requirements(),
+            microphone_permission_ready: false,
+            input_permission_ready: false,
+            hotkey_registered: false,
+            hotkey_registration_error: None,
+            first_dictation_completed: false,
+        }
+    }
 }
 
 impl FirstRunStatus {
@@ -440,6 +460,129 @@ impl FirstRunStatus {
             && self.microphone_permission_ready
             && self.input_permission_ready
             && self.hotkey_registered
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunPermissionRequirement {
+    pub id: String,
+    pub label: String,
+    pub state: FirstRunPermissionState,
+    pub detail: String,
+    pub action: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FirstRunPermissionState {
+    Ready,
+    NeedsHardware,
+    NeedsReview,
+    Blocked,
+}
+
+pub fn first_run_permission_requirements() -> Vec<FirstRunPermissionRequirement> {
+    platform_permission_specs()
+        .into_iter()
+        .map(
+            |(id, label, state, detail, action)| FirstRunPermissionRequirement {
+                id: id.to_string(),
+                label: label.to_string(),
+                state,
+                detail: detail.to_string(),
+                action: action.to_string(),
+            },
+        )
+        .collect()
+}
+
+fn platform_permission_specs() -> Vec<(
+    &'static str,
+    &'static str,
+    FirstRunPermissionState,
+    &'static str,
+    &'static str,
+)> {
+    if cfg!(target_os = "macos") {
+        vec![
+            (
+                "microphone",
+                "Microphone",
+                FirstRunPermissionState::NeedsHardware,
+                "Required before local capture can produce speech audio.",
+                "Grant Kaydence access in System Settings -> Privacy & Security -> Microphone.",
+            ),
+            (
+                "accessibility",
+                "Accessibility",
+                FirstRunPermissionState::NeedsHardware,
+                "Required for native insertion plus focus and secure-field checks.",
+                "Enable Kaydence in System Settings -> Privacy & Security -> Accessibility.",
+            ),
+            (
+                "input_monitoring",
+                "Input Monitoring",
+                FirstRunPermissionState::NeedsHardware,
+                "Required for the global hotkey monitoring path on macOS.",
+                "Enable Kaydence in System Settings -> Privacy & Security -> Input Monitoring.",
+            ),
+        ]
+    } else if cfg!(target_os = "windows") {
+        vec![
+            (
+                "microphone",
+                "Microphone",
+                FirstRunPermissionState::NeedsHardware,
+                "Required before local capture can produce speech audio.",
+                "Grant microphone access in Windows Privacy & security settings.",
+            ),
+            (
+                "uia_focus",
+                "UI Automation focus access",
+                FirstRunPermissionState::NeedsReview,
+                "Required to detect secure fields and use the native insertion path.",
+                "Validate with the Windows UIA self-test before marking ready.",
+            ),
+            (
+                "sendinput",
+                "Keyboard injection fallback",
+                FirstRunPermissionState::NeedsReview,
+                "Used only after secure-field and focus checks allow fallback typing.",
+                "Validate SendInput fallback on the target Windows build.",
+            ),
+        ]
+    } else if cfg!(target_os = "linux") {
+        vec![
+            (
+                "microphone",
+                "Microphone",
+                FirstRunPermissionState::NeedsHardware,
+                "Required before local capture can produce speech audio.",
+                "Confirm PipeWire or PulseAudio input access in the desktop session.",
+            ),
+            (
+                "accessibility_bus",
+                "AT-SPI accessibility bus",
+                FirstRunPermissionState::NeedsReview,
+                "Required to identify focus and refuse secure fields before injection.",
+                "Run cargo run --bin atspi-selftest -- focus-track on the GNOME VM.",
+            ),
+            (
+                "uinput",
+                "uinput keyboard path",
+                FirstRunPermissionState::NeedsHardware,
+                "Required for the current Linux keystroke injection path.",
+                "Confirm the user session can access /dev/uinput or the future portal/libei path.",
+            ),
+        ]
+    } else {
+        vec![(
+            "platform_review",
+            "Platform permission review",
+            FirstRunPermissionState::NeedsReview,
+            "This operating system has no locked Kaydence first-run permission contract yet.",
+            "Add an OS-specific permission checklist before marking setup ready.",
+        )]
     }
 }
 
@@ -764,10 +907,38 @@ mod tests {
         };
 
         assert!(!status.ready_to_dictate());
+        let json = serde_json::to_value(&status).unwrap();
         assert_eq!(
-            serde_json::to_string(&status).unwrap(),
-            "{\"model_ready\":false,\"model_readiness_error\":null,\"required_models\":[],\"asr_candidates\":[],\"recommended_asr_model_id\":null,\"selected_asr_model_id\":null,\"microphone_permission_ready\":false,\"input_permission_ready\":false,\"hotkey_registered\":false,\"hotkey_registration_error\":\"shortcut already registered\",\"first_dictation_completed\":false}"
+            json["hotkey_registration_error"],
+            "shortcut already registered"
         );
+        assert_eq!(json["hotkey_registered"], false);
+        assert!(json["permission_requirements"]
+            .as_array()
+            .is_some_and(|requirements| !requirements.is_empty()));
+    }
+
+    #[test]
+    fn first_run_permission_requirements_match_the_platform_contract() {
+        let requirements = first_run_permission_requirements();
+        let ids = requirements
+            .iter()
+            .map(|requirement| requirement.id.as_str())
+            .collect::<Vec<_>>();
+
+        if cfg!(target_os = "macos") {
+            assert_eq!(ids, ["microphone", "accessibility", "input_monitoring"]);
+        } else if cfg!(target_os = "windows") {
+            assert_eq!(ids, ["microphone", "uia_focus", "sendinput"]);
+        } else if cfg!(target_os = "linux") {
+            assert_eq!(ids, ["microphone", "accessibility_bus", "uinput"]);
+        } else {
+            assert_eq!(ids, ["platform_review"]);
+        }
+
+        assert!(requirements
+            .iter()
+            .all(|requirement| !matches!(requirement.state, FirstRunPermissionState::Ready)));
     }
 
     #[test]

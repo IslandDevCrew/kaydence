@@ -15,7 +15,6 @@ interface LaneSpec {
   label: string;
   accent: string;
   injection: string;
-  permission: string;
 }
 
 interface NavItem {
@@ -78,6 +77,16 @@ interface FirstRunAsrCandidate {
   license_review_required: boolean;
 }
 
+type FirstRunPermissionState = "ready" | "needs_hardware" | "needs_review" | "blocked";
+
+interface FirstRunPermissionRequirement {
+  id: string;
+  label: string;
+  state: FirstRunPermissionState;
+  detail: string;
+  action: string;
+}
+
 interface HotkeyBindingOption {
   id: string;
   label: string;
@@ -123,6 +132,7 @@ interface AppSnapshot {
       asr_candidates: FirstRunAsrCandidate[];
       recommended_asr_model_id: string | null;
       selected_asr_model_id: string | null;
+      permission_requirements: FirstRunPermissionRequirement[];
       microphone_permission_ready: boolean;
       input_permission_ready: boolean;
       hotkey_registered: boolean;
@@ -245,6 +255,29 @@ const previewSnapshot: AppSnapshot = {
       asr_candidates: [],
       recommended_asr_model_id: null,
       selected_asr_model_id: null,
+      permission_requirements: [
+        {
+          id: "microphone",
+          label: "Microphone",
+          state: "needs_hardware",
+          detail: "Required before local capture can produce speech audio.",
+          action: "Grant Kaydence access in System Settings -> Privacy & Security -> Microphone.",
+        },
+        {
+          id: "accessibility",
+          label: "Accessibility",
+          state: "needs_hardware",
+          detail: "Required for native insertion plus focus and secure-field checks.",
+          action: "Enable Kaydence in System Settings -> Privacy & Security -> Accessibility.",
+        },
+        {
+          id: "input_monitoring",
+          label: "Input Monitoring",
+          state: "needs_hardware",
+          detail: "Required for the global hotkey monitoring path on macOS.",
+          action: "Enable Kaydence in System Settings -> Privacy & Security -> Input Monitoring.",
+        },
+      ],
       microphone_permission_ready: false,
       input_permission_ready: false,
       hotkey_registered: false,
@@ -262,21 +295,18 @@ const lanes: LaneSpec[] = [
     label: "macOS",
     accent: "#14a7a1",
     injection: "AX native insert",
-    permission: "Microphone, Accessibility, Input Monitoring",
   },
   {
     id: "windows",
     label: "Windows",
     accent: "#2f72f2",
     injection: "UI Automation + SendInput",
-    permission: "Microphone privacy setting",
   },
   {
     id: "linux",
     label: "Linux",
     accent: "#1f9d63",
     injection: "AT-SPI detect + uinput",
-    permission: "Input group or portal consent",
   },
 ];
 
@@ -358,6 +388,7 @@ function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
     {
       label: "Grant OS permissions",
       status: permissionsReady ? "Ready" : "Needs hardware",
+      detail: permissionsReady ? undefined : "Review runtime requirements below.",
     },
     {
       label: "Set global hotkey",
@@ -374,6 +405,30 @@ function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
       status: firstRun.first_dictation_completed ? "Ready" : "Next",
     },
   ];
+}
+
+function permissionStateLabel(state: FirstRunPermissionState): string {
+  switch (state) {
+    case "ready":
+      return "Ready";
+    case "needs_hardware":
+      return "Needs hardware";
+    case "needs_review":
+      return "Needs review";
+    case "blocked":
+      return "Blocked";
+  }
+}
+
+function permissionSummary(requirements: FirstRunPermissionRequirement[]): string {
+  if (requirements.length === 0) {
+    return "No runtime contract";
+  }
+  return requirements.map((requirement) => requirement.label).join(" / ");
+}
+
+function statusClassName(status: string): string {
+  return status.toLowerCase().replace(/\s+/g, "-");
 }
 
 function historyStatus(session: HistorySession): string {
@@ -450,6 +505,8 @@ export function App(): JSX.Element {
     ? "Local context on"
     : "Local context off";
   const checklist = firstRunChecklist(snapshot);
+  const permissionRequirements = snapshot.settings.first_run.permission_requirements;
+  const permissionSummaryText = permissionSummary(permissionRequirements);
   const firstRunReady =
     snapshot.settings.first_run.model_ready &&
     snapshot.settings.first_run.microphone_permission_ready &&
@@ -1013,8 +1070,8 @@ export function App(): JSX.Element {
                 <strong>{lane.injection}</strong>
               </div>
               <div>
-                <span>Permission</span>
-                <strong>{lane.permission}</strong>
+                <span>Runtime permissions</span>
+                <strong>{permissionSummaryText}</strong>
               </div>
               <div>
                 <span>Unknown focus</span>
@@ -1052,7 +1109,7 @@ export function App(): JSX.Element {
             </div>
             <ol className="setup-list">
               {checklist.map((item) => (
-                <li className={`setup-item status-${item.status.toLowerCase()}`} key={item.label}>
+                <li className={`setup-item status-${statusClassName(item.status)}`} key={item.label}>
                   <span>
                     {item.label}
                     {item.detail ? <small>{item.detail}</small> : null}
@@ -1061,6 +1118,27 @@ export function App(): JSX.Element {
                 </li>
               ))}
             </ol>
+            {permissionRequirements.length > 0 ? (
+              <div className="permission-list" aria-label="OS permission requirements">
+                <div className="permission-list-heading">
+                  <span>OS permission requirements</span>
+                  <strong>Runtime contract</strong>
+                </div>
+                {permissionRequirements.map((requirement) => (
+                  <div
+                    className={`permission-item status-${requirement.state}`}
+                    key={requirement.id}
+                  >
+                    <div>
+                      <strong>{requirement.label}</strong>
+                      <span>{requirement.detail}</span>
+                      <small>{requirement.action}</small>
+                    </div>
+                    <em>{permissionStateLabel(requirement.state)}</em>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             {snapshot.settings.first_run.hotkey_registration_error ? (
               <div className="setup-rebind">
                 <span>Try another hotkey</span>

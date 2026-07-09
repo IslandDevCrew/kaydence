@@ -1,0 +1,65 @@
+Kaydence evidence: P1-P0-8 first-run permission readiness contract
+Date: 2026-07-09
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Branch: main
+
+Scope
+- Added backend-owned FirstRunStatus.permission_requirements.
+- Defaults are platform-specific:
+  - macOS: microphone, accessibility, input monitoring.
+  - Windows: microphone, UI Automation focus access, SendInput fallback.
+  - Linux: microphone, AT-SPI accessibility bus, uinput keyboard path.
+- React renders the runtime OS permission requirements in Screen Family 10 and
+  summarizes them in Screen Family 03.
+- No real OS permission detection is claimed in this slice. Default rows remain
+  needs_hardware or needs_review until live platform proof exists.
+
+Remote baseline rechecked before this slice
+- git status -sb: ## main...origin/main
+- git rev-parse --short HEAD: a89d169
+- git rev-list --left-right --count origin/main...HEAD: 0 0
+- gh run view 29017851614 --json ...:
+  - status: completed
+  - conclusion: success
+  - headSha: a89d16988e202e7ee5277b9e8c0f6a0e69dd9e79
+  - updatedAt: 2026-07-09T12:57:31Z
+  - macOS, Windows, and Ubuntu jobs all success. Ubuntu was success after rerun;
+    the earlier attempt had been cancelled before runner work.
+
+Local verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml settings::tests::first_run_permission_requirements_match_the_platform_contract
+  RESULT: PASS, 1 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml settings::tests::first_run_status_carries_hotkey_registration_errors
+  RESULT: PASS, 1 passed
+- bash scripts/check-frontend.sh
+  RESULT: PASS, tsc --noEmit and eslint --max-warnings 0
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all
+  RESULT: PASS, 189 lib tests, 2 crash_recovery tests, 5 event_sequences tests,
+  5 short_utterance tests, 0 doctests
+- bash scripts/check-privacy-posture.sh --check
+  RESULT: PASS, README promises present, network audit clean, no screen-capture primitives
+- bash scripts/check-adr-status.sh
+  RESULT: PASS, all ADRs Accepted except declared by-design ADR-0009
+- bash scripts/bench.sh --check
+  RESULT: PASS for measured metrics and PARTIAL for unmeasured real ASR/GPU/idle fields
+  Measurements: hotkey_to_capture=10ms, partial_lag=120ms,
+  release_to_inject_cpu=11ms, light_cleanup_added=1ms
+- ./script/build_and_run.sh build
+  RESULT: PASS, production Vite build plus Rust desktop build completed. pnpm
+  emitted its known warning that the legacy package.json pnpm field is ignored;
+  build output still completed successfully.
+- jq empty ops/mission/state.json
+  RESULT: PASS
+- git diff --check
+  RESULT: PASS
+
+Honest boundary
+- This advances P1-P0-8 and Screen Family 10 but does not close P1-P0-8.
+- Remaining work: real OS permission prompts/proof, model download/progress UI,
+  live first-dictation journey, and <=60s proof on reference machines.
+- This slice still requires a fresh post-push 3-OS Actions run before claiming
+  current-head remote parity.

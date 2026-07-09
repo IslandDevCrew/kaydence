@@ -587,6 +587,7 @@ button {
 
 .capability-list strong,
 .setup-list strong {
+  overflow-wrap: anywhere;
   text-align: right;
 }
 
@@ -744,6 +745,94 @@ button {
   color: var(--danger);
 }
 
+.permission-list {
+  display: grid;
+  gap: 8px;
+}
+
+.permission-list-heading,
+.permission-item {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.permission-list-heading {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.permission-list-heading strong {
+  color: var(--ink);
+  text-align: right;
+  text-transform: none;
+}
+
+.permission-item {
+  min-height: 78px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 10px 12px;
+}
+
+.permission-item > div {
+  min-width: 0;
+}
+
+.permission-item strong,
+.permission-item span,
+.permission-item small,
+.permission-item em {
+  display: block;
+}
+
+.permission-item strong {
+  overflow-wrap: anywhere;
+}
+
+.permission-item span,
+.permission-item small {
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.32;
+}
+
+.permission-item span {
+  margin-top: 3px;
+}
+
+.permission-item small {
+  margin-top: 4px;
+}
+
+.permission-item em {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .72rem;
+  font-style: normal;
+  font-weight: 900;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.permission-item.status-ready em {
+  color: color-mix(in srgb, var(--accent) 78%, #15313a);
+}
+
+.permission-item.status-needs_hardware em,
+.permission-item.status-needs_review em,
+.setup-item.status-needs-hardware strong {
+  color: var(--gold);
+}
+
+.permission-item.status-blocked em {
+  color: var(--danger);
+}
+
 .setup-list small {
   display: block;
   margin-top: 4px;
@@ -759,6 +848,10 @@ button {
 
 .setup-item.status-ready strong {
   color: color-mix(in srgb, var(--accent) 78%, #15313a);
+}
+
+.setup-item.status-needs-hardware small {
+  color: var(--gold);
 }
 
 .primary-action {
