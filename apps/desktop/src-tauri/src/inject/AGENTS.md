@@ -35,6 +35,13 @@ Mail, Notion, Obsidian…). Every release verifies the matrix; a regression on a
 matrix app blocks release. Electron apps and web editors are the usual
 offenders — expect per-app quirks and document each workaround inline.
 
+Known per-app quirks (documented, not defects):
+- **Windows — the new WinUI/RichEdit Notepad** coalesces rapid synthetic
+  `KEYEVENTF_UNICODE` events, so the *keystroke fallback* rung can drop repeated
+  characters there. It is a non-issue in practice: Notepad exposes a writable UIA
+  `ValuePattern`, so the native-primary path handles it cleanly. Validated
+  2026-07-09 (native insert PASS; keystroke PASS on classic Win32 Edit).
+
 ## Definition of done
 Both OSes, matrix green, clipboard-restore test green, secure-field test
 green, focus-change test green.

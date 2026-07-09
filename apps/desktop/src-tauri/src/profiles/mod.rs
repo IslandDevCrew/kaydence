@@ -239,10 +239,27 @@ where
     }
 }
 
+/// Windows frontmost-app detection via the shared Win32 plumbing in
+/// `inject::windows` (`GetForegroundWindow` + process image name — the blessed
+/// common helper per `inject/AGENTS.md`).
+#[cfg(target_os = "windows")]
+#[derive(Debug, Default)]
+pub struct WindowsFrontmostAppDetector;
+
+#[cfg(target_os = "windows")]
+impl FrontmostAppDetector for WindowsFrontmostAppDetector {
+    fn frontmost_app(&mut self) -> Option<AppRef> {
+        crate::inject::windows::foreground_app()
+    }
+}
+
 #[cfg(target_os = "macos")]
 pub type PlatformFrontmostAppDetector = MacOsFrontmostAppDetector;
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "windows")]
+pub type PlatformFrontmostAppDetector = WindowsFrontmostAppDetector;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 pub type PlatformFrontmostAppDetector = UnknownFrontmostAppDetector;
 
 pub fn platform_target_resolver() -> SessionTargetResolver<PlatformFrontmostAppDetector> {

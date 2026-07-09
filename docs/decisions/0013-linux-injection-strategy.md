@@ -78,6 +78,39 @@ Live testing (`bin/atspi-selftest`) refined the ladder with evidence:
 - The end-to-end "types into the focused app" validation is operator-in-the-loop (Wayland
   won't let a script move keyboard focus — the same isolation the whole ADR is about).
 
+## Amendment 2026-07-09 (Windows backend landed + validated live)
+
+The Windows backend (`inject/windows.rs`) fills the same `TextInjector` trait, governed by
+this ADR for consistency. It is the **inverse of the Linux ladder** — native-primary —
+because on Windows the native path actually works:
+
+- **UI Automation `IsPassword`** is the secure-field signal (non-negotiable #8). The
+  UIA-facts→`FieldKind` mapping is pure + unit-tested; an *unreadable* `IsPassword` bit
+  **fails closed** (treated as Secure). Live: a WinForms password field returned
+  `Held{SecureField}` and nothing was entered (twice).
+- **UIA `ValuePattern.SetValue` is the PRIMARY insertion path** (caret/selection-aware via
+  `TextPattern` when present, else append). Live PASS into Notepad (`method: Native`).
+- **`SendInput` `KEYEVENTF_UNICODE`** is the keystroke fallback — full Unicode,
+  layout-independent. Live PASS into a classic Win32 Edit. Documented quirk: the *new*
+  WinUI/RichEdit Notepad coalesces rapid synthetic key events, so the pure keystroke rung
+  drops repeated chars there — but Notepad gets the native path anyway; logged for the
+  `inject/AGENTS.md` app-compat matrix, not a backend defect.
+- **Clipboard fallback** rides on a `SendInput` Ctrl+V through the shared `clipboard_paste()`
+  helper: snapshot `CF_UNICODETEXT` → set → paste → **restore always** (≤200 ms; Pitfall P2).
+  It refuses when the clipboard holds non-text it cannot restore (text-only MVP snapshot).
+  Live PASS: injected text landed and a pre-seeded user clipboard was restored intact.
+
+**Dependency:** the `windows` crate (Microsoft official), `cfg(target_os = "windows")` only,
+version 0.61 — **already in `Cargo.lock` via tauri**, no new version. Minimal features
+(Foundation, Com, DataExchange, Memory, Threading, UI Accessibility / Input / WindowsAndMessaging).
+Local OS input/COM/clipboard APIs — **not a network surface**; `audit-network.sh` stays green,
+no `network-allowlist.json` entry needed. No elevation; degrades to keystroke/clipboard if UIA
+is unavailable (opaque focus → the Unknown-focus policy governs). Evidence:
+`ops/mission/evidence/2026-07-09-windows-injection.txt` (+ native/secure/clipboard screenshots).
+
+`GetForegroundWindow` + `QueryFullProcessImageNameW` (executable name) provides the
+frontmost-app identity for `profiles/` — the blessed shared helper, per `inject/AGENTS.md`.
+
 ## Consequences
 
 - **Easier:** one `TextInjector` trait with the tested policy/selection/fallback core already

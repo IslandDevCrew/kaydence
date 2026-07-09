@@ -2075,6 +2075,7 @@ dependencies = [
  "tauri-plugin-global-shortcut",
  "thiserror 2.0.18",
  "ulid",
+ "windows",
  "zbus",
 ]
 

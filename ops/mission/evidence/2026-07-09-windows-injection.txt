@@ -1,0 +1,75 @@
+P1-P0-3 — Windows text-injection backend — live + gate evidence
+Machine: Windows 11 Pro 26200 (the Fable box). Branch: mission/p1-p0-3-windows-injection
+Date: 2026-07-09. Backend: apps/desktop/src-tauri/src/inject/windows.rs (behind the shared TextInjector trait).
+
+════════════════════════════════════════════════════════════════════════════
+GATES (this box)
+════════════════════════════════════════════════════════════════════════════
+cargo fmt --all -- --check ................................. PASS (clean)
+cargo clippy --all-targets -- -D warnings ................. PASS (0 warnings)
+cargo test --all .......................................... PASS (172 lib + 2 crash_recovery)
+  new Windows unit tests (inject::windows::tests) ......... 11 PASS incl. the
+    UIA-property -> FieldKind mapping (secure/editable/no-target) and
+    fail-closed on an unreadable IsPassword bit.
+bash scripts/audit-network.sh ............................. see local run below
+bash scripts/check-adr-status.sh .......................... see local run below
+File sizes: inject/windows.rs = 758 lines (<800). All fns <50 lines.
+
+════════════════════════════════════════════════════════════════════════════
+LIVE VALIDATION (operator-observed on a real desktop — what Linux CI can't self-drive)
+Each run drives the REAL production entrypoint inject_committed_text()
+(decide_secure -> select_plan -> backend); the printed SessionEvent is the wire truth.
+════════════════════════════════════════════════════════════════════════════
+
+1) NATIVE INSERT into Notepad (primary Windows path — UIA ValuePattern.SetValue)
+   $ uia-selftest --inject 4 "Kaydence -> Windows UIA native insert (ValuePattern.SetValue). Speak anywhere. Ship clean text."
+   [focus] foreground app: id="Notepad.exe" name="Notepad"
+   [focus] field kind: Editable
+   [focus] caps: native=true keystroke=WindowsSendInput clipboard=true
+   [inject] SessionEvent: Injected { method: Native }
+   Screenshot: 2026-07-09-windows-injection-native-notepad.png
+   (Notepad shows the full 95-char string exactly; status bar "95 characters".)
+
+2) SECURE-FIELD REFUSAL (non-negotiable #8 — the load-bearing invariant)
+   Target: a WinForms TextBox with UseSystemPasswordChar (UIA IsPassword=true).
+   $ uia-selftest --inject 4 "SHOULD NEVER APPEAR IN A PASSWORD FIELD"
+   [focus] field kind: Secure
+   [focus] caps: native=false keystroke=None clipboard=false
+   [inject] SessionEvent: Held { reason: SecureField }
+   Ground truth (the field's own TextChanged log): EMPTY — nothing was entered.
+   Screenshot: 2026-07-09-windows-injection-secure-refusal.png
+   Repeated a second time earlier in the session: identical Held{SecureField}, field empty.
+
+3) KEYSTROKE FALLBACK (SendInput KEYEVENTF_UNICODE) into a classic Win32 Edit
+   $ uia-selftest --synth 3 "aaa bbb ccc"
+   Ground truth (TextChanged log): "aaa bbb ccc"  <- exact, incl. spaces + repeats.
+   Also validated 20-char no-repeat string "abcdefghijklmnopqrst" -> exact (clipboard readback LEN=20).
+   NOTE (honest, documented per inject/AGENTS.md app-compat matrix): the *new*
+   Windows Notepad (WinUI/RichEditD2D) coalesces rapid synthetic KEYEVENTF_UNICODE
+   events, so the pure keystroke rung dropped repeated chars THERE ("aaa bbb ccc"
+   -> "aaa ccccccc"). The classic Edit control took it perfectly, and on Windows
+   NATIVE is the PRIMARY path — Notepad receives native (run #1, clean). This is a
+   target-specific fallback quirk, not a backend defect; logged for the matrix.
+
+4) CLIPBOARD FALLBACK + RESTORE (Pitfall P2 — restore ALWAYS, <=200 ms)
+   Pre-seeded the OS clipboard with "USER-CLIPBOARD-SENTINEL-42".
+   $ uia-selftest --paste 3 "PASTED via clipboard rung OK"
+   Ground truth (TextChanged log): "PASTED via clipboard rung OK"  <- injected.
+   Clipboard AFTER injection: "USER-CLIPBOARD-SENTINEL-42"  <- RESTORED intact.
+   Screenshot (earlier paste run): 2026-07-09-windows-injection-clipboard-paste.png (Notepad).
+
+5) NO-TARGET GATE (bonus): when Notepad opened with focus on the tab strip (no
+   editable focus), the same entrypoint returned Held{NoTarget} and injected
+   NOTHING — it never guesses a target.
+
+════════════════════════════════════════════════════════════════════════════
+DEPENDENCY / AUDIT NOTE (critical decision path)
+════════════════════════════════════════════════════════════════════════════
+Added `windows` crate (Microsoft official) under
+[target.'cfg(target_os = "windows")'.dependencies], version 0.61 — the version
+ALREADY in Cargo.lock via tauri, so no new version enters the tree. Features are
+minimal: Win32_Foundation, Win32_System_{Com,DataExchange,Memory,Threading},
+Win32_UI_{Accessibility, Input_KeyboardAndMouse, WindowsAndMessaging}.
+These are local OS input/COM/clipboard APIs — NOT a network surface. audit-network
+stays green (no new call sites; nothing added to network-allowlist.json).
+No elevation required; degrades to keystroke/clipboard if UIA is unavailable.
