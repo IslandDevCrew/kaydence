@@ -39,6 +39,7 @@ struct HotkeyRuntime {
     coordinator: hotkeys::CaptureCoordinator,
     recorder: audio::WalCaptureRuntime,
     history: history::HistoryStore,
+    target_resolver: Box<dyn profiles::ResolveSessionTarget + Send>,
 }
 
 #[cfg(desktop)]
@@ -56,7 +57,11 @@ impl HotkeyRuntime {
         let app_data_dir = app_data_dir.into();
         let recorder = audio::WalCaptureRuntime::new(app_data_dir.clone());
         let history = history::HistoryStore::open(&app_data_dir)?;
-        Ok(Self::with_recorder(recorder, history))
+        Ok(Self::with_recorder(
+            recorder,
+            history,
+            Box::new(profiles::platform_target_resolver()),
+        ))
     }
 
     #[cfg(test)]
@@ -64,10 +69,18 @@ impl HotkeyRuntime {
         let app_data_dir = app_data_dir.into();
         let recorder = audio::WalCaptureRuntime::new_wal_only(app_data_dir.clone());
         let history = history::HistoryStore::open(&app_data_dir)?;
-        Ok(Self::with_recorder(recorder, history))
+        Ok(Self::with_recorder(
+            recorder,
+            history,
+            Box::new(profiles::platform_target_resolver()),
+        ))
     }
 
-    fn with_recorder(recorder: audio::WalCaptureRuntime, history: history::HistoryStore) -> Self {
+    fn with_recorder(
+        recorder: audio::WalCaptureRuntime,
+        history: history::HistoryStore,
+        target_resolver: Box<dyn profiles::ResolveSessionTarget + Send>,
+    ) -> Self {
         Self {
             coordinator: hotkeys::CaptureCoordinator::new(
                 hotkeys::HotkeyMode::PushToTalk,
@@ -75,7 +88,17 @@ impl HotkeyRuntime {
             ),
             recorder,
             history,
+            target_resolver,
         }
+    }
+
+    #[cfg(test)]
+    fn with_target_resolver(
+        mut self,
+        target_resolver: Box<dyn profiles::ResolveSessionTarget + Send>,
+    ) -> Self {
+        self.target_resolver = target_resolver;
+        self
     }
 
     fn handle_signal(
@@ -99,9 +122,22 @@ impl HotkeyRuntime {
                         return Err(err.into());
                     }
                 };
-                println!(
-                    "Kaydence capture started: id={:?} sessions_dir={}",
+                let target = self.target_resolver.resolve_session_target();
+                let started = events::SessionEvent::Started {
                     id,
+                    target_app: target.app.clone(),
+                    at_ms,
+                };
+                if let Err(err) = self.history.record_event(&started) {
+                    let _ = self.recorder.discard_capture(at_ms);
+                    self.coordinator.reset();
+                    return Err(err.into());
+                }
+                println!(
+                    "Kaydence capture started: id={:?} target_app={} profile={} sessions_dir={}",
+                    id,
+                    target.app.name,
+                    target.profile.id,
                     self.recorder.sessions_dir().display()
                 );
             }
@@ -116,6 +152,7 @@ impl HotkeyRuntime {
             }
             hotkeys::Action::DiscardCapture => {
                 let discarded = self.recorder.discard_capture(at_ms)?;
+                self.history.delete_session(discarded.id)?;
                 println!(
                     "Kaydence capture discarded: id={:?} path={} started_ms={} discarded_ms={} removed={}",
                     discarded.id,
@@ -251,10 +288,22 @@ mod tests {
         dir
     }
 
+    fn detected_app() -> events::AppRef {
+        events::AppRef {
+            id: "com.example.editor".to_string(),
+            name: "Example Editor".to_string(),
+        }
+    }
+
     #[test]
     fn hotkey_runtime_finalizes_wal_after_tail_tick() {
         let app_data = tmp();
-        let mut runtime = HotkeyRuntime::new_wal_only(&app_data).unwrap();
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_target_resolver(Box::new(profiles::SessionTargetResolver::new(
+                profiles::StaticFrontmostAppDetector::new(detected_app()),
+                profiles::ProfileStore::default(),
+            )));
 
         assert_eq!(
             runtime
@@ -283,19 +332,27 @@ mod tests {
         assert!(app_data.join(history::HISTORY_DB_FILE).exists());
 
         let session = runtime.history.get_session(id).unwrap().unwrap();
+        assert_eq!(session.target_app, Some(detected_app()));
         assert_eq!(session.audio_path.as_deref(), Some(path.to_str().unwrap()));
-        assert_eq!(session.event_count, 1);
+        assert_eq!(session.event_count, 2);
         assert_eq!(
             runtime.history.events_for_session(id).unwrap(),
-            vec![audio::CaptureSessionSummary {
-                id,
-                wal_path: path,
-                samples_written: 0,
-                dropped_input_samples: 0,
-                started_ms: 0,
-                finalized_ms: 700
-            }
-            .audio_persisted_event()]
+            vec![
+                events::SessionEvent::Started {
+                    id,
+                    target_app: detected_app(),
+                    at_ms: 0,
+                },
+                audio::CaptureSessionSummary {
+                    id,
+                    wal_path: path,
+                    samples_written: 0,
+                    dropped_input_samples: 0,
+                    started_ms: 0,
+                    finalized_ms: 700
+                }
+                .audio_persisted_event(),
+            ]
         );
         let _ = std::fs::remove_dir_all(app_data);
     }
@@ -322,6 +379,7 @@ mod tests {
         assert!(runtime.recorder.active_session_id().is_none());
         assert!(!path.exists());
         assert!(runtime.history.get_session(id).unwrap().is_none());
+        assert!(runtime.history.events_for_session(id).unwrap().is_empty());
         let _ = std::fs::remove_dir_all(app_data);
     }
 }

@@ -102,6 +102,13 @@ impl HistoryStore {
         Ok(())
     }
 
+    pub fn delete_session(&mut self, session_id: SessionId) -> Result<bool, HistoryError> {
+        Ok(self.conn.execute(
+            "DELETE FROM sessions WHERE session_id = ?1",
+            params![session_id_string(session_id)],
+        )? > 0)
+    }
+
     pub fn get_session(
         &self,
         session_id: SessionId,
@@ -682,5 +689,30 @@ mod tests {
 
         assert_eq!(recent.len(), 1);
         assert_eq!(recent[0].id, session_id_string(second));
+    }
+
+    #[test]
+    fn delete_session_removes_summary_and_event_stream() {
+        let id = sid(47);
+        let mut store = HistoryStore::open_in_memory().unwrap();
+        store
+            .record_events(&[
+                SessionEvent::RawFinal {
+                    id,
+                    text: "remove me".to_string(),
+                },
+                SessionEvent::CleanFinal {
+                    id,
+                    text: "Remove me.".to_string(),
+                    dial: CleanupDial::Light,
+                },
+            ])
+            .unwrap();
+
+        assert!(store.delete_session(id).unwrap());
+
+        assert!(store.get_session(id).unwrap().is_none());
+        assert!(store.events_for_session(id).unwrap().is_empty());
+        assert!(!store.delete_session(id).unwrap());
     }
 }

@@ -1,0 +1,58 @@
+Kaydence evidence: target binding and Started history event
+Date: 2026-07-08
+
+Intent
+- Bind the target app/profile once at capture start.
+- Persist SessionEvent::Started before later finalized events.
+- Use an explicit Unknown app plus Default profile when platform frontmost-app detection is not yet implemented.
+- Delete short-tap Started history so discarded taps do not appear as sessions.
+
+Changed
+- apps/desktop/src-tauri/src/profiles/mod.rs
+  - Replaced the scaffold with AppProfile, ProfileStore, detector/resolver traits, an Unknown fallback detector, and test detectors.
+  - Enforced shipped-profile cleanup dial <= Light; only user-edited profiles may select Full.
+  - Enforced the profiles invariant that unknown targets always resolve to Default, even if profile data contains an "unknown" app id.
+- apps/desktop/src-tauri/src/history/mod.rs
+  - Added HistoryStore::delete_session for discard cleanup.
+- apps/desktop/src-tauri/src/lib.rs
+  - HotkeyRuntime now resolves the session target after recorder start succeeds.
+  - StartCapture records SessionEvent::Started with the bound target app.
+  - Finalize then records AudioPersisted, preserving session event order.
+  - DiscardCapture deletes the session row and cascaded event stream.
+
+Focused verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml profiles:: --lib
+  - PASS: 6 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - PASS: 2 passed
+
+Full verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - PASS: 88 lib tests passed, 2 crash-recovery tests passed
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+- npm --prefix apps/desktop run check
+  - PASS
+- npm --prefix apps/desktop run build
+  - PASS
+- bash scripts/audit-network.sh --check
+  - PASS: 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  - PASS: ADR-0009 waiver only
+- ./script/build_and_run.sh build
+  - PASS
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Post-verify hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - PASS: no leftover desktop/dev processes
+- apps/desktop/dist/index.html restored; generated apps/desktop/dist/assets and apps/desktop/dist/favicon.svg removed after build verification.
+
+Remaining outside this slice
+- Real macOS, Windows, and Linux frontmost-app detectors.
+- User-defined glob profile matching and profile persistence.
+- Focus-change hold enforcement in inject.
+- Full ASR/cleanup/injection pipeline integration beyond finalized capture history.
