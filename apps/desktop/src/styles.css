@@ -363,7 +363,7 @@ button {
   padding-top: 8px;
 }
 
-.history-row div {
+.history-row-main {
   min-width: 0;
 }
 
@@ -377,8 +377,15 @@ button {
   line-height: 1.35;
 }
 
-.history-row em {
+.history-row-actions {
+  display: flex;
   flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.history-row em {
   color: color-mix(in srgb, var(--accent) 76%, #14313a);
   font-size: .72rem;
   font-style: normal;
@@ -399,6 +406,22 @@ button {
   font-size: .78rem;
   font-weight: 800;
   padding: 0 10px;
+}
+
+.danger-action {
+  min-height: 28px;
+  border: 1px solid color-mix(in srgb, var(--danger) 34%, var(--line));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  color: var(--danger);
+  font-size: .74rem;
+  font-weight: 900;
+  padding: 0 9px;
+}
+
+.danger-action:disabled {
+  color: var(--muted);
+  cursor: wait;
 }
 
 .mini-action:disabled {
@@ -614,6 +637,7 @@ button {
 
 .primary-action:focus-visible,
 .secondary-action:focus-visible,
+.danger-action:focus-visible,
 .mini-action:focus-visible,
 .lane:focus-visible,
 .segmented button:focus-visible,
@@ -649,5 +673,16 @@ button {
   .content-grid,
   .metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .history-row {
+    flex-direction: column;
+  }
+
+  .history-row-actions {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
 }

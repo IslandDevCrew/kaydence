@@ -1,0 +1,83 @@
+# P1-P0-4 History Session Delete
+
+Date: 2026-07-09T04:35Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Slice: local history single-session delete
+
+## Changes
+
+- Added `HistoryStore::delete_session_and_audio`.
+  - Deletes the SQLite session row.
+  - Removes the audio file only when the recorded path canonicalizes under the
+    app-data `sessions/` directory.
+  - Refuses relative, missing, non-file, symlink-escaped, and external paths.
+- Added the `delete_history_session` Tauri command.
+  - Opens the app-data history store.
+  - Runs the backend-owned delete operation.
+  - Returns the refreshed bounded recent history list to the frontend.
+- Added a cockpit row-level Delete action.
+  - React asks for confirmation, sends the session id, and renders the returned
+    list.
+  - React does not delete files, mutate SQLite, or transform history data.
+- Updated mission state and continuation prompt to reflect that recent history is
+  no longer read-only for single-session cleanup.
+
+## Focused Verification
+
+- `cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check`
+  - PASS
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml delete_session_and_audio`
+  - PASS: 2 tests
+  - `delete_session_and_audio_removes_db_row_and_wal_file`
+  - `delete_session_and_audio_refuses_external_audio_path`
+- `npm --prefix apps/desktop run check`
+  - PASS
+
+## Standing Gates
+
+- `jq empty ops/mission/state.json`
+  - PASS
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml`
+  - PASS: 157 lib tests + 2 crash recovery tests
+- `cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings`
+  - PASS
+- `scripts/audit-network.sh`
+  - PASS: 0 network-capable call sites, 0 unreviewed
+- `scripts/check-adr-status.sh`
+  - PASS: all ADRs Accepted except ADR-0009 waived by design
+- `npm --prefix apps/desktop run build`
+  - PASS
+- `./script/build_and_run.sh build`
+  - PASS
+- `./script/build_and_run.sh --verify`
+  - PASS
+- `ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true`
+  - PASS: no lingering Kaydence/Tauri/Vite processes
+
+## Cleanup
+
+- Removed generated Vite build outputs after verification:
+  - `git restore apps/desktop/dist/index.html`
+  - `rm -rf apps/desktop/dist/assets apps/desktop/dist/favicon.svg`
+
+## Remote Check
+
+- `git remote -v`
+  - origin: `https://github.com/IslandDevCrew/kaydence.git`
+- `gh auth status`
+  - Active account: `Navigata1`
+  - `IslandDevCrew` also logged in but inactive
+- `git fetch origin`
+  - FAIL: `Repository not found.`
+  - Action: kept this as a local commit + backup bundle; no push attempted.
+
+## Honest Boundary
+
+- This adds safe single-session deletion from the cockpit.
+- Still remaining under history/recovery polish:
+  - audio playback
+  - export
+  - purge/delete-all
+  - retention sweep
+  - crash-orphan recovery UI
+  - 3-OS validation beyond the locally runnable gates

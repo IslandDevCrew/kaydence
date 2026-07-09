@@ -96,6 +96,35 @@ fn recent_history(
     }
 }
 
+#[tauri::command]
+fn delete_history_session(
+    app: tauri::AppHandle,
+    session_id: String,
+) -> Result<Vec<history::HistorySession>, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        let mut store =
+            history::HistoryStore::open(&app_data_dir).map_err(|err| err.to_string())?;
+        store
+            .delete_session_and_audio(&session_id, &app_data_dir)
+            .map_err(|err| err.to_string())?;
+        store.list_recent(4).map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = session_id;
+        Ok(Vec::new())
+    }
+}
+
 #[derive(Debug)]
 struct RuntimeSnapshot {
     inner: Mutex<settings::AppSnapshot>,
@@ -851,7 +880,8 @@ pub fn run() {
             app_snapshot,
             select_asr_model,
             refresh_model_readiness,
-            recent_history
+            recent_history,
+            delete_history_session
         ])
         .setup(|app| {
             #[cfg(desktop)]

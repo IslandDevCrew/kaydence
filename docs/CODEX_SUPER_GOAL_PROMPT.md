@@ -36,8 +36,9 @@ Current verified state:
   scripts/audit-network.sh, scripts/check-adr-status.sh.
 - Frontend cockpit/setup shell is present and must remain presentation-only.
 - The Codex app Run action is wired to ./script/build_and_run.sh.
-- Recent local history is visible read-only in the cockpit via recent_history;
-  audio playback, export, purge/delete-all, retention sweep, and crash-orphan
+- Recent local history is visible in the cockpit via recent_history; per-session
+  delete now removes the DB row plus safe app-data session audio after confirm.
+  Audio playback, export, purge/delete-all, retention sweep, and crash-orphan
   recovery UI remain follow-up history/recovery work.
 
 Operating rules:

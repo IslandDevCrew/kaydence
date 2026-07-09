@@ -302,6 +302,7 @@ export function App(): JSX.Element {
   const [snapshotSource, setSnapshotSource] = useState<"backend" | "preview">("preview");
   const [historySessions, setHistorySessions] = useState<HistorySession[]>(previewHistory);
   const [historyRefreshPending, setHistoryRefreshPending] = useState(false);
+  const [deletingHistoryId, setDeletingHistoryId] = useState<string | null>(null);
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
@@ -404,6 +405,27 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setHistoryRefreshPending(false);
+      });
+  }
+
+  function deleteHistorySession(sessionId: string) {
+    const confirmed = window.confirm(
+      "Delete this local history session and its audio file?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingHistoryId(sessionId);
+    void invoke<HistorySession[]>("delete_history_session", { sessionId })
+      .then((sessions) => {
+        setHistorySessions(sessions);
+      })
+      .catch((error) => {
+        console.error("Kaydence history delete failed", error);
+      })
+      .finally(() => {
+        setDeletingHistoryId(null);
       });
   }
 
@@ -536,11 +558,22 @@ export function App(): JSX.Element {
                 <div className="history-list">
                   {historySessions.map((session) => (
                     <div className="history-row" key={session.id}>
-                      <div>
+                      <div className="history-row-main">
                         <strong>{session.target_app?.name ?? "Local session"}</strong>
                         <span>{historySummary(session)}</span>
                       </div>
-                      <em>{historyStatus(session)}</em>
+                      <div className="history-row-actions">
+                        <em>{historyStatus(session)}</em>
+                        <button
+                          aria-label={`Delete ${session.target_app?.name ?? "local history session"}`}
+                          className="danger-action"
+                          disabled={deletingHistoryId !== null}
+                          onClick={() => deleteHistorySession(session.id)}
+                          type="button"
+                        >
+                          {deletingHistoryId === session.id ? "Deleting" : "Delete"}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

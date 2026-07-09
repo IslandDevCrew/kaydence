@@ -11,6 +11,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 use std::{
     fs,
+    io::ErrorKind,
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -33,6 +34,13 @@ pub enum HistoryError {
 pub struct HistoryStore {
     conn: Connection,
     path: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DeleteSessionOutcome {
+    pub deleted: bool,
+    pub audio_removed: bool,
+    pub audio_path: Option<String>,
 }
 
 impl HistoryStore {
@@ -110,6 +118,38 @@ impl HistoryStore {
         )? > 0)
     }
 
+    pub fn delete_session_and_audio(
+        &mut self,
+        session_id: &str,
+        app_data_dir: &Path,
+    ) -> Result<DeleteSessionOutcome, HistoryError> {
+        let session_id = session_id.trim();
+        if session_id.is_empty() {
+            return Ok(DeleteSessionOutcome {
+                deleted: false,
+                audio_removed: false,
+                audio_path: None,
+            });
+        }
+
+        let Some(audio_path) = self.audio_path_for_session(session_id)? else {
+            return Ok(DeleteSessionOutcome {
+                deleted: false,
+                audio_removed: false,
+                audio_path: None,
+            });
+        };
+
+        let audio_removed = remove_safe_session_audio(audio_path.as_deref(), app_data_dir)?;
+        let deleted = self.delete_session_by_string(session_id)?;
+
+        Ok(DeleteSessionOutcome {
+            deleted,
+            audio_removed,
+            audio_path,
+        })
+    }
+
     pub fn get_session(
         &self,
         session_id: SessionId,
@@ -181,6 +221,27 @@ impl HistoryStore {
         })?;
 
         rows.map(|row| Ok(serde_json::from_str(&row?)?)).collect()
+    }
+
+    fn audio_path_for_session(
+        &self,
+        session_id: &str,
+    ) -> Result<Option<Option<String>>, HistoryError> {
+        Ok(self
+            .conn
+            .query_row(
+                "SELECT audio_path FROM sessions WHERE session_id = ?1",
+                params![session_id],
+                |row| row.get(0),
+            )
+            .optional()?)
+    }
+
+    fn delete_session_by_string(&mut self, session_id: &str) -> Result<bool, HistoryError> {
+        Ok(self.conn.execute(
+            "DELETE FROM sessions WHERE session_id = ?1",
+            params![session_id],
+        )? > 0)
     }
 
     fn migrate(&self) -> Result<(), HistoryError> {
@@ -498,6 +559,37 @@ fn session_id_string(id: SessionId) -> String {
     id.0.to_string()
 }
 
+fn remove_safe_session_audio(
+    audio_path: Option<&str>,
+    app_data_dir: &Path,
+) -> Result<bool, HistoryError> {
+    let Some(audio_path) = audio_path else {
+        return Ok(false);
+    };
+    let audio_path = PathBuf::from(audio_path);
+    if !audio_path.is_absolute() || !audio_path.exists() {
+        return Ok(false);
+    }
+
+    let app_data_dir = fs::canonicalize(app_data_dir)?;
+    let sessions_dir = match fs::canonicalize(app_data_dir.join("sessions")) {
+        Ok(path) => path,
+        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(false),
+        Err(err) => return Err(err.into()),
+    };
+    if !sessions_dir.starts_with(&app_data_dir) {
+        return Ok(false);
+    }
+
+    let audio_path = fs::canonicalize(audio_path)?;
+    if !audio_path.starts_with(&sessions_dir) || !audio_path.is_file() {
+        return Ok(false);
+    }
+
+    fs::remove_file(audio_path)?;
+    Ok(true)
+}
+
 fn decode_optional_json<T>(value: Option<String>) -> Result<Option<T>, HistoryError>
 where
     T: serde::de::DeserializeOwned,
@@ -533,6 +625,17 @@ mod tests {
             id: "com.example.editor".to_string(),
             name: "Example Editor".to_string(),
         }
+    }
+
+    fn temp_app_data(label: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "kaydence-history-{label}-{}-{}",
+            std::process::id(),
+            Ulid::new()
+        ));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        dir
     }
 
     #[test]
@@ -741,5 +844,85 @@ mod tests {
         assert!(store.get_session(id).unwrap().is_none());
         assert!(store.events_for_session(id).unwrap().is_empty());
         assert!(!store.delete_session(id).unwrap());
+    }
+
+    #[test]
+    fn delete_session_and_audio_removes_db_row_and_wal_file() {
+        let id = sid(48);
+        let app_data = temp_app_data("delete-audio");
+        let sessions_dir = app_data.join("sessions");
+        fs::create_dir_all(&sessions_dir).unwrap();
+        let audio_path = sessions_dir.join(format!("{}.wav", id.0));
+        fs::write(&audio_path, b"fixture audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        store
+            .record_events(&[
+                SessionEvent::AudioPersisted {
+                    id,
+                    wal_path: audio_path.display().to_string(),
+                },
+                SessionEvent::RawFinal {
+                    id,
+                    text: "delete this".to_string(),
+                },
+            ])
+            .unwrap();
+
+        let outcome = store
+            .delete_session_and_audio(&session_id_string(id), &app_data)
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            DeleteSessionOutcome {
+                deleted: true,
+                audio_removed: true,
+                audio_path: Some(audio_path.display().to_string()),
+            }
+        );
+        assert!(!audio_path.exists());
+        assert!(store.get_session(id).unwrap().is_none());
+
+        fs::remove_dir_all(app_data).unwrap();
+    }
+
+    #[test]
+    fn delete_session_and_audio_refuses_external_audio_path() {
+        let id = sid(49);
+        let app_data = temp_app_data("delete-external");
+        let external_dir = temp_app_data("external-audio");
+        let audio_path = external_dir.join("outside.wav");
+        fs::write(&audio_path, b"outside audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        store
+            .record_events(&[
+                SessionEvent::AudioPersisted {
+                    id,
+                    wal_path: audio_path.display().to_string(),
+                },
+                SessionEvent::RawFinal {
+                    id,
+                    text: "delete row only".to_string(),
+                },
+            ])
+            .unwrap();
+
+        let outcome = store
+            .delete_session_and_audio(&session_id_string(id), &app_data)
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            DeleteSessionOutcome {
+                deleted: true,
+                audio_removed: false,
+                audio_path: Some(audio_path.display().to_string()),
+            }
+        );
+        assert!(audio_path.exists());
+        assert!(store.get_session(id).unwrap().is_none());
+
+        fs::remove_dir_all(app_data).unwrap();
+        fs::remove_dir_all(external_dir).unwrap();
     }
 }
