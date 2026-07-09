@@ -218,6 +218,67 @@ button {
   line-height: 1.35;
 }
 
+.hotkey-binding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.hotkey-binding-grid.compact {
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+}
+
+.hotkey-binding-option {
+  min-height: 74px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  display: grid;
+  gap: 5px;
+  justify-items: start;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.hotkey-binding-option.selected {
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--line));
+  background: color-mix(in srgb, var(--accent) 13%, var(--surface));
+}
+
+.hotkey-binding-option:disabled {
+  cursor: wait;
+  opacity: .72;
+}
+
+.hotkey-binding-option span {
+  font-size: .86rem;
+  font-weight: 850;
+}
+
+.hotkey-binding-option small {
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.25;
+}
+
+.setup-rebind {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.setup-rebind > span {
+  color: var(--danger);
+  font-size: .78rem;
+  font-weight: 850;
+}
+
+.setup-rebind .hotkey-binding-option {
+  min-height: 38px;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -701,6 +762,7 @@ button {
 .secondary-action:focus-visible,
 .danger-action:focus-visible,
 .mini-action:focus-visible,
+.hotkey-binding-option:focus-visible,
 .lane:focus-visible,
 .segmented button:focus-visible,
 .nav-item:focus-visible {

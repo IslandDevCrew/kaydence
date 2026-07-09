@@ -72,6 +72,12 @@ interface FirstRunAsrCandidate {
   license_review_required: boolean;
 }
 
+interface HotkeyBindingOption {
+  id: string;
+  label: string;
+  detail: string;
+}
+
 interface AppSnapshot {
   app_name: string;
   app_identifier: string;
@@ -79,6 +85,7 @@ interface AppSnapshot {
     hotkey: {
       mode: "push_to_talk" | "toggle";
       primary_binding: string;
+      primary_binding_options: HotkeyBindingOption[];
       secondary_dial_override_binding: string;
     };
     capture: {
@@ -174,6 +181,33 @@ const previewSnapshot: AppSnapshot = {
     hotkey: {
       mode: "push_to_talk",
       primary_binding: "RightAlt",
+      primary_binding_options: [
+        {
+          id: "RightAlt",
+          label: "Right Alt / Option",
+          detail: "Default hold key, best when the OS accepts the right-side modifier.",
+        },
+        {
+          id: "F13",
+          label: "F13",
+          detail: "Dedicated function-key fallback for extended keyboards.",
+        },
+        {
+          id: "F14",
+          label: "F14",
+          detail: "Second dedicated function-key fallback for extended keyboards.",
+        },
+        {
+          id: "Control+Space",
+          label: "Control Space",
+          detail: "Chord fallback for compact keyboards without F13/F14.",
+        },
+        {
+          id: "Shift+F13",
+          label: "Shift F13",
+          detail: "Conflict-escape chord when a plain function key is already taken.",
+        },
+      ],
       secondary_dial_override_binding: "Shift+RightAlt",
     },
     capture: {
@@ -345,12 +379,15 @@ export function App(): JSX.Element {
   const [modelInstallIssue, setModelInstallIssue] = useState<string | null>(null);
   const [hotkeyModePending, setHotkeyModePending] = useState<HotkeyMode | null>(null);
   const [hotkeyModeIssue, setHotkeyModeIssue] = useState<string | null>(null);
+  const [hotkeyBindingPending, setHotkeyBindingPending] = useState<string | null>(null);
+  const [hotkeyBindingIssue, setHotkeyBindingIssue] = useState<string | null>(null);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
   );
   const hotkeyMode =
     snapshot.settings.hotkey.mode === "push_to_talk" ? "Push-to-talk" : "Toggle";
+  const hotkeyBindingOptions = snapshot.settings.hotkey.primary_binding_options;
   const cleanupDefault = snapshot.settings.cleanup.default_dial;
   const asrCandidates = snapshot.settings.first_run.asr_candidates;
   const selectedAsr = asrCandidates.find((candidate) => candidate.selected);
@@ -434,6 +471,23 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setHotkeyModePending(null);
+      });
+  }
+
+  function setHotkeyBinding(binding: string) {
+    setHotkeyBindingPending(binding);
+    setHotkeyBindingIssue(null);
+    void invoke<AppSnapshot>("set_hotkey_binding", { binding })
+      .then((nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setSnapshotSource("backend");
+      })
+      .catch((error) => {
+        console.error("Kaydence hotkey binding update failed", error);
+        setHotkeyBindingIssue("Hotkey binding could not register. Try another option when capture is idle.");
+      })
+      .finally(() => {
+        setHotkeyBindingPending(null);
       });
   }
 
@@ -867,6 +921,28 @@ export function App(): JSX.Element {
             {hotkeyModeIssue ? (
               <p className="hotkey-mode-note">{hotkeyModeIssue}</p>
             ) : null}
+            <div className="hotkey-binding-grid" role="group" aria-label="Hotkey binding">
+              {hotkeyBindingOptions.map((option) => (
+                <button
+                  aria-pressed={snapshot.settings.hotkey.primary_binding === option.id}
+                  className={
+                    snapshot.settings.hotkey.primary_binding === option.id
+                      ? "hotkey-binding-option selected"
+                      : "hotkey-binding-option"
+                  }
+                  disabled={hotkeyBindingPending !== null}
+                  key={option.id}
+                  onClick={() => setHotkeyBinding(option.id)}
+                  type="button"
+                >
+                  <span>{option.label}</span>
+                  <small>{option.detail}</small>
+                </button>
+              ))}
+            </div>
+            {hotkeyBindingIssue ? (
+              <p className="hotkey-mode-note">{hotkeyBindingIssue}</p>
+            ) : null}
             <ul className="rule-list">
               <li>{hotkeyMode} on {snapshot.settings.hotkey.primary_binding}</li>
               <li>Filler removal enabled</li>
@@ -919,6 +995,29 @@ export function App(): JSX.Element {
                 </li>
               ))}
             </ol>
+            {snapshot.settings.first_run.hotkey_registration_error ? (
+              <div className="setup-rebind">
+                <span>Try another hotkey</span>
+                <div className="hotkey-binding-grid compact" role="group" aria-label="Setup hotkey binding">
+                  {hotkeyBindingOptions.map((option) => (
+                    <button
+                      aria-pressed={snapshot.settings.hotkey.primary_binding === option.id}
+                      className={
+                        snapshot.settings.hotkey.primary_binding === option.id
+                          ? "hotkey-binding-option selected"
+                          : "hotkey-binding-option"
+                      }
+                      disabled={hotkeyBindingPending !== null}
+                      key={option.id}
+                      onClick={() => setHotkeyBinding(option.id)}
+                      type="button"
+                    >
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {asrCandidates.length > 0 ? (
               <div className="model-picker" aria-label="Local ASR model picker">
                 <div className="model-picker-heading">

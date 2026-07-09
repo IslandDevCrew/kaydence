@@ -76,6 +76,36 @@ fn set_hotkey_mode(
 }
 
 #[tauri::command]
+fn set_hotkey_binding(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
+    runtime: tauri::State<'_, HotkeyRuntimeHandle>,
+    binding: String,
+) -> Result<settings::AppSnapshot, String> {
+    let binding = settings::normalize_hotkey_binding(&binding).map_err(|err| err.to_string())?;
+
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        state
+            .set_hotkey_binding(&binding, &app, &app_data_dir, &runtime)
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = runtime;
+        Ok(state.apply_hotkey_binding(&binding))
+    }
+}
+
+#[tauri::command]
 fn refresh_model_readiness(
     app: tauri::AppHandle,
     state: tauri::State<'_, RuntimeSnapshot>,
@@ -360,6 +390,8 @@ struct RuntimeSnapshot {
 struct HotkeyRuntimeHandle {
     #[cfg(desktop)]
     inner: Mutex<Option<Arc<Mutex<HotkeyRuntime>>>>,
+    #[cfg(desktop)]
+    active_shortcut: Mutex<Option<tauri_plugin_global_shortcut::Shortcut>>,
 }
 
 #[cfg(desktop)]
@@ -369,6 +401,72 @@ impl HotkeyRuntimeHandle {
             .inner
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(runtime);
+    }
+
+    fn set_active_shortcut(&self, shortcut: tauri_plugin_global_shortcut::Shortcut) {
+        *self
+            .active_shortcut
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(shortcut);
+    }
+
+    fn active_shortcut(&self) -> Option<tauri_plugin_global_shortcut::Shortcut> {
+        *self
+            .active_shortcut
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    fn is_active_shortcut(&self, observed: &tauri_plugin_global_shortcut::Shortcut) -> bool {
+        self.active_shortcut()
+            .is_some_and(|active| active == *observed)
+    }
+
+    fn ensure_idle(&self) -> Result<(), HotkeyBindingUpdateError> {
+        let Some(runtime) = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+        else {
+            return Ok(());
+        };
+
+        let runtime = runtime
+            .lock()
+            .map_err(|_| HotkeyBindingUpdateError::RuntimePoisoned)?;
+        if runtime.is_idle() {
+            Ok(())
+        } else {
+            Err(HotkeyBindingUpdateError::CaptureActive)
+        }
+    }
+
+    fn apply_binding<R: tauri::Runtime>(
+        &self,
+        app: &tauri::AppHandle<R>,
+        binding: &str,
+    ) -> Result<String, HotkeyBindingUpdateError> {
+        use tauri_plugin_global_shortcut::GlobalShortcutExt;
+
+        let binding = settings::normalize_hotkey_binding(binding)?;
+        let shortcut = shortcut_from_binding(&binding)?;
+        if self.active_shortcut() == Some(shortcut) {
+            return Ok(binding);
+        }
+
+        self.ensure_idle()?;
+        app.global_shortcut()
+            .register(shortcut)
+            .map_err(|err| HotkeyBindingUpdateError::Register(err.to_string()))?;
+
+        if let Some(previous) = self.active_shortcut() {
+            if let Err(err) = app.global_shortcut().unregister(previous) {
+                eprintln!("Kaydence old global hotkey unregister failed after rebind: {err}");
+            }
+        }
+        self.set_active_shortcut(shortcut);
+        Ok(binding)
     }
 
     fn apply_mode(
@@ -446,6 +544,10 @@ impl RuntimeSnapshot {
         if let Some(mode) = settings.hotkey_mode {
             self.apply_hotkey_mode(mode);
         }
+        if let Some(binding) = settings.hotkey_primary_binding {
+            let binding = settings::normalize_hotkey_binding(&binding)?;
+            self.apply_hotkey_binding(&binding);
+        }
         Ok(())
     }
 
@@ -456,6 +558,17 @@ impl RuntimeSnapshot {
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
             snapshot.settings.hotkey.mode = mode;
+        }
+        self.snapshot()
+    }
+
+    fn apply_hotkey_binding(&self, binding: &str) -> settings::AppSnapshot {
+        {
+            let mut snapshot = self
+                .inner
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            snapshot.settings.hotkey.primary_binding = binding.to_string();
         }
         self.snapshot()
     }
@@ -472,12 +585,57 @@ impl RuntimeSnapshot {
         runtime.apply_mode(mode, capture)?;
 
         if let Some(store) = self.settings_store() {
-            let mut settings = store.load()?;
-            settings.hotkey_mode = Some(mode);
-            store.save(&settings)?;
+            Self::persist_hotkey_mode(&store, mode)?;
         }
 
         Ok(self.apply_hotkey_mode(mode))
+    }
+
+    #[cfg(desktop)]
+    fn persist_hotkey_mode(
+        store: &settings::SettingsStore,
+        mode: settings::HotkeyModeSetting,
+    ) -> Result<(), settings::SettingsStoreError> {
+        let mut settings = store.load()?;
+        settings.hotkey_mode = Some(mode);
+        store.save(&settings)
+    }
+
+    #[cfg(desktop)]
+    fn persist_hotkey_binding(
+        store: &settings::SettingsStore,
+        binding: &str,
+    ) -> Result<(), settings::SettingsStoreError> {
+        let mut settings = store.load()?;
+        settings.hotkey_primary_binding = Some(settings::normalize_hotkey_binding(binding)?);
+        store.save(&settings)
+    }
+
+    #[cfg(desktop)]
+    fn set_hotkey_binding<R: tauri::Runtime>(
+        &self,
+        binding: &str,
+        app: &tauri::AppHandle<R>,
+        app_data_dir: &Path,
+        runtime: &HotkeyRuntimeHandle,
+    ) -> Result<settings::AppSnapshot, SetHotkeyBindingError> {
+        self.set_settings_store(app_data_dir);
+        let binding = match runtime.apply_binding(app, binding) {
+            Ok(binding) => binding,
+            Err(err) => {
+                if runtime.active_shortcut().is_none() {
+                    self.mark_hotkey_registration_failed(err.to_string());
+                }
+                return Err(err.into());
+            }
+        };
+
+        if let Some(store) = self.settings_store() {
+            Self::persist_hotkey_binding(&store, &binding)?;
+        }
+
+        self.mark_hotkey_registered();
+        Ok(self.apply_hotkey_binding(&binding))
     }
 
     #[cfg(desktop)]
@@ -636,6 +794,26 @@ enum HotkeyModeUpdateError {
 enum SetHotkeyModeError {
     #[error("hotkey runtime: {0}")]
     Runtime(#[from] HotkeyModeUpdateError),
+    #[error("settings store: {0}")]
+    SettingsStore(#[from] settings::SettingsStoreError),
+}
+
+#[derive(Debug, thiserror::Error)]
+enum HotkeyBindingUpdateError {
+    #[error("hotkey binding cannot be changed during an active capture")]
+    CaptureActive,
+    #[error("hotkey runtime lock poisoned")]
+    RuntimePoisoned,
+    #[error("shortcut registration failed: {0}")]
+    Register(String),
+    #[error("settings: {0}")]
+    Settings(#[from] settings::SettingsError),
+}
+
+#[derive(Debug, thiserror::Error)]
+enum SetHotkeyBindingError {
+    #[error("hotkey binding: {0}")]
+    Runtime(#[from] HotkeyBindingUpdateError),
     #[error("settings store: {0}")]
     SettingsStore(#[from] settings::SettingsStoreError),
 }
@@ -990,11 +1168,15 @@ impl HotkeyRuntime {
         mode: settings::HotkeyModeSetting,
         capture: settings::CaptureSettings,
     ) -> Result<(), HotkeyModeUpdateError> {
-        if self.coordinator.state() != hotkeys::CaptureState::Idle {
+        if !self.is_idle() {
             return Err(HotkeyModeUpdateError::CaptureActive);
         }
         self.coordinator = hotkey_coordinator_from_settings(mode, capture);
         Ok(())
+    }
+
+    fn is_idle(&self) -> bool {
+        self.coordinator.state() == hotkeys::CaptureState::Idle
     }
 
     fn handle_signal(
@@ -1171,6 +1353,24 @@ fn hotkey_mode_from_setting(mode: settings::HotkeyModeSetting) -> hotkeys::Hotke
 }
 
 #[cfg(desktop)]
+fn shortcut_from_binding(
+    binding: &str,
+) -> Result<tauri_plugin_global_shortcut::Shortcut, settings::SettingsError> {
+    use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
+
+    match settings::normalize_hotkey_binding(binding)?.as_str() {
+        settings::DEFAULT_HOTKEY_BINDING => Ok(Shortcut::new(None, Code::AltRight)),
+        "F13" => Ok(Shortcut::new(None, Code::F13)),
+        "F14" => Ok(Shortcut::new(None, Code::F14)),
+        "Control+Space" => Ok(Shortcut::new(Some(Modifiers::CONTROL), Code::Space)),
+        "Shift+F13" => Ok(Shortcut::new(Some(Modifiers::SHIFT), Code::F13)),
+        other => Err(settings::SettingsError::InvalidHotkeyBinding(
+            other.to_string(),
+        )),
+    }
+}
+
+#[cfg(desktop)]
 fn elapsed_ms(started: Instant) -> u64 {
     started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64
 }
@@ -1201,19 +1401,22 @@ fn schedule_tail_tick(runtime: &Arc<Mutex<HotkeyRuntime>>, started: Instant, end
 fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     use hotkeys::Signal;
     use tauri::Manager;
-    use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
+    use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
-    let shortcut = Shortcut::new(None, Code::AltRight);
     let app_data_dir = app.path().app_data_dir()?;
     let settings = app.state::<RuntimeSnapshot>().snapshot().settings;
+    let shortcut = shortcut_from_binding(&settings.hotkey.primary_binding)?;
     let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir, &settings)?));
     let started = Instant::now();
     let handler_runtime = Arc::clone(&runtime);
 
     app.handle().plugin(
         tauri_plugin_global_shortcut::Builder::new()
-            .with_handler(move |_app, observed, event| {
-                if observed != &shortcut {
+            .with_handler(move |app, observed, event| {
+                if !app
+                    .state::<HotkeyRuntimeHandle>()
+                    .is_active_shortcut(observed)
+                {
                     return;
                 }
 
@@ -1244,9 +1447,10 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
             .build(),
     )?;
 
+    let handle = app.state::<HotkeyRuntimeHandle>();
+    handle.set_runtime(Arc::clone(&runtime));
     app.global_shortcut().register(shortcut)?;
-    app.state::<HotkeyRuntimeHandle>()
-        .set_runtime(Arc::clone(&runtime));
+    handle.set_active_shortcut(shortcut);
     app.state::<RuntimeSnapshot>().mark_hotkey_registered();
     Ok(())
 }
@@ -1266,6 +1470,7 @@ pub fn run() {
             app_snapshot,
             select_asr_model,
             set_hotkey_mode,
+            set_hotkey_binding,
             refresh_model_readiness,
             install_model_artifact,
             recent_history,
@@ -2041,6 +2246,62 @@ mod tests {
     }
 
     #[test]
+    fn persisted_hotkey_binding_applies_after_settings_load() {
+        let app_data = tmp();
+        let store = settings::SettingsStore::new(&app_data);
+        store
+            .save(&settings::UserSettingsFile {
+                hotkey_primary_binding: Some("Ctrl + Space".to_string()),
+                ..settings::UserSettingsFile::default()
+            })
+            .unwrap();
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+
+        state.apply_persisted_user_settings().unwrap();
+
+        assert_eq!(
+            state.snapshot().settings.hotkey.primary_binding,
+            "Control+Space"
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_binding_persistence_normalizes_recommended_values() {
+        let app_data = tmp();
+        let store = settings::SettingsStore::new(&app_data);
+
+        RuntimeSnapshot::persist_hotkey_binding(&store, "right-option").unwrap();
+
+        assert_eq!(
+            store.load().unwrap().hotkey_primary_binding.as_deref(),
+            Some(settings::DEFAULT_HOTKEY_BINDING)
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn shortcut_mapping_accepts_recommended_bindings_only() {
+        assert_eq!(
+            shortcut_from_binding("RightAlt").unwrap(),
+            shortcut_from_binding("right-option").unwrap()
+        );
+        assert_eq!(
+            shortcut_from_binding("Ctrl + Space").unwrap(),
+            shortcut_from_binding("Control+Space").unwrap()
+        );
+        assert!(shortcut_from_binding("F13").is_ok());
+        assert!(shortcut_from_binding("F14").is_ok());
+        assert!(shortcut_from_binding("Shift+F13").is_ok());
+        assert!(matches!(
+            shortcut_from_binding("CapsLock"),
+            Err(settings::SettingsError::InvalidHotkeyBinding(binding))
+                if binding == "CapsLock"
+        ));
+    }
+
+    #[test]
     fn selecting_hotkey_mode_updates_snapshot_and_persists_settings() {
         let app_data = tmp();
         let state = RuntimeSnapshot::default();
@@ -2061,6 +2322,33 @@ mod tests {
                 .hotkey_mode,
             Some(settings::HotkeyModeSetting::Toggle)
         );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_handle_refuses_binding_change_during_capture() {
+        let app_data = tmp();
+        let runtime = Arc::new(Mutex::new(HotkeyRuntime::new_wal_only(&app_data).unwrap()));
+        let handle = HotkeyRuntimeHandle::default();
+        handle.set_runtime(Arc::clone(&runtime));
+
+        runtime
+            .lock()
+            .unwrap()
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+
+        let err = handle.ensure_idle().unwrap_err();
+
+        assert!(matches!(err, HotkeyBindingUpdateError::CaptureActive));
+        let _ = runtime
+            .lock()
+            .unwrap()
+            .handle_signal(hotkeys::Signal::Release { at_ms: 400 });
+        let _ = runtime
+            .lock()
+            .unwrap()
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 700 });
         let _ = std::fs::remove_dir_all(app_data);
     }
 

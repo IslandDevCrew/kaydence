@@ -1,0 +1,69 @@
+Kaydence evidence: P1-P0-1 hotkey rebind
+Date: 2026-07-09
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Slice: backend-owned recommended hotkey binding rebind and live desktop re-registration
+
+What changed
+- Added an allowlisted primary hotkey binding setting with recommended options: RightAlt, F13, F14, Control+Space, and Shift+F13.
+- Added set_hotkey_binding Tauri command. Rust normalizes and validates the binding, persists it to app-data settings.json, and returns the updated AppSnapshot.
+- Changed the global-shortcut handler to consult the managed active shortcut instead of closing over the startup shortcut, so later rebinds are observed by the runtime.
+- Rebind registers the new shortcut before unregistering the old one, refuses while capture is active, and leaves an old working binding active when a new candidate fails.
+- Startup now retains the HotkeyRuntime even if the initial default shortcut registration fails, so a one-tap rebind can recover the same runtime without restarting.
+- The cockpit renders backend-provided binding options in Output rules and shows a compact first-run recovery strip when hotkey registration failed.
+
+Safety and boundaries
+- The frontend renders binding options supplied by AppSnapshot and sends only a binding intent; it does not parse arbitrary key input or own shortcut semantics.
+- This does not claim live OS permission or conflict proof across macOS, Windows, and Linux. The local evidence proves parser/persistence/runtime wiring and browser-rendered recovery UI.
+- No network, telemetry, new dependency, or new OS permission surface was added.
+
+Focused proof
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_binding
+  RESULT: PASS
+  Tests: settings_store_saves_hotkey_binding; hotkey_binding_parser_accepts_recommended_values; persisted_hotkey_binding_applies_after_settings_load; hotkey_binding_persistence_normalizes_recommended_values.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml shortcut_mapping
+  RESULT: PASS
+  Tests: shortcut_mapping_accepts_recommended_bindings_only.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_handle_refuses
+  RESULT: PASS
+  Tests: hotkey_runtime_handle_refuses_binding_change_during_capture.
+- npm --prefix apps/desktop run check
+  RESULT: PASS
+
+Standing local gates
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  RESULT: PASS
+  Tests: 184 lib tests + 2 crash_recovery tests.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- scripts/audit-network.sh
+  RESULT: PASS
+  Network-capable call sites found: 0; unreviewed: 0.
+- scripts/check-adr-status.sh
+  RESULT: PASS
+  All ADRs Accepted except declared by-design exception 0009.
+- npm --prefix apps/desktop run build
+  RESULT: PASS
+- jq empty ops/mission/state.json
+  RESULT: PASS
+- ./script/build_and_run.sh build
+  RESULT: PASS
+  Note: pnpm still warns that package.json pnpm.onlyBuiltDependencies is ignored; workspace allowBuilds remains the active fix.
+- ./script/build_and_run.sh --verify
+  RESULT: PASS
+- git restore apps/desktop/dist/index.html && rm -rf apps/desktop/dist/assets apps/desktop/dist/favicon.svg
+  RESULT: PASS
+
+Browser smoke
+- Browser skill loaded http://127.0.0.1:1422/ from a temporary Vite server.
+  RESULT: PASS
+  Signals: five hotkey binding buttons rendered; Right Alt / Option selected; Control Space and Shift F13 visible; hotkey mode control visible; browser error log empty.
+- Screenshot evidence:
+  ops/mission/evidence/2026-07-09-hotkey-rebind-preview.png
+
+Remote truth
+- git fetch origin
+  RESULT: FAIL, expected current blocker
+  remote: Repository not found.
+  fatal: repository 'https://github.com/IslandDevCrew/kaydence.git/' not found

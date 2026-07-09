@@ -39,8 +39,11 @@ Current verified state:
 - The hotkey runtime now honors persisted push-to-talk vs toggle mode. The
   cockpit mode control calls set_hotkey_mode, Rust persists hotkey_mode to
   app-data settings.json, and the active coordinator switches only while idle.
-  RightAlt/RightOption remains the only registered binding in this slice; live
-  OS permission/conflict/rebind proof remains follow-up work.
+  The hotkey binding rebind path is wired locally: set_hotkey_binding accepts
+  backend-allowlisted bindings (RightAlt, F13, F14, Control+Space, Shift+F13),
+  persists hotkey_primary_binding, and re-registers the active global shortcut
+  while idle. Live OS permission/conflict proof across macOS, Windows, and
+  Linux remains follow-up work.
 - Recent local history is visible in the cockpit via recent_history; per-session
   delete now removes the DB row plus safe app-data session audio after confirm.
   recent_history also surfaces untracked recoverable app-data WAVs as Capture
@@ -68,10 +71,10 @@ Operating rules:
   significant merges.
 
 Next best work:
-1. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict/rebind
-   validation on macOS, Windows, and Linux; rebind UI; P1-G2/P1-G3 gates. The
-   global-shortcut plugin, WAL runtime path, and persisted push-to-talk/toggle
-   mode are already wired locally.
+1. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict
+   validation on macOS, Windows, and Linux plus P1-G2/P1-G3 gates. The
+   global-shortcut plugin, WAL runtime path, persisted push-to-talk/toggle
+   mode, and allowlisted rebind UI/registration path are already wired locally.
 2. Advance P1-P0-2 ASR readiness: replace TODO model hashes/sources with
    reviewed artifacts, implement the network fetch/progress UI, and
    Parakeet/Whisper engine adapters. AppSnapshot already

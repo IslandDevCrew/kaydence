@@ -18,6 +18,7 @@ pub const SCHEMA_VERSION: u16 = 1;
 pub const SETTINGS_FILE_NAME: &str = "settings.json";
 /// The product brand string. Never hardcode "Kaydence" anywhere else.
 pub const APP_NAME: &str = "Kaydence";
+pub const DEFAULT_HOTKEY_BINDING: &str = "RightAlt";
 
 /// Reverse-DNS application identifier (matches tauri.conf.json `identifier`).
 pub const APP_IDENTIFIER: &str = "io.kaydence.app";
@@ -92,6 +93,8 @@ pub struct UserSettingsFile {
     pub selected_asr_model_id: Option<String>,
     #[serde(default)]
     pub hotkey_mode: Option<HotkeyModeSetting>,
+    #[serde(default)]
+    pub hotkey_primary_binding: Option<String>,
 }
 
 impl Default for UserSettingsFile {
@@ -100,6 +103,7 @@ impl Default for UserSettingsFile {
             schema_version: SCHEMA_VERSION,
             selected_asr_model_id: None,
             hotkey_mode: None,
+            hotkey_primary_binding: None,
         }
     }
 }
@@ -118,6 +122,9 @@ impl UserSettingsFile {
             .is_some_and(|id| id.trim().is_empty())
         {
             return Err(SettingsError::EmptyModelSelection);
+        }
+        if let Some(binding) = self.hotkey_primary_binding.as_deref() {
+            validate_hotkey_binding(binding)?;
         }
         Ok(())
     }
@@ -168,6 +175,7 @@ impl SettingsStore {
 pub struct HotkeySettings {
     pub mode: HotkeyModeSetting,
     pub primary_binding: String,
+    pub primary_binding_options: Vec<HotkeyBindingOption>,
     pub secondary_dial_override_binding: String,
 }
 
@@ -175,7 +183,8 @@ impl Default for HotkeySettings {
     fn default() -> Self {
         Self {
             mode: HotkeyModeSetting::PushToTalk,
-            primary_binding: "RightAlt".into(),
+            primary_binding: DEFAULT_HOTKEY_BINDING.into(),
+            primary_binding_options: hotkey_binding_options(),
             secondary_dial_override_binding: "Shift+RightAlt".into(),
         }
     }
@@ -186,11 +195,84 @@ impl HotkeySettings {
         if self.primary_binding.trim().is_empty() {
             return Err(SettingsError::EmptyHotkeyBinding);
         }
+        validate_hotkey_binding(&self.primary_binding)?;
         if self.secondary_dial_override_binding.trim().is_empty() {
             return Err(SettingsError::EmptyHotkeyBinding);
         }
         Ok(())
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HotkeyBindingOption {
+    pub id: String,
+    pub label: String,
+    pub detail: String,
+}
+
+pub fn hotkey_binding_options() -> Vec<HotkeyBindingOption> {
+    [
+        (
+            DEFAULT_HOTKEY_BINDING,
+            "Right Alt / Option",
+            "Default hold key, best when the OS accepts the right-side modifier.",
+        ),
+        (
+            "F13",
+            "F13",
+            "Dedicated function-key fallback for extended keyboards.",
+        ),
+        (
+            "F14",
+            "F14",
+            "Second dedicated function-key fallback for extended keyboards.",
+        ),
+        (
+            "Control+Space",
+            "Control Space",
+            "Chord fallback for compact keyboards without F13/F14.",
+        ),
+        (
+            "Shift+F13",
+            "Shift F13",
+            "Conflict-escape chord when a plain function key is already taken.",
+        ),
+    ]
+    .into_iter()
+    .map(|(id, label, detail)| HotkeyBindingOption {
+        id: id.to_string(),
+        label: label.to_string(),
+        detail: detail.to_string(),
+    })
+    .collect()
+}
+
+pub fn normalize_hotkey_binding(value: &str) -> Result<String, SettingsError> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return Err(SettingsError::EmptyHotkeyBinding);
+    }
+
+    let compact = trimmed
+        .chars()
+        .filter(|ch| !ch.is_whitespace() && *ch != '-' && *ch != '_')
+        .flat_map(char::to_lowercase)
+        .collect::<String>();
+
+    let normalized = match compact.as_str() {
+        "rightalt" | "altright" | "rightoption" | "optionright" => DEFAULT_HOTKEY_BINDING,
+        "f13" => "F13",
+        "f14" => "F14",
+        "control+space" | "ctrl+space" | "controlspace" | "ctrlspace" => "Control+Space",
+        "shift+f13" | "shiftf13" => "Shift+F13",
+        _ => return Err(SettingsError::InvalidHotkeyBinding(trimmed.to_string())),
+    };
+
+    Ok(normalized.to_string())
+}
+
+pub fn validate_hotkey_binding(value: &str) -> Result<(), SettingsError> {
+    normalize_hotkey_binding(value).map(|_| ())
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -416,6 +498,8 @@ pub enum SettingsError {
     EmptyModelSelection,
     #[error("invalid hotkey mode: {0}")]
     InvalidHotkeyMode(String),
+    #[error("unsupported hotkey binding: {0}")]
+    InvalidHotkeyBinding(String),
 }
 
 #[derive(Debug, Error)]
@@ -448,6 +532,12 @@ mod tests {
         let settings = AppSettings::default();
         assert_eq!(settings.schema_version, SCHEMA_VERSION);
         assert_eq!(settings.hotkey.mode, HotkeyModeSetting::PushToTalk);
+        assert_eq!(settings.hotkey.primary_binding, DEFAULT_HOTKEY_BINDING);
+        assert!(settings
+            .hotkey
+            .primary_binding_options
+            .iter()
+            .any(|option| option.id == DEFAULT_HOTKEY_BINDING));
         assert_eq!(settings.capture.min_capture_ms, 250);
         assert_eq!(settings.capture.tail_buffer_ms, 300);
         assert_eq!(settings.capture.debounce_ms, 30);
@@ -484,6 +574,13 @@ mod tests {
         settings = AppSettings::default();
         settings.hotkey.primary_binding.clear();
         assert_eq!(settings.validate(), Err(SettingsError::EmptyHotkeyBinding));
+
+        settings = AppSettings::default();
+        settings.hotkey.primary_binding = "CapsLock".to_string();
+        assert_eq!(
+            settings.validate(),
+            Err(SettingsError::InvalidHotkeyBinding("CapsLock".to_string()))
+        );
     }
 
     #[test]
@@ -549,6 +646,24 @@ mod tests {
     }
 
     #[test]
+    fn settings_store_saves_hotkey_binding() {
+        let dir = tmp();
+        let store = SettingsStore::new(&dir);
+        let settings = UserSettingsFile {
+            hotkey_primary_binding: Some("F13".to_string()),
+            ..UserSettingsFile::default()
+        };
+
+        store.save(&settings).unwrap();
+
+        assert_eq!(store.load().unwrap(), settings);
+        assert!(fs::read_to_string(store.path())
+            .unwrap()
+            .contains("\"hotkey_primary_binding\": \"F13\""));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn hotkey_mode_parser_accepts_ui_values() {
         assert_eq!(
             HotkeyModeSetting::parse("push_to_talk").unwrap(),
@@ -565,6 +680,28 @@ mod tests {
         assert!(matches!(
             HotkeyModeSetting::parse("hold"),
             Err(SettingsError::InvalidHotkeyMode(mode)) if mode == "hold"
+        ));
+    }
+
+    #[test]
+    fn hotkey_binding_parser_accepts_recommended_values() {
+        assert_eq!(
+            normalize_hotkey_binding("RightAlt").unwrap(),
+            DEFAULT_HOTKEY_BINDING
+        );
+        assert_eq!(
+            normalize_hotkey_binding("right-option").unwrap(),
+            DEFAULT_HOTKEY_BINDING
+        );
+        assert_eq!(normalize_hotkey_binding("f13").unwrap(), "F13");
+        assert_eq!(
+            normalize_hotkey_binding("Ctrl + Space").unwrap(),
+            "Control+Space"
+        );
+        assert_eq!(normalize_hotkey_binding("shift f13").unwrap(), "Shift+F13");
+        assert!(matches!(
+            normalize_hotkey_binding("CapsLock"),
+            Err(SettingsError::InvalidHotkeyBinding(binding)) if binding == "CapsLock"
         ));
     }
 
