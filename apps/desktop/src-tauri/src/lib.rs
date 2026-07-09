@@ -42,12 +42,38 @@ fn app_snapshot(state: tauri::State<'_, RuntimeSnapshot>) -> settings::AppSnapsh
 
 #[tauri::command]
 fn select_asr_model(
+    app: tauri::AppHandle,
     model_id: String,
     state: tauri::State<'_, RuntimeSnapshot>,
+    runtime: tauri::State<'_, HotkeyRuntimeHandle>,
 ) -> Result<settings::AppSnapshot, String> {
-    state
-        .select_asr_model(&model_id)
-        .map_err(|err| err.to_string())
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        runtime
+            .ensure_idle_for_asr_update()
+            .map_err(|err| err.to_string())?;
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        let snapshot = state
+            .select_asr_model(&model_id)
+            .map_err(|err| err.to_string())?;
+        apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime)
+            .map_err(|err| err.to_string())?;
+        Ok(snapshot)
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = runtime;
+        state
+            .select_asr_model(&model_id)
+            .map_err(|err| err.to_string())
+    }
 }
 
 #[tauri::command]
@@ -114,18 +140,25 @@ fn set_hotkey_binding(
 fn refresh_model_readiness(
     app: tauri::AppHandle,
     state: tauri::State<'_, RuntimeSnapshot>,
+    runtime: tauri::State<'_, HotkeyRuntimeHandle>,
 ) -> Result<settings::AppSnapshot, String> {
     #[cfg(desktop)]
     {
         use tauri::Manager;
 
+        runtime
+            .ensure_idle_for_asr_update()
+            .map_err(|err| err.to_string())?;
         let app_data_dir = app
             .path()
             .app_data_dir()
             .map_err(|err| format!("App data directory unavailable: {err}"))?;
-        state
+        let snapshot = state
             .refresh_models_from_app_data(&app_data_dir)
-            .map_err(|err| err.to_string())
+            .map_err(|err| err.to_string())?;
+        apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime)
+            .map_err(|err| err.to_string())?;
+        Ok(snapshot)
     }
 
     #[cfg(not(desktop))]
@@ -138,6 +171,7 @@ fn refresh_model_readiness(
 fn install_model_artifact(
     app: tauri::AppHandle,
     state: tauri::State<'_, RuntimeSnapshot>,
+    runtime: tauri::State<'_, HotkeyRuntimeHandle>,
     model_id: String,
     source_path: String,
 ) -> Result<settings::AppSnapshot, String> {
@@ -145,23 +179,30 @@ fn install_model_artifact(
     {
         use tauri::Manager;
 
+        runtime
+            .ensure_idle_for_asr_update()
+            .map_err(|err| err.to_string())?;
         let app_data_dir = app
             .path()
             .app_data_dir()
             .map_err(|err| format!("App data directory unavailable: {err}"))?;
-        state
+        let snapshot = state
             .install_model_artifact(
                 &models::source_tree_registry_path(),
                 &app_data_dir,
                 &model_id,
                 &PathBuf::from(source_path),
             )
-            .map_err(|err| err.to_string())
+            .map_err(|err| err.to_string())?;
+        apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime)
+            .map_err(|err| err.to_string())?;
+        Ok(snapshot)
     }
 
     #[cfg(not(desktop))]
     {
         let _ = app;
+        let _ = runtime;
         let _ = model_id;
         let _ = source_path;
         Ok(state.snapshot())
@@ -541,6 +582,45 @@ impl HotkeyRuntimeHandle {
         } else {
             Err(HotkeyBindingUpdateError::CaptureActive)
         }
+    }
+
+    fn ensure_idle_for_asr_update(&self) -> Result<(), AsrRuntimeUpdateError> {
+        let Some(runtime) = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+        else {
+            return Ok(());
+        };
+
+        let runtime = runtime
+            .lock()
+            .map_err(|_| AsrRuntimeUpdateError::RuntimePoisoned)?;
+        if runtime.is_idle() {
+            Ok(())
+        } else {
+            Err(AsrRuntimeUpdateError::CaptureActive)
+        }
+    }
+
+    fn apply_asr_adapter_state(
+        &self,
+        state: engine::LocalAsrAdapterState,
+    ) -> Result<(), AsrRuntimeUpdateError> {
+        let Some(runtime) = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+        else {
+            return Ok(());
+        };
+
+        let mut runtime = runtime
+            .lock()
+            .map_err(|_| AsrRuntimeUpdateError::RuntimePoisoned)?;
+        runtime.set_asr_adapter_state(state)
     }
 
     fn apply_binding<R: tauri::Runtime>(
@@ -1085,6 +1165,15 @@ enum HotkeyModeUpdateError {
     RuntimePoisoned,
 }
 
+#[cfg(desktop)]
+#[derive(Debug, thiserror::Error)]
+enum AsrRuntimeUpdateError {
+    #[error("ASR runtime cannot be changed during an active capture")]
+    CaptureActive,
+    #[error("ASR runtime lock poisoned")]
+    RuntimePoisoned,
+}
+
 #[derive(Debug, thiserror::Error)]
 enum SetHotkeyModeError {
     #[error("hotkey runtime: {0}")]
@@ -1393,15 +1482,16 @@ impl HotkeyRuntime {
         let app_data_dir = app_data_dir.into();
         let recorder = audio::WalCaptureRuntime::new(app_data_dir.clone());
         let history = history::HistoryStore::open(&app_data_dir)?;
-        let asr_context = selected_asr_runtime_context(&settings.first_run);
+        let asr_state = selected_asr_runtime_state(
+            &settings.first_run,
+            &models::source_tree_registry_path(),
+            &app_data_dir.join("models"),
+        );
         let mut runtime = Self::with_recorder(
             recorder,
             history,
             Box::new(profiles::platform_target_resolver()),
-            Box::new(pipeline::default_runtime_pipeline(
-                asr_context.model_id.as_deref(),
-                asr_context.lane.as_deref(),
-            )),
+            Box::new(pipeline::default_runtime_pipeline_with_asr(asr_state)),
             Box::new(inject::platform_injector()),
         );
         runtime.coordinator =
@@ -1418,7 +1508,12 @@ impl HotkeyRuntime {
             recorder,
             history,
             Box::new(profiles::platform_target_resolver()),
-            Box::new(pipeline::default_runtime_pipeline(None, None)),
+            Box::new(pipeline::default_runtime_pipeline_with_asr(
+                engine::LocalAsrAdapterState::Pending {
+                    selected_model_id: None,
+                    lane: engine::EngineLane::LocalCpu,
+                },
+            )),
             Box::new(inject::platform_injector()),
         ))
     }
@@ -1477,6 +1572,17 @@ impl HotkeyRuntime {
             return Err(HotkeyModeUpdateError::CaptureActive);
         }
         self.coordinator = hotkey_coordinator_from_settings(mode, capture);
+        Ok(())
+    }
+
+    fn set_asr_adapter_state(
+        &mut self,
+        state: engine::LocalAsrAdapterState,
+    ) -> Result<(), AsrRuntimeUpdateError> {
+        if !self.is_idle() {
+            return Err(AsrRuntimeUpdateError::CaptureActive);
+        }
+        self.processor = Box::new(pipeline::default_runtime_pipeline_with_asr(state));
         Ok(())
     }
 
@@ -1608,24 +1714,107 @@ impl HotkeyRuntime {
 }
 
 #[cfg(desktop)]
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct AsrRuntimeContext {
-    model_id: Option<String>,
-    lane: Option<String>,
+fn apply_selected_asr_to_runtime(
+    snapshot: &settings::AppSnapshot,
+    app_data_dir: &Path,
+    runtime: &HotkeyRuntimeHandle,
+) -> Result<(), AsrRuntimeUpdateError> {
+    runtime.apply_asr_adapter_state(selected_asr_runtime_state(
+        &snapshot.settings.first_run,
+        &models::source_tree_registry_path(),
+        &app_data_dir.join("models"),
+    ))
 }
 
 #[cfg(desktop)]
-fn selected_asr_runtime_context(first_run: &settings::FirstRunStatus) -> AsrRuntimeContext {
-    let model_id = first_run.selected_asr_model_id.clone();
-    let lane = model_id.as_deref().and_then(|model_id| {
-        first_run
-            .asr_candidates
-            .iter()
-            .find(|candidate| candidate.id == model_id)
-            .and_then(|candidate| candidate.lane.clone())
-    });
+fn selected_asr_runtime_state(
+    first_run: &settings::FirstRunStatus,
+    registry_path: &Path,
+    models_dir: &Path,
+) -> engine::LocalAsrAdapterState {
+    let selected_model_id = first_run.selected_asr_model_id.clone();
+    let fallback_lane = selected_model_id
+        .as_deref()
+        .and_then(|model_id| {
+            first_run
+                .asr_candidates
+                .iter()
+                .find(|candidate| candidate.id == model_id)
+        })
+        .and_then(|candidate| candidate.lane.as_deref())
+        .map(|lane| local_engine_lane(Some(lane)))
+        .unwrap_or(engine::EngineLane::LocalCpu);
 
-    AsrRuntimeContext { model_id, lane }
+    let Some(model_id) = selected_model_id.clone() else {
+        return engine::LocalAsrAdapterState::Pending {
+            selected_model_id: None,
+            lane: fallback_lane,
+        };
+    };
+
+    let registry = match models::ModelRegistry::load(registry_path) {
+        Ok(registry) => registry,
+        Err(err) => {
+            return engine::LocalAsrAdapterState::Blocked {
+                selected_model_id,
+                lane: fallback_lane,
+                reason: format!("model registry unavailable: {err}"),
+            };
+        }
+    };
+    let model = match registry.require(&model_id) {
+        Ok(model) => model,
+        Err(err) => {
+            return engine::LocalAsrAdapterState::Blocked {
+                selected_model_id,
+                lane: fallback_lane,
+                reason: err.to_string(),
+            };
+        }
+    };
+    let lane = local_engine_lane(model.lane.as_deref());
+    if model.task != models::ModelTask::Asr {
+        return engine::LocalAsrAdapterState::Blocked {
+            selected_model_id,
+            lane,
+            reason: format!("selected model task is {:?}", model.task),
+        };
+    }
+
+    match model.verify_artifact(models_dir) {
+        Ok(models::ModelArtifactStatus::Ready { path, size_bytes }) => {
+            engine::LocalAsrAdapterState::VerifiedArtifact {
+                spec: engine::LocalAsrAdapterSpec {
+                    model_id,
+                    lane,
+                    runtime: model.runtime.clone(),
+                    artifact_path: path,
+                    artifact_size_bytes: size_bytes,
+                },
+            }
+        }
+        Ok(models::ModelArtifactStatus::Missing { path }) => {
+            engine::LocalAsrAdapterState::Blocked {
+                selected_model_id,
+                lane,
+                reason: format!("selected artifact is missing at {}", path.display()),
+            }
+        }
+        Err(err) => engine::LocalAsrAdapterState::Blocked {
+            selected_model_id,
+            lane,
+            reason: err.to_string(),
+        },
+    }
+}
+
+#[cfg(desktop)]
+fn local_engine_lane(lane: Option<&str>) -> engine::EngineLane {
+    match lane {
+        Some("gpu") => engine::EngineLane::LocalGpu,
+        Some("byok") | Some("cloud") => engine::EngineLane::ByokCloud,
+        _ => engine::EngineLane::LocalCpu,
+    }
 }
 
 #[cfg(desktop)]
@@ -2905,35 +3094,80 @@ mod tests {
     }
 
     #[test]
-    fn selected_asr_runtime_context_carries_model_and_lane() {
-        let first_run = settings::FirstRunStatus {
-            selected_asr_model_id: Some("fixture-gpu".to_string()),
-            asr_candidates: vec![settings::FirstRunAsrCandidate {
-                id: "fixture-gpu".to_string(),
-                lane: Some("gpu".to_string()),
-                runtime: "whisper.cpp".to_string(),
-                size_mb: 2,
-                min_hw: "metal_or_dgpu".to_string(),
-                state: settings::FirstRunModelState::Ready,
-                detail: "Verified artifact, 2 MB on disk".to_string(),
-                download_available: true,
-                download_size_mb: Some(2),
-                download_source_count: 1,
-                selected: true,
-                recommendation: Some("Recommended for this OS lane".to_string()),
-                license: "MIT".to_string(),
-                license_review_required: false,
-            }],
-            ..settings::FirstRunStatus::default()
-        };
+    fn selected_asr_runtime_state_blocks_missing_artifact() {
+        let app_data = tmp();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
+        let models_dir = app_data.join("models");
+        let state = RuntimeSnapshot::default();
+        state.refresh_model_readiness(&registry_path, &models_dir);
+        let first_run = state.snapshot().settings.first_run;
+
+        let runtime_state = selected_asr_runtime_state(&first_run, &registry_path, &models_dir);
+
+        assert!(matches!(
+            runtime_state,
+            engine::LocalAsrAdapterState::Blocked {
+                selected_model_id: Some(ref model_id),
+                lane: engine::EngineLane::LocalCpu,
+                ref reason,
+            } if model_id == "fixture-asr"
+                && reason.contains("selected artifact is missing at")
+                && reason.contains("fixture-asr.onnx")
+        ));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn selected_asr_runtime_state_detects_verified_artifact() {
+        let app_data = tmp();
+        let models_dir = app_data.join("models");
+        std::fs::create_dir_all(&models_dir).unwrap();
+        let artifact_path = models_dir.join("fixture-asr.onnx");
+        std::fs::write(&artifact_path, b"asr").unwrap();
+        std::fs::write(models_dir.join("fixture-vad.onnx"), b"vad").unwrap();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
+        let state = RuntimeSnapshot::default();
+        state.refresh_model_readiness(&registry_path, &models_dir);
+        let first_run = state.snapshot().settings.first_run;
+
+        let runtime_state = selected_asr_runtime_state(&first_run, &registry_path, &models_dir);
 
         assert_eq!(
-            selected_asr_runtime_context(&first_run),
-            AsrRuntimeContext {
-                model_id: Some("fixture-gpu".to_string()),
-                lane: Some("gpu".to_string())
+            runtime_state,
+            engine::LocalAsrAdapterState::VerifiedArtifact {
+                spec: engine::LocalAsrAdapterSpec {
+                    model_id: "fixture-asr".to_string(),
+                    lane: engine::EngineLane::LocalCpu,
+                    runtime: "onnxruntime".to_string(),
+                    artifact_path,
+                    artifact_size_bytes: 3,
+                }
             }
         );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_refuses_asr_adapter_swap_during_capture() {
+        let app_data = tmp();
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data).unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+
+        let err = runtime
+            .set_asr_adapter_state(engine::LocalAsrAdapterState::Pending {
+                selected_model_id: Some("fixture-asr".to_string()),
+                lane: engine::EngineLane::LocalCpu,
+            })
+            .unwrap_err();
+
+        assert!(matches!(err, AsrRuntimeUpdateError::CaptureActive));
+        let _ = runtime.handle_signal(hotkeys::Signal::Release { at_ms: 400 });
+        let _ = runtime.handle_signal(hotkeys::Signal::Tick { at_ms: 700 });
+        let _ = std::fs::remove_dir_all(app_data);
     }
 
     #[test]

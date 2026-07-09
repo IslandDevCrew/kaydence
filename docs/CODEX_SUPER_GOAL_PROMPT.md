@@ -168,9 +168,11 @@ Next best work:
    installs reviewed files; install_model_artifact now opens a native file picker
    and lets Rust copy a selected reviewed local artifact into app-data models/
    only after the file matches the registry sha256; the default hotkey runtime
-   carries a PendingLocalAsrEngine keyed to the selected model/lane, so recordings
-   persist audio then record a specific Recognize failure until real
-   Parakeet/Whisper adapters are implemented.
+   now resolves the selected model into Pending/Blocked/VerifiedArtifact state
+   from the registry plus app-data artifacts, and ASR selection/refresh/install
+   hot-swap that state only while capture is idle. Verified artifacts still
+   report the honest boundary that real Parakeet/Whisper inference is not
+   implemented yet.
 4. Continue injection backends behind TextInjector: Windows UIA+SendInput is
    merged and live-validated; Linux AT-SPI/uinput still needs human-focus VM
    validation plus unicode-beyond-ASCII work; macOS AX/CGEvent/NSPasteboard has

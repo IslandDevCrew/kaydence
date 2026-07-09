@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T16:45Z — Codex P1 slice (artifact-aware ASR runtime adapter lifecycle)
+- Added an artifact-aware local ASR runtime state: Pending selected model, Blocked selected model with reason, and VerifiedArtifact with model id, lane, runtime, artifact path, and byte size. The default hotkey runtime now resolves that state from the first-run ASR selection, the source-tree model registry, and app-data model artifacts.
+- Wired `select_asr_model`, `refresh_model_readiness`, and `install_model_artifact` to require an idle hotkey runtime before applying a new ASR adapter state to the active processor. Active captures refuse ASR swaps instead of changing the pipeline mid-dictation.
+- Kept the boundary honest: verified artifacts now produce a precise Recognize failure saying the artifact is ready but the real runtime adapter is not implemented yet. No Parakeet/Whisper inference, model download, or network surface was faked.
+- Evidence saved at `ops/mission/evidence/2026-07-09-asr-runtime-adapter-lifecycle.txt`. Local gates passed: fmt, focused ASR lifecycle tests, clippy, full Rust suite (206 lib + crash/event/short suites), frontend check, privacy posture, ADR status, bench PASS/PARTIAL, production build, and desktop verify.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T16:32Z — Codex P1 slice (permission proof boundaries + remote SOTU pause)
 - Confirmed private GitHub access is restored and current: `origin` points to `https://github.com/IslandDevCrew/kaydence.git`, active `gh` account is `IslandDevCrew`, the repo resolves as PRIVATE, and local `main` matches `origin/main` at `f61ab49`.
 - Added backend-owned permission proof handoff metadata to `first_run_permission_action`: optional proof command, expected evidence, and ready boundary. Screen Family 10 now renders the command/evidence/boundary so a user or build agent can see exactly what must be proven before a permission can become ready.

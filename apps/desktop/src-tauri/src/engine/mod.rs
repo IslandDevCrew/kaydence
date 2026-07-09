@@ -6,6 +6,7 @@
 #![allow(dead_code)]
 
 use crate::events::{SessionEvent, SessionId};
+use std::path::PathBuf;
 
 pub const DEFAULT_NO_SPEECH_REJECT_THRESHOLD: f32 = 0.80;
 
@@ -215,6 +216,96 @@ impl AsrEngine for PendingLocalAsrEngine {
 
 pub fn pending_local_asr_stack(lane: EngineLane, selected_model_id: Option<&str>) -> EngineStack {
     EngineStack::new(vec![PendingLocalAsrEngine::boxed(lane, selected_model_id)])
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LocalAsrAdapterSpec {
+    pub model_id: String,
+    pub lane: EngineLane,
+    pub runtime: String,
+    pub artifact_path: PathBuf,
+    pub artifact_size_bytes: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LocalAsrAdapterState {
+    Pending {
+        selected_model_id: Option<String>,
+        lane: EngineLane,
+    },
+    Blocked {
+        selected_model_id: Option<String>,
+        lane: EngineLane,
+        reason: String,
+    },
+    VerifiedArtifact {
+        spec: LocalAsrAdapterSpec,
+    },
+}
+
+impl LocalAsrAdapterState {
+    fn lane(&self) -> EngineLane {
+        match self {
+            Self::Pending { lane, .. } | Self::Blocked { lane, .. } => *lane,
+            Self::VerifiedArtifact { spec } => spec.lane,
+        }
+    }
+}
+
+pub fn local_asr_stack(state: LocalAsrAdapterState) -> EngineStack {
+    EngineStack::new(vec![LocalAsrAdapterEngine::boxed(state)])
+}
+
+struct LocalAsrAdapterEngine {
+    state: LocalAsrAdapterState,
+}
+
+impl LocalAsrAdapterEngine {
+    fn boxed(state: LocalAsrAdapterState) -> Box<dyn AsrEngine + Send> {
+        Box::new(Self { state })
+    }
+}
+
+impl AsrEngine for LocalAsrAdapterEngine {
+    fn lane(&self) -> EngineLane {
+        self.state.lane()
+    }
+
+    fn transcribe(&mut self, _request: &AsrRequest) -> Result<AsrTranscript, AsrError> {
+        match &self.state {
+            LocalAsrAdapterState::Pending {
+                selected_model_id: Some(model),
+                ..
+            } => Err(AsrError::Unavailable(format!(
+                "local ASR adapter is waiting for a verified artifact for selected model '{model}'"
+            ))),
+            LocalAsrAdapterState::Pending {
+                selected_model_id: None,
+                ..
+            } => Err(AsrError::Unavailable(
+                "local ASR adapter is waiting for a selected model".to_string(),
+            )),
+            LocalAsrAdapterState::Blocked {
+                selected_model_id,
+                reason,
+                ..
+            } => {
+                let model = selected_model_id.as_deref().unwrap_or("none selected");
+                Err(AsrError::Unavailable(format!(
+                    "selected ASR model '{model}' is not runtime-ready: {reason}"
+                )))
+            }
+            LocalAsrAdapterState::VerifiedArtifact { spec } => {
+                Err(AsrError::Unavailable(format!(
+                    "verified {} ASR artifact for selected model '{}' is ready at {} ({} bytes), but the runtime adapter is not implemented yet",
+                    spec.runtime,
+                    spec.model_id,
+                    spec.artifact_path.display(),
+                    spec.artifact_size_bytes
+                )))
+            }
+        }
+    }
 }
 
 fn engine_lane_label(lane: EngineLane) -> &'static str {
@@ -453,6 +544,27 @@ mod tests {
         assert_eq!(
             err.to_string(),
             "all configured ASR engines failed: local_cpu: engine unavailable: local ASR adapter is not loaded yet for selected model 'fixture-asr'"
+        );
+    }
+
+    #[test]
+    fn artifact_aware_local_asr_reports_verified_adapter_boundary_without_fake_output() {
+        let id = session_id();
+        let mut stack = local_asr_stack(LocalAsrAdapterState::VerifiedArtifact {
+            spec: LocalAsrAdapterSpec {
+                model_id: "fixture-asr".to_string(),
+                lane: EngineLane::LocalCpu,
+                runtime: "onnxruntime".to_string(),
+                artifact_path: PathBuf::from("/tmp/kaydence-models/fixture-asr.onnx"),
+                artifact_size_bytes: 1_024,
+            },
+        });
+
+        let err = stack.transcribe(&request(id)).unwrap_err();
+
+        assert_eq!(
+            err.to_string(),
+            "all configured ASR engines failed: local_cpu: engine unavailable: verified onnxruntime ASR artifact for selected model 'fixture-asr' is ready at /tmp/kaydence-models/fixture-asr.onnx (1024 bytes), but the runtime adapter is not implemented yet"
         );
     }
 }

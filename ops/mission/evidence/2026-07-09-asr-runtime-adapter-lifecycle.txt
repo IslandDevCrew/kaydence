@@ -1,0 +1,53 @@
+Kaydence evidence — 2026-07-09 ASR runtime adapter lifecycle
+
+Scope
+- Added artifact-aware LocalAsrAdapterState for the runtime ASR stack:
+  Pending selected model, Blocked selected model, or VerifiedArtifact with model id, lane, runtime, artifact path, and byte size.
+- HotkeyRuntime startup now resolves selected ASR state from first-run selection + model registry + app-data models directory.
+- select_asr_model, refresh_model_readiness, and install_model_artifact now require the hotkey runtime to be idle before applying a new ASR adapter state to the active runtime.
+- Missing/invalid artifacts now produce explicit Recognize failures with model and reason. Verified artifacts produce an honest boundary message that the artifact is ready but the real inference adapter is not implemented yet.
+- No Parakeet/Whisper inference is faked, no model bytes are downloaded, and no network surface was added.
+
+Changed source
+- apps/desktop/src-tauri/src/engine/mod.rs
+- apps/desktop/src-tauri/src/pipeline/mod.rs
+- apps/desktop/src-tauri/src/lib.rs
+
+Focused gates
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml artifact_aware_local_asr
+  PASS: 1 test passed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml default_runtime_pipeline_reports
+  PASS: 2 tests passed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml selected_asr_runtime_state
+  PASS: 2 tests passed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime_refuses_asr
+  PASS: 1 test passed.
+
+Standing gates
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  PASS.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  PASS.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  PASS: 206 lib tests, 2 crash_recovery tests, 5 event_sequences tests, and 5 short_utterance tests passed.
+- pnpm --dir apps/desktop run check
+  PASS: tsc --noEmit and eslint --max-warnings 0.
+- pnpm --dir apps/desktop run build
+  PASS: Vite production build completed.
+- bash scripts/check-privacy-posture.sh
+  PASS: 0 network call sites; README promises present; no screen-capture primitives.
+- bash scripts/check-adr-status.sh
+  PASS: all ADRs accepted except the declared by-design ADR-0009 exception.
+- bash scripts/bench.sh --check
+  PASS/PARTIAL: measured Raw-path metrics within section 5 budgets; real ASR/GPU/idle-footprint/reference-machine metrics remain unmeasured.
+- ./script/build_and_run.sh --verify
+  PASS.
+
+Remote boundary
+- Not pushed. GitHub Actions hosted runners remain blocked before checkout by repository/account billing or spending-limit state, so local commits stay ahead of origin until the user fixes billing or explicitly asks to push despite red remote runs.
+
+Honest remaining work
+- Real Parakeet/Whisper engine adapters.
+- Reviewed real model hashes/sources or approved download flow.
+- Golden-clip WER and real ASR latency evidence.
+- Reference-machine <=60s first-run proof.

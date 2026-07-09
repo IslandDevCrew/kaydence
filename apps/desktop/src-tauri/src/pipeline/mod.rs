@@ -178,10 +178,19 @@ pub fn default_runtime_pipeline(
         _ => EngineLane::LocalCpu,
     };
 
+    default_runtime_pipeline_with_asr(engine::LocalAsrAdapterState::Pending {
+        selected_model_id: selected_model_id.map(str::to_string),
+        lane: engine_lane,
+    })
+}
+
+pub fn default_runtime_pipeline_with_asr(
+    asr_state: engine::LocalAsrAdapterState,
+) -> TranscriptionPipeline<crate::audio::vad::EnergyVad> {
     TranscriptionPipeline::new(
         crate::audio::vad::EnergyVad::new(0.01),
         SpeechGateConfig::default(),
-        engine::pending_local_asr_stack(engine_lane, selected_model_id),
+        engine::local_asr_stack(asr_state),
     )
 }
 
@@ -446,7 +455,40 @@ mod tests {
             SessionEvent::Failed {
                 id: summary.id,
                 stage: Stage::Recognize,
-                error: "all configured ASR engines failed: local_cpu: engine unavailable: local ASR adapter is not loaded yet for selected model 'fixture-asr'".to_string()
+                error: "all configured ASR engines failed: local_cpu: engine unavailable: local ASR adapter is waiting for a verified artifact for selected model 'fixture-asr'".to_string()
+            }
+        );
+        assert!(committed_text(&events).is_none());
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn default_runtime_pipeline_reports_verified_artifact_adapter_boundary() {
+        let (summary, app_data) = summary_for_samples(&[0.0, 0.0, 0.5, 0.5]);
+        let mut pipeline =
+            default_runtime_pipeline_with_asr(engine::LocalAsrAdapterState::VerifiedArtifact {
+                spec: engine::LocalAsrAdapterSpec {
+                    model_id: "fixture-asr".to_string(),
+                    lane: EngineLane::LocalCpu,
+                    runtime: "onnxruntime".to_string(),
+                    artifact_path: app_data.join("models/fixture-asr.onnx"),
+                    artifact_size_bytes: 3,
+                },
+            });
+
+        let events = pipeline.process_capture(&summary).unwrap();
+
+        assert_eq!(events[0], summary.audio_persisted_event());
+        assert_eq!(events.len(), 2);
+        assert_eq!(
+            events[1],
+            SessionEvent::Failed {
+                id: summary.id,
+                stage: Stage::Recognize,
+                error: format!(
+                    "all configured ASR engines failed: local_cpu: engine unavailable: verified onnxruntime ASR artifact for selected model 'fixture-asr' is ready at {} (3 bytes), but the runtime adapter is not implemented yet",
+                    app_data.join("models/fixture-asr.onnx").display()
+                )
             }
         );
         assert!(committed_text(&events).is_none());
