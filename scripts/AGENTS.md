@@ -15,6 +15,10 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
   peers only). Zero-source tree = clean pass. Any unreviewed surface = exit 1, a
   release blocker (non-negotiable #1). Deeper binary/deps scan is a TODO for
   post-build. Verified: FAILs on a planted `std::net` call outside the allowlist.
+- `check-privacy-posture.sh` — **present (P1-P0-7)**. Runs the network audit,
+  asserts the plain-language README privacy promises are still present, and scans
+  source for banned screen-capture implementation primitives. This is the
+  release privacy posture gate until deeper binary/dependency audits land.
 - `check-adr-status.sh` — **present (P0-T6)**. P0-G7 gate: all ADRs Accepted
   except declared by-design exceptions (ADR-0009 Relay stays Proposed until the
   operator crypto review gates P4-1). Comment-safe status parse.

@@ -29,6 +29,12 @@ interface Metric {
   detail: string;
 }
 
+interface PrivacyPostureItem {
+  label: string;
+  value: string;
+  detail: string;
+}
+
 interface ChecklistItem {
   label: string;
   status: "Ready" | "Needs hardware" | "Next" | "Issue";
@@ -291,8 +297,48 @@ const metrics: Metric[] = [
   { label: "Raw latency", value: "ready", detail: "bench gate wired" },
   { label: "Crash recovery", value: "33/33", detail: "local tests green" },
   { label: "Network audit", value: "0", detail: "unreviewed call sites" },
-  { label: "Remote", value: "404", detail: "local-first recovery" },
+  { label: "Remote", value: "live", detail: "private origin restored" },
 ];
+
+function privacyPosture(snapshot: AppSnapshot, lane: LaneSpec): PrivacyPostureItem[] {
+  const contextState = snapshot.settings.privacy.local_context_enabled
+    ? "Opt-in local"
+    : "Off by default";
+  const ocrState = snapshot.settings.privacy.local_ocr_enabled ? "local OCR on" : "OCR off";
+
+  return [
+    {
+      label: "Telemetry",
+      value: "None",
+      detail: "No usage beacon, account event stream, or hidden crash upload path.",
+    },
+    {
+      label: "Network",
+      value: "0 unreviewed",
+      detail: "audit-network is the source gate for every new egress-capable call site.",
+    },
+    {
+      label: "Screen capture",
+      value: "Banned",
+      detail: "Cloud screenshots and screen streams are permanently out of scope.",
+    },
+    {
+      label: "Context",
+      value: contextState,
+      detail: `${ocrState}; held in memory only and blocked for secure fields.`,
+    },
+    {
+      label: "History",
+      value: `${snapshot.settings.privacy.history_retention_days} days`,
+      detail: "Audio, raw text, cleaned text, playback, export, delete, and purge stay local.",
+    },
+    {
+      label: `${lane.label} secure fields`,
+      value: "Refuse",
+      detail: `${lane.injection} must hold instead of injecting when the target is secure.`,
+    },
+  ];
+}
 
 function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
   const firstRun = snapshot.settings.first_run;
@@ -414,6 +460,7 @@ export function App(): JSX.Element {
     !snapshot.settings.first_run.model_ready &&
     (requiredModels.length > 0 ||
       snapshot.settings.first_run.model_readiness_error !== null);
+  const privacyItems = privacyPosture(snapshot, lane);
 
   useEffect(() => {
     let active = true;
@@ -973,6 +1020,25 @@ export function App(): JSX.Element {
                 <span>Unknown focus</span>
                 <strong>{unknownFocus}</strong>
               </div>
+            </div>
+          </article>
+
+          <article className="panel privacy-panel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Screen family 07</p>
+                <h2>Privacy & context</h2>
+              </div>
+              <span className="pill subtle">Local only</span>
+            </div>
+            <div className="privacy-grid" aria-label="Privacy posture">
+              {privacyItems.map((item) => (
+                <div className="privacy-item" key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                  <small>{item.detail}</small>
+                </div>
+              ))}
             </div>
           </article>
 

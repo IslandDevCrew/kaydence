@@ -239,3 +239,9 @@
 - Repaired the private GitHub access issue without changing the remote URL. `origin` was already `https://github.com/IslandDevCrew/kaydence.git`; the active GitHub CLI account was `Navigata1`, while the stored `IslandDevCrew` login was inactive.
 - Ran `gh auth switch --hostname github.com --user IslandDevCrew` and `gh auth setup-git --hostname github.com`. `gh repo view IslandDevCrew/kaydence` now resolves the repo as PRIVATE with ADMIN permission, and `git fetch origin` passes.
 - Verified local main was 0 behind / 46 ahead of `origin/main` before the SOTU checkpoint. Evidence saved at `ops/mission/evidence/2026-07-09-remote-restored.txt`. Honest boundary: a fresh Actions run still must be watched after pushing the restored-access backlog.
+
+## 2026-07-09T05:51Z — Codex P1 slice (privacy posture)
+- Closed PRD P0-7's source/docs/UI posture slice: README now has explicit plain-language commitments for no telemetry, no account, no cloud screen capture, no default network egress, local-only history, and memory-only context.
+- Added `scripts/check-privacy-posture.sh` and wired it into CI after `audit-network`. The gate runs the network audit, asserts the README promises remain present, and fails on app/crates source tokens for banned screen-capture implementation primitives.
+- Added Screen Family 07 Privacy & Context to the cockpit, rendering privacy posture from backend-owned `AppSnapshot` plus OS-lane injection metadata. Browser smoke captured desktop/narrow screenshots with no page errors, horizontal overflow, or checked text overflow.
+- Evidence saved at `ops/mission/evidence/2026-07-09-privacy-posture.txt` plus screenshots `2026-07-09-privacy-posture-desktop.png` and `2026-07-09-privacy-posture-narrow.png`. Honest boundary: future BYOK/model-download/Harbor egress still needs ADR + toggle + allowlist review before implementation.

@@ -1,0 +1,46 @@
+Kaydence P1-P0-7 privacy posture slice
+Date: 2026-07-09T05:51Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Requirement: PRD P0-7 — no telemetry/accounts/screen capture; network audit passes; privacy page in README states it plainly.
+
+Changes:
+- Expanded README.md "Privacy, plainly" into release-grade public promises:
+  no telemetry, no account, no cloud screen capture, no default network egress,
+  local-only history, and memory-only context.
+- Added scripts/check-privacy-posture.sh, a portable bash 3.2 gate that:
+  1. runs scripts/audit-network.sh --check,
+  2. asserts the README privacy promise phrases remain present,
+  3. scans app/crates source for banned screen-capture implementation primitives.
+- Wired the new privacy posture gate into .github/workflows/ci.yml after the
+  existing network audit.
+- Added Screen Family 07 Privacy & Context panel to the React shell. The panel
+  renders privacy state from backend-owned AppSnapshot and OS lane metadata:
+  telemetry none, network 0 unreviewed, screen capture banned, context off by
+  default, local history retention, and secure-field refusal.
+
+Verification:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  PASS.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  PASS.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all
+  PASS: 184 lib tests + 2 crash_recovery tests.
+- bash scripts/check-frontend.sh
+  PASS: tsc --noEmit + eslint.
+- bash scripts/check-privacy-posture.sh --check
+  PASS: audit-network found 0 network-capable call sites; README promises present; no banned screen-capture primitives.
+- bash scripts/check-adr-status.sh
+  PASS: all ADRs Accepted except ADR-0009 Proposed by design.
+- pnpm --filter kaydence-desktop build
+  PASS: tsc + vite production build. Note: pnpm emitted the existing onlyBuiltDependencies warning; build succeeded.
+- Browser smoke via bundled Playwright against http://127.0.0.1:1420/
+  PASS at 1440x1100 and 980x1100: Privacy & context rendered once, Screen family 07 rendered once, six privacy cards rendered, no page errors, no horizontal overflow, and no checked text overflow.
+
+Visual evidence:
+- ops/mission/evidence/2026-07-09-privacy-posture-desktop.png
+- ops/mission/evidence/2026-07-09-privacy-posture-narrow.png
+
+Honest boundary:
+- This closes the PRD P0-7 source/docs/UI posture gate. It does not prove future
+  BYOK/model-download endpoints, because those network surfaces are not
+  implemented yet; when they land, they still require ADR/toggle/allowlist review.

@@ -32,10 +32,11 @@ Current verified state:
 - GitHub remote access is restored. Before the SOTU checkpoint push, local main
   was 0 behind / 46 ahead of origin/main and fast-forward eligible.
 - P0 is effectively complete except hardware-only window checks.
-- P1 is active.
-- Fresh local gates passed on 2026-07-08: cargo fmt, cargo clippy, cargo test
-  (28 tests including crash recovery), scripts/check-frontend.sh,
-  scripts/audit-network.sh, scripts/check-adr-status.sh.
+- P1 is active; P1-P0-7 privacy posture is done with evidence.
+- Fresh local gates passed on 2026-07-09: cargo fmt, cargo clippy, cargo test
+  (184 lib tests + 2 crash-recovery tests), scripts/check-frontend.sh,
+  scripts/check-privacy-posture.sh --check, scripts/check-adr-status.sh, and
+  pnpm --filter kaydence-desktop build.
 - Frontend cockpit/setup shell is present and must remain presentation-only.
 - The Codex app Run action is wired to ./script/build_and_run.sh.
 - The hotkey runtime now honors persisted push-to-talk vs toggle mode. The
@@ -56,6 +57,12 @@ Current verified state:
   safe app-data WAV and exposes it through Tauri's scoped asset protocol for the
   cockpit audio control. Recovered-audio re-transcription remains follow-up
   history/recovery work until real ASR adapters land.
+- Privacy posture is now checkable: README states no telemetry, no account, no
+  cloud screen capture, no default network egress, local-only history, and
+  memory-only context; scripts/check-privacy-posture.sh runs audit-network,
+  asserts those README promises, and blocks banned screen-capture primitives;
+  CI runs it after audit-network. The cockpit includes Screen Family 07 Privacy
+  & Context, with desktop/narrow screenshots in ops/mission/evidence/.
 
 Operating rules:
 - Work from evidence, not assertions.
@@ -98,7 +105,9 @@ Next best work:
    needs the Windows Codex session; Linux AT-SPI/uinput needs human-focus VM
    validation; macOS AX/CGEvent/NSPasteboard has local evidence.
 4. Build first-run permission/setup and dictation cockpit against screen
-   families 01, 03, 07, and 10.
+   families 01, 03, and 10; Screen Family 07 has a first source-backed privacy
+   panel but still needs the eventual human design fidelity review with the rest
+   of P1-G4.
 5. Watch the restored GitHub remote after each push: confirm Actions starts on
    the pushed HEAD and do not claim current-head 3-OS parity until the fresh
    CI run is green.

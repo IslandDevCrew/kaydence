@@ -553,6 +553,38 @@ button {
   gap: 8px;
 }
 
+.privacy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.privacy-item {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-height: 104px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 11px 12px;
+}
+
+.privacy-item span,
+.privacy-item small {
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.privacy-item strong {
+  color: color-mix(in srgb, var(--accent) 78%, #14313a);
+  font-size: 1rem;
+}
+
+.privacy-item small {
+  line-height: 1.32;
+}
+
 .capability-list strong,
 .setup-list strong {
   text-align: right;

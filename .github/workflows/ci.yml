@@ -54,6 +54,9 @@ jobs:
       - name: network audit (non-negotiable #1)
         shell: bash
         run: bash scripts/audit-network.sh
+      - name: privacy posture (P1-P0-7)
+        shell: bash
+        run: bash scripts/check-privacy-posture.sh --check
       - name: ADR status (P0-G7)
         shell: bash
         run: bash scripts/check-adr-status.sh
