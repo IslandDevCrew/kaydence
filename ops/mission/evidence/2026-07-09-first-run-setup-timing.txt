@@ -1,0 +1,89 @@
+Kaydence evidence: P1-P0-8 first-run setup timing proof
+Date: 2026-07-09
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Branch: main
+
+Scope
+- Added backend-owned first-run setup timing fields to app-data settings.json:
+  first_run_started_at_ms and first_dictation_completed_at_ms.
+- Added FirstRunSetupTiming to FirstRunStatus/AppSnapshot with:
+  started_at_ms, completed_at_ms, elapsed_ms, target_ms=60000,
+  and within_target.
+- Started the setup timer once when the desktop app refreshes model/app data,
+  and completed timing only when the runtime records a real Injected dictation.
+- If a legacy/missing start timestamp exists at completion time, the UI reports
+  completion without manufacturing a 0s elapsed duration.
+- Kept the first-run boundary honest: this proves durable timing mechanics and
+  UI presentation, not a reference-machine <=60s journey yet.
+- Added Screen Family 10 setup UI copy for the 60-second setup proof.
+- Fixed narrow desktop-window overflow found during Browser smoke by tightening
+  app-shell/sidebar/workspace grid min-width rules and making the waveform
+  shrink safely.
+
+Remote baseline rechecked before this slice
+- git status -sb: ## main...origin/main
+- git rev-parse --short HEAD: 699ff3b
+- git rev-list --left-right --count origin/main...HEAD: 0 0
+- gh run view 29022084029 --json ...:
+  - status: completed
+  - conclusion: success
+  - headSha: 699ff3b4a45d0668cb0915fb9f7862d4ceb169c8
+  - updatedAt: 2026-07-09T13:50:44Z
+  - macOS, Ubuntu, and Windows jobs all success.
+
+Focused verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_setup_timing
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot_starts_first_run_setup_timer_once
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot_times_first_dictation_completion_against_sixty_seconds
+  RESULT: PASS
+
+Local verification
+- cargo fmt --all --check
+  RESULT: PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  RESULT: PASS, 195 lib tests, 2 crash_recovery tests, 5 event_sequences tests,
+  5 short_utterance tests
+- pnpm --dir apps/desktop run check
+  RESULT: PASS, tsc --noEmit and eslint --max-warnings 0
+- bash scripts/check-privacy-posture.sh
+  RESULT: PASS, README promises present, network audit clean, no screen-capture primitives
+- bash scripts/check-adr-status.sh
+  RESULT: PASS, all ADRs Accepted except declared by-design ADR-0009
+- bash scripts/bench.sh --check
+  RESULT: PASS for measured metrics and PARTIAL for unmeasured real ASR/GPU/idle fields
+  Measurements: hotkey_to_capture=7ms, partial_lag=120ms,
+  release_to_inject_cpu=6ms, light_cleanup_added=1ms
+- pnpm --dir apps/desktop run build
+  RESULT: PASS, production Vite build completed
+- ./script/build_and_run.sh --verify
+  RESULT: PASS
+- ./script/build_and_run.sh build
+  RESULT: PASS, production Vite build plus Rust desktop build completed
+
+Browser/UI smoke
+- Temporary Vite dev server loaded at http://localhost:1420/.
+- In-app Browser preview verified at 1280x720:
+  - title Kaydence
+  - First run visible
+  - setup timing strip visible
+  - timing text: "60-second setup proof"
+  - no horizontal page overflow
+  - no browser console errors
+- In-app Browser preview verified at 390x844:
+  - setup timing strip visible
+  - no horizontal page overflow
+  - no detected overflowing elements
+  - no browser console errors
+
+Honest boundary
+- This advances P1-P0-8 by wiring durable setup timing proof and a visible
+  Screen Family 10 setup proof strip.
+- It does not close P1-P0-8.
+- Remaining work: real OS permission prompts/proof, model download/progress UI,
+  live first-dictation journey, and <=60s proof on reference machines.
+- This slice still requires a fresh post-push 3-OS Actions run before claiming
+  current-head remote parity.

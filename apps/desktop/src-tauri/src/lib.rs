@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::Mutex;
 #[cfg(desktop)]
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 pub mod events;
 
@@ -539,14 +539,36 @@ impl RuntimeSnapshot {
     fn mark_first_dictation_completed(
         &self,
     ) -> Result<settings::AppSnapshot, settings::SettingsStoreError> {
-        self.update_first_run(|first_run| {
-            first_run.first_dictation_completed = true;
-        });
+        self.mark_first_dictation_completed_at(current_unix_ms())
+    }
 
+    #[cfg(desktop)]
+    fn mark_first_dictation_completed_at(
+        &self,
+        completed_at_ms: u64,
+    ) -> Result<settings::AppSnapshot, settings::SettingsStoreError> {
         if let Some(store) = self.settings_store() {
             let mut settings = store.load()?;
             settings.first_dictation_completed = true;
+            if settings.first_dictation_completed_at_ms.is_none() {
+                settings.first_dictation_completed_at_ms = Some(completed_at_ms);
+            }
+            let setup_timing = settings::FirstRunSetupTiming::from_user_settings(&settings);
             store.save(&settings)?;
+            self.update_first_run(|first_run| {
+                first_run.first_dictation_completed = true;
+                first_run.setup_timing = setup_timing;
+            });
+        } else {
+            self.update_first_run(|first_run| {
+                first_run.first_dictation_completed = true;
+                if first_run.setup_timing.completed_at_ms.is_none() {
+                    first_run.setup_timing = settings::FirstRunSetupTiming::from_parts(
+                        first_run.setup_timing.started_at_ms,
+                        Some(completed_at_ms),
+                    );
+                }
+            });
         }
 
         Ok(self.snapshot())
@@ -567,6 +589,7 @@ impl RuntimeSnapshot {
             return Ok(());
         };
         let settings = store.load()?;
+        let setup_timing = settings::FirstRunSetupTiming::from_user_settings(&settings);
         let first_dictation_completed = settings.first_dictation_completed;
         if let Some(model_id) = settings.selected_asr_model_id {
             let _ = self.apply_asr_selection(&model_id);
@@ -578,11 +601,12 @@ impl RuntimeSnapshot {
             let binding = settings::normalize_hotkey_binding(&binding)?;
             self.apply_hotkey_binding(&binding);
         }
-        if first_dictation_completed {
-            self.update_first_run(|first_run| {
+        self.update_first_run(|first_run| {
+            first_run.setup_timing = setup_timing;
+            if first_dictation_completed {
                 first_run.first_dictation_completed = true;
-            });
-        }
+            }
+        });
         Ok(())
     }
 
@@ -647,6 +671,26 @@ impl RuntimeSnapshot {
     }
 
     #[cfg(desktop)]
+    fn ensure_first_run_started_at(
+        &self,
+        started_at_ms: u64,
+    ) -> Result<(), settings::SettingsStoreError> {
+        let Some(store) = self.settings_store() else {
+            return Ok(());
+        };
+        let mut settings = store.load()?;
+        if settings.first_run_started_at_ms.is_none() && !settings.first_dictation_completed {
+            settings.first_run_started_at_ms = Some(started_at_ms);
+            store.save(&settings)?;
+        }
+        let setup_timing = settings::FirstRunSetupTiming::from_user_settings(&settings);
+        self.update_first_run(|first_run| {
+            first_run.setup_timing = setup_timing;
+        });
+        Ok(())
+    }
+
+    #[cfg(desktop)]
     fn set_hotkey_binding<R: tauri::Runtime>(
         &self,
         binding: &str,
@@ -693,6 +737,7 @@ impl RuntimeSnapshot {
         app_data_dir: &Path,
     ) -> Result<settings::AppSnapshot, settings::SettingsStoreError> {
         self.set_settings_store(app_data_dir);
+        self.ensure_first_run_started_at(current_unix_ms())?;
         self.refresh_model_readiness(registry_path, &app_data_dir.join("models"));
         self.apply_persisted_user_settings()?;
         Ok(self.snapshot())
@@ -805,6 +850,15 @@ impl RuntimeSnapshot {
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         update(&mut snapshot.settings.first_run);
     }
+}
+
+#[cfg(desktop)]
+fn current_unix_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+        .min(u128::from(u64::MAX)) as u64
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -1893,6 +1947,11 @@ mod tests {
                 .unwrap()
                 .first_dictation_completed
         );
+        assert!(settings::SettingsStore::new(&app_data)
+            .load()
+            .unwrap()
+            .first_dictation_completed_at_ms
+            .is_some());
 
         let rehydrated = RuntimeSnapshot::default();
         rehydrated.set_settings_store(&app_data);
@@ -1904,6 +1963,61 @@ mod tests {
                 .first_run
                 .first_dictation_completed
         );
+        assert!(rehydrated
+            .snapshot()
+            .settings
+            .first_run
+            .setup_timing
+            .completed_at_ms
+            .is_some());
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn runtime_snapshot_starts_first_run_setup_timer_once() {
+        let app_data = tmp();
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+
+        state.ensure_first_run_started_at(1_000).unwrap();
+        state.ensure_first_run_started_at(2_000).unwrap();
+
+        let persisted = settings::SettingsStore::new(&app_data).load().unwrap();
+        assert_eq!(persisted.first_run_started_at_ms, Some(1_000));
+        assert_eq!(
+            state
+                .snapshot()
+                .settings
+                .first_run
+                .setup_timing
+                .started_at_ms,
+            Some(1_000)
+        );
+        assert_eq!(
+            state.snapshot().settings.first_run.setup_timing.target_ms,
+            settings::FIRST_RUN_SETUP_TARGET_MS
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn runtime_snapshot_times_first_dictation_completion_against_sixty_seconds() {
+        let app_data = tmp();
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+        state.ensure_first_run_started_at(1_000).unwrap();
+
+        let snapshot = state.mark_first_dictation_completed_at(60_500).unwrap();
+        let timing = snapshot.settings.first_run.setup_timing;
+
+        assert_eq!(timing.started_at_ms, Some(1_000));
+        assert_eq!(timing.completed_at_ms, Some(60_500));
+        assert_eq!(timing.elapsed_ms, Some(59_500));
+        assert_eq!(timing.within_target, Some(true));
+
+        let persisted = settings::SettingsStore::new(&app_data).load().unwrap();
+        assert_eq!(persisted.first_run_started_at_ms, Some(1_000));
+        assert_eq!(persisted.first_dictation_completed_at_ms, Some(60_500));
         let _ = std::fs::remove_dir_all(app_data);
     }
 

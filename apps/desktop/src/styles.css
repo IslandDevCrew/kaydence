@@ -38,6 +38,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
   border-right: 1px solid var(--line);
   background: #102026;
   color: #eef7f8;
@@ -49,6 +50,7 @@ button {
   grid-template-columns: 40px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -62,6 +64,8 @@ button {
 .brand-lockup strong,
 .brand-lockup span {
   display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .brand-lockup span {
@@ -72,6 +76,7 @@ button {
 .nav-list {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .nav-item {
@@ -79,12 +84,19 @@ button {
   align-items: center;
   justify-content: space-between;
   min-height: 36px;
+  min-width: 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
   color: #c7d7dc;
   padding: 0 10px;
   text-align: left;
+}
+
+.nav-item span,
+.nav-item small {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .nav-item small {
@@ -127,6 +139,7 @@ button {
   display: grid;
   align-content: start;
   gap: 18px;
+  min-width: 0;
   padding: 22px;
 }
 
@@ -197,6 +210,7 @@ button {
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
+  min-width: 0;
   padding: 7px 10px;
 }
 
@@ -291,6 +305,7 @@ button {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: 0 18px 42px rgba(20,33,38,.08);
+  min-width: 0;
 }
 
 .metric-card {
@@ -320,6 +335,7 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
   gap: 14px;
+  min-width: 0;
 }
 
 .panel {
@@ -330,6 +346,7 @@ button {
 
 .recording-panel {
   grid-row: span 2;
+  min-width: 0;
 }
 
 .pill {
@@ -350,15 +367,19 @@ button {
   display: flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
   min-height: 122px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: linear-gradient(180deg, #f9fbfb, #eef4f5);
+  overflow: hidden;
   padding: 18px;
 }
 
 .waveform span {
-  width: 8px;
+  flex: 1 1 4px;
+  max-width: 8px;
+  min-width: 2px;
   border-radius: 999px;
   background: linear-gradient(180deg, var(--accent), var(--blue));
 }
@@ -892,6 +913,39 @@ button {
   color: var(--gold);
 }
 
+.setup-timing {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 10px 12px;
+}
+
+.setup-timing span,
+.setup-timing strong,
+.setup-timing small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.setup-timing span {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.setup-timing strong {
+  font-size: .95rem;
+}
+
+.setup-timing small {
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
 .primary-action {
   min-height: 40px;
   border: 0;
@@ -947,7 +1001,7 @@ button {
 
 @media (max-width: 980px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar {
@@ -960,7 +1014,22 @@ button {
 
   .content-grid,
   .metric-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lane-switcher {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .panel-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .history-row {
@@ -972,5 +1041,11 @@ button {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+  }
+}
+
+@media (max-width: 520px) {
+  .nav-list {
+    grid-template-columns: 1fr;
   }
 }

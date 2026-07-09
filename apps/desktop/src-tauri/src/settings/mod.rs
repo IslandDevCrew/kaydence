@@ -16,6 +16,7 @@ use thiserror::Error;
 /// Current settings-file schema version.
 pub const SCHEMA_VERSION: u16 = 1;
 pub const SETTINGS_FILE_NAME: &str = "settings.json";
+pub const FIRST_RUN_SETUP_TARGET_MS: u64 = 60_000;
 /// The product brand string. Never hardcode "Kaydence" anywhere else.
 pub const APP_NAME: &str = "Kaydence";
 pub const DEFAULT_HOTKEY_BINDING: &str = "RightAlt";
@@ -96,7 +97,11 @@ pub struct UserSettingsFile {
     #[serde(default)]
     pub hotkey_primary_binding: Option<String>,
     #[serde(default)]
+    pub first_run_started_at_ms: Option<u64>,
+    #[serde(default)]
     pub first_dictation_completed: bool,
+    #[serde(default)]
+    pub first_dictation_completed_at_ms: Option<u64>,
 }
 
 impl Default for UserSettingsFile {
@@ -106,7 +111,9 @@ impl Default for UserSettingsFile {
             selected_asr_model_id: None,
             hotkey_mode: None,
             hotkey_primary_binding: None,
+            first_run_started_at_ms: None,
             first_dictation_completed: false,
+            first_dictation_completed_at_ms: None,
         }
     }
 }
@@ -128,6 +135,21 @@ impl UserSettingsFile {
         }
         if let Some(binding) = self.hotkey_primary_binding.as_deref() {
             validate_hotkey_binding(binding)?;
+        }
+        if let (Some(started), Some(completed)) = (
+            self.first_run_started_at_ms,
+            self.first_dictation_completed_at_ms,
+        ) {
+            if completed < started {
+                return Err(SettingsError::InvalidFirstRunTiming(
+                    "completion precedes start",
+                ));
+            }
+        }
+        if self.first_dictation_completed_at_ms.is_some() && !self.first_dictation_completed {
+            return Err(SettingsError::InvalidFirstRunTiming(
+                "completion timestamp requires completed=true",
+            ));
         }
         Ok(())
     }
@@ -432,6 +454,7 @@ pub struct FirstRunStatus {
     pub input_permission_ready: bool,
     pub hotkey_registered: bool,
     pub hotkey_registration_error: Option<String>,
+    pub setup_timing: FirstRunSetupTiming,
     pub first_dictation_completed: bool,
 }
 
@@ -449,6 +472,7 @@ impl Default for FirstRunStatus {
             input_permission_ready: false,
             hotkey_registered: false,
             hotkey_registration_error: None,
+            setup_timing: FirstRunSetupTiming::default(),
             first_dictation_completed: false,
         }
     }
@@ -460,6 +484,45 @@ impl FirstRunStatus {
             && self.microphone_permission_ready
             && self.input_permission_ready
             && self.hotkey_registered
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunSetupTiming {
+    pub started_at_ms: Option<u64>,
+    pub completed_at_ms: Option<u64>,
+    pub elapsed_ms: Option<u64>,
+    pub target_ms: u64,
+    pub within_target: Option<bool>,
+}
+
+impl Default for FirstRunSetupTiming {
+    fn default() -> Self {
+        Self::from_parts(None, None)
+    }
+}
+
+impl FirstRunSetupTiming {
+    pub fn from_user_settings(settings: &UserSettingsFile) -> Self {
+        Self::from_parts(
+            settings.first_run_started_at_ms,
+            settings.first_dictation_completed_at_ms,
+        )
+    }
+
+    pub fn from_parts(started_at_ms: Option<u64>, completed_at_ms: Option<u64>) -> Self {
+        let elapsed_ms = started_at_ms
+            .zip(completed_at_ms)
+            .and_then(|(started, completed)| completed.checked_sub(started));
+        let within_target = elapsed_ms.map(|elapsed| elapsed <= FIRST_RUN_SETUP_TARGET_MS);
+
+        Self {
+            started_at_ms,
+            completed_at_ms,
+            elapsed_ms,
+            target_ms: FIRST_RUN_SETUP_TARGET_MS,
+            within_target,
+        }
     }
 }
 
@@ -714,6 +777,8 @@ pub enum SettingsError {
     InvalidHotkeyBinding(String),
     #[error("unknown first-run permission requirement: {0}")]
     UnknownPermissionRequirement(String),
+    #[error("invalid first-run timing: {0}")]
+    InvalidFirstRunTiming(&'static str),
 }
 
 #[derive(Debug, Error)]
@@ -882,7 +947,9 @@ mod tests {
         let dir = tmp();
         let store = SettingsStore::new(&dir);
         let settings = UserSettingsFile {
+            first_run_started_at_ms: Some(1_000),
             first_dictation_completed: true,
+            first_dictation_completed_at_ms: Some(60_000),
             ..UserSettingsFile::default()
         };
 
@@ -893,6 +960,50 @@ mod tests {
             .unwrap()
             .contains("\"first_dictation_completed\": true"));
         let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn first_run_setup_timing_calculates_elapsed_and_target() {
+        let timing = FirstRunSetupTiming::from_parts(Some(1_000), Some(60_500));
+
+        assert_eq!(timing.elapsed_ms, Some(59_500));
+        assert_eq!(timing.target_ms, FIRST_RUN_SETUP_TARGET_MS);
+        assert_eq!(timing.within_target, Some(true));
+
+        let slow = FirstRunSetupTiming::from_parts(Some(1_000), Some(62_000));
+        assert_eq!(slow.elapsed_ms, Some(61_000));
+        assert_eq!(slow.within_target, Some(false));
+
+        let missing_start = FirstRunSetupTiming::from_parts(None, Some(60_500));
+        assert_eq!(missing_start.elapsed_ms, None);
+        assert_eq!(missing_start.within_target, None);
+    }
+
+    #[test]
+    fn validation_rejects_invalid_first_run_timing() {
+        let mut settings = UserSettingsFile {
+            first_run_started_at_ms: Some(10_000),
+            first_dictation_completed: true,
+            first_dictation_completed_at_ms: Some(1_000),
+            ..UserSettingsFile::default()
+        };
+        assert!(matches!(
+            settings.validate(),
+            Err(SettingsError::InvalidFirstRunTiming(
+                "completion precedes start"
+            ))
+        ));
+
+        settings = UserSettingsFile {
+            first_dictation_completed_at_ms: Some(1_000),
+            ..UserSettingsFile::default()
+        };
+        assert!(matches!(
+            settings.validate(),
+            Err(SettingsError::InvalidFirstRunTiming(
+                "completion timestamp requires completed=true"
+            ))
+        ));
     }
 
     #[test]

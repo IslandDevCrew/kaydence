@@ -31,20 +31,21 @@ Read first, in order:
 Current verified state:
 - GitHub remote access is restored; `IslandDevCrew/kaydence` resolves as a
   PRIVATE repo with ADMIN permission and `git fetch origin` succeeds.
-- Current verified remote baseline before the first-run permission-action slice:
-  main at `86e50fd` had green 3-OS Actions CI in run 29020477134, completed
-  2026-07-09T13:26:06Z on macOS, Ubuntu, and Windows.
+- Current verified remote baseline before the first-run setup-timing slice:
+  main at `699ff3b` had green 3-OS Actions CI in run 29022084029, completed
+  2026-07-09T13:50:44Z on macOS, Ubuntu, and Windows.
 - P0 is complete: 7/7 tasks and 7/7 gates, including windowed `cargo tauri dev`
   observed on macOS, Linux, and Windows.
 - P1 is active; P1-P0-7 privacy posture is done with evidence, P1-G1 is locally
   passed with a repaired real `crash_recovery` filter, and P1-G2 has a runnable
   capture/WAL short-utterance suite. P1-G2 remains pending for ASR golden clips.
-- Fresh local gates passed on 2026-07-09 for the first-run permission-action
-  slice: cargo fmt, cargo clippy, cargo test (191 lib tests + 2
+- Fresh local gates passed on 2026-07-09 for the first-run setup-timing
+  slice: cargo fmt, cargo clippy, cargo test (195 lib tests + 2
   crash-recovery tests + 5 event-sequence tests + 5 short-utterance tests),
   scripts/check-frontend.sh, scripts/check-privacy-posture.sh --check,
   scripts/check-adr-status.sh, scripts/bench.sh --check, production frontend
-  build, desktop verify/build, and Browser UI smoke.
+  build, desktop verify/build, and Browser UI smoke at desktop plus narrow
+  window widths.
 - The `event_sequences` integration gate now exists and passed locally plus 3-OS
   CI through `d531a4c` / run 29016531062. It covers
   the typed cross-module order for happy path, focus-change hold, secure-field
@@ -52,9 +53,9 @@ Current verified state:
   fallback before injection.
 - The latency bench gate has a working partial floor: `kaydence --bench` emits
   JSON before Tauri startup, and `scripts/bench.sh --check` enforces measured
-  Raw-path budgets in CI instead of skipping. 3-OS CI run 29016531062 enforced
+  Raw-path budgets in CI instead of skipping. 3-OS CI run 29022084029 enforced
   the bench step successfully; local follow-up PASS measured
-  hotkey_to_capture=8ms, partial_lag=120ms, release_to_inject_cpu=7ms, and
+  hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, and
   light_cleanup_added=1ms. P1-G3 remains pending for real
   ASR/GPU/idle-footprint and reference-machine p95 evidence.
 - First-run completion truth is now backend-owned: first_dictation_completed is
@@ -66,10 +67,14 @@ Current verified state:
   renders those runtime OS requirements with state/detail/action copy.
   Permission rows also carry backend-owned action_label metadata, and the
   first_run_permission_action Tauri command returns manual_step plus
-  proof_requirement for the setup UI. This is not fake detection: default
+  proof_requirement for the setup UI. FirstRunSetupTiming now records
+  first_run_started_at_ms, first_dictation_completed_at_ms, elapsed_ms,
+  target_ms=60000, and within_target in Rust-owned AppSnapshot/settings truth;
+  the setup UI renders a 60-second setup proof strip. This is not fake detection
+  or fake timing proof: default
   permission states remain needs_hardware or needs_review until live platform
   proof exists. P1-P0-8 remains in progress for live permission prompts/proof,
-  model download, live first-dictation journey, and <=60s proof.
+  model download, live first-dictation journey, and <=60s reference proof.
 - Frontend cockpit/setup shell is present and must remain presentation-only.
 - The Codex app Run action is wired to ./script/build_and_run.sh.
 - The hotkey runtime now honors persisted push-to-talk vs toggle mode. The
@@ -120,10 +125,11 @@ Operating rules:
 Next best work:
 1. Continue P1-P0-8 first run: the final checklist step now has durable Rust
    truth after a real injected dictation, the setup card renders the
-   backend-owned OS permission requirements contract, and permission rows can
-   ask Rust for a manual step/proof boundary. Next are live permission
-   prompts/proof, model download/progress UI, a live first-dictation journey,
-   and <=60s reference proof.
+   backend-owned OS permission requirements contract, permission rows can ask
+   Rust for a manual step/proof boundary, and FirstRunSetupTiming drives the
+   60-second setup proof strip. Next are live permission prompts/proof, model
+   download/progress UI, a live first-dictation journey, and <=60s reference
+   proof.
 2. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict
    validation on macOS, Windows, and Linux plus ASR golden-clip proof. The
    global-shortcut plugin, WAL runtime path, persisted push-to-talk/toggle

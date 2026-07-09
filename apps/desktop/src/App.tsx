@@ -97,6 +97,14 @@ interface FirstRunPermissionActionOutcome {
   proof_requirement: string;
 }
 
+interface FirstRunSetupTiming {
+  started_at_ms: number | null;
+  completed_at_ms: number | null;
+  elapsed_ms: number | null;
+  target_ms: number;
+  within_target: boolean | null;
+}
+
 interface HotkeyBindingOption {
   id: string;
   label: string;
@@ -147,6 +155,7 @@ interface AppSnapshot {
       input_permission_ready: boolean;
       hotkey_registered: boolean;
       hotkey_registration_error: string | null;
+      setup_timing: FirstRunSetupTiming;
       first_dictation_completed: boolean;
     };
   };
@@ -295,6 +304,13 @@ const previewSnapshot: AppSnapshot = {
       input_permission_ready: false,
       hotkey_registered: false,
       hotkey_registration_error: null,
+      setup_timing: {
+        started_at_ms: null,
+        completed_at_ms: null,
+        elapsed_ms: null,
+        target_ms: 60000,
+        within_target: null,
+      },
       first_dictation_completed: false,
     },
   },
@@ -420,6 +436,44 @@ function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
   ];
 }
 
+function setupTimingLabel(timing: FirstRunSetupTiming): string {
+  if (timing.within_target === true && timing.elapsed_ms !== null) {
+    return `Complete in ${formatDuration(timing.elapsed_ms)}`;
+  }
+  if (timing.within_target === false && timing.elapsed_ms !== null) {
+    return `${formatDuration(timing.elapsed_ms)} total`;
+  }
+  if (timing.completed_at_ms !== null) {
+    return "Completion recorded";
+  }
+  if (timing.started_at_ms !== null) {
+    return "Timer armed";
+  }
+  return "Waiting for app data";
+}
+
+function setupTimingDetail(timing: FirstRunSetupTiming): string {
+  const target = formatDuration(timing.target_ms);
+  if (timing.within_target === true) {
+    return `Inside ${target} target.`;
+  }
+  if (timing.within_target === false) {
+    return `Over ${target} target; keep proof visible.`;
+  }
+  if (timing.completed_at_ms !== null) {
+    return "Start time unavailable; keep proof visible.";
+  }
+  if (timing.started_at_ms !== null) {
+    return `${target} target armed for the first injected dictation.`;
+  }
+  return `${target} target starts when the desktop app opens with app data.`;
+}
+
+function formatDuration(ms: number): string {
+  const seconds = Math.max(0, Math.round(ms / 100) / 10);
+  return `${seconds.toFixed(seconds % 1 === 0 ? 0 : 1)}s`;
+}
+
 function permissionStateLabel(state: FirstRunPermissionState): string {
   switch (state) {
     case "ready":
@@ -524,6 +578,7 @@ export function App(): JSX.Element {
   const checklist = firstRunChecklist(snapshot);
   const permissionRequirements = snapshot.settings.first_run.permission_requirements;
   const permissionSummaryText = permissionSummary(permissionRequirements);
+  const setupTiming = snapshot.settings.first_run.setup_timing;
   const firstRunReady =
     snapshot.settings.first_run.model_ready &&
     snapshot.settings.first_run.microphone_permission_ready &&
@@ -1153,6 +1208,11 @@ export function App(): JSX.Element {
                 </li>
               ))}
             </ol>
+            <div className="setup-timing" aria-label="First-run setup timing">
+              <span>60-second setup proof</span>
+              <strong>{setupTimingLabel(setupTiming)}</strong>
+              <small>{setupTimingDetail(setupTiming)}</small>
+            </div>
             {permissionRequirements.length > 0 ? (
               <div className="permission-list" aria-label="OS permission requirements">
                 <div className="permission-list-heading">
