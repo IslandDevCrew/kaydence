@@ -1271,7 +1271,7 @@ mod tests {
         assert!(!audio_path.exists());
         assert!(store.get_session(id).unwrap().is_none());
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 
     #[test]
@@ -1311,7 +1311,7 @@ mod tests {
         assert!(audio_path.exists());
         assert!(store.get_session(id).unwrap().is_none());
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
         fs::remove_dir_all(external_dir).unwrap();
     }
 
@@ -1347,7 +1347,7 @@ mod tests {
         assert!(!text_path.exists());
         assert!(store.get_session(id).unwrap().is_none());
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 
     #[test]
@@ -1410,7 +1410,7 @@ mod tests {
         assert!(exported_text.contains("um export my history"));
         assert!(exported_text.contains("Export my history."));
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 
     #[test]
@@ -1430,7 +1430,7 @@ mod tests {
         );
         assert!(!app_data.join(EXPORTS_DIR).exists());
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 
     #[test]
@@ -1460,7 +1460,7 @@ mod tests {
             }
         );
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 
     #[test]
@@ -1480,7 +1480,7 @@ mod tests {
 
         assert_eq!(store.audio_playback(id, &app_data).unwrap(), None);
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
         fs::remove_dir_all(external_dir).unwrap();
     }
 
@@ -1528,7 +1528,7 @@ mod tests {
         assert!(store.list_recent(10).unwrap().is_empty());
         assert!(store.events_for_session(id).unwrap().is_empty());
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 
     #[test]
@@ -1603,7 +1603,7 @@ mod tests {
             .join(format!("{}.json", fresh_id.0))
             .exists());
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 
     #[test]
@@ -1648,7 +1648,7 @@ mod tests {
             ]
         );
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 
     #[test]
@@ -1674,6 +1674,6 @@ mod tests {
         assert_eq!(session.target_app, Some(app()));
         assert_eq!(session.event_count, 3);
 
-        fs::remove_dir_all(app_data).unwrap();
+        let _ = fs::remove_dir_all(&app_data);
     }
 }
