@@ -29,6 +29,25 @@ pub mod windows;
 
 // ─────────────────────────────── secure-field policy ───────────────────────
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlatformPermissionProof {
+    pub requirement_id: &'static str,
+    pub detail: &'static str,
+    pub action: &'static str,
+}
+
+pub fn platform_permission_proofs() -> Vec<PlatformPermissionProof> {
+    #[cfg(target_os = "macos")]
+    {
+        macos::platform_permission_proofs()
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        Vec::new()
+    }
+}
+
 /// What the accessibility layer can tell us about the focused field. On some
 /// Wayland clients nothing is exposed → [`FieldKind::Unknown`]: an honest
 /// limitation, not a safe default (ADR-0013 §"secure-field detection").

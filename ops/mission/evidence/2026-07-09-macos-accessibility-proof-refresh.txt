@@ -1,0 +1,53 @@
+Kaydence evidence: macOS Accessibility proof refresh
+Generated: 2026-07-09T18:08Z
+
+Scope
+- Added a macOS Accessibility preflight through AXIsProcessTrusted inside the
+  macOS injector platform boundary.
+- refresh_first_run_runtime_proofs now also applies passive platform permission
+  proofs after draining active hotkey/audio proofs.
+- When macOS reports that the current Kaydence process is trusted for
+  Accessibility, the first-run Accessibility row becomes Ready with a runtime
+  proof detail.
+- Microphone and Input Monitoring are not marked from this passive preflight.
+  They still require stronger runtime evidence: non-empty persisted capture
+  audio and a real hotkey event reaching the runtime.
+
+Files changed
+- apps/desktop/src-tauri/src/inject/macos.rs
+- apps/desktop/src-tauri/src/inject/mod.rs
+- apps/desktop/src-tauri/src/lib.rs
+- ops/mission/state.json
+- ops/mission/journal.md
+- ops/mission/state-of-the-union.html
+
+Validation
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib permission
+  RESULT: PASS (11 focused tests)
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
+  RESULT: PASS (224 tests)
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- npm --prefix apps/desktop run build
+  RESULT: PASS (tsc --noEmit + vite build)
+- git diff --check
+  RESULT: PASS
+
+New coverage
+- runtime_snapshot_marks_single_permission_requirement_from_platform_proof
+- platform_permission_proofs_update_only_reported_requirements
+
+Honest boundaries
+- This is a preflight and state-refresh path, not a permission prompt.
+- This does not prove native insertion or secure-field refusal by itself; those
+  remain separate injection proof requirements before the full Accessibility
+  lane can be called platform-complete.
+- This does not mark Microphone or Input Monitoring ready.
+- Fresh remote 3-OS CI was not run because GitHub Actions hosted runners remain
+  blocked before checkout by the billing/spending-limit state. Latest known
+  green remote baseline remains ca60244 / run 29031546518.
+- The production build generated dist/ artifacts during validation; those
+  generated outputs were removed/restored before commit so the diff stays source
+  plus mission evidence.

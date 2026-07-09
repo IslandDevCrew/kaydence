@@ -369,6 +369,7 @@ fn refresh_first_run_runtime_proofs(
     runtime: tauri::State<'_, HotkeyRuntimeHandle>,
 ) -> settings::AppSnapshot {
     apply_hotkey_first_run_proof_to_snapshot(&state, runtime.take_first_run_proof());
+    apply_platform_permission_proofs_to_snapshot(&state, &inject::platform_permission_proofs());
     state.snapshot()
 }
 
@@ -915,6 +916,29 @@ impl RuntimeSnapshot {
             first_run.microphone_permission_ready = true;
             settings::sync_first_run_permission_requirements(first_run);
         });
+    }
+
+    #[cfg(desktop)]
+    fn mark_permission_requirement_ready(
+        &self,
+        requirement_id: &str,
+        detail: &str,
+        action: &str,
+    ) -> bool {
+        let mut marked = false;
+        self.update_first_run(|first_run| {
+            if let Some(requirement) = first_run
+                .permission_requirements
+                .iter_mut()
+                .find(|requirement| requirement.id == requirement_id)
+            {
+                requirement.state = settings::FirstRunPermissionState::Ready;
+                requirement.detail = detail.to_string();
+                requirement.action = action.to_string();
+                marked = true;
+            }
+        });
+        marked
     }
 
     #[cfg(desktop)]
@@ -2421,6 +2445,16 @@ fn apply_hotkey_first_run_proof_to_snapshot(
 }
 
 #[cfg(desktop)]
+fn apply_platform_permission_proofs_to_snapshot(
+    state: &RuntimeSnapshot,
+    proofs: &[inject::PlatformPermissionProof],
+) {
+    for proof in proofs {
+        state.mark_permission_requirement_ready(proof.requirement_id, proof.detail, proof.action);
+    }
+}
+
+#[cfg(desktop)]
 fn apply_hotkey_first_run_proof<R: tauri::Runtime>(
     app: &tauri::AppHandle<R>,
     proof: HotkeyRuntimeFirstRunProof,
@@ -2940,6 +2974,71 @@ mod tests {
             .unwrap();
         assert_eq!(microphone.state, settings::FirstRunPermissionState::Ready);
         assert!(microphone.detail.contains("persisted local audio"));
+    }
+
+    #[test]
+    fn runtime_snapshot_marks_single_permission_requirement_from_platform_proof() {
+        let state = RuntimeSnapshot::default();
+
+        let marked = state.mark_permission_requirement_ready(
+            "accessibility",
+            "Runtime proof observed: macOS Accessibility preflight trusts this Kaydence process.",
+            "No action needed; Accessibility proof is recorded for this runtime.",
+        );
+
+        if cfg!(target_os = "macos") {
+            assert!(marked);
+            let first_run = state.snapshot().settings.first_run;
+            let accessibility = first_run
+                .permission_requirements
+                .iter()
+                .find(|requirement| requirement.id == "accessibility")
+                .unwrap();
+            assert_eq!(
+                accessibility.state,
+                settings::FirstRunPermissionState::Ready
+            );
+            assert!(accessibility.detail.contains("Accessibility preflight"));
+            let microphone = first_run
+                .permission_requirements
+                .iter()
+                .find(|requirement| requirement.id == "microphone")
+                .unwrap();
+            assert_ne!(microphone.state, settings::FirstRunPermissionState::Ready);
+            assert!(!first_run.ready_to_dictate());
+        } else {
+            assert!(!marked);
+        }
+    }
+
+    #[test]
+    fn platform_permission_proofs_update_only_reported_requirements() {
+        let state = RuntimeSnapshot::default();
+
+        apply_platform_permission_proofs_to_snapshot(
+            &state,
+            &[inject::PlatformPermissionProof {
+                requirement_id: "accessibility",
+                detail: "Runtime proof observed: test platform proof.",
+                action: "No action needed; test proof recorded.",
+            }],
+        );
+
+        if cfg!(target_os = "macos") {
+            let first_run = state.snapshot().settings.first_run;
+            let accessibility = first_run
+                .permission_requirements
+                .iter()
+                .find(|requirement| requirement.id == "accessibility")
+                .unwrap();
+            assert_eq!(
+                accessibility.state,
+                settings::FirstRunPermissionState::Ready
+            );
+            assert!(accessibility.detail.contains("test platform proof"));
+            assert!(!first_run.input_permission_ready);
+            assert!(!first_run.microphone_permission_ready);
+        }
     }
 
     #[test]

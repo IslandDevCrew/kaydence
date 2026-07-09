@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T18:08Z — Codex P1 slice (macOS Accessibility proof refresh)
+- Added a macOS Accessibility preflight through `AXIsProcessTrusted` inside the macOS injector platform boundary.
+- `refresh_first_run_runtime_proofs` now applies platform permission proofs after draining active hotkey/audio proofs; when macOS trusts this Kaydence process for Accessibility, the first-run Accessibility row becomes Ready with runtime proof detail.
+- Kept the readiness boundary honest: Microphone still needs non-empty persisted capture audio, Input Monitoring still needs a real hotkey event reaching the runtime, and native insertion/secure-field refusal proof remains separate.
+- Evidence saved at `ops/mission/evidence/2026-07-09-macos-accessibility-proof-refresh.txt`. Local gates passed: fmt check, focused permission tests, full Rust lib suite (224 tests), clippy with `-D warnings`, frontend production build, and diff whitespace check.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T18:02Z — Codex P1 slice (cleanup default dial persistence)
 - Wired the visible Cleanup dial to real backend behavior: `set_cleanup_dial` parses Raw/Light/Full, persists `cleanup_default_dial` in app-data `settings.json`, updates `AppSnapshot`, and refuses runtime mutation during active capture.
 - The hotkey runtime now carries a persisted cleanup default for non-user-edited profile targets, while user-edited per-app profiles still override it and the Shift+RightAlt/Option Raw override remains a one-capture override.

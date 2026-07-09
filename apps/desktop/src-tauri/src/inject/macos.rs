@@ -18,7 +18,9 @@ use objc2::runtime::ProtocolObject;
 use objc2_app_kit::{NSPasteboard, NSPasteboardItem, NSPasteboardTypeString, NSPasteboardWriting};
 use objc2_foundation::{NSArray, NSData, NSString};
 
-use super::{FieldKind, InjectError, InjectorCaps, KeystrokeChannel, TextInjector};
+use super::{
+    FieldKind, InjectError, InjectorCaps, KeystrokeChannel, PlatformPermissionProof, TextInjector,
+};
 
 const CFSTRING_ENCODING_UTF8: CFStringEncoding = 0x0800_0100;
 const AX_ERROR_SUCCESS: AXError = 0;
@@ -52,6 +54,9 @@ type UniCharCount = usize;
 
 #[link(name = "ApplicationServices", kind = "framework")]
 extern "C" {
+    #[link_name = "AXIsProcessTrusted"]
+    fn ax_is_process_trusted() -> Boolean;
+
     #[link_name = "AXUIElementCreateSystemWide"]
     fn axui_element_create_system_wide() -> AXUIElementRef;
 
@@ -137,6 +142,24 @@ extern "C" {
 
 #[derive(Debug, Default)]
 pub struct MacOsTextInjector;
+
+pub fn accessibility_permission_ready() -> bool {
+    // Preflight only; prompting remains owned by the first-run UI/settings path.
+    unsafe { ax_is_process_trusted() != 0 }
+}
+
+pub fn platform_permission_proofs() -> Vec<PlatformPermissionProof> {
+    let mut proofs = Vec::new();
+    if accessibility_permission_ready() {
+        proofs.push(PlatformPermissionProof {
+            requirement_id: "accessibility",
+            detail:
+                "Runtime proof observed: macOS Accessibility preflight trusts this Kaydence process.",
+            action: "No action needed; Accessibility proof is recorded for this runtime.",
+        });
+    }
+    proofs
+}
 
 impl TextInjector for MacOsTextInjector {
     fn caps(&self) -> InjectorCaps {
