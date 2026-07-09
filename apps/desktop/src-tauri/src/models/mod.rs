@@ -2,7 +2,8 @@
 //!
 //! The registry is descriptive: it names the models Kaydence can use and where
 //! their verified artifacts should live. This module deliberately stays
-//! download-free so model readiness remains a local, auditable filesystem check.
+//! download-free: it can produce validated download plans, but it does not fetch
+//! bytes, so model readiness remains a local, auditable filesystem check.
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -16,6 +17,7 @@ use std::{
 pub const SUPPORTED_SCHEMA_VERSION: u16 = 1;
 pub const QUARANTINE_DIR_NAME: &str = "quarantine";
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
+const HTTPS_SCHEME_PREFIX: &str = concat!("https", "://");
 
 pub fn source_tree_models_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -56,6 +58,10 @@ pub enum ModelRegistryError {
         #[source]
         source: io::Error,
     },
+    #[error("model {id} does not have usable download sources yet")]
+    PlaceholderSources { id: String },
+    #[error("model {id} has an invalid download source: {url}")]
+    InvalidDownloadSource { id: String, url: String },
     #[error("model registry json: {0}")]
     Json(#[from] serde_json::Error),
     #[error("model registry io: {0}")]
@@ -107,6 +113,14 @@ impl ModelRegistry {
             })
             .map(|model| (model, model.verify_artifact(models_dir)))
             .collect()
+    }
+
+    pub fn download_plan(
+        &self,
+        id: &str,
+        models_dir: &Path,
+    ) -> Result<ModelDownloadPlan, ModelRegistryError> {
+        self.require(id)?.download_plan(models_dir)
     }
 
     fn validate(&self) -> Result<(), ModelRegistryError> {
@@ -220,6 +234,59 @@ impl ModelEntry {
             path,
         })
     }
+
+    pub fn download_plan(
+        &self,
+        models_dir: &Path,
+    ) -> Result<ModelDownloadPlan, ModelRegistryError> {
+        if self.is_checksum_placeholder() {
+            return Err(ModelRegistryError::PlaceholderChecksum {
+                id: self.id.clone(),
+            });
+        }
+
+        let destination_path = self.artifact_path(models_dir)?;
+        let sources = self.validated_sources()?;
+        Ok(ModelDownloadPlan {
+            id: self.id.clone(),
+            task: self.task,
+            file: self.file.clone(),
+            destination_path,
+            sha256: self.sha256.trim().to_ascii_lowercase(),
+            size_mb: self.size_mb,
+            license: self.license.clone(),
+            license_review_required: self.license_review_required,
+            sources,
+        })
+    }
+
+    fn validated_sources(&self) -> Result<Vec<String>, ModelRegistryError> {
+        let mut sources = Vec::new();
+        for source in &self.sources {
+            let source = source.trim();
+            if source.is_empty() || source.starts_with("TODO") {
+                return Err(ModelRegistryError::PlaceholderSources {
+                    id: self.id.clone(),
+                });
+            }
+            if !is_https_download_source(source) {
+                return Err(ModelRegistryError::InvalidDownloadSource {
+                    id: self.id.clone(),
+                    url: source.to_string(),
+                });
+            }
+            if !sources.iter().any(|seen| seen == source) {
+                sources.push(source.to_string());
+            }
+        }
+
+        if sources.is_empty() {
+            return Err(ModelRegistryError::PlaceholderSources {
+                id: self.id.clone(),
+            });
+        }
+        Ok(sources)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -237,9 +304,28 @@ pub enum ModelArtifactStatus {
     Ready { path: PathBuf, size_bytes: u64 },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ModelDownloadPlan {
+    pub id: String,
+    pub task: ModelTask,
+    pub file: String,
+    pub destination_path: PathBuf,
+    pub sha256: String,
+    pub size_mb: u64,
+    pub license: String,
+    pub license_review_required: bool,
+    pub sources: Vec<String>,
+}
+
 fn is_sha256_hex(value: &str) -> bool {
     let value = value.trim();
     value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+}
+
+fn is_https_download_source(source: &str) -> bool {
+    source.starts_with(HTTPS_SCHEME_PREFIX)
+        && !source.bytes().any(|byte| byte.is_ascii_whitespace())
+        && !source.bytes().any(|byte| byte.is_ascii_control())
 }
 
 fn hash_file_sha256(path: &Path) -> io::Result<String> {
@@ -354,6 +440,14 @@ mod tests {
         hex_lower(&hasher.finalize())
     }
 
+    fn downloadable_entry(id: &str, file: &str) -> ModelEntry {
+        let mut model = entry(id, file, sha256_for(b"expected"));
+        let primary = format!("{}models.example.test/fixture.onnx", HTTPS_SCHEME_PREFIX);
+        let mirror = format!("{}mirror.example.test/fixture.onnx", HTTPS_SCHEME_PREFIX);
+        model.sources = vec![format!(" {primary} "), primary, mirror];
+        model
+    }
+
     #[test]
     fn parses_current_registry_and_exposes_first_run_candidates() {
         let registry = ModelRegistry::load(&registry_path()).unwrap();
@@ -415,6 +509,104 @@ mod tests {
                 path: dir.join("missing.onnx")
             }
         );
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn download_plan_normalizes_sources_and_destination() {
+        let dir = tmp();
+        let model = downloadable_entry("fixture-asr", "fixture.onnx");
+
+        let plan = model.download_plan(&dir).unwrap();
+
+        assert_eq!(plan.id, "fixture-asr");
+        assert_eq!(plan.task, ModelTask::Asr);
+        assert_eq!(plan.file, "fixture.onnx");
+        assert_eq!(plan.destination_path, dir.join("fixture.onnx"));
+        assert_eq!(plan.sha256, sha256_for(b"expected"));
+        assert_eq!(plan.size_mb, 1);
+        assert_eq!(plan.license, "Apache-2.0");
+        assert!(!plan.license_review_required);
+        assert_eq!(
+            plan.sources,
+            vec![
+                format!("{}models.example.test/fixture.onnx", HTTPS_SCHEME_PREFIX),
+                format!("{}mirror.example.test/fixture.onnx", HTTPS_SCHEME_PREFIX)
+            ]
+        );
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn registry_download_plan_requires_registered_model() {
+        let dir = tmp();
+        let registry = ModelRegistry {
+            schema_version: SUPPORTED_SCHEMA_VERSION,
+            models: vec![downloadable_entry("fixture-asr", "fixture.onnx")],
+        };
+
+        assert!(registry.download_plan("fixture-asr", &dir).is_ok());
+        let err = registry.download_plan("missing", &dir).unwrap_err();
+
+        assert!(matches!(err, ModelRegistryError::ModelNotFound(id) if id == "missing"));
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn download_plan_rejects_placeholder_checksum() {
+        let dir = tmp();
+        let mut model = downloadable_entry("fixture-asr", "fixture.onnx");
+        model.sha256 = "TODO".to_string();
+
+        let err = model.download_plan(&dir).unwrap_err();
+
+        assert!(matches!(
+            err,
+            ModelRegistryError::PlaceholderChecksum { id } if id == "fixture-asr"
+        ));
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn download_plan_rejects_placeholder_sources() {
+        let dir = tmp();
+        for sources in [
+            Vec::new(),
+            vec!["TODO_primary".to_string()],
+            vec![" ".to_string()],
+        ] {
+            let mut model = entry("fixture-asr", "fixture.onnx", sha256_for(b"expected"));
+            model.sources = sources;
+
+            let err = model.download_plan(&dir).unwrap_err();
+
+            assert!(matches!(
+                err,
+                ModelRegistryError::PlaceholderSources { id } if id == "fixture-asr"
+            ));
+        }
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn download_plan_rejects_non_https_or_unsafe_sources() {
+        let dir = tmp();
+        for source in [
+            format!("{}models.example.test/fixture.onnx", concat!("http", "://")),
+            format!("{}tmp/fixture.onnx", concat!("file", "://")),
+            format!("{}models.example.test/fixture onnx", HTTPS_SCHEME_PREFIX),
+        ] {
+            let mut model = entry("fixture-asr", "fixture.onnx", sha256_for(b"expected"));
+            model.sources = vec![source.clone()];
+
+            let err = model.download_plan(&dir).unwrap_err();
+
+            assert!(matches!(
+                err,
+                ModelRegistryError::InvalidDownloadSource { id, url: rejected }
+                    if id == "fixture-asr" && rejected == source
+            ));
+        }
         let _ = std::fs::remove_dir_all(dir);
     }
 

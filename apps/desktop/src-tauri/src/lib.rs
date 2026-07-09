@@ -242,7 +242,7 @@ fn first_run_model_readiness(registry_path: &Path, models_dir: &Path) -> FirstRu
     let required_models = registry
         .verify_required_first_run_models(models_dir)
         .into_iter()
-        .map(|(model, status)| first_run_model_status(model, status))
+        .map(|(model, status)| first_run_model_status(model, status, models_dir))
         .collect::<Vec<_>>();
     let asr_candidates = registry
         .recommended_for(models::ModelTask::Asr)
@@ -251,6 +251,7 @@ fn first_run_model_readiness(registry_path: &Path, models_dir: &Path) -> FirstRu
             first_run_asr_candidate(
                 model,
                 model.verify_artifact(models_dir),
+                models_dir,
                 recommended_asr_model_id.as_deref(),
                 platform_tag,
             )
@@ -277,16 +278,23 @@ fn first_run_model_readiness(registry_path: &Path, models_dir: &Path) -> FirstRu
 fn first_run_model_status(
     model: &models::ModelEntry,
     status: Result<models::ModelArtifactStatus, models::ModelRegistryError>,
+    models_dir: &Path,
 ) -> settings::FirstRunModelStatus {
     let (state, detail) = match status {
         Ok(models::ModelArtifactStatus::Ready { size_bytes, .. }) => (
             settings::FirstRunModelState::Ready,
             format!("Verified artifact, {} MB on disk", bytes_to_mb(size_bytes)),
         ),
-        Ok(models::ModelArtifactStatus::Missing { .. }) => (
-            settings::FirstRunModelState::Missing,
-            "Download required before first dictation".to_string(),
-        ),
+        Ok(models::ModelArtifactStatus::Missing { .. }) => match model.download_plan(models_dir) {
+            Ok(_) => (
+                settings::FirstRunModelState::Missing,
+                "Download required before first dictation".to_string(),
+            ),
+            Err(err) => (
+                settings::FirstRunModelState::Blocked,
+                format!("Download unavailable: {err}"),
+            ),
+        },
         Err(models::ModelRegistryError::PlaceholderChecksum { .. }) => (
             settings::FirstRunModelState::Blocked,
             "Registry checksum pending".to_string(),
@@ -321,10 +329,11 @@ fn first_run_model_status(
 fn first_run_asr_candidate(
     model: &models::ModelEntry,
     status: Result<models::ModelArtifactStatus, models::ModelRegistryError>,
+    models_dir: &Path,
     recommended_asr_model_id: Option<&str>,
     platform_tag: &str,
 ) -> settings::FirstRunAsrCandidate {
-    let base = first_run_model_status(model, status);
+    let base = first_run_model_status(model, status, models_dir);
     let selected = recommended_asr_model_id == Some(model.id.as_str());
 
     settings::FirstRunAsrCandidate {
@@ -352,7 +361,9 @@ fn model_readiness_error(models: &[settings::FirstRunModelStatus]) -> Option<Str
         .iter()
         .any(|model| model.state == settings::FirstRunModelState::Blocked)
     {
-        return Some("Model registry needs verified checksums or artifact repair".to_string());
+        return Some(
+            "Model registry needs verified metadata, checksums, or artifact repair".to_string(),
+        );
     }
 
     None
@@ -960,7 +971,8 @@ mod tests {
                   "size_mb": 1,
                   "license": "Apache-2.0",
                   "min_hw": "any",
-                  "recommended": true
+                  "recommended": true,
+                  "sources": ["https\u003A//models.example.test/fixture-asr.onnx"]
                 }},
                 {{
                   "id": "fixture-vad",
@@ -971,7 +983,8 @@ mod tests {
                   "size_mb": 1,
                   "license": "MIT",
                   "min_hw": "any",
-                  "recommended": true
+                  "recommended": true,
+                  "sources": ["https\u003A//models.example.test/fixture-vad.onnx"]
                 }}
               ]
             }}"#
@@ -1080,7 +1093,9 @@ mod tests {
         assert!(!first_run.model_ready);
         assert_eq!(
             first_run.model_readiness_error,
-            Some("Model registry needs verified checksums or artifact repair".to_string())
+            Some(
+                "Model registry needs verified metadata, checksums, or artifact repair".to_string()
+            )
         );
         assert_eq!(first_run.required_models.len(), 2);
         assert!(first_run
@@ -1124,6 +1139,60 @@ mod tests {
             .asr_candidates
             .iter()
             .all(|model| model.state == settings::FirstRunModelState::Missing));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn runtime_snapshot_blocks_missing_model_without_download_sources() {
+        let app_data = tmp();
+        let registry_dir = app_data.join("registry");
+        std::fs::create_dir_all(&registry_dir).unwrap();
+        let registry_path = registry_dir.join("registry.json");
+        std::fs::write(
+            &registry_path,
+            format!(
+                r#"{{
+                  "schema_version": 1,
+                  "models": [
+                    {{
+                      "id": "fixture-asr",
+                      "task": "asr",
+                      "lane": "cpu",
+                      "runtime": "onnxruntime",
+                      "file": "fixture-asr.onnx",
+                      "sha256": "{}",
+                      "size_mb": 1,
+                      "license": "Apache-2.0",
+                      "min_hw": "any",
+                      "recommended": true,
+                      "sources": ["TODO_primary"]
+                    }}
+                  ]
+                }}"#,
+                sha256_for(b"asr")
+            ),
+        )
+        .unwrap();
+        let state = RuntimeSnapshot::default();
+
+        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
+
+        let first_run = state.snapshot().settings.first_run;
+        assert!(!first_run.model_ready);
+        assert_eq!(
+            first_run.model_readiness_error,
+            Some(
+                "Model registry needs verified metadata, checksums, or artifact repair".to_string()
+            )
+        );
+        assert_eq!(first_run.required_models.len(), 1);
+        assert_eq!(
+            first_run.required_models[0].state,
+            settings::FirstRunModelState::Blocked
+        );
+        assert!(first_run.required_models[0]
+            .detail
+            .contains("Download unavailable"));
         let _ = std::fs::remove_dir_all(app_data);
     }
 

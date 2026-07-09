@@ -1,0 +1,64 @@
+Kaydence model download-plan evidence
+Date: 2026-07-08
+
+Intent
+- Prepare the first-run model download flow without adding a network fetch
+  surface yet.
+- Make the registry prove that a missing model is actually downloadable before
+  first-run readiness says "Download required."
+- Keep the future fetcher bounded to a safe destination path, a verified
+  expected sha256, and a normalized HTTPS mirror list.
+
+Changed files
+- apps/desktop/src-tauri/src/models/mod.rs
+  - Added ModelDownloadPlan with model id, task, file, destination path,
+    expected sha256, size, license metadata, and normalized sources.
+  - Added ModelRegistry::download_plan and ModelEntry::download_plan.
+  - Download plans reject placeholder checksums, empty/TODO sources, non-HTTPS
+    sources, whitespace-bearing sources, unsafe artifact paths, and unknown ids.
+  - Tests cover valid plan generation, duplicate mirror dedupe, placeholder
+    checksum/source rejection, HTTPS-only source validation, and registry lookup.
+- apps/desktop/src-tauri/src/lib.rs
+  - Missing first-run artifacts now call download_plan before rendering a
+    Missing state.
+  - If a checksum is usable but sources are TODO/invalid, first-run readiness
+    renders Blocked with "Download unavailable..." instead of implying a
+    working download button exists.
+  - Runtime snapshot tests cover both downloadable-missing and
+    metadata-blocked-missing model states.
+- ops/mission/state.json and docs/CODEX_SUPER_GOAL_PROMPT.md
+  - Updated P1-P0-2 remaining work: planning is wired; network fetch/progress
+    UI, reviewed artifacts, and real ASR adapters remain.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml models:: --lib
+  - 13 model registry tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot --lib
+  - 7 runtime snapshot tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 150 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run check
+- PASS: npm --prefix apps/desktop run build
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 waiver only.
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This does not download bytes or perform any network request.
+- This does not replace registry TODO hashes or TODO sources with reviewed
+  published artifacts.
+- This does not implement progress UI, cancellation, retry, or resume.
+- This does not implement Parakeet/Whisper inference adapters.
+- This does not provide WER or latency evidence for real ASR output.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.
