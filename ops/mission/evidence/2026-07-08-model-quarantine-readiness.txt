@@ -1,0 +1,62 @@
+Kaydence model checksum quarantine evidence
+Date: 2026-07-08
+
+Intent
+- Enforce the model registry invariant that checksum mismatches quarantine the
+  local artifact before any engine can load it.
+- Keep the model verifier local and auditable; no network download surface was
+  added in this slice.
+- Surface the quarantine path through first-run readiness so a user/build agent
+  can see why the model is blocked and where the suspect file moved.
+
+Changed files
+- apps/desktop/src-tauri/src/models/mod.rs
+  - Added QUARANTINE_DIR_NAME = "quarantine".
+  - verify_artifact now moves a mismatched artifact into
+    models/quarantine/<filename>.<actual-hash-prefix>.bad before returning a
+    ChecksumMismatch error.
+  - Repeated mismatches use unique suffixes instead of overwriting earlier
+    quarantined artifacts.
+  - Added tests for quarantine movement and unique quarantine names.
+- apps/desktop/src-tauri/src/lib.rs
+  - First-run model status now reports "Checksum mismatch; quarantined at ..."
+    for mismatched artifacts.
+  - Added runtime snapshot coverage proving first-run readiness quarantines a
+    mismatched model artifact and blocks it.
+- ops/mission/state.json and docs/CODEX_SUPER_GOAL_PROMPT.md
+  - Updated P1-P0-2 remaining work: quarantine is no longer open; download
+    fetch/source replacement and real engine adapters remain.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml models:: --lib
+  - 8 model registry tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot --lib
+  - 6 runtime snapshot tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 144 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run check
+- PASS: npm --prefix apps/desktop run build
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 waiver only.
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This does not download model artifacts.
+- This does not replace registry TODO hashes or TODO sources with reviewed
+  published artifacts.
+- This does not implement Parakeet/Whisper inference adapters.
+- This does not provide WER or latency evidence for real ASR output.
+- If the app cannot rename the mismatched artifact, readiness still fails
+  closed with a quarantine failure error; it does not load the artifact.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.

@@ -8,12 +8,13 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{
     collections::HashSet,
-    fs::File,
+    fs::{self, File},
     io::{self, Read},
     path::{Component, Path, PathBuf},
 };
 
 pub const SUPPORTED_SCHEMA_VERSION: u16 = 1;
+pub const QUARANTINE_DIR_NAME: &str = "quarantine";
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
 
 pub fn source_tree_models_dir() -> PathBuf {
@@ -38,11 +39,22 @@ pub enum ModelRegistryError {
     InvalidArtifactPath { id: String, file: String },
     #[error("model {id} does not have a usable sha256 yet")]
     PlaceholderChecksum { id: String },
-    #[error("model {id} checksum mismatch: expected {expected}, actual {actual}")]
+    #[error(
+        "model {id} checksum mismatch: expected {expected}, actual {actual}; quarantined at {}",
+        quarantined_to.display()
+    )]
     ChecksumMismatch {
         id: String,
         expected: String,
         actual: String,
+        quarantined_to: PathBuf,
+    },
+    #[error("model {id} checksum mismatch and quarantine failed for {}: {source}", path.display())]
+    QuarantineFailed {
+        id: String,
+        path: PathBuf,
+        #[source]
+        source: io::Error,
     },
     #[error("model registry json: {0}")]
     Json(#[from] serde_json::Error),
@@ -188,10 +200,18 @@ impl ModelEntry {
         let actual = hash_file_sha256(&path)?;
         let expected = self.sha256.trim().to_ascii_lowercase();
         if actual != expected {
+            let quarantined_to = quarantine_artifact(&path, &actual).map_err(|source| {
+                ModelRegistryError::QuarantineFailed {
+                    id: self.id.clone(),
+                    path: path.clone(),
+                    source,
+                }
+            })?;
             return Err(ModelRegistryError::ChecksumMismatch {
                 id: self.id.clone(),
                 expected,
                 actual,
+                quarantined_to,
             });
         }
 
@@ -236,6 +256,43 @@ fn hash_file_sha256(path: &Path) -> io::Result<String> {
     }
 
     Ok(hex_lower(&hasher.finalize()))
+}
+
+fn quarantine_artifact(path: &Path, actual_hash: &str) -> io::Result<PathBuf> {
+    let parent = path.parent().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "model artifact path has no parent directory",
+        )
+    })?;
+    let file_name = path.file_name().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "model artifact path has no filename",
+        )
+    })?;
+    let file_name = file_name.to_string_lossy();
+    let short_hash = actual_hash.get(..12).unwrap_or(actual_hash);
+    let quarantine_dir = parent.join(QUARANTINE_DIR_NAME);
+    fs::create_dir_all(&quarantine_dir)?;
+
+    for index in 0..1000 {
+        let suffix = if index == 0 {
+            String::new()
+        } else {
+            format!(".{index}")
+        };
+        let candidate = quarantine_dir.join(format!("{file_name}.{short_hash}{suffix}.bad"));
+        if !candidate.exists() {
+            fs::rename(path, &candidate)?;
+            return Ok(candidate);
+        }
+    }
+
+    Err(io::Error::new(
+        io::ErrorKind::AlreadyExists,
+        "too many quarantined artifacts with the same checksum",
+    ))
 }
 
 fn hex_lower(bytes: &[u8]) -> String {
@@ -362,17 +419,71 @@ mod tests {
     }
 
     #[test]
-    fn checksum_mismatch_is_an_error() {
+    fn checksum_mismatch_quarantines_artifact() {
         let dir = tmp();
         let model = entry("fixture-asr", "fixture.onnx", sha256_for(b"expected"));
+        let artifact_path = dir.join("fixture.onnx");
+        std::fs::write(&artifact_path, b"actual").unwrap();
+
+        let err = model.verify_artifact(&dir).unwrap_err();
+
+        let quarantined_to = match err {
+            ModelRegistryError::ChecksumMismatch {
+                id,
+                actual,
+                quarantined_to,
+                ..
+            } => {
+                assert_eq!(id, "fixture-asr");
+                assert_eq!(actual, sha256_for(b"actual"));
+                quarantined_to
+            }
+            other => panic!("unexpected error: {other:?}"),
+        };
+        assert!(!artifact_path.exists());
+        assert_eq!(
+            quarantined_to
+                .parent()
+                .unwrap()
+                .file_name()
+                .unwrap()
+                .to_string_lossy(),
+            QUARANTINE_DIR_NAME
+        );
+        assert!(quarantined_to
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .contains(&sha256_for(b"actual")[..12]));
+        assert_eq!(std::fs::read(quarantined_to).unwrap(), b"actual");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn quarantine_uses_unique_names_for_repeated_bad_artifacts() {
+        let dir = tmp();
+        let model = entry("fixture-asr", "fixture.onnx", sha256_for(b"expected"));
+        let actual_hash = sha256_for(b"actual");
+        let quarantine_dir = dir.join(QUARANTINE_DIR_NAME);
+        std::fs::create_dir_all(&quarantine_dir).unwrap();
+        std::fs::write(
+            quarantine_dir.join(format!("fixture.onnx.{}.bad", &actual_hash[..12])),
+            b"previous bad artifact",
+        )
+        .unwrap();
         std::fs::write(dir.join("fixture.onnx"), b"actual").unwrap();
 
         let err = model.verify_artifact(&dir).unwrap_err();
 
-        assert!(matches!(
-            err,
-            ModelRegistryError::ChecksumMismatch { id, .. } if id == "fixture-asr"
-        ));
+        let quarantined_to = match err {
+            ModelRegistryError::ChecksumMismatch { quarantined_to, .. } => quarantined_to,
+            other => panic!("unexpected error: {other:?}"),
+        };
+        assert_eq!(
+            quarantined_to.file_name().unwrap().to_string_lossy(),
+            format!("fixture.onnx.{}.1.bad", &actual_hash[..12])
+        );
+        assert_eq!(std::fs::read(quarantined_to).unwrap(), b"actual");
         let _ = std::fs::remove_dir_all(dir);
     }
 

@@ -291,9 +291,12 @@ fn first_run_model_status(
             settings::FirstRunModelState::Blocked,
             "Registry checksum pending".to_string(),
         ),
-        Err(models::ModelRegistryError::ChecksumMismatch { .. }) => (
+        Err(models::ModelRegistryError::ChecksumMismatch { quarantined_to, .. }) => (
             settings::FirstRunModelState::Blocked,
-            "Checksum mismatch; replace the local artifact".to_string(),
+            format!(
+                "Checksum mismatch; quarantined at {}",
+                quarantined_to.display()
+            ),
         ),
         Err(err) => (
             settings::FirstRunModelState::Blocked,
@@ -1147,6 +1150,33 @@ mod tests {
             .all(|model| model.state == settings::FirstRunModelState::Ready));
         assert!(first_run.model_ready);
         assert!(first_run.asr_candidates[0].selected);
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn runtime_snapshot_quarantines_mismatched_first_run_model() {
+        let app_data = tmp();
+        let models_dir = app_data.join("models");
+        std::fs::create_dir_all(&models_dir).unwrap();
+        let mismatched_path = models_dir.join("fixture-asr.onnx");
+        std::fs::write(&mismatched_path, b"unexpected").unwrap();
+        std::fs::write(models_dir.join("fixture-vad.onnx"), b"vad").unwrap();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"expected"), &sha256_for(b"vad"));
+        let state = RuntimeSnapshot::default();
+
+        state.refresh_model_readiness(&registry_path, &models_dir);
+
+        let first_run = state.snapshot().settings.first_run;
+        let asr_status = first_run
+            .required_models
+            .iter()
+            .find(|model| model.id == "fixture-asr")
+            .unwrap();
+        assert_eq!(asr_status.state, settings::FirstRunModelState::Blocked);
+        assert!(asr_status.detail.contains("quarantined at"));
+        assert!(!mismatched_path.exists());
+        assert!(models_dir.join(models::QUARANTINE_DIR_NAME).exists());
         let _ = std::fs::remove_dir_all(app_data);
     }
 

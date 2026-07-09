@@ -57,12 +57,13 @@ Next best work:
    validation on macOS, Windows, and Linux; toggle/rebind UI; P1-G2/P1-G3 gates.
    The global-shortcut plugin and WAL runtime path are already wired locally.
 2. Advance P1-P0-2 ASR readiness: replace TODO model hashes/sources with
-   reviewed artifacts, implement download/quarantine, and Parakeet/Whisper
-   engine adapters. AppSnapshot already
+   reviewed artifacts, implement the download fetch/UI flow, and
+   Parakeet/Whisper engine adapters. AppSnapshot already
    exposes ready/missing/blocked model states plus backend-owned ASR candidates,
    selected model id, and recommended model id from registry verification; the
    select_asr_model command persists the selected ASR model id to app-data
-   settings.json and reapplies it on startup.
+   settings.json and reapplies it on startup; checksum mismatches quarantine the
+   suspect artifact before readiness blocks load.
 3. Continue injection backends behind TextInjector: Windows UIA+SendInput still
    needs the Windows Codex session; Linux AT-SPI/uinput needs human-focus VM
    validation; macOS AX/CGEvent/NSPasteboard has local evidence.
