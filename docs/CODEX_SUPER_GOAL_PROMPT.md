@@ -8,10 +8,11 @@ losing the thread.
 
 Repo: /Users/IDC2.5/Kaydence/kaydence
 Visual/report staging: /Users/IDC2.5/Documents/Kaydence
-Remote state as of 2026-07-08: origin points to
-https://github.com/IslandDevCrew/kaydence.git, but authenticated fetch returns
-"Repository not found." Treat the local repo as authoritative until the remote
-is restored, recreated, or repointed by the operator.
+Remote state as of 2026-07-09: origin points to
+https://github.com/IslandDevCrew/kaydence.git. Private repo access is restored
+after switching the active GitHub CLI account to IslandDevCrew and running
+gh auth setup-git; gh repo view resolves IslandDevCrew/kaydence as PRIVATE with
+ADMIN permission and git fetch succeeds.
 
 Mission: build Kaydence into a real local-first cross-platform AI dictation app:
 one hotkey, local capture, write-ahead audio, local ASR, Raw/Light/Full cleanup,
@@ -28,7 +29,8 @@ Read first, in order:
 7. prompts/BUILD-LOOP.md and prompts/JUDGE-AUDITOR.md
 
 Current verified state:
-- local main is ahead of origin/main because the remote is unavailable.
+- GitHub remote access is restored. Before the SOTU checkpoint push, local main
+  was 0 behind / 46 ahead of origin/main and fast-forward eligible.
 - P0 is effectively complete except hardware-only window checks.
 - P1 is active.
 - Fresh local gates passed on 2026-07-08: cargo fmt, cargo clippy, cargo test
@@ -97,9 +99,9 @@ Next best work:
    validation; macOS AX/CGEvent/NSPasteboard has local evidence.
 4. Build first-run permission/setup and dictation cockpit against screen
    families 01, 03, 07, and 10.
-5. Prepare remote recovery only after preserving local commits: either restore
-   IslandDevCrew/kaydence, create Navigata1/kaydence, or fork one from the other
-   once one exists.
+5. Watch the restored GitHub remote after each push: confirm Actions starts on
+   the pushed HEAD and do not claim current-head 3-OS parity until the fresh
+   CI run is green.
 
 Never mark complete until each PRD item/gate has current evidence proving it.
 ```

@@ -1,0 +1,38 @@
+Kaydence evidence: GitHub remote access restored
+Date: 2026-07-09T05:43Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Remote: https://github.com/IslandDevCrew/kaydence
+
+What was wrong
+- origin already pointed to https://github.com/IslandDevCrew/kaydence.git.
+- The active GitHub CLI account was Navigata1, and `gh repo view IslandDevCrew/kaydence` failed with:
+  GraphQL: Could not resolve to a Repository with the name 'IslandDevCrew/kaydence'.
+- A second GitHub CLI login for IslandDevCrew existed locally but was inactive.
+
+Repair
+- gh auth switch --hostname github.com --user IslandDevCrew
+  RESULT: PASS
+- gh auth setup-git --hostname github.com
+  RESULT: PASS
+- gh repo view IslandDevCrew/kaydence --json nameWithOwner,visibility,defaultBranchRef,url,viewerPermission
+  RESULT: PASS
+  Repository: IslandDevCrew/kaydence
+  Visibility: PRIVATE
+  Default branch: main
+  Viewer permission: ADMIN
+  URL: https://github.com/IslandDevCrew/kaydence
+- git fetch origin
+  RESULT: PASS
+
+Current sync state before the SOTU checkpoint push
+- git rev-list --left-right --count origin/main...HEAD
+  RESULT: 0 46
+  Meaning: local main was 0 commits behind and 46 commits ahead of origin/main, so the backlog was fast-forward eligible.
+- gh pr list --repo IslandDevCrew/kaydence --state open --limit 20
+  RESULT: no open PRs.
+- gh run list --repo IslandDevCrew/kaydence --limit 10
+  RESULT: last visible main CI runs were present; most recent listed run before backlog push was success at 2026-07-08T12:20:45Z on head f37c750.
+
+Boundary
+- This evidence proves private repo access and git fetch were restored locally.
+- A fresh CI result for the current post-backlog HEAD still must be observed after the checkpoint is pushed.
