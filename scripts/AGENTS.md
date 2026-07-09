@@ -4,11 +4,13 @@ Inventory (create as phases need them; keep each runnable on macOS, Windows AND
 Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or paired
 .sh/.ps1):
 
-- `bench.sh` — **present (P0-T6, skeleton)**. Drives the golden audio corpus
-  through the built pipeline, emits the latency table; `--check` compares against
-  root-AGENTS §5 budgets and fails on regression. Exit 3 = not-measurable-yet
-  (pre-build); CI treats 3 as skip, 1 as failure. Wires to the `--bench` binary
-  once the app builds (P0-T2+).
+- `bench.sh` — **present (P1-P0-6, partial working gate)**. Drives the Rust
+  `--bench` contract, emits the latency table, compares every measured value
+  against root-AGENTS §5, and fails CI on regression. When no packaged binary
+  exists it runs `cargo run -- --bench`, so CI no longer skips the gate. The
+  current contract measures the implemented Raw orchestration path and marks
+  real ASR/GPU/reference-machine/idle-footprint values as explicit unmeasured
+  fields until those adapters and machines land.
 - `audit-network.sh` — **present (P0-T6), a working gate**. Fixed-string scan of
   the Rust/TS source for network-capable call sites, diffed against
   `network-allowlist.json` (model mirrors + user-configured BYOK endpoints + Relay

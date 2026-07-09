@@ -277,3 +277,9 @@
 - The suite proves the typed order for happy path, focus-change hold, secure-field hold, engine fallback, and the current Full cleanup rule-floor fallback: target bind, WAL first, ASR output, cleanup, then exactly one delivery outcome.
 - Refreshed mission truth: the latest pre-slice remote baseline is Actions run `29013513964` at `55e25b7`, green on macOS, Ubuntu, and Windows. This event-sequence commit still needs its own fresh CI run after push.
 - Evidence saved at `ops/mission/evidence/2026-07-09-event-sequences-gate.txt`. Local gates passed: fmt, clippy, focused event_sequences, full backend tests (184 lib + 2 crash + 5 event + 5 short), frontend check, privacy posture, and ADR status. Honest boundary: this validates orchestration, not real Parakeet/Whisper recognition, golden ASR clips, Linux human-focus injection, or latency/footprint budgets.
+
+## 2026-07-09T11:50Z — Codex P1 latency bench gate
+- Confirmed the event-sequence commit is green remotely: Actions run `29015166246` at `1694fe9` completed successfully on macOS, Ubuntu, and Windows.
+- Added `apps/desktop/src-tauri/src/bench.rs` plus `kaydence --bench`, a machine-readable JSON bench path that runs before Tauri startup.
+- Changed `scripts/bench.sh --check` from skipped skeleton to working partial gate: it uses a packaged bench binary when present or `cargo run -- --bench` in CI, compares every measured metric to AGENTS section 5, and fails on regression. CI no longer treats bench exit 3 as a pass.
+- Evidence saved at `ops/mission/evidence/2026-07-09-latency-bench-gate.txt`. Local focused gates passed: `cargo test ... bench` and `bash scripts/bench.sh --check`. Latest measured local Raw-path values: hotkey_to_capture=6ms, partial_lag=120ms, release_to_inject_cpu=7ms, light_cleanup_added=1ms. Honest boundary: P1-G3 remains pending for real Parakeet/Whisper ASR, GPU path, idle RAM/CPU, and reference-machine p95; fresh 3-OS CI is required after this workflow change.

@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # bench.sh — the latency & footprint gate (root AGENTS §5).
 #
-# Drives the golden audio corpus through the built pipeline and emits the timing
-# table (release->inject, streaming lag, Light cleanup cost) plus idle RAM/CPU.
-# In --check mode it compares the results against the §5 budgets and fails if any
-# budget regresses (>10% band applied to the baseline once one is recorded).
+# Drives the implemented bench contract and emits the timing table
+# (release->inject, streaming lag, Light cleanup cost, plus explicit unmeasured
+# fields for model/footprint work that has not landed yet). In --check mode it
+# compares every measured result against the §5 budgets and fails if any budget
+# regresses (>10% band applied to the baseline once one is recorded).
 #
-# Runs on each OS (macOS/Windows/Linux) — budgets are per-platform. Requires the
-# app built with `--bench` (emits the machine-readable timing table, ARCHITECTURE
-# §8) and a golden corpus at scripts/corpus/audio/*.wav with expected outputs.
+# Runs on each OS (macOS/Windows/Linux) — budgets are per-platform. Uses a built
+# `--bench` binary when present, otherwise runs the Rust bench entry point through
+# Cargo so CI can enforce the gate before release packaging exists.
 #
 # Portable to bash 3.2 (macOS default): no associative arrays.
 #   usage: bash scripts/bench.sh [--check]
@@ -30,19 +31,17 @@ BUDGET_JSON='{
 }'
 
 BENCH_BIN="${KAYDENCE_BENCH_BIN:-$ROOT/apps/desktop/src-tauri/target/release/kaydence}"
-if [ ! -x "$BENCH_BIN" ]; then
-  echo "== bench.sh =="
-  echo "no built --bench binary at: $BENCH_BIN"
-  echo "Build the app first (P0-T2+), then this gate measures vs root AGENTS §5:"
-  printf '%s\n' "$BUDGET_JSON"
-  if [ "$MODE" = "--check" ]; then
-    echo "RESULT: SKIP (no build to bench) — gate not measurable until the pipeline exists." >&2
-    exit 3   # 3 = not-measurable-yet (distinct from 1 = regression)
-  fi
-  exit 0
+BENCH_BIN_EXE="${BENCH_BIN}.exe"
+if [ -x "$BENCH_BIN" ]; then
+  RESULTS="$("$BENCH_BIN" --bench)"
+elif [ -x "$BENCH_BIN_EXE" ]; then
+  RESULTS="$("$BENCH_BIN_EXE" --bench)"
+elif command -v cargo >/dev/null; then
+  RESULTS="$(cargo run --quiet --manifest-path "$ROOT/apps/desktop/src-tauri/Cargo.toml" --bin kaydence -- --bench)"
+else
+  echo "RESULT: FAIL (no bench binary and cargo is unavailable)" >&2
+  exit 2
 fi
-
-RESULTS="$("$BENCH_BIN" --bench)"
 printf '%s\n' "$RESULTS"
 [ "$MODE" != "--check" ] && exit 0
 
@@ -51,11 +50,16 @@ printf '%s' "$RESULTS" | BUDGET_JSON="$BUDGET_JSON" node -e '
   let data=""; process.stdin.on("data",c=>data+=c).on("end",()=>{
     const m=JSON.parse(data), b=JSON.parse(process.env.BUDGET_JSON);
     let fail=0;
+    let measured=0;
+    const skipped=[];
     for (const k of Object.keys(b)) {
-      if (m[k]==null) continue;
+      if (m[k]==null) { skipped.push(k); continue; }
+      measured++;
       if (m[k] > b[k]) { console.error(`REGRESSION ${k}: ${m[k]} > ${b[k]}`); fail=1; }
     }
+    if (measured===0) { console.error("RESULT: FAIL (bench emitted no measured budget fields)"); process.exit(2); }
     if (fail) process.exit(1);
-    console.log("RESULT: PASS (all measured metrics within §5 budgets)");
+    console.log(`RESULT: PASS (${measured} measured metrics within §5 budgets)`);
+    if (skipped.length) console.log(`RESULT: PARTIAL (unmeasured: ${skipped.join(", ")})`);
   });
 ' || { echo "RESULT: FAIL (budget regression)" >&2; exit 1; }

@@ -1,0 +1,33 @@
+Kaydence P1-P0-6 latency bench gate
+Timestamp: 2026-07-09T11:50Z
+Scope: turn scripts/bench.sh from a skipped skeleton into a working partial
+Raw-path budget gate for the implemented pipeline.
+
+Changed:
+- Added apps/desktop/src-tauri/src/bench.rs.
+- Added kaydence --bench routing before Tauri starts.
+- Updated scripts/bench.sh to run a built bench binary or fall back to
+  cargo run -- --bench, parse JSON, and fail on measured budget regressions.
+- Removed the CI allowance that treated bench exit 3 as a pass.
+
+Local focused evidence:
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml bench
+  PASS: 2 bench unit tests.
+- bash scripts/bench.sh --check
+  PASS: 4 measured metrics within AGENTS section 5 budgets.
+
+Observed local bench JSON:
+- hotkey_to_capture_ms: 6
+- partial_lag_ms: 120
+- release_to_inject_cpu_ms: 7
+- light_cleanup_added_ms: 1
+- samples_written: 9600
+- events: audio_persisted -> partial -> raw_final
+
+Honest boundary:
+- P1-G3 remains pending. The gate now enforces the implemented Raw
+  orchestration path, but release_to_inject_gpu_ms, prediction_guess_ms,
+  idle_ram_mb, idle_cpu_pct, real Parakeet/Whisper ASR, and reference-machine
+  p95 are explicitly unmeasured until the real adapters and reference machines
+  exist.
+- Fresh 3-OS CI is required after this commit because the CI workflow changed.

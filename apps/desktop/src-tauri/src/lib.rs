@@ -16,6 +16,7 @@ use std::time::{Duration, Instant};
 pub mod events;
 
 pub mod audio;
+pub mod bench;
 pub mod cleanup;
 pub mod context;
 pub mod dictionary;
@@ -28,6 +29,10 @@ pub mod pipeline;
 pub mod prediction;
 pub mod profiles;
 pub mod settings;
+
+pub fn run_bench_json() -> Result<String, bench::BenchError> {
+    bench::run_bench_json()
+}
 
 /// Initial app/config snapshot for the presentation layer.
 #[tauri::command]

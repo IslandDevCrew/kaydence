@@ -31,8 +31,8 @@ Read first, in order:
 Current verified state:
 - GitHub remote access is restored; `IslandDevCrew/kaydence` resolves as a
   PRIVATE repo with ADMIN permission and `git fetch origin` succeeds.
-- Current remote baseline before the event-sequences slice: main at `55e25b7`
-  had green 3-OS Actions CI in run 29013513964.
+- Current remote baseline before the latency bench-gate slice: main at
+  `1694fe9` had green 3-OS Actions CI in run 29015166246.
 - P0 is complete: 7/7 tasks and 7/7 gates, including windowed `cargo tauri dev`
   observed on macOS, Linux, and Windows.
 - P1 is active; P1-P0-7 privacy posture is done with evidence, P1-G1 is locally
@@ -43,11 +43,17 @@ Current verified state:
   tests), focused `cargo test ... crash_recovery`, focused `cargo test ...
   short_utterance`, scripts/check-frontend.sh, scripts/check-privacy-posture.sh
   --check, scripts/check-adr-status.sh, and pnpm --filter kaydence-desktop build.
-- The `event_sequences` integration gate now exists and passes locally. It covers
+- The `event_sequences` integration gate now exists and passed locally plus 3-OS
+  CI at `1694fe9` / run 29015166246. It covers
   the typed cross-module order for happy path, focus-change hold, secure-field
   hold, BYOK/GPU/local-CPU fallback, and the current Full cleanup rule-floor
-  fallback before injection. Fresh CI is still required after the event-sequences
-  commit is pushed.
+  fallback before injection.
+- The latency bench gate has a working partial floor: `kaydence --bench` emits
+  JSON before Tauri startup, and `scripts/bench.sh --check` enforces measured
+  Raw-path budgets in CI instead of skipping. Local PASS measured
+  hotkey_to_capture=6ms, partial_lag=120ms, release_to_inject_cpu=7ms, and
+  light_cleanup_added=1ms. P1-G3 remains pending for real ASR/GPU/idle-footprint
+  and reference-machine p95 evidence.
 - Frontend cockpit/setup shell is present and must remain presentation-only.
 - The Codex app Run action is wired to ./script/build_and_run.sh.
 - The hotkey runtime now honors persisted push-to-talk vs toggle mode. The

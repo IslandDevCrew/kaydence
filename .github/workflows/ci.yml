@@ -63,5 +63,4 @@ jobs:
         run: bash scripts/check-adr-status.sh
       - name: latency budget (root §5)
         shell: bash
-        # exit 3 = not-measurable-yet (pre-build); only a real regression (exit 1) fails CI.
-        run: bash scripts/bench.sh --check || test $? -eq 3
+        run: bash scripts/bench.sh --check
