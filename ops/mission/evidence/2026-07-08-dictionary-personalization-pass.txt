@@ -1,0 +1,57 @@
+Kaydence evidence: deterministic dictionary personalization pass
+Date: 2026-07-08
+
+Intent
+- Replace the dictionary P0 stub with the deterministic core for PRD P1-2/P1-6.
+- Run personalization after cleanup and before committed text is selected for injection.
+- Preserve the product rule that dictionary behavior is explicit and deterministic, never silent correction-learning.
+
+Changed
+- apps/desktop/src-tauri/src/dictionary/mod.rs
+  - Added DictionaryTerm with BuiltIn/User source, optional case-sensitive matching, and bias-hint export.
+  - Added Snippet exact trigger expansion.
+  - Added DictionaryPass for word-boundary-safe replacements and snippets.
+  - Enforced longest-match-first ordering, with user entries beating built-ins for the same phrase.
+  - Removed the previous todo! stage stub.
+- apps/desktop/src-tauri/src/pipeline/mod.rs
+  - Added DictionaryPass ownership to TranscriptionPipeline.
+  - Added with_dictionary_pass for tests/runtime configuration.
+  - Applied dictionary personalization to CleanFinal events before committed_text chooses delivery text.
+
+Focused verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml dictionary:: --lib
+  - PASS: 7 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml pipeline:: --lib
+  - PASS: 8 passed
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS after replacing Option::is_none_or with Rust-1.80-compatible map_or.
+
+Full verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - PASS: 103 lib tests passed, 2 crash-recovery tests passed
+- npm --prefix apps/desktop run check
+  - PASS
+- npm --prefix apps/desktop run build
+  - PASS
+- bash scripts/audit-network.sh --check
+  - PASS: 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  - PASS: ADR-0009 waiver only
+- ./script/build_and_run.sh build
+  - PASS
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Post-verify hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - PASS: no leftover desktop/dev processes
+- apps/desktop/dist/index.html restored; generated apps/desktop/dist/assets and apps/desktop/dist/favicon.svg removed after build verification.
+
+Remaining outside this slice
+- SQLite-backed dictionary persistence via the history-owned database.
+- Wispr Flow and Glaido import preview/commit flows.
+- Correction-learning suggestion intake after user edits injected text.
+- Runtime UI for adding/editing terms and snippets.
+- Feeding configured dictionary bias_hints into the real ASR runtime once model adapters land.

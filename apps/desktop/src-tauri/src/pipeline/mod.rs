@@ -9,6 +9,7 @@ use crate::audio::{
     vad::{SpeechGate, SpeechGateConfig, VadDetector},
 };
 use crate::cleanup;
+use crate::dictionary;
 use crate::engine::{AsrError, AsrRequest, EngineStack};
 use crate::events::{CleanupDial, SessionEvent, SessionId, Stage};
 
@@ -34,6 +35,7 @@ pub struct TranscriptionPipeline<D> {
     vad_config: SpeechGateConfig,
     engines: EngineStack,
     dictionary_hints: Vec<String>,
+    dictionary: dictionary::DictionaryPass,
     cleanup_dial: CleanupDial,
 }
 
@@ -47,12 +49,18 @@ where
             vad_config,
             engines,
             dictionary_hints: Vec::new(),
+            dictionary: dictionary::DictionaryPass::default(),
             cleanup_dial: CleanupDial::Light,
         }
     }
 
     pub fn with_dictionary_hints(mut self, dictionary_hints: Vec<String>) -> Self {
         self.dictionary_hints = dictionary_hints;
+        self
+    }
+
+    pub fn with_dictionary_pass(mut self, dictionary: dictionary::DictionaryPass) -> Self {
+        self.dictionary = dictionary;
         self
     }
 
@@ -87,6 +95,7 @@ where
                         let clean_event = match &event {
                             SessionEvent::RawFinal { id, text } => {
                                 cleanup::clean_final_event(*id, text, self.cleanup_dial)
+                                    .map(|event| self.dictionary.apply_event(event))
                             }
                             _ => None,
                         };
@@ -172,6 +181,7 @@ pub fn default_runtime_pipeline() -> TranscriptionPipeline<crate::audio::vad::En
 mod tests {
     use super::*;
     use crate::audio::{vad::EnergyVad, wal};
+    use crate::dictionary::{DictionaryPass, DictionaryTerm, Snippet};
     use crate::engine::{AsrEngine, AsrTranscript, EngineLane};
     use crate::events::{CleanupDial, SessionId, Stage};
     use std::collections::VecDeque;
@@ -468,5 +478,38 @@ mod tests {
                 text: "first raw second raw".to_string()
             })
         );
+    }
+
+    #[test]
+    fn dictionary_personalizes_clean_final_before_commit_selection() {
+        let (summary, app_data) = summary_for_samples(&[0.0, 0.0, 0.5, 0.5]);
+        let requests = Arc::new(Mutex::new(Vec::new()));
+        let dictionary = DictionaryPass::new()
+            .with_terms(vec![DictionaryTerm::user("kaydence", "Kaydence")])
+            .with_snippets(vec![Snippet::exact("sig", "Regards, Kaydence")]);
+        let mut pipeline = pipeline(
+            vec![Ok(AsrTranscript::raw("hello kaydence sig"))],
+            Arc::clone(&requests),
+        )
+        .with_dictionary_pass(dictionary);
+
+        let events = pipeline.process_capture(&summary).unwrap();
+
+        assert_eq!(
+            events[2],
+            SessionEvent::CleanFinal {
+                id: summary.id,
+                text: "Hello Kaydence Regards, Kaydence.".to_string(),
+                dial: CleanupDial::Light
+            }
+        );
+        assert_eq!(
+            committed_text(&events),
+            Some(CommittedText {
+                id: summary.id,
+                text: "Hello Kaydence Regards, Kaydence.".to_string(),
+            })
+        );
+        let _ = std::fs::remove_dir_all(app_data);
     }
 }
