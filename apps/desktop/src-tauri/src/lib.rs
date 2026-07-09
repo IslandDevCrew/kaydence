@@ -832,6 +832,7 @@ impl RuntimeSnapshot {
         for candidate in &mut first_run.asr_candidates {
             candidate.selected = candidate.id == model_id;
         }
+        first_run.recompute_next_step();
         Some(())
     }
 
@@ -849,6 +850,7 @@ impl RuntimeSnapshot {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         update(&mut snapshot.settings.first_run);
+        snapshot.settings.first_run.recompute_next_step();
     }
 }
 

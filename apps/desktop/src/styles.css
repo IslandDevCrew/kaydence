@@ -913,6 +913,67 @@ button {
   color: var(--gold);
 }
 
+.next-step-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(118px, auto);
+  gap: 10px;
+  align-items: start;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-soft));
+  padding: 11px 12px;
+}
+
+.next-step-card > div {
+  min-width: 0;
+}
+
+.next-step-card span,
+.next-step-card strong,
+.next-step-card p,
+.next-step-card small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.next-step-card span {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.next-step-card strong {
+  margin-top: 3px;
+  color: color-mix(in srgb, var(--accent) 82%, #14313a);
+  font-size: 1rem;
+}
+
+.next-step-card p,
+.next-step-card small {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.next-step-action {
+  width: 100%;
+  min-width: 118px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.next-step-note {
+  grid-column: 1 / -1;
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.next-step-card.step-model_metadata strong {
+  color: var(--danger);
+}
+
 .setup-timing {
   display: grid;
   gap: 4px;
@@ -1041,6 +1102,14 @@ button {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+  }
+
+  .next-step-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .next-step-action {
+    max-width: 220px;
   }
 }
 

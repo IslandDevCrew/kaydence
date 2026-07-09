@@ -97,6 +97,24 @@ interface FirstRunPermissionActionOutcome {
   proof_requirement: string;
 }
 
+type FirstRunNextStepKind =
+  | "setup"
+  | "model_metadata"
+  | "model_install"
+  | "permission"
+  | "hotkey"
+  | "dictation"
+  | "complete";
+
+interface FirstRunNextStep {
+  kind: FirstRunNextStepKind;
+  target_id: string | null;
+  title: string;
+  detail: string;
+  action_label: string;
+  proof_requirement: string;
+}
+
 interface FirstRunSetupTiming {
   started_at_ms: number | null;
   completed_at_ms: number | null;
@@ -150,6 +168,7 @@ interface AppSnapshot {
       asr_candidates: FirstRunAsrCandidate[];
       recommended_asr_model_id: string | null;
       selected_asr_model_id: string | null;
+      next_step: FirstRunNextStep;
       permission_requirements: FirstRunPermissionRequirement[];
       microphone_permission_ready: boolean;
       input_permission_ready: boolean;
@@ -274,6 +293,14 @@ const previewSnapshot: AppSnapshot = {
       asr_candidates: [],
       recommended_asr_model_id: null,
       selected_asr_model_id: null,
+      next_step: {
+        kind: "model_metadata",
+        target_id: null,
+        title: "Resolve model readiness",
+        detail: "Model readiness has not been proven yet.",
+        action_label: "Review models",
+        proof_requirement: "Refresh model readiness with verified ASR and VAD artifacts.",
+      },
       permission_requirements: [
         {
           id: "microphone",
@@ -553,6 +580,7 @@ export function App(): JSX.Element {
   const [permissionActionOutcome, setPermissionActionOutcome] =
     useState<FirstRunPermissionActionOutcome | null>(null);
   const [permissionActionIssue, setPermissionActionIssue] = useState<string | null>(null);
+  const [firstRunActionNote, setFirstRunActionNote] = useState<string | null>(null);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
@@ -579,11 +607,19 @@ export function App(): JSX.Element {
   const permissionRequirements = snapshot.settings.first_run.permission_requirements;
   const permissionSummaryText = permissionSummary(permissionRequirements);
   const setupTiming = snapshot.settings.first_run.setup_timing;
+  const nextStep = snapshot.settings.first_run.next_step;
   const firstRunReady =
     snapshot.settings.first_run.model_ready &&
     snapshot.settings.first_run.microphone_permission_ready &&
     snapshot.settings.first_run.input_permission_ready &&
     snapshot.settings.first_run.hotkey_registered;
+  const firstRunActionDisabled =
+    nextStep.kind === "setup" ||
+    ((nextStep.kind === "model_install" || nextStep.kind === "permission") &&
+      nextStep.target_id === null) ||
+    installingModelId !== null ||
+    permissionActionPendingId !== null ||
+    modelRefreshPending;
   const requiredModels = snapshot.settings.first_run.required_models;
   const showModelRecheck =
     !snapshot.settings.first_run.model_ready &&
@@ -729,6 +765,46 @@ export function App(): JSX.Element {
       setModelInstallIssue("Model artifact was not installed.");
     } finally {
       setInstallingModelId(null);
+    }
+  }
+
+  async function handleFirstRunAction() {
+    setFirstRunActionNote(null);
+
+    if (snapshotSource === "preview") {
+      setFirstRunActionNote(nextStep.proof_requirement);
+      return;
+    }
+
+    if (nextStep.kind === "permission" && nextStep.target_id) {
+      showPermissionAction(nextStep.target_id);
+      return;
+    }
+
+    if (nextStep.kind === "model_install" && nextStep.target_id) {
+      await installModelArtifact(nextStep.target_id);
+      return;
+    }
+
+    if (nextStep.kind === "model_metadata") {
+      setFirstRunActionNote(nextStep.proof_requirement);
+      refreshModelReadiness();
+      return;
+    }
+
+    if (nextStep.kind === "hotkey") {
+      setFirstRunActionNote(nextStep.proof_requirement);
+      setHotkeyBindingIssue(nextStep.proof_requirement);
+      return;
+    }
+
+    if (nextStep.kind === "dictation") {
+      setFirstRunActionNote(nextStep.proof_requirement);
+      return;
+    }
+
+    if (nextStep.kind === "complete") {
+      setFirstRunActionNote(nextStep.proof_requirement);
     }
   }
 
@@ -1197,6 +1273,27 @@ export function App(): JSX.Element {
               </div>
               <span className="pill">Free selected</span>
             </div>
+            <div className={`next-step-card step-${nextStep.kind}`} aria-label="First-run next step">
+              <div>
+                <span>Next step</span>
+                <strong>{nextStep.title}</strong>
+                <p>{nextStep.detail}</p>
+                <small>Proof: {nextStep.proof_requirement}</small>
+              </div>
+              <button
+                className="secondary-action next-step-action"
+                disabled={firstRunActionDisabled}
+                onClick={() => void handleFirstRunAction()}
+                type="button"
+              >
+                {nextStep.action_label}
+              </button>
+              {firstRunActionNote ? (
+                <small className="next-step-note" role="status">
+                  {firstRunActionNote}
+                </small>
+              ) : null}
+            </div>
             <ol className="setup-list">
               {checklist.map((item) => (
                 <li className={`setup-item status-${statusClassName(item.status)}`} key={item.label}>
@@ -1355,8 +1452,13 @@ export function App(): JSX.Element {
                 {modelRefreshPending ? "Checking Models" : "Recheck Models"}
               </button>
             ) : null}
-            <button className="primary-action" disabled={!firstRunReady} type="button">
-              {firstRunReady ? "Start Dictating" : "Resolve Setup"}
+            <button
+              className="primary-action"
+              disabled={firstRunActionDisabled}
+              onClick={() => void handleFirstRunAction()}
+              type="button"
+            >
+              {firstRunReady ? nextStep.action_label : "Resolve Setup"}
             </button>
           </article>
         </section>

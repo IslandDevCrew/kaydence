@@ -1,0 +1,53 @@
+Kaydence P1-P0-8 evidence: first-run next-step orchestration
+Date: 2026-07-09
+Commit scope: backend-owned first-run next-step guidance rendered in Screen Family 10
+
+Changed:
+- Added FirstRunNextStep to the Rust AppSnapshot first_run contract.
+- Recomputed the next step after model readiness, permission/hotkey state, ASR selection, and first-dictation completion updates.
+- Ordered setup truth in Rust: model metadata review -> reviewed model install -> OS permission proof -> hotkey recovery -> real first dictation -> complete.
+- Rendered the next-step card in the first-run panel, with a backend-selected action label and proof requirement.
+- Added a Vite preview guard so the next-step action shows proof guidance without trying to call Tauri IPC outside the desktop runtime.
+
+Honest boundary:
+- No network downloader was added. Real model downloads remain blocked until reviewed registry metadata, ADR/toggle/allowlist work, and approved endpoints exist.
+- No real OS permission detection or prompt automation was added.
+- No fake first dictation is claimed; completion still requires a real Injected event.
+
+Verification:
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml first_run_next_step
+  - 3 focused next-step tests passed.
+- PASS: pnpm --dir apps/desktop run check
+- PASS: Browser smoke at 1280x720
+  - next-step card present
+  - button text: Review models
+  - no horizontal overflow
+  - no page console errors before interaction
+- PASS: Browser smoke at 390x844
+  - next-step card present
+  - button text: Review models
+  - no horizontal overflow
+- PASS: Browser interaction smoke
+  - next-step click renders proof note: Refresh model readiness with verified ASR and VAD artifacts.
+  - no new console error was emitted after the preview guard; the Browser log retained one old pre-patch error with unchanged before/after count.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  - 198 lib tests, 2 crash_recovery tests, 5 event_sequences tests, 5 short_utterance tests.
+- PASS: bash scripts/check-privacy-posture.sh --check
+  - network-capable call sites found: 0
+  - README privacy promises present
+  - no banned screen-capture primitives
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 remains the only declared by-design Proposed exception.
+- PASS/PARTIAL: bash scripts/bench.sh --check
+  - hotkey_to_capture_ms=8
+  - partial_lag_ms=120
+  - release_to_inject_cpu_ms=6
+  - light_cleanup_added_ms=1
+  - unmeasured: real ASR/GPU, prediction, idle RAM/CPU, reference-machine p95.
+- PASS: pnpm --dir apps/desktop run build
+- PASS: ./script/build_and_run.sh --verify
+- PASS: ./script/build_and_run.sh build
+- PASS: jq empty ops/mission/state.json
+- PASS: git diff --check

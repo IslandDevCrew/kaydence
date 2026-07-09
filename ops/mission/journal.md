@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T15:30Z — Codex P1 slice (first-run next-step orchestration)
+- Added backend-owned first-run sequencing for P1-P0-8. `FirstRunStatus` now carries `next_step`, recomputed after model readiness, ASR selection, permission/hotkey state, and first-dictation completion updates.
+- The Rust sequence is explicit and evidence-safe: model metadata review -> reviewed model install -> OS permission proof -> hotkey recovery -> real first dictation -> complete. This does not add a network downloader, fake OS permission detection, or fake completion proof.
+- Screen Family 10 now renders a compact next-step card with backend-selected title/detail/action/proof. The action dispatches the backend-selected intent when running under Tauri; Vite preview mode only shows proof guidance, avoiding noisy IPC errors in browser smoke.
+- Evidence saved at `ops/mission/evidence/2026-07-09-first-run-next-step.txt`: focused next-step tests PASS, frontend check PASS, Browser desktop/narrow/click smoke PASS, clippy PASS, full Rust suite PASS (198 lib + crash/event/short suites), privacy/ADR gates PASS, bench PASS/PARTIAL, production build PASS, build/run script PASS.
+- Honest boundary remains: live OS permission prompts/proof, approved model download/progress UI, a live first-dictation journey, and <=60s reference-machine proof are still open.
+
 ## 2026-07-07T00:00Z — session 1 (bootstrap)
 - Bootstrapped mission-control on the docs-first Kaydence v3 scaffold (no prior ops/mission). git initialized; baseline commit of 49 tracked files.
 - Seeded state.json from the v3 plan: 5 phases (P0 Toolchain, P1 MVP Dictation, P2 Cleanup, P3 Polish+Whisper-Ahead, P4 Flagship Trio), PRD IDs as task seeds, exit criteria as runnable gates.

@@ -449,6 +449,7 @@ pub struct FirstRunStatus {
     pub asr_candidates: Vec<FirstRunAsrCandidate>,
     pub recommended_asr_model_id: Option<String>,
     pub selected_asr_model_id: Option<String>,
+    pub next_step: FirstRunNextStep,
     pub permission_requirements: Vec<FirstRunPermissionRequirement>,
     pub microphone_permission_ready: bool,
     pub input_permission_ready: bool,
@@ -460,13 +461,14 @@ pub struct FirstRunStatus {
 
 impl Default for FirstRunStatus {
     fn default() -> Self {
-        Self {
+        let mut status = Self {
             model_ready: false,
             model_readiness_error: None,
             required_models: Vec::new(),
             asr_candidates: Vec::new(),
             recommended_asr_model_id: None,
             selected_asr_model_id: None,
+            next_step: FirstRunNextStep::default(),
             permission_requirements: first_run_permission_requirements(),
             microphone_permission_ready: false,
             input_permission_ready: false,
@@ -474,7 +476,9 @@ impl Default for FirstRunStatus {
             hotkey_registration_error: None,
             setup_timing: FirstRunSetupTiming::default(),
             first_dictation_completed: false,
-        }
+        };
+        status.recompute_next_step();
+        status
     }
 }
 
@@ -484,6 +488,10 @@ impl FirstRunStatus {
             && self.microphone_permission_ready
             && self.input_permission_ready
             && self.hotkey_registered
+    }
+
+    pub fn recompute_next_step(&mut self) {
+        self.next_step = FirstRunNextStep::from_status(self);
     }
 }
 
@@ -553,6 +561,151 @@ pub struct FirstRunPermissionActionOutcome {
     pub action_label: String,
     pub manual_step: String,
     pub proof_requirement: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunNextStep {
+    pub kind: FirstRunNextStepKind,
+    pub target_id: Option<String>,
+    pub title: String,
+    pub detail: String,
+    pub action_label: String,
+    pub proof_requirement: String,
+}
+
+impl Default for FirstRunNextStep {
+    fn default() -> Self {
+        Self {
+            kind: FirstRunNextStepKind::Setup,
+            target_id: None,
+            title: "Resolve setup".to_string(),
+            detail: "Kaydence is still gathering first-run readiness state.".to_string(),
+            action_label: "Resolve setup".to_string(),
+            proof_requirement: "Refresh setup state before claiming readiness.".to_string(),
+        }
+    }
+}
+
+impl FirstRunNextStep {
+    pub fn from_status(status: &FirstRunStatus) -> Self {
+        if let Some(model) = status
+            .required_models
+            .iter()
+            .find(|model| model.state == FirstRunModelState::Blocked)
+        {
+            return Self {
+                kind: FirstRunNextStepKind::ModelMetadata,
+                target_id: Some(model.id.clone()),
+                title: "Review model metadata".to_string(),
+                detail: format!("{} is blocked: {}", model.id, model.detail),
+                action_label: "Review registry".to_string(),
+                proof_requirement:
+                    "Record reviewed sha256 and HTTPS source metadata before enabling install or download."
+                        .to_string(),
+            };
+        }
+
+        if let Some(model) = status
+            .required_models
+            .iter()
+            .find(|model| model.state == FirstRunModelState::Missing)
+        {
+            return Self {
+                kind: FirstRunNextStepKind::ModelInstall,
+                target_id: Some(model.id.clone()),
+                title: "Install reviewed model".to_string(),
+                detail: format!(
+                    "{} needs a verified local artifact before first dictation.",
+                    model.id
+                ),
+                action_label: "Install artifact".to_string(),
+                proof_requirement:
+                    "Import a reviewed artifact and verify its sha256 under app-data models/."
+                        .to_string(),
+            };
+        }
+
+        if !status.model_ready {
+            return Self {
+                kind: FirstRunNextStepKind::ModelMetadata,
+                target_id: None,
+                title: "Resolve model readiness".to_string(),
+                detail: status
+                    .model_readiness_error
+                    .clone()
+                    .unwrap_or_else(|| "Model readiness has not been proven yet.".to_string()),
+                action_label: "Review models".to_string(),
+                proof_requirement: "Refresh model readiness with verified ASR and VAD artifacts."
+                    .to_string(),
+            };
+        }
+
+        if let Some(requirement) = status
+            .permission_requirements
+            .iter()
+            .find(|requirement| requirement.state != FirstRunPermissionState::Ready)
+        {
+            return Self {
+                kind: FirstRunNextStepKind::Permission,
+                target_id: Some(requirement.id.clone()),
+                title: format!("Grant {}", requirement.label),
+                detail: requirement.detail.clone(),
+                action_label: requirement.action_label.clone(),
+                proof_requirement: first_run_permission_proof(&requirement.id).to_string(),
+            };
+        }
+
+        if !status.hotkey_registered {
+            return Self {
+                kind: FirstRunNextStepKind::Hotkey,
+                target_id: None,
+                title: "Recover hotkey registration".to_string(),
+                detail: status
+                    .hotkey_registration_error
+                    .clone()
+                    .unwrap_or_else(|| "Register the selected global hotkey.".to_string()),
+                action_label: "Choose hotkey".to_string(),
+                proof_requirement:
+                    "Register and trigger the selected global hotkey on this OS build.".to_string(),
+            };
+        }
+
+        if !status.first_dictation_completed {
+            return Self {
+                kind: FirstRunNextStepKind::Dictation,
+                target_id: None,
+                title: "Run first dictation".to_string(),
+                detail: "Hold the registered hotkey, speak a short phrase, and inject it into a normal text field.".to_string(),
+                action_label: "Start dictation proof".to_string(),
+                proof_requirement:
+                    "A real Injected event must persist first_dictation_completed and setup timing."
+                        .to_string(),
+            };
+        }
+
+        Self {
+            kind: FirstRunNextStepKind::Complete,
+            target_id: None,
+            title: "First run complete".to_string(),
+            detail: "Setup has a persisted first-dictation proof.".to_string(),
+            action_label: "Open cockpit".to_string(),
+            proof_requirement:
+                "settings.json contains first_dictation_completed=true and completion timing."
+                    .to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FirstRunNextStepKind {
+    Setup,
+    ModelMetadata,
+    ModelInstall,
+    Permission,
+    Hotkey,
+    Dictation,
+    Complete,
 }
 
 pub fn first_run_permission_requirements() -> Vec<FirstRunPermissionRequirement> {
@@ -1079,6 +1232,87 @@ mod tests {
     }
 
     #[test]
+    fn first_run_next_step_prioritizes_blocked_model_metadata() {
+        let mut status = FirstRunStatus {
+            model_ready: false,
+            required_models: vec![FirstRunModelStatus {
+                id: "parakeet-v3".to_string(),
+                task: "ASR".to_string(),
+                lane: Some("cpu".to_string()),
+                runtime: "onnxruntime".to_string(),
+                file: "parakeet-v3-int8.onnx".to_string(),
+                state: FirstRunModelState::Blocked,
+                detail: "Registry checksum pending".to_string(),
+                download_available: false,
+                download_size_mb: None,
+                download_source_count: 0,
+                license: "Apache-2.0".to_string(),
+                license_review_required: false,
+            }],
+            ..FirstRunStatus::default()
+        };
+        status.recompute_next_step();
+
+        assert_eq!(status.next_step.kind, FirstRunNextStepKind::ModelMetadata);
+        assert_eq!(status.next_step.target_id.as_deref(), Some("parakeet-v3"));
+        assert!(status.next_step.proof_requirement.contains("sha256"));
+    }
+
+    #[test]
+    fn first_run_next_step_points_missing_models_to_reviewed_install() {
+        let mut status = FirstRunStatus {
+            model_ready: false,
+            required_models: vec![FirstRunModelStatus {
+                id: "silero-vad".to_string(),
+                task: "VAD".to_string(),
+                lane: None,
+                runtime: "onnxruntime".to_string(),
+                file: "silero_vad.onnx".to_string(),
+                state: FirstRunModelState::Missing,
+                detail: "Download required before first dictation".to_string(),
+                download_available: true,
+                download_size_mb: Some(2),
+                download_source_count: 1,
+                license: "MIT".to_string(),
+                license_review_required: false,
+            }],
+            ..FirstRunStatus::default()
+        };
+        status.recompute_next_step();
+
+        assert_eq!(status.next_step.kind, FirstRunNextStepKind::ModelInstall);
+        assert_eq!(status.next_step.target_id.as_deref(), Some("silero-vad"));
+        assert_eq!(status.next_step.action_label, "Install artifact");
+    }
+
+    #[test]
+    fn first_run_next_step_orders_permissions_hotkey_dictation_and_completion() {
+        let mut status = FirstRunStatus {
+            model_ready: true,
+            hotkey_registered: false,
+            ..FirstRunStatus::default()
+        };
+        status.recompute_next_step();
+        assert_eq!(status.next_step.kind, FirstRunNextStepKind::Permission);
+
+        for requirement in &mut status.permission_requirements {
+            requirement.state = FirstRunPermissionState::Ready;
+        }
+        status.microphone_permission_ready = true;
+        status.input_permission_ready = true;
+        status.recompute_next_step();
+        assert_eq!(status.next_step.kind, FirstRunNextStepKind::Hotkey);
+
+        status.hotkey_registered = true;
+        status.recompute_next_step();
+        assert_eq!(status.next_step.kind, FirstRunNextStepKind::Dictation);
+
+        status.first_dictation_completed = true;
+        status.recompute_next_step();
+        assert_eq!(status.next_step.kind, FirstRunNextStepKind::Complete);
+    }
+
+    #[test]
     fn first_run_status_carries_hotkey_registration_errors() {
         let status = FirstRunStatus {
             hotkey_registration_error: Some("shortcut already registered".to_string()),
@@ -1095,6 +1329,7 @@ mod tests {
         assert!(json["permission_requirements"]
             .as_array()
             .is_some_and(|requirements| !requirements.is_empty()));
+        assert_eq!(json["next_step"]["kind"], "model_metadata");
     }
 
     #[test]
