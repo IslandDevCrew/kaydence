@@ -18,6 +18,9 @@ use crate::events::{AppRef, HoldReason, InjectMethod, SessionEvent, SessionId, S
 #[cfg(target_os = "linux")]
 pub mod linux;
 
+#[cfg(target_os = "macos")]
+pub mod macos;
+
 #[cfg(target_os = "linux")]
 pub mod uinput;
 
@@ -138,7 +141,7 @@ impl KeystrokeChannel {
 /// Injection channels the running environment offers (detected once at startup).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InjectorCaps {
-    /// Native text insertion — macOS AX `AXValue`, Windows UIA `ValuePattern`,
+    /// Native text insertion — macOS AX selected-text, Windows UIA `ValuePattern`,
     /// Linux AT-SPI `EditableText`. No synthetic keys; cleanest path.
     pub native_text_insert: bool,
     /// Best available keystroke channel (drives `Keystroke` and clipboard paste).
@@ -333,19 +336,33 @@ impl TextInjector for UnimplementedInjector {
     }
 }
 
-/// The current platform's injector. Returns the placeholder until the ADR-0013
-/// backends are approved + validated on the reference machines.
-pub fn platform_injector() -> UnimplementedInjector {
-    let platform = if cfg!(target_os = "macos") {
-        "macOS"
-    } else if cfg!(target_os = "windows") {
-        "Windows"
-    } else if cfg!(target_os = "linux") {
-        "Linux"
-    } else {
-        "unknown"
-    };
-    UnimplementedInjector { platform }
+#[cfg(target_os = "macos")]
+pub type PlatformTextInjector = macos::MacOsTextInjector;
+
+#[cfg(not(target_os = "macos"))]
+pub type PlatformTextInjector = UnimplementedInjector;
+
+/// The current platform's injector. Platforms without an approved backend use
+/// the placeholder so nothing silently "succeeds" before validation.
+pub fn platform_injector() -> PlatformTextInjector {
+    #[cfg(target_os = "macos")]
+    {
+        macos::MacOsTextInjector
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let platform = if cfg!(target_os = "macos") {
+            "macOS"
+        } else if cfg!(target_os = "windows") {
+            "Windows"
+        } else if cfg!(target_os = "linux") {
+            "Linux"
+        } else {
+            "unknown"
+        };
+        UnimplementedInjector { platform }
+    }
 }
 
 #[cfg(test)]
@@ -698,6 +715,7 @@ mod tests {
         assert!(injector.delivered.is_empty());
     }
 
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn placeholder_backend_refuses_and_reports_no_caps() {
         let mut inj = platform_injector();

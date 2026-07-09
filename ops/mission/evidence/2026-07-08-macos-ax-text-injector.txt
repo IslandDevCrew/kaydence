@@ -1,0 +1,58 @@
+Kaydence evidence: macOS AX native text injector
+Date: 2026-07-08
+
+Intent
+- Replace the macOS placeholder TextInjector with a real Accessibility-backed native insertion path.
+- Detect focused macOS text controls through AX role/subrole and refuse secure fields before delivery.
+- Use AXSelectedText for insertion so the backend inserts at the caret or replaces the current selection instead of overwriting AXValue for the whole field.
+- Keep unsupported focus, missing Accessibility access, and non-text controls fail-closed as NoTarget / unavailable.
+
+Changed
+- apps/desktop/src-tauri/src/inject/mod.rs
+  - Added macOS cfg module wiring and PlatformTextInjector alias.
+  - platform_injector() now returns MacOsTextInjector on macOS and the placeholder on non-macOS platforms.
+  - Updated the native insertion contract comment from destructive AXValue wording to selected-text insertion.
+- apps/desktop/src-tauri/src/inject/macos.rs
+  - Added dependency-free FFI bindings for ApplicationServices AXUIElement and CoreFoundation strings.
+  - Added focused-element lookup via AXFocusedUIElement.
+  - Added role/subrole classification for AXTextField, AXTextArea, AXComboBox, AXSearchField, and AXSecureTextField.
+  - Added native insertion through AXUIElementSetAttributeValue(..., AXSelectedText, text).
+  - Added capability probing with AXUIElementIsAttributeSettable for AXSelectedText.
+  - Added pure unit tests for editable, secure, search, unsupported, and missing role classification.
+
+Focused verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml inject:: --lib
+  - PASS: 19 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - PASS: 5 passed
+
+Full verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - PASS: 111 lib tests passed, 2 crash-recovery tests passed
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+- npm --prefix apps/desktop run check
+  - PASS
+- npm --prefix apps/desktop run build
+  - PASS
+- bash scripts/audit-network.sh --check
+  - PASS: 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  - PASS: ADR-0009 waiver only
+- ./script/build_and_run.sh build
+  - PASS
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Post-verify hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - PASS: no leftover desktop/dev processes
+- apps/desktop/dist/index.html restored; generated apps/desktop/dist/assets and apps/desktop/dist/favicon.svg removed after build verification.
+
+Remaining outside this slice
+- Live AX insertion validation across the macOS app-compat matrix.
+- macOS CGEvent fallback for fields that do not expose AXSelectedText.
+- Clipboard snapshot/paste/restore backend for macOS.
+- Windows UIA/SendInput injector backend.
