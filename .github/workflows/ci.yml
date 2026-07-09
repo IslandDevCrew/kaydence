@@ -32,6 +32,7 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libgtk-layer-shell-dev \
+            libasound2-dev \
             patchelf
       # --- Rust backend ---
       - name: fmt
