@@ -1,0 +1,51 @@
+Kaydence evidence: macOS conservative clipboard fallback
+Date: 2026-07-08
+
+Intent
+- Add the third macOS delivery rung: clipboard set + Command-V paste + restore.
+- Keep the secure-field/no-target gate in front of clipboard delivery.
+- Avoid destroying user clipboard data by refusing clipboard fallback when the current pasteboard advertises non-text types we cannot faithfully restore through pbcopy/pbpaste.
+- Keep restore bounded with a 20 ms post-paste delay before restoring the original text clipboard snapshot.
+
+Changed
+- apps/desktop/src-tauri/src/inject/macos.rs
+  - MacOsTextInjector::caps now advertises clipboard only when focused AX role is Editable and the current clipboard snapshot is restorable.
+  - paste_clipboard re-checks focused AX role, snapshots text/empty pasteboards, writes dictated text with pbcopy, posts Command-V via CGEvent, then restores the prior text snapshot.
+  - Added conservative clipboard type classification from `osascript -e 'clipboard info'`.
+  - Added parser tests for empty, text-only, non-text, and mixed text/non-text pasteboards.
+
+Focused verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml inject:: --lib
+  - PASS: 26 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - PASS: 5 passed
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+
+Full verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - PASS: 118 lib tests passed, 2 crash-recovery tests passed
+- npm --prefix apps/desktop run check
+  - PASS
+- npm --prefix apps/desktop run build
+  - PASS
+- bash scripts/audit-network.sh --check
+  - PASS: 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  - PASS: ADR-0009 waiver only
+- ./script/build_and_run.sh build
+  - PASS
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Post-verify hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - PASS: no leftover desktop/dev processes
+- apps/desktop/dist/index.html restored; generated apps/desktop/dist/assets and apps/desktop/dist/favicon.svg removed after build verification.
+
+Honest limits
+- This slice restores text-compatible or empty pasteboards only; mixed/non-text pasteboards are refused so user data is preserved.
+- A future NSPasteboard backend should snapshot and restore all advertised pasteboard item types.
+- Live app-matrix validation is still required to prove target apps consume the Command-V event before restore.

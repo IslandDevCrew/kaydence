@@ -8,16 +8,27 @@
 #![allow(dead_code)]
 
 use std::ffi::CStr;
+use std::io::Write;
 use std::os::raw::{c_char, c_void};
+use std::path::Path;
+use std::process::{Command, Stdio};
 use std::ptr;
+use std::thread;
+use std::time::Duration;
 
 use super::{FieldKind, InjectError, InjectorCaps, KeystrokeChannel, TextInjector};
 
 const CFSTRING_ENCODING_UTF8: CFStringEncoding = 0x0800_0100;
 const AX_ERROR_SUCCESS: AXError = 0;
 const CG_HID_EVENT_TAP: CGEventTapLocation = 0;
+const CG_COMMAND_FLAG: CGEventFlags = 0x0010_0000;
 const CG_UNICODE_KEY_CODE: CGKeyCode = 0;
+const CG_V_KEY_CODE: CGKeyCode = 0x09;
+const CLIPBOARD_RESTORE_DELAY_MS: u64 = 20;
 const MAX_UNICHARS_PER_EVENT: usize = 512;
+const OSASCRIPT: &str = "/usr/bin/osascript";
+const PBCOPY: &str = "/usr/bin/pbcopy";
+const PBPASTE: &str = "/usr/bin/pbpaste";
 
 const ATTR_FOCUSED_UI_ELEMENT: &str = "AXFocusedUIElement";
 const ATTR_ROLE: &str = "AXRole";
@@ -27,6 +38,7 @@ const ATTR_SELECTED_TEXT: &str = "AXSelectedText";
 type AXError = i32;
 type AXUIElementRef = *const c_void;
 type Boolean = u8;
+type CGEventFlags = u64;
 type CGEventRef = *const c_void;
 type CGEventSourceRef = *const c_void;
 type CGEventTapLocation = u32;
@@ -81,6 +93,9 @@ extern "C" {
 
     #[link_name = "CGEventPost"]
     fn cg_event_post(tap: CGEventTapLocation, event: CGEventRef);
+
+    #[link_name = "CGEventSetFlags"]
+    fn cg_event_set_flags(event: CGEventRef, flags: CGEventFlags);
 }
 
 #[link(name = "CoreFoundation", kind = "framework")]
@@ -144,7 +159,7 @@ impl TextInjector for MacOsTextInjector {
         InjectorCaps {
             native_text_insert,
             keystroke,
-            clipboard: false,
+            clipboard: focused_kind == FieldKind::Editable && clipboard_snapshot_supported(),
         }
     }
 
@@ -212,6 +227,39 @@ impl TextInjector for MacOsTextInjector {
             )),
         }
     }
+
+    fn paste_clipboard(&mut self, text: &str) -> Result<(), InjectError> {
+        require_editable_focus("macOS clipboard paste")?;
+
+        let snap = snapshot_clipboard_text()?;
+        if let Err(err) = set_clipboard_text(text) {
+            let _ = restore_clipboard_text(snap);
+            return Err(err);
+        }
+
+        let pasted = post_command_v();
+        thread::sleep(Duration::from_millis(CLIPBOARD_RESTORE_DELAY_MS));
+        let restored = restore_clipboard_text(snap);
+        pasted.and(restored)
+    }
+}
+
+fn require_editable_focus(action: &str) -> Result<(), InjectError> {
+    let Some(element) = focused_ax_element() else {
+        return Err(InjectError(format!(
+            "{action} refused: Accessibility focused element unavailable"
+        )));
+    };
+
+    match element.field_kind() {
+        FieldKind::Editable => Ok(()),
+        FieldKind::Secure => Err(InjectError(format!(
+            "{action} refused: secure field focused"
+        ))),
+        FieldKind::NoTarget | FieldKind::Unknown => Err(InjectError(format!(
+            "{action} refused: no editable field focused"
+        ))),
+    }
 }
 
 fn post_unicode_text(text: &str) -> Result<(), InjectError> {
@@ -250,6 +298,167 @@ fn create_keyboard_event(key_down: bool) -> Result<OwnedCfType, InjectError> {
     };
     OwnedCfType::new(event)
         .ok_or_else(|| InjectError("macOS CGEvent keyboard event could not be created".to_string()))
+}
+
+fn post_command_v() -> Result<(), InjectError> {
+    let key_down = create_key_event_with_flags(CG_V_KEY_CODE, true, CG_COMMAND_FLAG)?;
+    unsafe {
+        cg_event_post(CG_HID_EVENT_TAP, key_down.as_event());
+    }
+
+    let key_up = create_key_event_with_flags(CG_V_KEY_CODE, false, CG_COMMAND_FLAG)?;
+    unsafe {
+        cg_event_post(CG_HID_EVENT_TAP, key_up.as_event());
+    }
+
+    Ok(())
+}
+
+fn create_key_event_with_flags(
+    key_code: CGKeyCode,
+    key_down: bool,
+    flags: CGEventFlags,
+) -> Result<OwnedCfType, InjectError> {
+    let event =
+        unsafe { cg_event_create_keyboard_event(ptr::null(), key_code, key_down) as CFTypeRef };
+    let event = OwnedCfType::new(event).ok_or_else(|| {
+        InjectError("macOS CGEvent keyboard event could not be created".to_string())
+    })?;
+    unsafe {
+        cg_event_set_flags(event.as_event(), flags);
+    }
+    Ok(event)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ClipboardInfoKind {
+    Empty,
+    TextOnly,
+    NonText,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum MacOsClipboardSnapshot {
+    Empty,
+    Text(String),
+}
+
+fn clipboard_tools_available() -> bool {
+    Path::new(OSASCRIPT).exists() && Path::new(PBCOPY).exists() && Path::new(PBPASTE).exists()
+}
+
+fn clipboard_snapshot_supported() -> bool {
+    clipboard_tools_available()
+        && clipboard_info()
+            .map(|info| classify_clipboard_info(&info) != ClipboardInfoKind::NonText)
+            .unwrap_or(false)
+}
+
+fn snapshot_clipboard_text() -> Result<MacOsClipboardSnapshot, InjectError> {
+    match classify_clipboard_info(&clipboard_info()?) {
+        ClipboardInfoKind::Empty => Ok(MacOsClipboardSnapshot::Empty),
+        ClipboardInfoKind::TextOnly => Ok(MacOsClipboardSnapshot::Text(read_clipboard_text()?)),
+        ClipboardInfoKind::NonText => Err(InjectError(
+            "macOS clipboard contains non-text data; refusing fallback to preserve it".to_string(),
+        )),
+    }
+}
+
+fn restore_clipboard_text(snapshot: MacOsClipboardSnapshot) -> Result<(), InjectError> {
+    match snapshot {
+        MacOsClipboardSnapshot::Empty => set_clipboard_text(""),
+        MacOsClipboardSnapshot::Text(text) => set_clipboard_text(&text),
+    }
+}
+
+fn clipboard_info() -> Result<String, InjectError> {
+    let output = Command::new(OSASCRIPT)
+        .args(["-e", "clipboard info"])
+        .output()
+        .map_err(|err| InjectError(format!("clipboard info failed to start: {err}")))?;
+    command_output_to_string(output, "clipboard info")
+}
+
+fn read_clipboard_text() -> Result<String, InjectError> {
+    let output = Command::new(PBPASTE)
+        .args(["-Prefer", "txt"])
+        .env("LANG", "en_US.UTF-8")
+        .output()
+        .map_err(|err| InjectError(format!("pbpaste failed to start: {err}")))?;
+    command_output_to_string(output, "pbpaste")
+}
+
+fn set_clipboard_text(text: &str) -> Result<(), InjectError> {
+    let mut child = Command::new(PBCOPY)
+        .env("LANG", "en_US.UTF-8")
+        .stdin(Stdio::piped())
+        .spawn()
+        .map_err(|err| InjectError(format!("pbcopy failed to start: {err}")))?;
+
+    let mut stdin = child.stdin.take().ok_or_else(|| {
+        InjectError("pbcopy stdin was unavailable while setting clipboard".to_string())
+    })?;
+    stdin
+        .write_all(text.as_bytes())
+        .map_err(|err| InjectError(format!("pbcopy stdin write failed: {err}")))?;
+    drop(stdin);
+
+    let status = child
+        .wait()
+        .map_err(|err| InjectError(format!("pbcopy wait failed: {err}")))?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(InjectError(format!("pbcopy exited with status {status}")))
+    }
+}
+
+fn command_output_to_string(
+    output: std::process::Output,
+    command: &str,
+) -> Result<String, InjectError> {
+    if !output.status.success() {
+        return Err(InjectError(format!(
+            "{command} exited with status {}: {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+
+    String::from_utf8(output.stdout)
+        .map(|text| text.trim_end_matches(['\r', '\n']).to_string())
+        .map_err(|err| InjectError(format!("{command} returned non-UTF-8 output: {err}")))
+}
+
+fn classify_clipboard_info(info: &str) -> ClipboardInfoKind {
+    let types = clipboard_info_types(info);
+    if types.is_empty() {
+        return ClipboardInfoKind::Empty;
+    }
+
+    if types.iter().all(|ty| is_text_clipboard_type(ty)) {
+        ClipboardInfoKind::TextOnly
+    } else {
+        ClipboardInfoKind::NonText
+    }
+}
+
+fn clipboard_info_types(info: &str) -> Vec<String> {
+    info.split(',')
+        .map(str::trim)
+        .enumerate()
+        .filter_map(|(index, token)| {
+            let is_type_slot = index % 2 == 0;
+            (is_type_slot && !token.is_empty()).then(|| token.to_string())
+        })
+        .collect()
+}
+
+fn is_text_clipboard_type(ty: &str) -> bool {
+    matches!(
+        ty,
+        "Unicode text" | "string" | "styled Clipboard text" | "«class utf8»" | "«class ut16»"
+    )
 }
 
 fn utf16_event_chunks(text: &str, limit: usize) -> Vec<Vec<u16>> {
@@ -518,5 +727,43 @@ mod tests {
     #[test]
     fn empty_text_creates_no_unicode_chunks() {
         assert!(utf16_event_chunks("", 8).is_empty());
+    }
+
+    #[test]
+    fn clipboard_info_empty_is_restorable_empty() {
+        assert_eq!(classify_clipboard_info(""), ClipboardInfoKind::Empty);
+    }
+
+    #[test]
+    fn clipboard_info_text_types_are_restorable() {
+        let info = "Unicode text, 26, string, 13, styled Clipboard text, 22, «class utf8», 13, «class ut16», 28";
+
+        assert_eq!(classify_clipboard_info(info), ClipboardInfoKind::TextOnly);
+        assert_eq!(
+            clipboard_info_types(info),
+            vec![
+                "Unicode text",
+                "string",
+                "styled Clipboard text",
+                "«class utf8»",
+                "«class ut16»"
+            ]
+        );
+    }
+
+    #[test]
+    fn clipboard_info_non_text_is_not_restorable() {
+        assert_eq!(
+            classify_clipboard_info("TIFF picture, 2048"),
+            ClipboardInfoKind::NonText
+        );
+    }
+
+    #[test]
+    fn clipboard_info_mixed_text_and_non_text_is_not_restorable() {
+        assert_eq!(
+            classify_clipboard_info("Unicode text, 12, TIFF picture, 2048"),
+            ClipboardInfoKind::NonText
+        );
     }
 }
