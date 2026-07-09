@@ -1,0 +1,63 @@
+Kaydence P1 model download preflight proof
+Timestamp: 2026-07-09T16:19Z
+Slice: P1-P0-2 / P1-P0-8
+
+What changed
+- Added a Rust-owned first_run_model_download_preflight Tauri command.
+- The command returns a structured FirstRunModelDownloadPreflight with model id, task, lane, runtime, file, current first-run state/detail, availability, destination path, expected sha256, size, source count, source URLs, license, block reason, operator action, and proof requirement.
+- The command is read-only: it uses the existing registry ModelDownloadPlan and the current AppSnapshot readiness state, and it does not fetch bytes or create model files.
+- Screen Family 10 now renders a Review action for incomplete required models and shows the download preflight card from Rust-owned truth.
+
+Honest boundary
+- This is not the network downloader and not a progress bar.
+- It deliberately keeps audit-network clean and blocks placeholder hashes/sources.
+- The actual fetch/progress path is still a future critical decision path requiring ADR/operator review and an allowlisted, toggled network surface.
+
+Focused proof
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml model_download_preflight
+  Result: PASS
+  Scope: 2 tests.
+  Evidence:
+  - reviewed metadata exposes destination/source/hash proof without creating apps models/fixture-asr.onnx
+  - placeholder checksum metadata returns available=false with a registry review action
+
+Local gates
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  Result: PASS
+- pnpm --dir apps/desktop run check
+  Result: PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  Result: PASS
+- bash scripts/check-privacy-posture.sh
+  Result: PASS, audit-network found 0 network call sites
+- bash scripts/check-adr-status.sh
+  Result: PASS, ADR-0009 remains the declared by-design Proposed exception
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  Result: PASS
+  Counts: 202 lib tests, 2 crash_recovery tests, 5 event_sequences tests, 5 short_utterance tests
+- bash scripts/bench.sh --check
+  Result: PASS/PARTIAL
+  Measured: hotkey_to_capture=5ms, partial_lag=120ms, release_to_inject_cpu=5ms, light_cleanup_added=1ms
+  Unmeasured: GPU release-to-inject, prediction, idle RAM/CPU, real ASR, reference-machine p95
+- pnpm --dir apps/desktop run build
+  Result: PASS
+- ./script/build_and_run.sh --verify
+  Result: PASS
+- ./script/build_and_run.sh build
+  Result: PASS
+
+Browser smoke
+- Target: http://localhost:4173/
+- Desktop: 1280x720, PASS
+- Narrow: 390x844, PASS
+- URL-scoped console errors for localhost:4173: none
+- Horizontal overflow: none
+- Preview-mode proof action: PASS, shows the desktop-runtime boundary instead of attempting Tauri IPC
+- Screenshots:
+  - ops/mission/evidence/2026-07-09-model-download-preflight-desktop.png
+  - ops/mission/evidence/2026-07-09-model-download-preflight-narrow.png
+
+Next boundaries
+- Replace TODO model hashes/sources with reviewed published artifacts before real downloads can be safe.
+- Add the actual fetch/progress UI only after the network surface is approved, toggled, and audit allowlisted.
+- Continue P1-P0-8 with live OS permission prompts/proof, the real first-dictation journey, and reference-machine <=60s timing proof.

@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T16:19Z — Codex P1 slice (model download preflight)
+- Added a Rust-owned `first_run_model_download_preflight` command for P1-P0-2/P1-P0-8. It returns model id, task, lane, runtime, file, current first-run state/detail, availability, destination path, expected sha256, size, sources, license, blocked reason, operator action, and proof requirement.
+- Kept the boundary honest: the command is read-only, reuses the existing `ModelDownloadPlan`, does not fetch bytes, does not create files, and blocks placeholder hashes/sources instead of pretending a download is safe.
+- Wired Screen Family 10 required-model rows with a Review action and a compact preflight card. The existing Install path remains the reviewed local-artifact import path; real network fetch/progress is still a future critical decision path.
+- Evidence saved at `ops/mission/evidence/2026-07-09-model-download-preflight.txt` plus desktop/narrow screenshots. Local gates passed: fmt, focused preflight tests, frontend check, clippy, full Rust suite (202 lib + 2 crash + 5 event + 5 short), privacy/ADR gates, bench PASS/PARTIAL, production build, desktop verify/build, and Browser smoke at 1280x720 plus 390x844.
+- Honest boundary remains: live OS permission prompts/proof, approved network download/progress UI, real Parakeet/Whisper adapters, live first dictation, and <=60s reference-machine proof are still open.
+
 ## 2026-07-09T15:53Z — Codex P1 slice (first-run proof export)
 - Added a Rust-owned `FirstRunProofPlan` for P1-P0-8, generated from `AppSnapshot` with schema_version, generated_at_ms, os_lane, ready_to_dictate, first_dictation_completed, next_step, setup_timing, model/ASR state, permission requirements, hotkey state, and proof_items for next step, models, permissions, hotkey, and first dictation.
 - Added `export_first_run_proof_plan`, which writes app-data `exports/first-run-proof-plan.json` and returns the local path plus proof item count. Screen Family 10 now exposes a compact Export Proof action and displays the backend-returned status/path.

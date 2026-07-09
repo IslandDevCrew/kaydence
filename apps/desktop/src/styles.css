@@ -745,8 +745,16 @@ button {
   text-align: right;
 }
 
-.model-install-action {
+.model-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
   margin-top: 8px;
+}
+
+.model-review-action,
+.model-install-action {
   min-width: 82px;
 }
 
@@ -763,6 +771,59 @@ button {
 }
 
 .model-status.status-blocked em {
+  color: var(--danger);
+}
+
+.model-preflight-card {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 10px 12px;
+}
+
+.model-preflight-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.model-preflight-card strong,
+.model-preflight-card span,
+.model-preflight-card small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.model-preflight-heading span {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.model-preflight-heading strong {
+  color: color-mix(in srgb, var(--accent) 78%, #15313a);
+  font-size: .72rem;
+  text-transform: uppercase;
+}
+
+.model-preflight-card > strong {
+  color: color-mix(in srgb, var(--accent) 80%, #15313a);
+  font-size: .95rem;
+}
+
+.model-preflight-card span,
+.model-preflight-card small {
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
+.model-preflight-card.status-blocked .model-preflight-heading strong,
+.model-preflight-card.status-blocked > strong {
   color: var(--danger);
 }
 

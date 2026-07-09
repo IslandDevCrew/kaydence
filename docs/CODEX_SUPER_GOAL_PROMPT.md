@@ -76,10 +76,16 @@ Current verified state:
   truth with next_step, setup_timing, model/ASR state, permission requirements,
   hotkey state, first-dictation state, and proof_items for build-agent handoff.
   Screen Family 10 exposes the Export Proof action and reports the returned
-  path/item count. This is not fake detection or fake timing proof: default
-  permission states remain needs_hardware or needs_review until live platform
-  proof exists. P1-P0-8 remains in progress for live permission prompts/proof,
-  model download, live first-dictation journey, and <=60s reference proof.
+  path/item count. first_run_model_download_preflight now gives Screen Family
+  10 a read-only Review path for required models: destination, expected sha256,
+  size, sources, license, block reason, operator action, and proof requirement
+  come from Rust without fetching bytes or creating files. This is not fake
+  detection, fake timing proof, or a network downloader: default permission
+  states remain needs_hardware or needs_review until live platform proof exists,
+  and the real fetch/progress UI still requires ADR/operator review plus an
+  allowlisted, toggled network surface. P1-P0-8 remains in progress for live
+  permission prompts/proof, approved network download/progress UI, live
+  first-dictation journey, and <=60s reference proof.
 - Frontend cockpit/setup shell is present and must remain presentation-only.
 - The Codex app Run action is wired to ./script/build_and_run.sh.
 - The hotkey runtime now honors persisted push-to-talk vs toggle mode. The
@@ -133,17 +139,18 @@ Next best work:
    backend-owned OS permission requirements contract, permission rows can ask
    Rust for a manual step/proof boundary, FirstRunSetupTiming drives the
    60-second setup proof strip, FirstRunStatus.next_step sequences the next
-   setup action, and export_first_run_proof_plan writes the local proof-plan
-   JSON under app-data exports/. Next are live permission prompts/proof, model
-   download/progress UI, a live first-dictation journey, and <=60s reference
-   proof.
+   setup action, export_first_run_proof_plan writes the local proof-plan JSON
+   under app-data exports/, and first_run_model_download_preflight renders a
+   read-only model Review card without fetching bytes. Next are live permission
+   prompts/proof, approved network download/progress UI, a live first-dictation
+   journey, and <=60s reference proof.
 2. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict
    validation on macOS, Windows, and Linux plus ASR golden-clip proof. The
    global-shortcut plugin, WAL runtime path, persisted push-to-talk/toggle
    mode, allowlisted rebind UI/registration path, repaired crash_recovery
    filter, and capture/WAL short_utterance suite are already wired locally.
 3. Advance P1-P0-2 ASR readiness: replace TODO model hashes/sources with
-   reviewed artifacts, implement the network fetch/progress UI, and
+   reviewed artifacts, implement the approved network fetch/progress UI, and
    Parakeet/Whisper engine adapters. AppSnapshot already
    exposes ready/missing/blocked model states plus backend-owned ASR candidates,
    selected/recommended model ids, and validated download metadata; the

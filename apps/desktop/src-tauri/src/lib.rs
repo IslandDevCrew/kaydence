@@ -169,6 +169,38 @@ fn install_model_artifact(
 }
 
 #[tauri::command]
+fn first_run_model_download_preflight(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
+    model_id: String,
+) -> Result<settings::FirstRunModelDownloadPreflight, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        state
+            .model_download_preflight(
+                &models::source_tree_registry_path(),
+                &app_data_dir,
+                &model_id,
+            )
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = state;
+        let _ = model_id;
+        Err("Model download preflight requires the desktop runtime".to_string())
+    }
+}
+
+#[tauri::command]
 fn first_run_permission_action(
     requirement_id: String,
 ) -> Result<settings::FirstRunPermissionActionOutcome, String> {
@@ -829,6 +861,121 @@ impl RuntimeSnapshot {
     }
 
     #[cfg(desktop)]
+    fn model_download_preflight(
+        &self,
+        registry_path: &Path,
+        app_data_dir: &Path,
+        model_id: &str,
+    ) -> Result<settings::FirstRunModelDownloadPreflight, ModelDownloadPreflightError> {
+        let model_id = model_id.trim();
+        if model_id.is_empty() {
+            return Err(ModelDownloadPreflightError::EmptyModelId);
+        }
+
+        let registry = models::ModelRegistry::load(registry_path)?;
+        let model = registry.require(model_id)?;
+        let snapshot_status = self.first_run_model_status_for(model_id);
+        let (state, detail) = snapshot_status.unwrap_or_else(|| {
+            (
+                settings::FirstRunModelState::Blocked,
+                "Model readiness has not been refreshed for this artifact.".to_string(),
+            )
+        });
+        let plan = model.download_plan(&app_data_dir.join("models"));
+
+        let (
+            available,
+            destination_path,
+            expected_sha256,
+            size_mb,
+            source_count,
+            sources,
+            blocked_reason,
+            operator_action,
+            proof_requirement,
+        ) = match plan {
+            Ok(plan) => {
+                let source_count = plan.sources.len().min(usize::from(u16::MAX)) as u16;
+                (
+                    true,
+                    Some(plan.destination_path.display().to_string()),
+                    Some(plan.sha256),
+                    Some(plan.size_mb),
+                    source_count,
+                    plan.sources,
+                    None,
+                    if state == settings::FirstRunModelState::Ready {
+                        "No download needed; the local artifact already verifies.".to_string()
+                    } else {
+                        "Fetch only through the reviewed downloader, then verify sha256 before marking ready."
+                            .to_string()
+                    },
+                    "Download proof must record source URL, destination path, expected sha256, and post-fetch verification."
+                        .to_string(),
+                )
+            }
+            Err(err) => (
+                false,
+                None,
+                None,
+                None,
+                0,
+                Vec::new(),
+                Some(err.to_string()),
+                "Review models/registry.json and replace placeholder hashes or sources with audited artifact metadata."
+                    .to_string(),
+                "Do not fetch bytes until the registry can produce a validated HTTPS download plan."
+                    .to_string(),
+            ),
+        };
+
+        Ok(settings::FirstRunModelDownloadPreflight {
+            model_id: model.id.clone(),
+            task: model_task_label(model.task).to_string(),
+            lane: model.lane.clone(),
+            runtime: model.runtime.clone(),
+            file: model.file.clone(),
+            state,
+            detail,
+            available,
+            destination_path,
+            expected_sha256,
+            size_mb,
+            source_count,
+            sources,
+            license: model.license.clone(),
+            license_review_required: model.license_review_required,
+            blocked_reason,
+            operator_action,
+            proof_requirement,
+        })
+    }
+
+    #[cfg(desktop)]
+    fn first_run_model_status_for(
+        &self,
+        model_id: &str,
+    ) -> Option<(settings::FirstRunModelState, String)> {
+        let snapshot = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let first_run = &snapshot.settings.first_run;
+        first_run
+            .required_models
+            .iter()
+            .find(|model| model.id == model_id)
+            .map(|model| (model.state, model.detail.clone()))
+            .or_else(|| {
+                first_run
+                    .asr_candidates
+                    .iter()
+                    .find(|model| model.id == model_id)
+                    .map(|model| (model.state, model.detail.clone()))
+            })
+    }
+
+    #[cfg(desktop)]
     fn mark_model_readiness_failed(&self, error: String) {
         self.update_first_run(|first_run| {
             first_run.model_ready = false;
@@ -974,6 +1121,14 @@ enum InstallModelArtifactError {
     ModelRegistry(#[from] models::ModelRegistryError),
     #[error("settings store: {0}")]
     SettingsStore(#[from] settings::SettingsStoreError),
+}
+
+#[derive(Debug, thiserror::Error)]
+enum ModelDownloadPreflightError {
+    #[error("model id cannot be empty")]
+    EmptyModelId,
+    #[error("model registry: {0}")]
+    ModelRegistry(#[from] models::ModelRegistryError),
 }
 
 #[cfg(desktop)]
@@ -1645,6 +1800,7 @@ pub fn run() {
             set_hotkey_binding,
             refresh_model_readiness,
             install_model_artifact,
+            first_run_model_download_preflight,
             first_run_permission_action,
             export_first_run_proof_plan,
             recent_history,
@@ -2192,6 +2348,77 @@ mod tests {
             .all(|model| model.download_available
                 && model.download_size_mb == Some(1)
                 && model.download_source_count == 1));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn model_download_preflight_exposes_reviewed_plan_without_fetching() {
+        let app_data = tmp();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
+        let state = RuntimeSnapshot::default();
+        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
+
+        let preflight = state
+            .model_download_preflight(&registry_path, &app_data, "fixture-asr")
+            .unwrap();
+
+        assert_eq!(preflight.model_id, "fixture-asr");
+        assert_eq!(preflight.state, settings::FirstRunModelState::Missing);
+        assert!(preflight.available);
+        assert_eq!(preflight.size_mb, Some(1));
+        assert_eq!(preflight.source_count, 1);
+        let expected_destination = app_data
+            .join("models/fixture-asr.onnx")
+            .to_string_lossy()
+            .into_owned();
+        assert_eq!(
+            preflight.destination_path.as_deref(),
+            Some(expected_destination.as_str())
+        );
+        let expected_hash = sha256_for(b"asr");
+        assert_eq!(
+            preflight.expected_sha256.as_deref(),
+            Some(expected_hash.as_str())
+        );
+        assert_eq!(
+            preflight.sources,
+            vec![format!(
+                "{}models.example.test/fixture-asr.onnx",
+                concat!("https", "://")
+            )]
+        );
+        assert!(preflight.blocked_reason.is_none());
+        assert!(preflight
+            .proof_requirement
+            .contains("post-fetch verification"));
+        assert!(!app_data.join("models/fixture-asr.onnx").exists());
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn model_download_preflight_blocks_placeholder_metadata() {
+        let app_data = tmp();
+        let registry_path = write_first_run_registry(&app_data, "TODO", "TODO");
+        let state = RuntimeSnapshot::default();
+        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
+
+        let preflight = state
+            .model_download_preflight(&registry_path, &app_data, "fixture-asr")
+            .unwrap();
+
+        assert_eq!(preflight.model_id, "fixture-asr");
+        assert_eq!(preflight.state, settings::FirstRunModelState::Blocked);
+        assert!(!preflight.available);
+        assert_eq!(preflight.destination_path, None);
+        assert_eq!(preflight.expected_sha256, None);
+        assert_eq!(preflight.source_count, 0);
+        assert!(preflight.sources.is_empty());
+        assert!(preflight
+            .blocked_reason
+            .as_deref()
+            .is_some_and(|reason| reason.contains("usable sha256")));
+        assert!(preflight.operator_action.contains("models/registry.json"));
         let _ = std::fs::remove_dir_all(app_data);
     }
 

@@ -762,6 +762,28 @@ pub struct FirstRunProofExportOutcome {
     pub item_count: usize,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunModelDownloadPreflight {
+    pub model_id: String,
+    pub task: String,
+    pub lane: Option<String>,
+    pub runtime: String,
+    pub file: String,
+    pub state: FirstRunModelState,
+    pub detail: String,
+    pub available: bool,
+    pub destination_path: Option<String>,
+    pub expected_sha256: Option<String>,
+    pub size_mb: Option<u64>,
+    pub source_count: u16,
+    pub sources: Vec<String>,
+    pub license: String,
+    pub license_review_required: bool,
+    pub blocked_reason: Option<String>,
+    pub operator_action: String,
+    pub proof_requirement: String,
+}
+
 pub fn first_run_proof_plan(snapshot: &AppSnapshot, generated_at_ms: u64) -> FirstRunProofPlan {
     let first_run = &snapshot.settings.first_run;
     let mut proof_items = Vec::new();

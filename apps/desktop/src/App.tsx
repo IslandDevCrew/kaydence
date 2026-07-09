@@ -45,13 +45,15 @@ interface AppRef {
   name: string;
 }
 
+type FirstRunModelState = "ready" | "missing" | "blocked";
+
 interface FirstRunModelStatus {
   id: string;
   task: string;
   lane: string | null;
   runtime: string;
   file: string;
-  state: "ready" | "missing" | "blocked";
+  state: FirstRunModelState;
   detail: string;
   download_available: boolean;
   download_size_mb: number | null;
@@ -66,7 +68,7 @@ interface FirstRunAsrCandidate {
   runtime: string;
   size_mb: number;
   min_hw: string;
-  state: "ready" | "missing" | "blocked";
+  state: FirstRunModelState;
   detail: string;
   download_available: boolean;
   download_size_mb: number | null;
@@ -127,6 +129,27 @@ interface FirstRunProofExportOutcome {
   exported: boolean;
   json_path: string | null;
   item_count: number;
+}
+
+interface FirstRunModelDownloadPreflight {
+  model_id: string;
+  task: string;
+  lane: string | null;
+  runtime: string;
+  file: string;
+  state: FirstRunModelState;
+  detail: string;
+  available: boolean;
+  destination_path: string | null;
+  expected_sha256: string | null;
+  size_mb: number | null;
+  source_count: number;
+  sources: string[];
+  license: string;
+  license_review_required: boolean;
+  blocked_reason: string | null;
+  operator_action: string;
+  proof_requirement: string;
 }
 
 interface HotkeyBindingOption {
@@ -578,6 +601,11 @@ export function App(): JSX.Element {
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const [installingModelId, setInstallingModelId] = useState<string | null>(null);
   const [modelInstallIssue, setModelInstallIssue] = useState<string | null>(null);
+  const [modelPreflightPendingId, setModelPreflightPendingId] = useState<string | null>(null);
+  const [modelDownloadPreflight, setModelDownloadPreflight] =
+    useState<FirstRunModelDownloadPreflight | null>(null);
+  const [modelDownloadPreflightIssue, setModelDownloadPreflightIssue] =
+    useState<string | null>(null);
   const [hotkeyModePending, setHotkeyModePending] = useState<HotkeyMode | null>(null);
   const [hotkeyModeIssue, setHotkeyModeIssue] = useState<string | null>(null);
   const [hotkeyBindingPending, setHotkeyBindingPending] = useState<string | null>(null);
@@ -629,7 +657,8 @@ export function App(): JSX.Element {
       nextStep.target_id === null) ||
     installingModelId !== null ||
     permissionActionPendingId !== null ||
-    modelRefreshPending;
+    modelRefreshPending ||
+    modelPreflightPendingId !== null;
   const firstRunProofExportLabel = firstRunProofExport?.exported
     ? `${firstRunProofExport.item_count} proof items`
     : "Build-agent handoff";
@@ -719,6 +748,7 @@ export function App(): JSX.Element {
   function refreshModelReadiness() {
     setModelRefreshPending(true);
     setModelInstallIssue(null);
+    setModelDownloadPreflightIssue(null);
     void invoke<AppSnapshot>("refresh_model_readiness")
       .then((nextSnapshot) => {
         setSnapshot(nextSnapshot);
@@ -729,6 +759,32 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setModelRefreshPending(false);
+      });
+  }
+
+  function reviewModelDownload(modelId: string) {
+    setModelPreflightPendingId(modelId);
+    setModelDownloadPreflight(null);
+    setModelDownloadPreflightIssue(null);
+
+    if (snapshotSource === "preview") {
+      setModelDownloadPreflightIssue("Open the desktop runtime to review model download metadata.");
+      setModelPreflightPendingId(null);
+      return;
+    }
+
+    void invoke<FirstRunModelDownloadPreflight>("first_run_model_download_preflight", {
+      modelId,
+    })
+      .then((preflight) => {
+        setModelDownloadPreflight(preflight);
+      })
+      .catch((error) => {
+        console.error("Kaydence model download preflight failed", error);
+        setModelDownloadPreflightIssue("Model download metadata could not be reviewed.");
+      })
+      .finally(() => {
+        setModelPreflightPendingId(null);
       });
   }
 
@@ -753,6 +809,7 @@ export function App(): JSX.Element {
   async function installModelArtifact(modelId: string) {
     setInstallingModelId(modelId);
     setModelInstallIssue(null);
+    setModelDownloadPreflightIssue(null);
     try {
       const selected = await openDialog({
         multiple: false,
@@ -801,6 +858,9 @@ export function App(): JSX.Element {
 
     if (nextStep.kind === "model_metadata") {
       setFirstRunActionNote(nextStep.proof_requirement);
+      if (nextStep.target_id) {
+        reviewModelDownload(nextStep.target_id);
+      }
       refreshModelReadiness();
       return;
     }
@@ -1480,23 +1540,76 @@ export function App(): JSX.Element {
                         </small>
                       ) : null}
                       {model.state !== "ready" ? (
-                        <button
-                          className="mini-action model-install-action"
-                          disabled={
-                            !model.download_available ||
-                            installingModelId !== null ||
-                            modelRefreshPending
-                          }
-                          onClick={() => void installModelArtifact(model.id)}
-                          type="button"
-                        >
-                          {installingModelId === model.id ? "Installing" : "Install"}
-                        </button>
+                        <div className="model-status-actions">
+                          <button
+                            className="mini-action model-review-action"
+                            disabled={modelPreflightPendingId !== null || modelRefreshPending}
+                            onClick={() => reviewModelDownload(model.id)}
+                            type="button"
+                          >
+                            {modelPreflightPendingId === model.id ? "Reviewing" : "Review"}
+                          </button>
+                          <button
+                            className="mini-action model-install-action"
+                            disabled={
+                              !model.download_available ||
+                              installingModelId !== null ||
+                              modelRefreshPending
+                            }
+                            onClick={() => void installModelArtifact(model.id)}
+                            type="button"
+                          >
+                            {installingModelId === model.id ? "Installing" : "Install"}
+                          </button>
+                        </div>
                       ) : null}
                     </div>
                   </div>
                 ))}
               </div>
+            ) : null}
+            {modelDownloadPreflight ? (
+              <div
+                className={`model-preflight-card status-${modelDownloadPreflight.state}`}
+                aria-label="Model download preflight"
+              >
+                <div className="model-preflight-heading">
+                  <span>Download preflight</span>
+                  <strong>{modelDownloadPreflight.available ? "Available" : "Blocked"}</strong>
+                </div>
+                <strong>{modelDownloadPreflight.model_id}</strong>
+                <span>
+                  {modelDownloadPreflight.task}
+                  {modelDownloadPreflight.lane ? ` / ${modelDownloadPreflight.lane}` : ""} /{" "}
+                  {modelDownloadPreflight.runtime}
+                </span>
+                <small>{modelDownloadPreflight.detail}</small>
+                {modelDownloadPreflight.available ? (
+                  <>
+                    <small>
+                      Destination: {modelDownloadPreflight.destination_path ?? "not available"}
+                    </small>
+                    <small>
+                      Expected sha256: {modelDownloadPreflight.expected_sha256 ?? "not available"}
+                    </small>
+                    <small>
+                      Sources: {modelDownloadPreflight.source_count}; License:{" "}
+                      {modelDownloadPreflight.license}
+                      {modelDownloadPreflight.license_review_required
+                        ? " / review required"
+                        : ""}
+                    </small>
+                    <small>{modelDownloadPreflight.sources[0] ?? "No source URL exposed"}</small>
+                  </>
+                ) : (
+                  <small>{modelDownloadPreflight.blocked_reason}</small>
+                )}
+                <small>Action: {modelDownloadPreflight.operator_action}</small>
+                <small>Proof: {modelDownloadPreflight.proof_requirement}</small>
+              </div>
+            ) : null}
+            {modelDownloadPreflightIssue ? (
+              <p className="model-install-note">{modelDownloadPreflightIssue}</p>
             ) : null}
             {modelInstallIssue ? (
               <p className="model-install-note">{modelInstallIssue}</p>
