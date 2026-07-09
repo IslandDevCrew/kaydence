@@ -24,6 +24,9 @@ pub mod macos;
 #[cfg(target_os = "linux")]
 pub mod uinput;
 
+#[cfg(target_os = "windows")]
+pub mod windows;
+
 // ─────────────────────────────── secure-field policy ───────────────────────
 
 /// What the accessibility layer can tell us about the focused field. On some
@@ -339,7 +342,10 @@ impl TextInjector for UnimplementedInjector {
 #[cfg(target_os = "macos")]
 pub type PlatformTextInjector = macos::MacOsTextInjector;
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "windows")]
+pub type PlatformTextInjector = windows::WindowsTextInjector;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 pub type PlatformTextInjector = UnimplementedInjector;
 
 /// The current platform's injector. Platforms without an approved backend use
@@ -350,13 +356,14 @@ pub fn platform_injector() -> PlatformTextInjector {
         macos::MacOsTextInjector
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "windows")]
     {
-        let platform = if cfg!(target_os = "macos") {
-            "macOS"
-        } else if cfg!(target_os = "windows") {
-            "Windows"
-        } else if cfg!(target_os = "linux") {
+        windows::WindowsTextInjector
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        let platform = if cfg!(target_os = "linux") {
             "Linux"
         } else {
             "unknown"
@@ -715,7 +722,7 @@ mod tests {
         assert!(injector.delivered.is_empty());
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     #[test]
     fn placeholder_backend_refuses_and_reports_no_caps() {
         let mut inj = platform_injector();
