@@ -15,6 +15,9 @@ use super::{FieldKind, InjectError, InjectorCaps, KeystrokeChannel, TextInjector
 
 const CFSTRING_ENCODING_UTF8: CFStringEncoding = 0x0800_0100;
 const AX_ERROR_SUCCESS: AXError = 0;
+const CG_HID_EVENT_TAP: CGEventTapLocation = 0;
+const CG_UNICODE_KEY_CODE: CGKeyCode = 0;
+const MAX_UNICHARS_PER_EVENT: usize = 512;
 
 const ATTR_FOCUSED_UI_ELEMENT: &str = "AXFocusedUIElement";
 const ATTR_ROLE: &str = "AXRole";
@@ -24,11 +27,17 @@ const ATTR_SELECTED_TEXT: &str = "AXSelectedText";
 type AXError = i32;
 type AXUIElementRef = *const c_void;
 type Boolean = u8;
+type CGEventRef = *const c_void;
+type CGEventSourceRef = *const c_void;
+type CGEventTapLocation = u32;
+type CGKeyCode = u16;
 type CFIndex = isize;
 type CFStringEncoding = u32;
 type CFStringRef = *const c_void;
 type CFTypeID = usize;
 type CFTypeRef = *const c_void;
+type UniChar = u16;
+type UniCharCount = usize;
 
 #[link(name = "ApplicationServices", kind = "framework")]
 extern "C" {
@@ -55,6 +64,23 @@ extern "C" {
         attribute: CFStringRef,
         settable: *mut Boolean,
     ) -> AXError;
+
+    #[link_name = "CGEventCreateKeyboardEvent"]
+    fn cg_event_create_keyboard_event(
+        source: CGEventSourceRef,
+        virtual_key: CGKeyCode,
+        key_down: bool,
+    ) -> CGEventRef;
+
+    #[link_name = "CGEventKeyboardSetUnicodeString"]
+    fn cg_event_keyboard_set_unicode_string(
+        event: CGEventRef,
+        string_length: UniCharCount,
+        unicode_string: *const UniChar,
+    );
+
+    #[link_name = "CGEventPost"]
+    fn cg_event_post(tap: CGEventTapLocation, event: CGEventRef);
 }
 
 #[link(name = "CoreFoundation", kind = "framework")]
@@ -100,13 +126,24 @@ pub struct MacOsTextInjector;
 
 impl TextInjector for MacOsTextInjector {
     fn caps(&self) -> InjectorCaps {
-        let native_text_insert = focused_ax_element()
-            .filter(|element| element.field_kind() == FieldKind::Editable)
-            .is_some_and(|element| element.is_attribute_settable(ATTR_SELECTED_TEXT));
+        let element = focused_ax_element();
+        let focused_kind = element
+            .as_ref()
+            .map(|element| element.field_kind())
+            .unwrap_or(FieldKind::NoTarget);
+        let native_text_insert = focused_kind == FieldKind::Editable
+            && element
+                .as_ref()
+                .is_some_and(|element| element.is_attribute_settable(ATTR_SELECTED_TEXT));
+        let keystroke = if focused_kind == FieldKind::Editable {
+            KeystrokeChannel::MacOsEvent
+        } else {
+            KeystrokeChannel::None
+        };
 
         InjectorCaps {
             native_text_insert,
-            keystroke: KeystrokeChannel::None,
+            keystroke,
             clipboard: false,
         }
     }
@@ -158,11 +195,83 @@ impl TextInjector for MacOsTextInjector {
         }
     }
 
-    fn synth_text(&mut self, _text: &str) -> Result<(), InjectError> {
-        Err(InjectError(
-            "macOS CGEvent text synthesis not implemented".to_string(),
-        ))
+    fn synth_text(&mut self, text: &str) -> Result<(), InjectError> {
+        let Some(element) = focused_ax_element() else {
+            return Err(InjectError(
+                "macOS Accessibility focused element unavailable".to_string(),
+            ));
+        };
+
+        match element.field_kind() {
+            FieldKind::Editable => post_unicode_text(text),
+            FieldKind::Secure => Err(InjectError(
+                "macOS CGEvent insert refused: secure field focused".to_string(),
+            )),
+            FieldKind::NoTarget | FieldKind::Unknown => Err(InjectError(
+                "macOS CGEvent insert refused: no editable field focused".to_string(),
+            )),
+        }
     }
+}
+
+fn post_unicode_text(text: &str) -> Result<(), InjectError> {
+    for chunk in utf16_event_chunks(text, MAX_UNICHARS_PER_EVENT) {
+        post_unicode_chunk(&chunk)?;
+    }
+    Ok(())
+}
+
+fn post_unicode_chunk(chunk: &[u16]) -> Result<(), InjectError> {
+    if chunk.is_empty() {
+        return Ok(());
+    }
+
+    let key_down = create_keyboard_event(true)?;
+    unsafe {
+        cg_event_keyboard_set_unicode_string(
+            key_down.as_event(),
+            chunk.len() as UniCharCount,
+            chunk.as_ptr(),
+        );
+        cg_event_post(CG_HID_EVENT_TAP, key_down.as_event());
+    }
+
+    let key_up = create_keyboard_event(false)?;
+    unsafe {
+        cg_event_post(CG_HID_EVENT_TAP, key_up.as_event());
+    }
+
+    Ok(())
+}
+
+fn create_keyboard_event(key_down: bool) -> Result<OwnedCfType, InjectError> {
+    let event = unsafe {
+        cg_event_create_keyboard_event(ptr::null(), CG_UNICODE_KEY_CODE, key_down) as CFTypeRef
+    };
+    OwnedCfType::new(event)
+        .ok_or_else(|| InjectError("macOS CGEvent keyboard event could not be created".to_string()))
+}
+
+fn utf16_event_chunks(text: &str, limit: usize) -> Vec<Vec<u16>> {
+    assert!(limit > 0, "unicode event chunk limit must be positive");
+
+    let mut chunks = Vec::new();
+    let mut current = Vec::new();
+    for ch in text.chars() {
+        let mut encoded = [0; 2];
+        let units = ch.encode_utf16(&mut encoded);
+        if !current.is_empty() && current.len() + units.len() > limit {
+            chunks.push(current);
+            current = Vec::new();
+        }
+        current.extend_from_slice(units);
+    }
+
+    if !current.is_empty() {
+        chunks.push(current);
+    }
+
+    chunks
 }
 
 fn classify_ax_focus(role: Option<&str>, subrole: Option<&str>) -> FieldKind {
@@ -290,6 +399,10 @@ impl OwnedCfType {
     fn as_type(&self) -> CFTypeRef {
         self.0
     }
+
+    fn as_event(&self) -> CGEventRef {
+        self.0 as CGEventRef
+    }
 }
 
 impl Drop for OwnedCfType {
@@ -377,5 +490,33 @@ mod tests {
             FieldKind::NoTarget
         );
         assert_eq!(classify_ax_focus(None, None), FieldKind::NoTarget);
+    }
+
+    #[test]
+    fn unicode_chunks_preserve_text_roundtrip() {
+        let text = "Kaydence 🪄 العربية かな";
+        let chunks = utf16_event_chunks(text, 5);
+        let stitched = chunks.into_iter().flatten().collect::<Vec<_>>();
+
+        assert_eq!(String::from_utf16(&stitched).unwrap(), text);
+    }
+
+    #[test]
+    fn unicode_chunks_do_not_split_surrogate_pairs() {
+        let chunks = utf16_event_chunks("ab🪄cd", 3);
+
+        assert!(chunks.iter().all(|chunk| !chunk
+            .last()
+            .is_some_and(|unit| (0xD800..=0xDBFF).contains(unit))));
+        assert!(chunks.iter().all(|chunk| !chunk
+            .first()
+            .is_some_and(|unit| (0xDC00..=0xDFFF).contains(unit))));
+        let stitched = chunks.into_iter().flatten().collect::<Vec<_>>();
+        assert_eq!(String::from_utf16(&stitched).unwrap(), "ab🪄cd");
+    }
+
+    #[test]
+    fn empty_text_creates_no_unicode_chunks() {
+        assert!(utf16_event_chunks("", 8).is_empty());
     }
 }

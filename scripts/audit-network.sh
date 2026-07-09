@@ -26,7 +26,7 @@ PATTERNS=(
   'reqwest::' 'hyper::' 'ureq::' 'isahc::' 'surf::' 'curl::' 'libcurl'
   'TcpStream' 'TcpListener' 'UdpSocket' 'std::net' 'tokio::net'
   'ws://' 'wss://' 'http://' 'https://'
-  'fetch(' 'XMLHttpRequest' 'WebSocket' 'navigator.sendBeacon' 'EventSource'
+  'fetch(' 'XMLHttpRequest' 'WebSocket' 'navigator.sendBeacon' 'EventSource('
   'axios' 'node-fetch'
 )
 

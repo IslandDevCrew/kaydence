@@ -1,0 +1,54 @@
+Kaydence evidence: macOS CGEvent Unicode fallback
+Date: 2026-07-08
+
+Intent
+- Add the macOS keystroke-synthesis fallback under the same secure-field gate as AXSelectedText.
+- Cover focused fields that are editable but do not expose AXSelectedText as settable.
+- Keep the fallback layout-independent by posting Unicode text through CGEventKeyboardSetUnicodeString.
+- Preserve the privacy gate by fixing an audit-network false positive instead of allowlisting local CoreGraphics FFI as network.
+
+Changed
+- apps/desktop/src-tauri/src/inject/macos.rs
+  - MacOsTextInjector::caps now advertises KeystrokeChannel::MacOsEvent only when AX confirms an editable focused field.
+  - synth_text re-checks the focused AX element and refuses secure/no-target focus before posting CGEvents.
+  - Added CGEventCreateKeyboardEvent, CGEventKeyboardSetUnicodeString, and CGEventPost FFI.
+  - Added UTF-16 chunking with tests for emoji/surrogate safety, multilingual roundtrip, and empty text.
+- scripts/audit-network.sh
+  - Narrowed the browser EventSource scan token to EventSource( so local Apple CGEventSourceRef types do not trip the network gate.
+  - Verified the no-space fixed-string pattern avoids bash word-splitting in the existing grep argument builder.
+
+Focused verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml inject:: --lib
+  - PASS: 22 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - PASS: 5 passed
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+
+Full verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - PASS: 114 lib tests passed, 2 crash-recovery tests passed
+- npm --prefix apps/desktop run check
+  - PASS
+- npm --prefix apps/desktop run build
+  - PASS
+- bash scripts/audit-network.sh --check
+  - PASS: 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  - PASS: ADR-0009 waiver only
+- ./script/build_and_run.sh build
+  - PASS
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Post-verify hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - PASS: no leftover desktop/dev processes
+- apps/desktop/dist/index.html restored; generated apps/desktop/dist/assets and apps/desktop/dist/favicon.svg removed after build verification.
+
+Honest limits
+- CoreGraphics event posting does not report whether the target app accepted the text; the app-compat matrix still needs live focused-field validation.
+- Clipboard snapshot/paste/restore backend for macOS remains outside this slice.
+- Windows UIA/SendInput injector backend remains outside this slice.
