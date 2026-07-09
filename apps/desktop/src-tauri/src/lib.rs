@@ -35,15 +35,27 @@ fn app_snapshot(state: tauri::State<'_, RuntimeSnapshot>) -> settings::AppSnapsh
     state.snapshot()
 }
 
+#[tauri::command]
+fn select_asr_model(
+    model_id: String,
+    state: tauri::State<'_, RuntimeSnapshot>,
+) -> Result<settings::AppSnapshot, String> {
+    state
+        .select_asr_model(&model_id)
+        .map_err(|err| err.to_string())
+}
+
 #[derive(Debug)]
 struct RuntimeSnapshot {
     inner: Mutex<settings::AppSnapshot>,
+    settings_store: Mutex<Option<settings::SettingsStore>>,
 }
 
 impl Default for RuntimeSnapshot {
     fn default() -> Self {
         Self {
             inner: Mutex::new(settings::AppSnapshot::default()),
+            settings_store: Mutex::new(None),
         }
     }
 }
@@ -73,6 +85,27 @@ impl RuntimeSnapshot {
     }
 
     #[cfg(desktop)]
+    fn set_settings_store(&self, app_data_dir: &Path) {
+        *self
+            .settings_store
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) =
+            Some(settings::SettingsStore::new(app_data_dir));
+    }
+
+    #[cfg(desktop)]
+    fn apply_persisted_user_settings(&self) -> Result<(), settings::SettingsStoreError> {
+        let Some(store) = self.settings_store() else {
+            return Ok(());
+        };
+        let settings = store.load()?;
+        if let Some(model_id) = settings.selected_asr_model_id {
+            let _ = self.apply_asr_selection(&model_id);
+        }
+        Ok(())
+    }
+
+    #[cfg(desktop)]
     fn refresh_model_readiness(&self, registry_path: &Path, models_dir: &Path) {
         let readiness = first_run_model_readiness(registry_path, models_dir);
         self.update_first_run(|first_run| {
@@ -97,6 +130,65 @@ impl RuntimeSnapshot {
         });
     }
 
+    fn select_asr_model(&self, model_id: &str) -> Result<settings::AppSnapshot, SelectModelError> {
+        let model_id = model_id.trim();
+        if model_id.is_empty() {
+            return Err(SelectModelError::EmptyModelId);
+        }
+        if !self.has_asr_candidate(model_id) {
+            return Err(SelectModelError::UnknownModel(model_id.to_string()));
+        }
+
+        if let Some(store) = self.settings_store() {
+            let mut settings = store.load()?;
+            settings.selected_asr_model_id = Some(model_id.to_string());
+            store.save(&settings)?;
+        }
+
+        self.apply_asr_selection(model_id)
+            .ok_or_else(|| SelectModelError::UnknownModel(model_id.to_string()))?;
+        Ok(self.snapshot())
+    }
+
+    fn has_asr_candidate(&self, model_id: &str) -> bool {
+        self.inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .settings
+            .first_run
+            .asr_candidates
+            .iter()
+            .any(|candidate| candidate.id == model_id)
+    }
+
+    fn apply_asr_selection(&self, model_id: &str) -> Option<()> {
+        let mut snapshot = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let first_run = &mut snapshot.settings.first_run;
+        if !first_run
+            .asr_candidates
+            .iter()
+            .any(|candidate| candidate.id == model_id)
+        {
+            return None;
+        }
+
+        first_run.selected_asr_model_id = Some(model_id.to_string());
+        for candidate in &mut first_run.asr_candidates {
+            candidate.selected = candidate.id == model_id;
+        }
+        Some(())
+    }
+
+    fn settings_store(&self) -> Option<settings::SettingsStore> {
+        self.settings_store
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+    }
+
     #[cfg(desktop)]
     fn update_first_run(&self, update: impl FnOnce(&mut settings::FirstRunStatus)) {
         let mut snapshot = self
@@ -105,6 +197,16 @@ impl RuntimeSnapshot {
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         update(&mut snapshot.settings.first_run);
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+enum SelectModelError {
+    #[error("ASR model id cannot be empty")]
+    EmptyModelId,
+    #[error("unknown ASR model id: {0}")]
+    UnknownModel(String),
+    #[error("settings store: {0}")]
+    SettingsStore(#[from] settings::SettingsStoreError),
 }
 
 #[cfg(desktop)]
@@ -620,7 +722,7 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 pub fn run() {
     tauri::Builder::default()
         .manage(RuntimeSnapshot::default())
-        .invoke_handler(tauri::generate_handler![app_snapshot])
+        .invoke_handler(tauri::generate_handler![app_snapshot, select_asr_model])
         .setup(|app| {
             #[cfg(desktop)]
             {
@@ -628,10 +730,16 @@ pub fn run() {
 
                 let snapshot = app.state::<RuntimeSnapshot>();
                 match app.path().app_data_dir() {
-                    Ok(app_data_dir) => snapshot.refresh_model_readiness(
-                        &models::source_tree_registry_path(),
-                        &app_data_dir.join("models"),
-                    ),
+                    Ok(app_data_dir) => {
+                        snapshot.set_settings_store(&app_data_dir);
+                        snapshot.refresh_model_readiness(
+                            &models::source_tree_registry_path(),
+                            &app_data_dir.join("models"),
+                        );
+                        if let Err(err) = snapshot.apply_persisted_user_settings() {
+                            eprintln!("Kaydence settings load failed: {err}");
+                        }
+                    }
                     Err(err) => snapshot.mark_model_readiness_failed(format!(
                         "App data directory unavailable: {err}"
                     )),
@@ -867,6 +975,50 @@ mod tests {
         )
     }
 
+    fn selectable_asr_registry_json() -> String {
+        r#"{
+          "schema_version": 1,
+          "models": [
+            {
+              "id": "fixture-asr",
+              "task": "asr",
+              "lane": "cpu",
+              "runtime": "onnxruntime",
+              "file": "fixture-asr.onnx",
+              "sha256": "TODO",
+              "size_mb": 1,
+              "license": "Apache-2.0",
+              "min_hw": "any",
+              "recommended": true
+            },
+            {
+              "id": "fixture-gpu",
+              "task": "asr",
+              "lane": "gpu",
+              "runtime": "whisper.cpp",
+              "file": "fixture-gpu.bin",
+              "sha256": "TODO",
+              "size_mb": 2,
+              "license": "MIT",
+              "min_hw": "metal_or_dgpu",
+              "recommended": true
+            },
+            {
+              "id": "fixture-vad",
+              "task": "vad",
+              "runtime": "onnxruntime",
+              "file": "fixture-vad.onnx",
+              "sha256": "TODO",
+              "size_mb": 1,
+              "license": "MIT",
+              "min_hw": "any",
+              "recommended": true
+            }
+          ]
+        }"#
+        .to_string()
+    }
+
     fn write_first_run_registry(
         app_data: &std::path::Path,
         asr_hash: &str,
@@ -876,6 +1028,14 @@ mod tests {
         std::fs::create_dir_all(&registry_dir).unwrap();
         let registry_path = registry_dir.join("registry.json");
         std::fs::write(&registry_path, first_run_registry_json(asr_hash, vad_hash)).unwrap();
+        registry_path
+    }
+
+    fn write_selectable_asr_registry(app_data: &std::path::Path) -> std::path::PathBuf {
+        let registry_dir = app_data.join("registry");
+        std::fs::create_dir_all(&registry_dir).unwrap();
+        let registry_path = registry_dir.join("registry.json");
+        std::fs::write(&registry_path, selectable_asr_registry_json()).unwrap();
         registry_path
     }
 
@@ -1033,6 +1193,90 @@ mod tests {
             recommendation_reason(recommended, "macos"),
             "Recommended for this OS lane"
         );
+    }
+
+    #[test]
+    fn selecting_asr_model_updates_snapshot_and_persists_settings() {
+        let app_data = tmp();
+        let registry_path = write_selectable_asr_registry(&app_data);
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
+
+        let snapshot = state.select_asr_model("fixture-gpu").unwrap();
+
+        let first_run = snapshot.settings.first_run;
+        assert_eq!(
+            first_run.selected_asr_model_id.as_deref(),
+            Some("fixture-gpu")
+        );
+        assert!(first_run
+            .asr_candidates
+            .iter()
+            .any(|candidate| candidate.id == "fixture-gpu" && candidate.selected));
+        assert!(first_run
+            .asr_candidates
+            .iter()
+            .any(|candidate| candidate.id == "fixture-asr" && !candidate.selected));
+        assert_eq!(
+            settings::SettingsStore::new(&app_data)
+                .load()
+                .unwrap()
+                .selected_asr_model_id
+                .as_deref(),
+            Some("fixture-gpu")
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn persisted_asr_selection_applies_after_model_refresh() {
+        let app_data = tmp();
+        let registry_path = write_selectable_asr_registry(&app_data);
+        let store = settings::SettingsStore::new(&app_data);
+        store
+            .save(&settings::UserSettingsFile {
+                selected_asr_model_id: Some("fixture-gpu".to_string()),
+                ..settings::UserSettingsFile::default()
+            })
+            .unwrap();
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+
+        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
+        state.apply_persisted_user_settings().unwrap();
+
+        let first_run = state.snapshot().settings.first_run;
+        assert_eq!(
+            first_run.selected_asr_model_id.as_deref(),
+            Some("fixture-gpu")
+        );
+        assert!(first_run
+            .asr_candidates
+            .iter()
+            .any(|candidate| candidate.id == "fixture-gpu" && candidate.selected));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn selecting_unknown_asr_model_is_rejected() {
+        let app_data = tmp();
+        let registry_path = write_selectable_asr_registry(&app_data);
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
+
+        let err = state.select_asr_model("missing-model").unwrap_err();
+
+        assert!(matches!(err, SelectModelError::UnknownModel(model) if model == "missing-model"));
+        assert_eq!(
+            settings::SettingsStore::new(&app_data)
+                .load()
+                .unwrap()
+                .selected_asr_model_id,
+            None
+        );
+        let _ = std::fs::remove_dir_all(app_data);
     }
 
     #[test]

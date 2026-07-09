@@ -1,0 +1,67 @@
+Kaydence ASR selection persistence evidence
+Date: 2026-07-08
+
+Intent
+- Make the first-run Local ASR picker selectable instead of display-only.
+- Persist the selected ASR model id in a schema-versioned app-data settings.json.
+- Keep React presentation-only: the frontend forwards the selection intent and
+  Rust owns validation, storage, and the returned AppSnapshot.
+
+Changed files
+- apps/desktop/src-tauri/src/settings/mod.rs
+  - Added UserSettingsFile with schema_version and selected_asr_model_id.
+  - Added SettingsStore rooted at app-data/settings.json, with missing-file
+    defaults, JSON validation, pretty JSON writes, and atomic temp-file rename.
+  - Rejects empty selected_asr_model_id values.
+- apps/desktop/src-tauri/src/lib.rs
+  - Added select_asr_model Tauri command.
+  - RuntimeSnapshot now stores a SettingsStore when app-data is available.
+  - Startup applies a persisted ASR model selection after registry readiness
+    refresh.
+  - Selecting a model validates that it exists in backend-owned ASR candidates,
+    saves it, updates selected flags, and returns the refreshed AppSnapshot.
+  - Added tests for selecting, persistence reload, and unknown-model rejection.
+- apps/desktop/src/App.tsx
+  - Local ASR option buttons now invoke select_asr_model and render Rust's
+    returned snapshot.
+- ops/mission/state.json and docs/CODEX_SUPER_GOAL_PROMPT.md
+  - Removed editable ASR selection persistence from the P1-P0-2 remaining-work
+    list and recorded the new evidence.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml settings:: --lib
+  - 11 settings tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml selecting_asr --lib
+  - 1 ASR selection persistence test passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml persisted_asr --lib
+  - 1 persisted selection reload test passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot --lib
+  - 5 runtime snapshot tests passed.
+- PASS: npm --prefix apps/desktop run check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 142 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run build
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 waiver only.
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This does not download model artifacts.
+- This does not replace registry TODO hashes/sources with reviewed published
+  artifacts.
+- This does not implement Parakeet/Whisper inference adapters.
+- This does not provide WER or latency evidence for real ASR output.
+- This persists the selected model id locally only; it does not sync settings
+  across devices and does not hot-reload edits made directly to settings.json.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.

@@ -7,10 +7,15 @@
 
 use crate::events::CleanupDial;
 use serde::{Deserialize, Serialize};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 use thiserror::Error;
 
 /// Current settings-file schema version.
 pub const SCHEMA_VERSION: u16 = 1;
+pub const SETTINGS_FILE_NAME: &str = "settings.json";
 /// The product brand string. Never hardcode "Kaydence" anywhere else.
 pub const APP_NAME: &str = "Kaydence";
 
@@ -76,6 +81,82 @@ impl AppSettings {
         self.hotkey.validate()?;
         self.capture.validate()?;
         self.privacy.validate()?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct UserSettingsFile {
+    pub schema_version: u16,
+    #[serde(default)]
+    pub selected_asr_model_id: Option<String>,
+}
+
+impl Default for UserSettingsFile {
+    fn default() -> Self {
+        Self {
+            schema_version: SCHEMA_VERSION,
+            selected_asr_model_id: None,
+        }
+    }
+}
+
+impl UserSettingsFile {
+    pub fn validate(&self) -> Result<(), SettingsError> {
+        if self.schema_version != SCHEMA_VERSION {
+            return Err(SettingsError::UnsupportedSchema {
+                expected: SCHEMA_VERSION,
+                got: self.schema_version,
+            });
+        }
+        if self
+            .selected_asr_model_id
+            .as_deref()
+            .is_some_and(|id| id.trim().is_empty())
+        {
+            return Err(SettingsError::EmptyModelSelection);
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SettingsStore {
+    path: PathBuf,
+}
+
+impl SettingsStore {
+    pub fn new(app_data_dir: impl AsRef<Path>) -> Self {
+        Self {
+            path: app_data_dir.as_ref().join(SETTINGS_FILE_NAME),
+        }
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn load(&self) -> Result<UserSettingsFile, SettingsStoreError> {
+        match fs::read_to_string(&self.path) {
+            Ok(json) => {
+                let settings: UserSettingsFile = serde_json::from_str(&json)?;
+                settings.validate()?;
+                Ok(settings)
+            }
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(UserSettingsFile::default()),
+            Err(err) => Err(err.into()),
+        }
+    }
+
+    pub fn save(&self, settings: &UserSettingsFile) -> Result<(), SettingsStoreError> {
+        settings.validate()?;
+        if let Some(parent) = self.path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let tmp = self.path.with_extension("json.tmp");
+        let json = serde_json::to_string_pretty(settings)?;
+        fs::write(&tmp, json)?;
+        fs::rename(tmp, &self.path)?;
         Ok(())
     }
 }
@@ -312,11 +393,34 @@ pub enum SettingsError {
     InvalidRetentionDays(u16),
     #[error("local OCR requires local context reading to be enabled")]
     OcrRequiresContext,
+    #[error("selected ASR model id cannot be empty")]
+    EmptyModelSelection,
+}
+
+#[derive(Debug, Error)]
+pub enum SettingsStoreError {
+    #[error("settings io: {0}")]
+    Io(#[from] io::Error),
+    #[error("settings json: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("settings validation: {0}")]
+    Validation(#[from] SettingsError),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn tmp() -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "kaydence-settings-test-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
 
     #[test]
     fn defaults_match_the_product_thesis() {
@@ -373,6 +477,55 @@ mod tests {
         settings = AppSettings::default();
         settings.privacy.local_ocr_enabled = true;
         assert_eq!(settings.validate(), Err(SettingsError::OcrRequiresContext));
+    }
+
+    #[test]
+    fn settings_store_defaults_when_file_is_missing() {
+        let dir = tmp();
+        let store = SettingsStore::new(&dir);
+
+        let settings = store.load().unwrap();
+
+        assert_eq!(settings, UserSettingsFile::default());
+        assert_eq!(store.path(), dir.join(SETTINGS_FILE_NAME));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn settings_store_saves_selected_asr_model() {
+        let dir = tmp();
+        let store = SettingsStore::new(&dir);
+        let settings = UserSettingsFile {
+            selected_asr_model_id: Some("whisper-large-v3-turbo".to_string()),
+            ..UserSettingsFile::default()
+        };
+
+        store.save(&settings).unwrap();
+
+        assert_eq!(store.load().unwrap(), settings);
+        assert!(fs::read_to_string(store.path())
+            .unwrap()
+            .contains("whisper-large-v3-turbo"));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn settings_store_rejects_empty_model_selection() {
+        let dir = tmp();
+        let store = SettingsStore::new(&dir);
+        fs::write(
+            store.path(),
+            r#"{"schema_version":1,"selected_asr_model_id":""}"#,
+        )
+        .unwrap();
+
+        let err = store.load().unwrap_err();
+
+        assert!(matches!(
+            err,
+            SettingsStoreError::Validation(SettingsError::EmptyModelSelection)
+        ));
+        let _ = fs::remove_dir_all(dir);
     }
 
     #[test]

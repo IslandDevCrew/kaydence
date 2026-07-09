@@ -287,6 +287,17 @@ export function App(): JSX.Element {
     };
   }, []);
 
+  function selectAsrModel(modelId: string) {
+    void invoke<AppSnapshot>("select_asr_model", { modelId })
+      .then((nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setSnapshotSource("backend");
+      })
+      .catch((error) => {
+        console.error("Kaydence ASR selection failed", error);
+      });
+  }
+
   return (
     <main
       className="app-shell"
@@ -479,6 +490,7 @@ export function App(): JSX.Element {
                     aria-pressed={model.selected}
                     className={`model-option status-${model.state}${model.selected ? " selected" : ""}`}
                     key={model.id}
+                    onClick={() => selectAsrModel(model.id)}
                     type="button"
                   >
                     <span>
