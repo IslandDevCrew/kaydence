@@ -783,6 +783,14 @@ button {
   min-width: 0;
 }
 
+.permission-item-actions {
+  display: grid;
+  flex: 0 0 144px;
+  justify-items: end;
+  gap: 8px;
+  min-width: 144px;
+}
+
 .permission-item strong,
 .permission-item span,
 .permission-item small,
@@ -817,6 +825,36 @@ button {
   font-weight: 900;
   text-align: right;
   text-transform: uppercase;
+}
+
+.permission-action {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.permission-action-outcome {
+  display: grid;
+  gap: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  padding: 10px 12px;
+}
+
+.permission-action-outcome strong,
+.permission-action-outcome span,
+.permission-action-outcome small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.permission-action-outcome span,
+.permission-action-outcome small {
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
 }
 
 .permission-item.status-ready em {
@@ -887,6 +925,7 @@ button {
 .secondary-action:focus-visible,
 .danger-action:focus-visible,
 .mini-action:focus-visible,
+.permission-action:focus-visible,
 .hotkey-binding-option:focus-visible,
 .lane:focus-visible,
 .segmented button:focus-visible,

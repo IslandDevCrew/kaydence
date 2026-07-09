@@ -169,6 +169,13 @@ fn install_model_artifact(
 }
 
 #[tauri::command]
+fn first_run_permission_action(
+    requirement_id: String,
+) -> Result<settings::FirstRunPermissionActionOutcome, String> {
+    settings::first_run_permission_action(&requirement_id).map_err(|err| err.to_string())
+}
+
+#[tauri::command]
 fn recent_history(
     app: tauri::AppHandle,
     state: tauri::State<'_, RuntimeSnapshot>,
@@ -1525,6 +1532,7 @@ pub fn run() {
             set_hotkey_binding,
             refresh_model_readiness,
             install_model_artifact,
+            first_run_permission_action,
             recent_history,
             delete_history_session,
             export_history_session,

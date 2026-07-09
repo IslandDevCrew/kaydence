@@ -1,0 +1,75 @@
+Kaydence evidence: P1-P0-8 first-run permission action guidance
+Date: 2026-07-09
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Branch: main
+
+Scope
+- Added backend-owned permission action metadata to
+  FirstRunStatus.permission_requirements via action_label.
+- Added first_run_permission_action(requirement_id) as a Tauri command returning
+  a structured FirstRunPermissionActionOutcome:
+  requirement_id, label, state, action_label, manual_step, proof_requirement.
+- Wired Screen Family 10 permission rows to call the Rust command and render the
+  returned manual step/proof boundary in the setup panel.
+- Kept the boundary honest: this is action guidance, not live permission
+  detection, not OS settings deep links, and not a readiness claim.
+
+Remote baseline rechecked before this slice
+- git status -sb: ## main...origin/main
+- git rev-parse --short HEAD: 86e50fd
+- git rev-list --left-right --count origin/main...HEAD: 0 0
+- gh run view 29020477134 --json ...:
+  - status: completed
+  - conclusion: success
+  - headSha: 86e50fd296a4f7908efb64b6b33a05ac6c70f9d1
+  - updatedAt: 2026-07-09T13:26:06Z
+  - macOS, Ubuntu, and Windows jobs all success.
+
+Local verification
+- cargo fmt --all --check
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml settings::tests::first_run_permission_action
+  RESULT: PASS, 2 passed
+- pnpm --dir apps/desktop run check
+  RESULT: PASS, tsc --noEmit and eslint --max-warnings 0
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  RESULT: PASS, 191 lib tests, 2 crash_recovery tests, 5 event_sequences tests,
+  5 short_utterance tests
+- bash scripts/check-privacy-posture.sh
+  RESULT: PASS, README promises present, network audit clean, no screen-capture primitives
+- bash scripts/check-adr-status.sh
+  RESULT: PASS, all ADRs Accepted except declared by-design ADR-0009
+- bash scripts/bench.sh --check
+  RESULT: PASS for measured metrics and PARTIAL for unmeasured real ASR/GPU/idle fields
+  Measurements: hotkey_to_capture=8ms, partial_lag=120ms,
+  release_to_inject_cpu=7ms, light_cleanup_added=1ms
+- pnpm --dir apps/desktop run build
+  RESULT: PASS, production Vite build completed
+- ./script/build_and_run.sh --verify
+  RESULT: PASS
+- ./script/build_and_run.sh build
+  RESULT: PASS, production Vite build plus Rust desktop build completed
+
+Browser/UI smoke
+- Temporary Vite dev server loaded at http://localhost:1420/.
+- In-app Browser preview verified:
+  - title Kaydence
+  - First run visible
+  - 3 permission rows visible
+  - permission action buttons visible:
+    Show microphone step, Show accessibility step, Show input step
+  - no horizontal page overflow
+  - no detected button/text overflow after CSS fix
+  - no browser console errors
+- Browser preview cannot verify the Tauri command round trip because invoke() is
+  unavailable outside the Tauri shell; that path is covered by Rust command tests
+  and frontend typecheck.
+
+Honest boundary
+- This advances P1-P0-8 first-run setup ergonomics but does not close P1-P0-8.
+- Remaining work: real OS permission prompts/proof, model download/progress UI,
+  live first-dictation journey, and <=60s proof on reference machines.
+- This slice still requires a fresh post-push 3-OS Actions run before claiming
+  current-head remote parity.

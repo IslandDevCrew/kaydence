@@ -31,20 +31,20 @@ Read first, in order:
 Current verified state:
 - GitHub remote access is restored; `IslandDevCrew/kaydence` resolves as a
   PRIVATE repo with ADMIN permission and `git fetch origin` succeeds.
-- Current verified remote baseline before the first-run permission-readiness
-  slice: main at `a89d169` had green 3-OS Actions CI in run 29017851614,
-  completed 2026-07-09T12:57:31Z after rerunning the initially cancelled Ubuntu
-  leg.
+- Current verified remote baseline before the first-run permission-action slice:
+  main at `86e50fd` had green 3-OS Actions CI in run 29020477134, completed
+  2026-07-09T13:26:06Z on macOS, Ubuntu, and Windows.
 - P0 is complete: 7/7 tasks and 7/7 gates, including windowed `cargo tauri dev`
   observed on macOS, Linux, and Windows.
 - P1 is active; P1-P0-7 privacy posture is done with evidence, P1-G1 is locally
   passed with a repaired real `crash_recovery` filter, and P1-G2 has a runnable
   capture/WAL short-utterance suite. P1-G2 remains pending for ASR golden clips.
-- Fresh local gates passed on 2026-07-09 for the first-run permission-readiness
-  slice: cargo fmt, cargo clippy, cargo test (189 lib tests + 2
+- Fresh local gates passed on 2026-07-09 for the first-run permission-action
+  slice: cargo fmt, cargo clippy, cargo test (191 lib tests + 2
   crash-recovery tests + 5 event-sequence tests + 5 short-utterance tests),
   scripts/check-frontend.sh, scripts/check-privacy-posture.sh --check,
-  scripts/check-adr-status.sh, and scripts/bench.sh --check.
+  scripts/check-adr-status.sh, scripts/bench.sh --check, production frontend
+  build, desktop verify/build, and Browser UI smoke.
 - The `event_sequences` integration gate now exists and passed locally plus 3-OS
   CI through `d531a4c` / run 29016531062. It covers
   the typed cross-module order for happy path, focus-change hold, secure-field
@@ -63,11 +63,13 @@ Current verified state:
   outcome. Held delivery paths, including focus-change before delivery, do not
   mark setup complete. FirstRunStatus also carries backend-owned
   permission_requirements for macOS, Windows, and Linux, and Screen Family 10
-  renders those runtime OS requirements with state/detail/action copy. This is
-  not fake detection: default permission states remain needs_hardware or
-  needs_review until live platform proof exists. P1-P0-8 remains in progress
-  for live permission prompts/proof, model download, live first-dictation
-  journey, and <=60s proof.
+  renders those runtime OS requirements with state/detail/action copy.
+  Permission rows also carry backend-owned action_label metadata, and the
+  first_run_permission_action Tauri command returns manual_step plus
+  proof_requirement for the setup UI. This is not fake detection: default
+  permission states remain needs_hardware or needs_review until live platform
+  proof exists. P1-P0-8 remains in progress for live permission prompts/proof,
+  model download, live first-dictation journey, and <=60s proof.
 - Frontend cockpit/setup shell is present and must remain presentation-only.
 - The Codex app Run action is wired to ./script/build_and_run.sh.
 - The hotkey runtime now honors persisted push-to-talk vs toggle mode. The
@@ -117,8 +119,9 @@ Operating rules:
 
 Next best work:
 1. Continue P1-P0-8 first run: the final checklist step now has durable Rust
-   truth after a real injected dictation, and the setup card now renders the
-   backend-owned OS permission requirements contract. Next are live permission
+   truth after a real injected dictation, the setup card renders the
+   backend-owned OS permission requirements contract, and permission rows can
+   ask Rust for a manual step/proof boundary. Next are live permission
    prompts/proof, model download/progress UI, a live first-dictation journey,
    and <=60s reference proof.
 2. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict

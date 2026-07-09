@@ -85,6 +85,16 @@ interface FirstRunPermissionRequirement {
   state: FirstRunPermissionState;
   detail: string;
   action: string;
+  action_label: string;
+}
+
+interface FirstRunPermissionActionOutcome {
+  requirement_id: string;
+  label: string;
+  state: FirstRunPermissionState;
+  action_label: string;
+  manual_step: string;
+  proof_requirement: string;
 }
 
 interface HotkeyBindingOption {
@@ -262,6 +272,7 @@ const previewSnapshot: AppSnapshot = {
           state: "needs_hardware",
           detail: "Required before local capture can produce speech audio.",
           action: "Grant Kaydence access in System Settings -> Privacy & Security -> Microphone.",
+          action_label: "Show microphone step",
         },
         {
           id: "accessibility",
@@ -269,6 +280,7 @@ const previewSnapshot: AppSnapshot = {
           state: "needs_hardware",
           detail: "Required for native insertion plus focus and secure-field checks.",
           action: "Enable Kaydence in System Settings -> Privacy & Security -> Accessibility.",
+          action_label: "Show accessibility step",
         },
         {
           id: "input_monitoring",
@@ -276,6 +288,7 @@ const previewSnapshot: AppSnapshot = {
           state: "needs_hardware",
           detail: "Required for the global hotkey monitoring path on macOS.",
           action: "Enable Kaydence in System Settings -> Privacy & Security -> Input Monitoring.",
+          action_label: "Show input step",
         },
       ],
       microphone_permission_ready: false,
@@ -482,6 +495,10 @@ export function App(): JSX.Element {
   const [hotkeyModeIssue, setHotkeyModeIssue] = useState<string | null>(null);
   const [hotkeyBindingPending, setHotkeyBindingPending] = useState<string | null>(null);
   const [hotkeyBindingIssue, setHotkeyBindingIssue] = useState<string | null>(null);
+  const [permissionActionPendingId, setPermissionActionPendingId] = useState<string | null>(null);
+  const [permissionActionOutcome, setPermissionActionOutcome] =
+    useState<FirstRunPermissionActionOutcome | null>(null);
+  const [permissionActionIssue, setPermissionActionIssue] = useState<string | null>(null);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
@@ -608,6 +625,24 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setModelRefreshPending(false);
+      });
+  }
+
+  function showPermissionAction(requirementId: string) {
+    setPermissionActionPendingId(requirementId);
+    setPermissionActionIssue(null);
+    void invoke<FirstRunPermissionActionOutcome>("first_run_permission_action", {
+      requirementId,
+    })
+      .then((outcome) => {
+        setPermissionActionOutcome(outcome);
+      })
+      .catch((error) => {
+        console.error("Kaydence permission action failed", error);
+        setPermissionActionIssue("Permission guidance is unavailable for this requirement.");
+      })
+      .finally(() => {
+        setPermissionActionPendingId(null);
       });
   }
 
@@ -1134,9 +1169,31 @@ export function App(): JSX.Element {
                       <span>{requirement.detail}</span>
                       <small>{requirement.action}</small>
                     </div>
-                    <em>{permissionStateLabel(requirement.state)}</em>
+                    <div className="permission-item-actions">
+                      <em>{permissionStateLabel(requirement.state)}</em>
+                      <button
+                        className="mini-action permission-action"
+                        disabled={permissionActionPendingId !== null}
+                        onClick={() => showPermissionAction(requirement.id)}
+                        type="button"
+                      >
+                        {permissionActionPendingId === requirement.id
+                          ? "Loading"
+                          : requirement.action_label}
+                      </button>
+                    </div>
                   </div>
                 ))}
+                {permissionActionOutcome ? (
+                  <div className="permission-action-outcome" role="status">
+                    <strong>{permissionActionOutcome.label}</strong>
+                    <span>{permissionActionOutcome.manual_step}</span>
+                    <small>Proof: {permissionActionOutcome.proof_requirement}</small>
+                  </div>
+                ) : null}
+                {permissionActionIssue ? (
+                  <p className="model-install-note">{permissionActionIssue}</p>
+                ) : null}
               </div>
             ) : null}
             {snapshot.settings.first_run.hotkey_registration_error ? (

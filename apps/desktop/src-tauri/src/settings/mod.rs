@@ -470,6 +470,7 @@ pub struct FirstRunPermissionRequirement {
     pub state: FirstRunPermissionState,
     pub detail: String,
     pub action: String,
+    pub action_label: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -481,25 +482,80 @@ pub enum FirstRunPermissionState {
     Blocked,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunPermissionActionOutcome {
+    pub requirement_id: String,
+    pub label: String,
+    pub state: FirstRunPermissionState,
+    pub action_label: String,
+    pub manual_step: String,
+    pub proof_requirement: String,
+}
+
 pub fn first_run_permission_requirements() -> Vec<FirstRunPermissionRequirement> {
     platform_permission_specs()
         .into_iter()
         .map(
-            |(id, label, state, detail, action)| FirstRunPermissionRequirement {
+            |(id, label, state, detail, action, action_label)| FirstRunPermissionRequirement {
                 id: id.to_string(),
                 label: label.to_string(),
                 state,
                 detail: detail.to_string(),
                 action: action.to_string(),
+                action_label: action_label.to_string(),
             },
         )
         .collect()
+}
+
+pub fn first_run_permission_action(
+    requirement_id: &str,
+) -> Result<FirstRunPermissionActionOutcome, SettingsError> {
+    let requirement = first_run_permission_requirements()
+        .into_iter()
+        .find(|requirement| requirement.id == requirement_id)
+        .ok_or_else(|| SettingsError::UnknownPermissionRequirement(requirement_id.to_string()))?;
+
+    Ok(FirstRunPermissionActionOutcome {
+        requirement_id: requirement.id,
+        label: requirement.label,
+        state: requirement.state,
+        action_label: requirement.action_label,
+        manual_step: requirement.action,
+        proof_requirement: first_run_permission_proof(requirement_id).to_string(),
+    })
+}
+
+fn first_run_permission_proof(requirement_id: &str) -> &'static str {
+    match requirement_id {
+        "microphone" => {
+            "Run the first-dictation journey and verify capture produces persisted audio."
+        }
+        "accessibility" => {
+            "Validate native insertion plus secure-field refusal on the current macOS build."
+        }
+        "input_monitoring" => {
+            "Register and trigger the selected global hotkey on the current macOS build."
+        }
+        "uia_focus" => {
+            "Run the Windows UIA focus self-test and confirm password fields are refused."
+        }
+        "sendinput" => {
+            "Run the Windows fallback injection proof against a non-native editable field."
+        }
+        "accessibility_bus" => {
+            "Run `cargo run --bin atspi-selftest -- focus-track` in the Linux desktop session."
+        }
+        "uinput" => "Run the Linux human-focus proof: normal field types, password field refuses.",
+        _ => "Record OS-specific setup evidence before marking the requirement ready.",
+    }
 }
 
 fn platform_permission_specs() -> Vec<(
     &'static str,
     &'static str,
     FirstRunPermissionState,
+    &'static str,
     &'static str,
     &'static str,
 )> {
@@ -511,6 +567,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsHardware,
                 "Required before local capture can produce speech audio.",
                 "Grant Kaydence access in System Settings -> Privacy & Security -> Microphone.",
+                "Show microphone step",
             ),
             (
                 "accessibility",
@@ -518,6 +575,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsHardware,
                 "Required for native insertion plus focus and secure-field checks.",
                 "Enable Kaydence in System Settings -> Privacy & Security -> Accessibility.",
+                "Show accessibility step",
             ),
             (
                 "input_monitoring",
@@ -525,6 +583,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsHardware,
                 "Required for the global hotkey monitoring path on macOS.",
                 "Enable Kaydence in System Settings -> Privacy & Security -> Input Monitoring.",
+                "Show input step",
             ),
         ]
     } else if cfg!(target_os = "windows") {
@@ -535,6 +594,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsHardware,
                 "Required before local capture can produce speech audio.",
                 "Grant microphone access in Windows Privacy & security settings.",
+                "Show microphone step",
             ),
             (
                 "uia_focus",
@@ -542,6 +602,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsReview,
                 "Required to detect secure fields and use the native insertion path.",
                 "Validate with the Windows UIA self-test before marking ready.",
+                "Show UIA proof",
             ),
             (
                 "sendinput",
@@ -549,6 +610,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsReview,
                 "Used only after secure-field and focus checks allow fallback typing.",
                 "Validate SendInput fallback on the target Windows build.",
+                "Show fallback proof",
             ),
         ]
     } else if cfg!(target_os = "linux") {
@@ -559,6 +621,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsHardware,
                 "Required before local capture can produce speech audio.",
                 "Confirm PipeWire or PulseAudio input access in the desktop session.",
+                "Show microphone step",
             ),
             (
                 "accessibility_bus",
@@ -566,6 +629,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsReview,
                 "Required to identify focus and refuse secure fields before injection.",
                 "Run cargo run --bin atspi-selftest -- focus-track on the GNOME VM.",
+                "Show AT-SPI proof",
             ),
             (
                 "uinput",
@@ -573,6 +637,7 @@ fn platform_permission_specs() -> Vec<(
                 FirstRunPermissionState::NeedsHardware,
                 "Required for the current Linux keystroke injection path.",
                 "Confirm the user session can access /dev/uinput or the future portal/libei path.",
+                "Show uinput proof",
             ),
         ]
     } else {
@@ -582,6 +647,7 @@ fn platform_permission_specs() -> Vec<(
             FirstRunPermissionState::NeedsReview,
             "This operating system has no locked Kaydence first-run permission contract yet.",
             "Add an OS-specific permission checklist before marking setup ready.",
+            "Show review step",
         )]
     }
 }
@@ -646,6 +712,8 @@ pub enum SettingsError {
     InvalidHotkeyMode(String),
     #[error("unsupported hotkey binding: {0}")]
     InvalidHotkeyBinding(String),
+    #[error("unknown first-run permission requirement: {0}")]
+    UnknownPermissionRequirement(String),
 }
 
 #[derive(Debug, Error)]
@@ -939,6 +1007,35 @@ mod tests {
         assert!(requirements
             .iter()
             .all(|requirement| !matches!(requirement.state, FirstRunPermissionState::Ready)));
+        assert!(requirements
+            .iter()
+            .all(|requirement| !requirement.action_label.trim().is_empty()));
+    }
+
+    #[test]
+    fn first_run_permission_action_returns_manual_proof_boundary() {
+        let requirement = first_run_permission_requirements()
+            .into_iter()
+            .next()
+            .expect("platform contract has at least one requirement");
+        let outcome = first_run_permission_action(&requirement.id).unwrap();
+
+        assert_eq!(outcome.requirement_id, requirement.id);
+        assert_eq!(outcome.label, requirement.label);
+        assert_eq!(outcome.state, requirement.state);
+        assert_eq!(outcome.action_label, requirement.action_label);
+        assert!(!outcome.manual_step.trim().is_empty());
+        assert!(!outcome.proof_requirement.trim().is_empty());
+    }
+
+    #[test]
+    fn first_run_permission_action_rejects_unknown_ids() {
+        assert_eq!(
+            first_run_permission_action("not-a-real-permission"),
+            Err(SettingsError::UnknownPermissionRequirement(
+                "not-a-real-permission".to_string()
+            ))
+        );
     }
 
     #[test]
