@@ -1,0 +1,69 @@
+Kaydence macOS NSPasteboard restore evidence
+Date: 2026-07-08
+
+Intent
+- Replace the conservative text-only macOS clipboard fallback with an NSPasteboard
+  snapshot/restore path that preserves all readable pasteboard items, declared
+  types, and bytes.
+- Keep paste injection guarded by the existing editable-focus check.
+- Avoid probing or touching the pasteboard from capability discovery.
+
+Changed files
+- apps/desktop/src-tauri/Cargo.toml
+  - Added macOS-only objc2, objc2-app-kit, and objc2-foundation dependencies with
+    minimal AppKit pasteboard features.
+- apps/desktop/src-tauri/src/inject/macos.rs
+  - Replaced pbcopy/pbpaste/osascript text snapshots with NSPasteboard snapshots.
+  - Added MacOsClipboardSnapshot::Items with per-item pasteboard flavors.
+  - Added snapshot_clipboard, restore_clipboard, set_clipboard_text_for_paste,
+    and build_pasteboard_items.
+  - Clipboard fallback now snapshots existing items, writes temporary text for
+    Command-V, then restores the captured item/type/data payload.
+  - Clipboard capability is reported only when the focused target is editable,
+    without reading or mutating the clipboard.
+- Cargo.lock
+  - Updated only the Kaydence direct dependency edge list for the new macOS
+    target dependencies.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml inject:: --lib
+  - 35 inject tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - 5 hotkey runtime tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 127 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run check
+- PASS: npm --prefix apps/desktop run build
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 waiver only.
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Focused coverage added
+- Empty pasteboard snapshot representation.
+- Multi-item snapshots.
+- Multiple pasteboard types per item.
+- Plain text, RTF, HTML, file URL, TIFF, PNG-like, and binary data examples.
+- Type/data-sensitive equality.
+- Declared type order preservation.
+- Mixed text and binary content is representable instead of rejected.
+
+Honest limits
+- This proves the native snapshot/build/restore contract and the full desktop
+  gate set. It does not yet prove every target app consumes Command-V before the
+  restore delay in live app-matrix testing.
+- NSPasteboard types are preserved when dataForType can materialize bytes. If a
+  promised or lazy pasteboard type cannot be read, the fallback fails closed
+  rather than performing a lossy restore.
+- Windows UIA/SendInput injection remains outside this slice.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.

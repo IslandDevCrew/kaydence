@@ -8,13 +8,15 @@
 #![allow(dead_code)]
 
 use std::ffi::CStr;
-use std::io::Write;
 use std::os::raw::{c_char, c_void};
-use std::path::Path;
-use std::process::{Command, Stdio};
 use std::ptr;
 use std::thread;
 use std::time::Duration;
+
+use objc2::rc::{autoreleasepool, Retained};
+use objc2::runtime::ProtocolObject;
+use objc2_app_kit::{NSPasteboard, NSPasteboardItem, NSPasteboardTypeString, NSPasteboardWriting};
+use objc2_foundation::{NSArray, NSData, NSString};
 
 use super::{FieldKind, InjectError, InjectorCaps, KeystrokeChannel, TextInjector};
 
@@ -26,9 +28,6 @@ const CG_UNICODE_KEY_CODE: CGKeyCode = 0;
 const CG_V_KEY_CODE: CGKeyCode = 0x09;
 const CLIPBOARD_RESTORE_DELAY_MS: u64 = 20;
 const MAX_UNICHARS_PER_EVENT: usize = 512;
-const OSASCRIPT: &str = "/usr/bin/osascript";
-const PBCOPY: &str = "/usr/bin/pbcopy";
-const PBPASTE: &str = "/usr/bin/pbpaste";
 
 const ATTR_FOCUSED_UI_ELEMENT: &str = "AXFocusedUIElement";
 const ATTR_ROLE: &str = "AXRole";
@@ -159,7 +158,7 @@ impl TextInjector for MacOsTextInjector {
         InjectorCaps {
             native_text_insert,
             keystroke,
-            clipboard: focused_kind == FieldKind::Editable && clipboard_snapshot_supported(),
+            clipboard: focused_kind == FieldKind::Editable,
         }
     }
 
@@ -231,15 +230,15 @@ impl TextInjector for MacOsTextInjector {
     fn paste_clipboard(&mut self, text: &str) -> Result<(), InjectError> {
         require_editable_focus("macOS clipboard paste")?;
 
-        let snap = snapshot_clipboard_text()?;
-        if let Err(err) = set_clipboard_text(text) {
-            let _ = restore_clipboard_text(snap);
+        let snap = snapshot_clipboard()?;
+        if let Err(err) = set_clipboard_text_for_paste(text) {
+            let _ = restore_clipboard(snap);
             return Err(err);
         }
 
         let pasted = post_command_v();
         thread::sleep(Duration::from_millis(CLIPBOARD_RESTORE_DELAY_MS));
-        let restored = restore_clipboard_text(snap);
+        let restored = restore_clipboard(snap);
         pasted.and(restored)
     }
 }
@@ -331,134 +330,119 @@ fn create_key_event_with_flags(
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum ClipboardInfoKind {
+enum MacOsClipboardSnapshot {
     Empty,
-    TextOnly,
-    NonText,
+    Items(Vec<MacOsPasteboardItemSnapshot>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum MacOsClipboardSnapshot {
-    Empty,
-    Text(String),
+struct MacOsPasteboardItemSnapshot {
+    flavors: Vec<MacOsPasteboardFlavor>,
 }
 
-fn clipboard_tools_available() -> bool {
-    Path::new(OSASCRIPT).exists() && Path::new(PBCOPY).exists() && Path::new(PBPASTE).exists()
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct MacOsPasteboardFlavor {
+    type_id: String,
+    data: Vec<u8>,
 }
 
-fn clipboard_snapshot_supported() -> bool {
-    clipboard_tools_available()
-        && clipboard_info()
-            .map(|info| classify_clipboard_info(&info) != ClipboardInfoKind::NonText)
-            .unwrap_or(false)
+fn snapshot_clipboard() -> Result<MacOsClipboardSnapshot, InjectError> {
+    autoreleasepool(|_| {
+        let pasteboard = NSPasteboard::generalPasteboard();
+        let Some(items) = pasteboard.pasteboardItems() else {
+            return Ok(MacOsClipboardSnapshot::Empty);
+        };
+
+        let mut snapshots = Vec::new();
+        for item in &items {
+            let mut flavors = Vec::new();
+            for pasteboard_type in item.types().iter() {
+                let type_id = pasteboard_type.to_string();
+                let data = item.dataForType(&pasteboard_type).ok_or_else(|| {
+                    InjectError(format!(
+                        "macOS clipboard type {type_id} could not be read for restore"
+                    ))
+                })?;
+                flavors.push(MacOsPasteboardFlavor {
+                    type_id,
+                    data: data.to_vec(),
+                });
+            }
+            snapshots.push(MacOsPasteboardItemSnapshot { flavors });
+        }
+
+        if snapshots.is_empty() {
+            Ok(MacOsClipboardSnapshot::Empty)
+        } else {
+            Ok(MacOsClipboardSnapshot::Items(snapshots))
+        }
+    })
 }
 
-fn snapshot_clipboard_text() -> Result<MacOsClipboardSnapshot, InjectError> {
-    match classify_clipboard_info(&clipboard_info()?) {
-        ClipboardInfoKind::Empty => Ok(MacOsClipboardSnapshot::Empty),
-        ClipboardInfoKind::TextOnly => Ok(MacOsClipboardSnapshot::Text(read_clipboard_text()?)),
-        ClipboardInfoKind::NonText => Err(InjectError(
-            "macOS clipboard contains non-text data; refusing fallback to preserve it".to_string(),
-        )),
+fn restore_clipboard(snapshot: MacOsClipboardSnapshot) -> Result<(), InjectError> {
+    autoreleasepool(|_| {
+        let pasteboard = NSPasteboard::generalPasteboard();
+        pasteboard.clearContents();
+
+        let MacOsClipboardSnapshot::Items(items) = snapshot else {
+            return Ok(());
+        };
+
+        let pasteboard_items = build_pasteboard_items(&items)?;
+        if pasteboard_items.is_empty() {
+            return Ok(());
+        }
+
+        let writing_items = pasteboard_items
+            .into_iter()
+            .map(ProtocolObject::<dyn NSPasteboardWriting>::from_retained)
+            .collect::<Vec<Retained<ProtocolObject<dyn NSPasteboardWriting>>>>();
+        let writing_array = NSArray::from_retained_slice(&writing_items);
+        if pasteboard.writeObjects(&writing_array) {
+            Ok(())
+        } else {
+            Err(InjectError(
+                "macOS clipboard restore writeObjects failed".to_string(),
+            ))
+        }
+    })
+}
+
+fn set_clipboard_text_for_paste(text: &str) -> Result<(), InjectError> {
+    autoreleasepool(|_| {
+        let pasteboard = NSPasteboard::generalPasteboard();
+        pasteboard.clearContents();
+        let ns_text = NSString::from_str(text);
+        let string_type = unsafe { NSPasteboardTypeString };
+        if pasteboard.setString_forType(&ns_text, string_type) {
+            Ok(())
+        } else {
+            Err(InjectError(
+                "macOS clipboard text write failed before paste".to_string(),
+            ))
+        }
+    })
+}
+
+fn build_pasteboard_items(
+    items: &[MacOsPasteboardItemSnapshot],
+) -> Result<Vec<Retained<NSPasteboardItem>>, InjectError> {
+    let mut restored = Vec::new();
+    for item in items {
+        let pasteboard_item = NSPasteboardItem::new();
+        for flavor in &item.flavors {
+            let pasteboard_type = NSString::from_str(&flavor.type_id);
+            let data = NSData::with_bytes(&flavor.data);
+            if !pasteboard_item.setData_forType(&data, &pasteboard_type) {
+                return Err(InjectError(format!(
+                    "macOS clipboard restore failed for pasteboard type {}",
+                    flavor.type_id
+                )));
+            }
+        }
+        restored.push(pasteboard_item);
     }
-}
-
-fn restore_clipboard_text(snapshot: MacOsClipboardSnapshot) -> Result<(), InjectError> {
-    match snapshot {
-        MacOsClipboardSnapshot::Empty => set_clipboard_text(""),
-        MacOsClipboardSnapshot::Text(text) => set_clipboard_text(&text),
-    }
-}
-
-fn clipboard_info() -> Result<String, InjectError> {
-    let output = Command::new(OSASCRIPT)
-        .args(["-e", "clipboard info"])
-        .output()
-        .map_err(|err| InjectError(format!("clipboard info failed to start: {err}")))?;
-    command_output_to_string(output, "clipboard info")
-}
-
-fn read_clipboard_text() -> Result<String, InjectError> {
-    let output = Command::new(PBPASTE)
-        .args(["-Prefer", "txt"])
-        .env("LANG", "en_US.UTF-8")
-        .output()
-        .map_err(|err| InjectError(format!("pbpaste failed to start: {err}")))?;
-    command_output_to_string(output, "pbpaste")
-}
-
-fn set_clipboard_text(text: &str) -> Result<(), InjectError> {
-    let mut child = Command::new(PBCOPY)
-        .env("LANG", "en_US.UTF-8")
-        .stdin(Stdio::piped())
-        .spawn()
-        .map_err(|err| InjectError(format!("pbcopy failed to start: {err}")))?;
-
-    let mut stdin = child.stdin.take().ok_or_else(|| {
-        InjectError("pbcopy stdin was unavailable while setting clipboard".to_string())
-    })?;
-    stdin
-        .write_all(text.as_bytes())
-        .map_err(|err| InjectError(format!("pbcopy stdin write failed: {err}")))?;
-    drop(stdin);
-
-    let status = child
-        .wait()
-        .map_err(|err| InjectError(format!("pbcopy wait failed: {err}")))?;
-    if status.success() {
-        Ok(())
-    } else {
-        Err(InjectError(format!("pbcopy exited with status {status}")))
-    }
-}
-
-fn command_output_to_string(
-    output: std::process::Output,
-    command: &str,
-) -> Result<String, InjectError> {
-    if !output.status.success() {
-        return Err(InjectError(format!(
-            "{command} exited with status {}: {}",
-            output.status,
-            String::from_utf8_lossy(&output.stderr).trim()
-        )));
-    }
-
-    String::from_utf8(output.stdout)
-        .map(|text| text.trim_end_matches(['\r', '\n']).to_string())
-        .map_err(|err| InjectError(format!("{command} returned non-UTF-8 output: {err}")))
-}
-
-fn classify_clipboard_info(info: &str) -> ClipboardInfoKind {
-    let types = clipboard_info_types(info);
-    if types.is_empty() {
-        return ClipboardInfoKind::Empty;
-    }
-
-    if types.iter().all(|ty| is_text_clipboard_type(ty)) {
-        ClipboardInfoKind::TextOnly
-    } else {
-        ClipboardInfoKind::NonText
-    }
-}
-
-fn clipboard_info_types(info: &str) -> Vec<String> {
-    info.split(',')
-        .map(str::trim)
-        .enumerate()
-        .filter_map(|(index, token)| {
-            let is_type_slot = index % 2 == 0;
-            (is_type_slot && !token.is_empty()).then(|| token.to_string())
-        })
-        .collect()
-}
-
-fn is_text_clipboard_type(ty: &str) -> bool {
-    matches!(
-        ty,
-        "Unicode text" | "string" | "styled Clipboard text" | "«class utf8»" | "«class ut16»"
-    )
+    Ok(restored)
 }
 
 fn utf16_event_chunks(text: &str, limit: usize) -> Vec<Vec<u16>> {
@@ -730,40 +714,265 @@ mod tests {
     }
 
     #[test]
-    fn clipboard_info_empty_is_restorable_empty() {
-        assert_eq!(classify_clipboard_info(""), ClipboardInfoKind::Empty);
+    fn pasteboard_snapshot_can_represent_empty_clipboard() {
+        assert_eq!(MacOsClipboardSnapshot::Empty, MacOsClipboardSnapshot::Empty);
     }
 
     #[test]
-    fn clipboard_info_text_types_are_restorable() {
-        let info = "Unicode text, 26, string, 13, styled Clipboard text, 22, «class utf8», 13, «class ut16», 28";
+    fn pasteboard_snapshot_preserves_multiple_items_and_types() {
+        let snapshot = MacOsClipboardSnapshot::Items(vec![
+            MacOsPasteboardItemSnapshot {
+                flavors: vec![
+                    MacOsPasteboardFlavor {
+                        type_id: "public.utf8-plain-text".to_string(),
+                        data: b"hello".to_vec(),
+                    },
+                    MacOsPasteboardFlavor {
+                        type_id: "public.html".to_string(),
+                        data: b"<b>hello</b>".to_vec(),
+                    },
+                ],
+            },
+            MacOsPasteboardItemSnapshot {
+                flavors: vec![MacOsPasteboardFlavor {
+                    type_id: "public.png".to_string(),
+                    data: vec![137, 80, 78, 71],
+                }],
+            },
+        ]);
 
-        assert_eq!(classify_clipboard_info(info), ClipboardInfoKind::TextOnly);
-        assert_eq!(
-            clipboard_info_types(info),
-            vec![
-                "Unicode text",
-                "string",
-                "styled Clipboard text",
-                "«class utf8»",
-                "«class ut16»"
-            ]
-        );
+        let MacOsClipboardSnapshot::Items(items) = snapshot else {
+            panic!("expected item snapshot");
+        };
+
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].flavors.len(), 2);
+        assert_eq!(items[0].flavors[1].type_id, "public.html");
+        assert_eq!(items[1].flavors[0].data, vec![137, 80, 78, 71]);
     }
 
     #[test]
-    fn clipboard_info_non_text_is_not_restorable() {
-        assert_eq!(
-            classify_clipboard_info("TIFF picture, 2048"),
-            ClipboardInfoKind::NonText
-        );
+    fn restore_builder_accepts_plain_data_flavors() {
+        let items = vec![MacOsPasteboardItemSnapshot {
+            flavors: vec![MacOsPasteboardFlavor {
+                type_id: "public.utf8-plain-text".to_string(),
+                data: b"Kaydence".to_vec(),
+            }],
+        }];
+
+        autoreleasepool(|_| {
+            let rebuilt = build_pasteboard_items(&items).unwrap();
+            assert_eq!(rebuilt.len(), 1);
+            let ty = NSString::from_str("public.utf8-plain-text");
+            assert_eq!(
+                rebuilt[0].dataForType(&ty).unwrap().to_vec(),
+                b"Kaydence".to_vec()
+            );
+        });
     }
 
     #[test]
-    fn clipboard_info_mixed_text_and_non_text_is_not_restorable() {
+    fn restore_builder_keeps_each_item_separate() {
+        let items = vec![
+            MacOsPasteboardItemSnapshot {
+                flavors: vec![MacOsPasteboardFlavor {
+                    type_id: "public.utf8-plain-text".to_string(),
+                    data: b"first".to_vec(),
+                }],
+            },
+            MacOsPasteboardItemSnapshot {
+                flavors: vec![MacOsPasteboardFlavor {
+                    type_id: "public.utf8-plain-text".to_string(),
+                    data: b"second".to_vec(),
+                }],
+            },
+        ];
+
+        autoreleasepool(|_| {
+            let rebuilt = build_pasteboard_items(&items).unwrap();
+            let ty = NSString::from_str("public.utf8-plain-text");
+            assert_eq!(rebuilt.len(), 2);
+            assert_eq!(
+                rebuilt[0].dataForType(&ty).unwrap().to_vec(),
+                b"first".to_vec()
+            );
+            assert_eq!(
+                rebuilt[1].dataForType(&ty).unwrap().to_vec(),
+                b"second".to_vec()
+            );
+        });
+    }
+
+    #[test]
+    fn restore_builder_accepts_multiple_flavors_on_one_item() {
+        let items = vec![MacOsPasteboardItemSnapshot {
+            flavors: vec![
+                MacOsPasteboardFlavor {
+                    type_id: "public.utf8-plain-text".to_string(),
+                    data: b"text".to_vec(),
+                },
+                MacOsPasteboardFlavor {
+                    type_id: "public.rtf".to_string(),
+                    data: b"{\\rtf1 text}".to_vec(),
+                },
+            ],
+        }];
+
+        autoreleasepool(|_| {
+            let rebuilt = build_pasteboard_items(&items).unwrap();
+            let types = rebuilt[0]
+                .types()
+                .iter()
+                .map(|ty| ty.to_string())
+                .collect::<Vec<_>>();
+
+            assert_eq!(
+                types,
+                vec![
+                    "public.utf8-plain-text".to_string(),
+                    "public.rtf".to_string()
+                ]
+            );
+        });
+    }
+
+    #[test]
+    fn pasteboard_snapshot_equality_includes_type_and_data() {
+        let left = MacOsPasteboardFlavor {
+            type_id: "public.data".to_string(),
+            data: vec![1],
+        };
+        let same_type_different_data = MacOsPasteboardFlavor {
+            type_id: "public.data".to_string(),
+            data: vec![2],
+        };
+        let same_data_different_type = MacOsPasteboardFlavor {
+            type_id: "public.png".to_string(),
+            data: vec![1],
+        };
+
+        assert_ne!(left, same_type_different_data);
+        assert_ne!(left, same_data_different_type);
+    }
+
+    #[test]
+    fn pasteboard_snapshot_no_longer_rejects_mixed_content() {
+        let snapshot = MacOsClipboardSnapshot::Items(vec![MacOsPasteboardItemSnapshot {
+            flavors: vec![
+                MacOsPasteboardFlavor {
+                    type_id: "public.utf8-plain-text".to_string(),
+                    data: b"caption".to_vec(),
+                },
+                MacOsPasteboardFlavor {
+                    type_id: "public.png".to_string(),
+                    data: vec![137, 80, 78, 71],
+                },
+            ],
+        }]);
+
+        assert!(matches!(snapshot, MacOsClipboardSnapshot::Items(_)));
+    }
+
+    #[test]
+    fn pasteboard_snapshot_debug_includes_type_ids() {
+        let snapshot = MacOsClipboardSnapshot::Items(vec![MacOsPasteboardItemSnapshot {
+            flavors: vec![MacOsPasteboardFlavor {
+                type_id: "public.file-url".to_string(),
+                data: b"file:///tmp/example.txt".to_vec(),
+            }],
+        }]);
+
+        assert!(format!("{snapshot:?}").contains("public.file-url"));
+    }
+
+    #[test]
+    fn restore_builder_handles_empty_item_snapshots() {
+        autoreleasepool(|_| {
+            let rebuilt =
+                build_pasteboard_items(&[MacOsPasteboardItemSnapshot { flavors: vec![] }]).unwrap();
+
+            assert_eq!(rebuilt.len(), 1);
+            assert_eq!(rebuilt[0].types().len(), 0);
+        });
+    }
+
+    #[test]
+    fn pasteboard_snapshot_text_and_binary_can_coexist() {
+        let item = MacOsPasteboardItemSnapshot {
+            flavors: vec![
+                MacOsPasteboardFlavor {
+                    type_id: "public.utf8-plain-text".to_string(),
+                    data: b"plain".to_vec(),
+                },
+                MacOsPasteboardFlavor {
+                    type_id: "public.tiff".to_string(),
+                    data: vec![73, 73, 42, 0],
+                },
+            ],
+        };
+
+        assert_eq!(item.flavors.len(), 2);
+        assert_eq!(item.flavors[0].data, b"plain".to_vec());
+        assert_eq!(item.flavors[1].type_id, "public.tiff");
+    }
+
+    #[test]
+    fn restore_builder_preserves_binary_data() {
+        let items = vec![MacOsPasteboardItemSnapshot {
+            flavors: vec![MacOsPasteboardFlavor {
+                type_id: "public.data".to_string(),
+                data: vec![0, 1, 2, 255],
+            }],
+        }];
+
+        autoreleasepool(|_| {
+            let rebuilt = build_pasteboard_items(&items).unwrap();
+            let ty = NSString::from_str("public.data");
+            assert_eq!(
+                rebuilt[0].dataForType(&ty).unwrap().to_vec(),
+                vec![0, 1, 2, 255]
+            );
+        });
+    }
+
+    #[test]
+    fn restore_builder_preserves_declared_type_order() {
+        let items = vec![MacOsPasteboardItemSnapshot {
+            flavors: vec![
+                MacOsPasteboardFlavor {
+                    type_id: "public.html".to_string(),
+                    data: b"<p>hi</p>".to_vec(),
+                },
+                MacOsPasteboardFlavor {
+                    type_id: "public.utf8-plain-text".to_string(),
+                    data: b"hi".to_vec(),
+                },
+            ],
+        }];
+
+        autoreleasepool(|_| {
+            let rebuilt = build_pasteboard_items(&items).unwrap();
+            let types = rebuilt[0]
+                .types()
+                .iter()
+                .map(|ty| ty.to_string())
+                .collect::<Vec<_>>();
+
+            assert_eq!(
+                types,
+                vec![
+                    "public.html".to_string(),
+                    "public.utf8-plain-text".to_string()
+                ]
+            );
+        });
+    }
+
+    #[test]
+    fn pasteboard_snapshot_items_can_be_empty_vec() {
         assert_eq!(
-            classify_clipboard_info("Unicode text, 12, TIFF picture, 2048"),
-            ClipboardInfoKind::NonText
+            MacOsClipboardSnapshot::Items(vec![]),
+            MacOsClipboardSnapshot::Items(vec![])
         );
     }
 }
