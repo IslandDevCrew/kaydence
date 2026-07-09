@@ -32,7 +32,6 @@ pub mod prediction;
 pub mod profiles;
 pub mod settings;
 
-#[cfg(desktop)]
 use crate::events::CleanupDial;
 
 pub fn run_bench_json() -> Result<String, bench::BenchError> {
@@ -142,6 +141,36 @@ fn set_hotkey_binding(
         let _ = app;
         let _ = runtime;
         Ok(state.apply_hotkey_binding(&binding))
+    }
+}
+
+#[tauri::command]
+fn set_cleanup_dial(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
+    runtime: tauri::State<'_, HotkeyRuntimeHandle>,
+    dial: String,
+) -> Result<settings::AppSnapshot, String> {
+    let dial = settings::parse_cleanup_dial(&dial).map_err(|err| err.to_string())?;
+
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        state
+            .set_cleanup_dial(dial, &app_data_dir, &runtime)
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = runtime;
+        Ok(state.apply_cleanup_dial(dial))
     }
 }
 
@@ -758,6 +787,22 @@ impl HotkeyRuntimeHandle {
         runtime.set_asr_adapter_state(state)
     }
 
+    fn apply_cleanup_dial(&self, dial: CleanupDial) -> Result<(), CleanupDialUpdateError> {
+        let Some(runtime) = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+        else {
+            return Ok(());
+        };
+
+        let mut runtime = runtime
+            .lock()
+            .map_err(|_| CleanupDialUpdateError::RuntimePoisoned)?;
+        runtime.set_default_cleanup_dial(dial)
+    }
+
     fn take_first_run_proof(&self) -> HotkeyRuntimeFirstRunProof {
         let Some(runtime) = self
             .inner
@@ -952,6 +997,9 @@ impl RuntimeSnapshot {
             let binding = settings::normalize_hotkey_binding(&binding)?;
             self.apply_hotkey_binding(&binding);
         }
+        if let Some(dial) = settings.cleanup_default_dial {
+            self.apply_cleanup_dial(dial);
+        }
         self.update_first_run(|first_run| {
             first_run.setup_timing = setup_timing;
             if first_dictation_completed {
@@ -986,6 +1034,17 @@ impl RuntimeSnapshot {
         self.snapshot()
     }
 
+    fn apply_cleanup_dial(&self, dial: CleanupDial) -> settings::AppSnapshot {
+        {
+            let mut snapshot = self
+                .inner
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            snapshot.settings.cleanup.default_dial = dial;
+        }
+        self.snapshot()
+    }
+
     #[cfg(desktop)]
     fn set_hotkey_mode(
         &self,
@@ -1011,6 +1070,33 @@ impl RuntimeSnapshot {
     ) -> Result<(), settings::SettingsStoreError> {
         let mut settings = store.load()?;
         settings.hotkey_mode = Some(mode);
+        store.save(&settings)
+    }
+
+    #[cfg(desktop)]
+    fn set_cleanup_dial(
+        &self,
+        dial: CleanupDial,
+        app_data_dir: &Path,
+        runtime: &HotkeyRuntimeHandle,
+    ) -> Result<settings::AppSnapshot, SetCleanupDialError> {
+        self.set_settings_store(app_data_dir);
+        runtime.apply_cleanup_dial(dial)?;
+
+        if let Some(store) = self.settings_store() {
+            Self::persist_cleanup_dial(&store, dial)?;
+        }
+
+        Ok(self.apply_cleanup_dial(dial))
+    }
+
+    #[cfg(desktop)]
+    fn persist_cleanup_dial(
+        store: &settings::SettingsStore,
+        dial: CleanupDial,
+    ) -> Result<(), settings::SettingsStoreError> {
+        let mut settings = store.load()?;
+        settings.cleanup_default_dial = Some(dial);
         store.save(&settings)
     }
 
@@ -1382,9 +1468,25 @@ enum AsrRuntimeUpdateError {
 }
 
 #[derive(Debug, thiserror::Error)]
+enum CleanupDialUpdateError {
+    #[error("cleanup dial cannot be changed during an active capture")]
+    CaptureActive,
+    #[error("hotkey runtime lock poisoned")]
+    RuntimePoisoned,
+}
+
+#[derive(Debug, thiserror::Error)]
 enum SetHotkeyModeError {
     #[error("hotkey runtime: {0}")]
     Runtime(#[from] HotkeyModeUpdateError),
+    #[error("settings store: {0}")]
+    SettingsStore(#[from] settings::SettingsStoreError),
+}
+
+#[derive(Debug, thiserror::Error)]
+enum SetCleanupDialError {
+    #[error("cleanup dial runtime: {0}")]
+    Runtime(#[from] CleanupDialUpdateError),
     #[error("settings store: {0}")]
     SettingsStore(#[from] settings::SettingsStoreError),
 }
@@ -1666,6 +1768,7 @@ struct HotkeyRuntime {
     injector: Box<dyn inject::TextInjector + Send>,
     unknown_field_policy: inject::UnknownFieldPolicy,
     prefer_clipboard: bool,
+    default_cleanup_dial: CleanupDial,
     active_shortcut_role: Option<HotkeyShortcutRole>,
     capture_cleanup_override: Option<CleanupDial>,
     microphone_permission_ready_pending: bool,
@@ -1713,6 +1816,7 @@ impl HotkeyRuntime {
         );
         runtime.coordinator =
             hotkey_coordinator_from_settings(settings.hotkey.mode, settings.capture);
+        runtime.default_cleanup_dial = settings.cleanup.default_dial;
         Ok(runtime)
     }
 
@@ -1755,6 +1859,7 @@ impl HotkeyRuntime {
             injector,
             unknown_field_policy: inject::UnknownFieldPolicy::default(),
             prefer_clipboard: false,
+            default_cleanup_dial: CleanupDial::Light,
             active_shortcut_role: None,
             capture_cleanup_override: None,
             microphone_permission_ready_pending: false,
@@ -1795,6 +1900,17 @@ impl HotkeyRuntime {
         Ok(())
     }
 
+    fn set_default_cleanup_dial(
+        &mut self,
+        dial: CleanupDial,
+    ) -> Result<(), CleanupDialUpdateError> {
+        if !self.is_idle() {
+            return Err(CleanupDialUpdateError::CaptureActive);
+        }
+        self.default_cleanup_dial = dial;
+        Ok(())
+    }
+
     fn set_asr_adapter_state(
         &mut self,
         state: engine::LocalAsrAdapterState,
@@ -1832,6 +1948,15 @@ impl HotkeyRuntime {
         signal: hotkeys::Signal,
     ) -> Result<Option<u64>, HotkeyRuntimeError> {
         self.handle_shortcut_signal(HotkeyShortcutRole::Primary, signal)
+    }
+
+    fn effective_cleanup_dial(&self, target: &profiles::SessionTarget) -> CleanupDial {
+        let target_default = if target.profile.user_edited {
+            target.profile.cleanup_dial
+        } else {
+            self.default_cleanup_dial
+        };
+        self.capture_cleanup_override.unwrap_or(target_default)
     }
 
     fn handle_shortcut_signal(
@@ -1899,9 +2024,7 @@ impl HotkeyRuntime {
                 }
                 let bound_target = self.active_target.take();
                 if let Some(target) = &bound_target {
-                    let cleanup_dial = self
-                        .capture_cleanup_override
-                        .unwrap_or(target.profile.cleanup_dial);
+                    let cleanup_dial = self.effective_cleanup_dial(target);
                     self.processor.set_cleanup_dial(cleanup_dial);
                 }
                 let events = self.processor.process_capture(&summary)?;
@@ -2430,6 +2553,7 @@ pub fn run() {
             select_asr_model,
             set_hotkey_mode,
             set_hotkey_binding,
+            set_cleanup_dial,
             refresh_model_readiness,
             install_model_artifact,
             first_run_model_download_preflight,
@@ -3517,6 +3641,28 @@ mod tests {
     }
 
     #[test]
+    fn persisted_cleanup_dial_applies_after_settings_load() {
+        let app_data = tmp();
+        let store = settings::SettingsStore::new(&app_data);
+        store
+            .save(&settings::UserSettingsFile {
+                cleanup_default_dial: Some(CleanupDial::Full),
+                ..settings::UserSettingsFile::default()
+            })
+            .unwrap();
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+
+        state.apply_persisted_user_settings().unwrap();
+
+        assert_eq!(
+            state.snapshot().settings.cleanup.default_dial,
+            CleanupDial::Full
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
     fn hotkey_binding_persistence_normalizes_recommended_values() {
         let app_data = tmp();
         let store = settings::SettingsStore::new(&app_data);
@@ -3582,6 +3728,27 @@ mod tests {
                 .unwrap()
                 .hotkey_mode,
             Some(settings::HotkeyModeSetting::Toggle)
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn selecting_cleanup_dial_updates_snapshot_and_persists_settings() {
+        let app_data = tmp();
+        let state = RuntimeSnapshot::default();
+        let runtime = HotkeyRuntimeHandle::default();
+
+        let snapshot = state
+            .set_cleanup_dial(CleanupDial::Raw, &app_data, &runtime)
+            .unwrap();
+
+        assert_eq!(snapshot.settings.cleanup.default_dial, CleanupDial::Raw);
+        assert_eq!(
+            settings::SettingsStore::new(&app_data)
+                .load()
+                .unwrap()
+                .cleanup_default_dial,
+            Some(CleanupDial::Raw)
         );
         let _ = std::fs::remove_dir_all(app_data);
     }
@@ -3772,6 +3939,91 @@ mod tests {
             .unwrap_err();
 
         assert!(matches!(err, HotkeyModeUpdateError::CaptureActive));
+        let _ = runtime.handle_signal(hotkeys::Signal::Release { at_ms: 400 });
+        let _ = runtime.handle_signal(hotkeys::Signal::Tick { at_ms: 700 });
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_uses_cleanup_default_for_default_profile() {
+        let app_data = tmp();
+        let delivered = Arc::new(Mutex::new(Vec::new()));
+        let seen_dials = Arc::new(Mutex::new(Vec::new()));
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_target_resolver(Box::new(profiles::SessionTargetResolver::new(
+                profiles::StaticFrontmostAppDetector::new(detected_app()),
+                profiles::ProfileStore::default(),
+            )))
+            .with_processor(Box::new(ScriptedProcessor::new(Arc::clone(&seen_dials))))
+            .with_injector(Box::new(TestInjector::native(Arc::clone(&delivered))));
+        runtime.set_default_cleanup_dial(CleanupDial::Full).unwrap();
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+        let id = runtime.recorder.active_session_id().unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Release { at_ms: 400 })
+            .unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 700 })
+            .unwrap();
+
+        assert_eq!(*seen_dials.lock().unwrap(), vec![CleanupDial::Full]);
+        let session = runtime.history.get_session(id).unwrap().unwrap();
+        assert_eq!(session.clean_text.as_deref(), Some("Hello captain."));
+        assert_eq!(session.cleanup_dial, Some(CleanupDial::Full));
+        assert_eq!(*delivered.lock().unwrap(), vec!["Hello captain."]);
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_keeps_user_edited_profile_cleanup_over_default() {
+        let app_data = tmp();
+        let delivered = Arc::new(Mutex::new(Vec::new()));
+        let seen_dials = Arc::new(Mutex::new(Vec::new()));
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_target_resolver(Box::new(profiles::SessionTargetResolver::new(
+                profiles::StaticFrontmostAppDetector::new(detected_app()),
+                matching_profiles(CleanupDial::Full),
+            )))
+            .with_processor(Box::new(ScriptedProcessor::new(Arc::clone(&seen_dials))))
+            .with_injector(Box::new(TestInjector::native(Arc::clone(&delivered))));
+        runtime.set_default_cleanup_dial(CleanupDial::Raw).unwrap();
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+        let id = runtime.recorder.active_session_id().unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Release { at_ms: 400 })
+            .unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 700 })
+            .unwrap();
+
+        assert_eq!(*seen_dials.lock().unwrap(), vec![CleanupDial::Full]);
+        let session = runtime.history.get_session(id).unwrap().unwrap();
+        assert_eq!(session.cleanup_dial, Some(CleanupDial::Full));
+        assert_eq!(*delivered.lock().unwrap(), vec!["Hello captain."]);
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_refuses_cleanup_default_change_during_capture() {
+        let app_data = tmp();
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data).unwrap();
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+        let err = runtime
+            .set_default_cleanup_dial(CleanupDial::Raw)
+            .unwrap_err();
+
+        assert!(matches!(err, CleanupDialUpdateError::CaptureActive));
         let _ = runtime.handle_signal(hotkeys::Signal::Release { at_ms: 400 });
         let _ = runtime.handle_signal(hotkeys::Signal::Tick { at_ms: 700 });
         let _ = std::fs::remove_dir_all(app_data);

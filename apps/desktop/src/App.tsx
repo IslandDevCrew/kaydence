@@ -9,6 +9,7 @@ const markUrl = new URL(
 
 type OsLane = "mac" | "windows" | "linux";
 type HotkeyMode = "push_to_talk" | "toggle";
+type CleanupDial = "raw" | "light" | "full";
 
 interface LaneSpec {
   id: OsLane;
@@ -207,7 +208,7 @@ interface AppSnapshot {
       auto_recommend_by_hardware: boolean;
     };
     cleanup: {
-      default_dial: "raw" | "light" | "full";
+      default_dial: CleanupDial;
       full_requires_explicit_opt_in: boolean;
     };
     injection: {
@@ -682,6 +683,8 @@ export function App(): JSX.Element {
     useState<string | null>(null);
   const [hotkeyModePending, setHotkeyModePending] = useState<HotkeyMode | null>(null);
   const [hotkeyModeIssue, setHotkeyModeIssue] = useState<string | null>(null);
+  const [cleanupDialPending, setCleanupDialPending] = useState<CleanupDial | null>(null);
+  const [cleanupDialIssue, setCleanupDialIssue] = useState<string | null>(null);
   const [hotkeyBindingPending, setHotkeyBindingPending] = useState<string | null>(null);
   const [hotkeyBindingIssue, setHotkeyBindingIssue] = useState<string | null>(null);
   const [permissionActionPendingId, setPermissionActionPendingId] = useState<string | null>(null);
@@ -827,6 +830,23 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setHotkeyModePending(null);
+      });
+  }
+
+  function setCleanupDial(dial: CleanupDial) {
+    setCleanupDialPending(dial);
+    setCleanupDialIssue(null);
+    void invoke<AppSnapshot>("set_cleanup_dial", { dial })
+      .then((nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setSnapshotSource("backend");
+      })
+      .catch((error) => {
+        console.error("Kaydence cleanup dial update failed", error);
+        setCleanupDialIssue("Cleanup dial can be changed when capture is idle.");
+      })
+      .finally(() => {
+        setCleanupDialPending(null);
       });
   }
 
@@ -1398,16 +1418,37 @@ export function App(): JSX.Element {
               </div>
             </div>
             <div className="segmented" role="group" aria-label="Cleanup level">
-              <button className={cleanupDefault === "raw" ? "selected" : ""} type="button">
+              <button
+                aria-pressed={cleanupDefault === "raw"}
+                className={cleanupDefault === "raw" ? "selected" : ""}
+                disabled={cleanupDialPending !== null}
+                onClick={() => setCleanupDial("raw")}
+                type="button"
+              >
                 Raw
               </button>
-              <button className={cleanupDefault === "light" ? "selected" : ""} type="button">
+              <button
+                aria-pressed={cleanupDefault === "light"}
+                className={cleanupDefault === "light" ? "selected" : ""}
+                disabled={cleanupDialPending !== null}
+                onClick={() => setCleanupDial("light")}
+                type="button"
+              >
                 Light
               </button>
-              <button className={cleanupDefault === "full" ? "selected" : ""} type="button">
+              <button
+                aria-pressed={cleanupDefault === "full"}
+                className={cleanupDefault === "full" ? "selected" : ""}
+                disabled={cleanupDialPending !== null}
+                onClick={() => setCleanupDial("full")}
+                type="button"
+              >
                 Full
               </button>
             </div>
+            {cleanupDialIssue ? (
+              <p className="hotkey-mode-note">{cleanupDialIssue}</p>
+            ) : null}
             <div className="segmented hotkey-mode-control" role="group" aria-label="Hotkey mode">
               <button
                 className={snapshot.settings.hotkey.mode === "push_to_talk" ? "selected" : ""}

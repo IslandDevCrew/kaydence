@@ -1,0 +1,52 @@
+Kaydence evidence: cleanup default dial persistence
+Generated: 2026-07-09T18:02Z
+
+Scope
+- The visible Cleanup dial segmented control now invokes a backend-owned
+  set_cleanup_dial command instead of being display-only.
+- app-data settings.json persists cleanup_default_dial as raw, light, or full.
+- AppSnapshot hydrates the persisted cleanup default on startup.
+- The hotkey runtime applies the persisted cleanup default for non-user-edited
+  profile targets, while user-edited per-app profile cleanup still overrides it.
+- The Shift+RightAlt/Option Raw cleanup override remains per-invocation and
+  still resets on the next primary capture.
+
+Files changed
+- apps/desktop/src/App.tsx
+- apps/desktop/src-tauri/src/settings/mod.rs
+- apps/desktop/src-tauri/src/lib.rs
+- ops/mission/state.json
+- ops/mission/journal.md
+- ops/mission/state-of-the-union.html
+
+Validation
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
+  RESULT: PASS (222 tests)
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- npm --prefix apps/desktop run build
+  RESULT: PASS (tsc --noEmit + vite build)
+- git diff --check
+  RESULT: PASS
+
+New coverage
+- settings_store_saves_cleanup_default_dial
+- cleanup_dial_parser_accepts_frontend_values
+- persisted_cleanup_dial_applies_after_settings_load
+- selecting_cleanup_dial_updates_snapshot_and_persists_settings
+- hotkey_runtime_uses_cleanup_default_for_default_profile
+- hotkey_runtime_keeps_user_edited_profile_cleanup_over_default
+- hotkey_runtime_refuses_cleanup_default_change_during_capture
+
+Honest boundaries
+- This does not implement new cleanup authoring behavior; Full still uses the
+  existing cleanup pipeline boundary.
+- This does not add a network surface.
+- Fresh remote 3-OS CI was not run because GitHub Actions hosted runners remain
+  blocked before checkout by the billing/spending-limit state. Latest known green
+  remote baseline remains ca60244 / run 29031546518.
+- The production build generated dist/ artifacts during validation; those
+  generated outputs were removed/restored before commit so the diff stays source
+  plus mission evidence.

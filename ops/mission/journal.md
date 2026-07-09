@@ -1,5 +1,11 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T18:02Z — Codex P1 slice (cleanup default dial persistence)
+- Wired the visible Cleanup dial to real backend behavior: `set_cleanup_dial` parses Raw/Light/Full, persists `cleanup_default_dial` in app-data `settings.json`, updates `AppSnapshot`, and refuses runtime mutation during active capture.
+- The hotkey runtime now carries a persisted cleanup default for non-user-edited profile targets, while user-edited per-app profiles still override it and the Shift+RightAlt/Option Raw override remains a one-capture override.
+- Evidence saved at `ops/mission/evidence/2026-07-09-cleanup-default-dial-persistence.txt`. Local gates passed: fmt check, full Rust lib suite (222 tests), clippy with `-D warnings`, frontend production build, and diff whitespace check.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T17:52Z — Codex P1 slice (secondary cleanup override hotkey)
 - Added runtime support for the secondary per-invocation cleanup override chord: `Shift+RightAlt` / `Shift+RightOption` can register alongside the selected primary global shortcut as a Raw-only capture path.
 - The hotkey runtime now tracks which shortcut role started a capture, ignores mismatched release edges, applies `CleanupDial::Raw` only to the override capture, and returns the next primary capture to the detected profile cleanup dial.

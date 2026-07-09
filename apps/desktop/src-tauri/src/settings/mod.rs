@@ -98,6 +98,8 @@ pub struct UserSettingsFile {
     #[serde(default)]
     pub hotkey_primary_binding: Option<String>,
     #[serde(default)]
+    pub cleanup_default_dial: Option<CleanupDial>,
+    #[serde(default)]
     pub first_run_started_at_ms: Option<u64>,
     #[serde(default)]
     pub first_dictation_completed: bool,
@@ -112,6 +114,7 @@ impl Default for UserSettingsFile {
             selected_asr_model_id: None,
             hotkey_mode: None,
             hotkey_primary_binding: None,
+            cleanup_default_dial: None,
             first_run_started_at_ms: None,
             first_dictation_completed: false,
             first_dictation_completed_at_ms: None,
@@ -384,6 +387,22 @@ impl Default for CleanupSettings {
             default_dial: CleanupDial::Light,
             full_requires_explicit_opt_in: true,
         }
+    }
+}
+
+pub fn parse_cleanup_dial(dial: &str) -> Result<CleanupDial, SettingsError> {
+    let compact = dial
+        .trim()
+        .chars()
+        .filter(|ch| !ch.is_whitespace() && *ch != '-' && *ch != '_')
+        .flat_map(char::to_lowercase)
+        .collect::<String>();
+
+    match compact.as_str() {
+        "raw" => Ok(CleanupDial::Raw),
+        "light" => Ok(CleanupDial::Light),
+        "full" => Ok(CleanupDial::Full),
+        _ => Err(SettingsError::InvalidCleanupDial(dial.trim().to_string())),
     }
 }
 
@@ -1392,6 +1411,8 @@ pub enum SettingsError {
     InvalidHotkeyMode(String),
     #[error("unsupported hotkey binding: {0}")]
     InvalidHotkeyBinding(String),
+    #[error("invalid cleanup dial: {0}")]
+    InvalidCleanupDial(String),
     #[error("unknown first-run permission requirement: {0}")]
     UnknownPermissionRequirement(String),
     #[error("invalid first-run timing: {0}")]
@@ -1558,6 +1579,35 @@ mod tests {
             .unwrap()
             .contains("\"hotkey_primary_binding\": \"F13\""));
         let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn settings_store_saves_cleanup_default_dial() {
+        let dir = tmp();
+        let store = SettingsStore::new(&dir);
+        let settings = UserSettingsFile {
+            cleanup_default_dial: Some(CleanupDial::Raw),
+            ..UserSettingsFile::default()
+        };
+
+        store.save(&settings).unwrap();
+
+        assert_eq!(store.load().unwrap(), settings);
+        assert!(fs::read_to_string(store.path())
+            .unwrap()
+            .contains("\"cleanup_default_dial\": \"raw\""));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn cleanup_dial_parser_accepts_frontend_values() {
+        assert_eq!(parse_cleanup_dial("raw").unwrap(), CleanupDial::Raw);
+        assert_eq!(parse_cleanup_dial("Light").unwrap(), CleanupDial::Light);
+        assert_eq!(parse_cleanup_dial("full").unwrap(), CleanupDial::Full);
+        assert!(matches!(
+            parse_cleanup_dial("author"),
+            Err(SettingsError::InvalidCleanupDial(value)) if value == "author"
+        ));
     }
 
     #[test]
