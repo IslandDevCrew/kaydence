@@ -1,0 +1,69 @@
+Kaydence evidence: P1-P0-4 local history audio playback
+Date: 2026-07-08
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Slice: local history audio playback under PRD P0-4
+
+What changed
+- Added HistoryStore::audio_playback.
+- Added play_history_audio Tauri command.
+- Added cockpit Play action for history rows with audio.
+- Enabled Tauri asset protocol for app-data sessions/** only.
+- Added media-src CSP entries for asset: and http://asset.localhost so the native audio control can load scoped local WAVs.
+- Enabled Tauri's protocol-asset feature. Cargo.lock now includes Tauri's http-range helper for local media serving.
+
+Safety and boundaries
+- Playback returns an asset only for a stored audio path that canonicalizes under app-data sessions/.
+- Playback refuses unsafe, external, missing, non-file, or non-WAV paths.
+- The frontend does not decide file safety and does not read arbitrary files; it asks Rust for a validated path and converts it with Tauri convertFileSrc.
+- The asset protocol scope is limited to app-data sessions/**, not the full app-data directory or user filesystem.
+- No app network surface was added; audit-network remains at 0 call sites.
+- Remaining history/recovery polish: recovered-audio re-transcription once real ASR adapters land, and 3-OS validation.
+
+Documentation checked
+- Context7 Tauri v2 docs for convertFileSrc and asset protocol:
+  convertFileSrc converts device file paths for WebView loading; asset: and http://asset.localhost must be allowed in CSP; app.security.assetProtocol must be enabled with a scoped allowlist.
+
+Focused proof
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml audio_playback
+  RESULT: PASS
+  Tests: audio_playback_returns_safe_app_data_wav_asset; audio_playback_refuses_external_audio_path.
+- npm --prefix apps/desktop run check
+  RESULT: PASS
+
+Standing local gates
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  RESULT: PASS
+  Tests: 167 lib tests + 2 crash_recovery tests.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- npm --prefix apps/desktop run build
+  RESULT: PASS
+- scripts/audit-network.sh
+  RESULT: PASS
+  Network-capable call sites found: 0; unreviewed: 0.
+- scripts/check-adr-status.sh
+  RESULT: PASS
+  All ADRs Accepted except declared by-design exception 0009.
+- jq empty ops/mission/state.json
+  RESULT: PASS
+- ./script/build_and_run.sh build
+  RESULT: PASS
+  Note: pnpm still warns that package.json pnpm.onlyBuiltDependencies is ignored; workspace allowBuilds remains the active fix.
+- ./script/build_and_run.sh --verify
+  RESULT: PASS
+- git restore apps/desktop/dist/index.html && rm -rf apps/desktop/dist/assets apps/desktop/dist/favicon.svg
+  RESULT: PASS
+
+Remote truth
+- git fetch origin
+  RESULT: FAIL, expected current blocker
+  remote: Repository not found.
+  fatal: repository 'https://github.com/IslandDevCrew/kaydence.git/' not found
+  This checkpoint is local-only until the operator restores/repoints the remote.
+
+Final hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  RESULT: PASS
+  No lingering Kaydence app/dev-server processes found.

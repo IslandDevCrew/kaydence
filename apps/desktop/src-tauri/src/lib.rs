@@ -219,6 +219,36 @@ fn export_history_session(
 }
 
 #[tauri::command]
+fn play_history_audio(
+    app: tauri::AppHandle,
+    session_id: String,
+) -> Result<Option<history::HistoryAudioPlayback>, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let session_id = parse_history_session_id(&session_id)?;
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        let mut store =
+            history::HistoryStore::open(&app_data_dir).map_err(|err| err.to_string())?;
+        recover_history_audio(&mut store, &app_data_dir).map_err(|err| err.to_string())?;
+        store
+            .audio_playback(session_id, &app_data_dir)
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = session_id;
+        Ok(None)
+    }
+}
+
+#[tauri::command]
 fn purge_history(app: tauri::AppHandle) -> Result<history::PurgeHistoryOutcome, String> {
     #[cfg(desktop)]
     {
@@ -1014,6 +1044,7 @@ pub fn run() {
             recent_history,
             delete_history_session,
             export_history_session,
+            play_history_audio,
             purge_history
         ])
         .setup(|app| {

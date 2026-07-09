@@ -42,8 +42,10 @@ Current verified state:
   failures so crash-orphan audio is visible. export_history_session now writes
   JSON + text exports under app-data exports/. purge_history clears rows,
   app-data session audio, and app-data exports; recent_history applies the
-  Rust settings retention window before listing. Audio playback and
-  recovered-audio re-transcription remain follow-up history/recovery work.
+  Rust settings retention window before listing. play_history_audio validates a
+  safe app-data WAV and exposes it through Tauri's scoped asset protocol for the
+  cockpit audio control. Recovered-audio re-transcription remains follow-up
+  history/recovery work until real ASR adapters land.
 
 Operating rules:
 - Work from evidence, not assertions.

@@ -67,6 +67,13 @@ pub struct RetentionSweepOutcome {
     pub export_files_removed: usize,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct HistoryAudioPlayback {
+    pub asset_path: String,
+    pub mime_type: String,
+    pub byte_length: u64,
+}
+
 #[derive(Debug, Clone, Serialize)]
 struct HistorySessionExport {
     schema_version: i64,
@@ -220,6 +227,32 @@ impl HistoryStore {
             json_path: Some(json_path.display().to_string()),
             text_path: Some(text_path.display().to_string()),
         })
+    }
+
+    pub fn audio_playback(
+        &self,
+        session_id: SessionId,
+        app_data_dir: &Path,
+    ) -> Result<Option<HistoryAudioPlayback>, HistoryError> {
+        let Some(audio_path) = self.audio_path_for_session(&session_id_string(session_id))? else {
+            return Ok(None);
+        };
+        let Some(audio_path) = safe_session_audio_path(audio_path.as_deref(), app_data_dir)? else {
+            return Ok(None);
+        };
+        if audio_path
+            .extension()
+            .and_then(|extension| extension.to_str())
+            != Some("wav")
+        {
+            return Ok(None);
+        }
+        let byte_length = fs::metadata(&audio_path)?.len();
+        Ok(Some(HistoryAudioPlayback {
+            asset_path: audio_path.display().to_string(),
+            mime_type: "audio/wav".to_string(),
+            byte_length,
+        }))
     }
 
     pub fn purge_all(&mut self, app_data_dir: &Path) -> Result<PurgeHistoryOutcome, HistoryError> {
@@ -758,31 +791,40 @@ fn remove_safe_session_audio(
     audio_path: Option<&str>,
     app_data_dir: &Path,
 ) -> Result<bool, HistoryError> {
-    let Some(audio_path) = audio_path else {
+    let Some(audio_path) = safe_session_audio_path(audio_path, app_data_dir)? else {
         return Ok(false);
+    };
+    fs::remove_file(audio_path)?;
+    Ok(true)
+}
+
+fn safe_session_audio_path(
+    audio_path: Option<&str>,
+    app_data_dir: &Path,
+) -> Result<Option<PathBuf>, HistoryError> {
+    let Some(audio_path) = audio_path else {
+        return Ok(None);
     };
     let audio_path = PathBuf::from(audio_path);
     if !audio_path.is_absolute() || !audio_path.exists() {
-        return Ok(false);
+        return Ok(None);
     }
 
     let app_data_dir = fs::canonicalize(app_data_dir)?;
     let sessions_dir = match fs::canonicalize(app_data_dir.join("sessions")) {
         Ok(path) => path,
-        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(false),
+        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(None),
         Err(err) => return Err(err.into()),
     };
     if !sessions_dir.starts_with(&app_data_dir) {
-        return Ok(false);
+        return Ok(None);
     }
 
     let audio_path = fs::canonicalize(audio_path)?;
     if !audio_path.starts_with(&sessions_dir) || !audio_path.is_file() {
-        return Ok(false);
+        return Ok(None);
     }
-
-    fs::remove_file(audio_path)?;
-    Ok(true)
+    Ok(Some(audio_path))
 }
 
 fn remove_session_exports(session_id: &str, app_data_dir: &Path) -> Result<usize, HistoryError> {
@@ -1389,6 +1431,57 @@ mod tests {
         assert!(!app_data.join(EXPORTS_DIR).exists());
 
         fs::remove_dir_all(app_data).unwrap();
+    }
+
+    #[test]
+    fn audio_playback_returns_safe_app_data_wav_asset() {
+        let id = sid(58);
+        let app_data = temp_app_data("playback-safe");
+        let sessions_dir = app_data.join("sessions");
+        fs::create_dir_all(&sessions_dir).unwrap();
+        let audio_path = sessions_dir.join(format!("{}.wav", id.0));
+        fs::write(&audio_path, b"fixture audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        store
+            .record_event(&SessionEvent::AudioPersisted {
+                id,
+                wal_path: audio_path.display().to_string(),
+            })
+            .unwrap();
+
+        let playback = store.audio_playback(id, &app_data).unwrap().unwrap();
+
+        assert_eq!(
+            playback,
+            HistoryAudioPlayback {
+                asset_path: fs::canonicalize(&audio_path).unwrap().display().to_string(),
+                mime_type: "audio/wav".to_string(),
+                byte_length: b"fixture audio".len() as u64,
+            }
+        );
+
+        fs::remove_dir_all(app_data).unwrap();
+    }
+
+    #[test]
+    fn audio_playback_refuses_external_audio_path() {
+        let id = sid(59);
+        let app_data = temp_app_data("playback-external");
+        let external_dir = temp_app_data("playback-external-file");
+        let audio_path = external_dir.join("outside.wav");
+        fs::write(&audio_path, b"outside audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        store
+            .record_event(&SessionEvent::AudioPersisted {
+                id,
+                wal_path: audio_path.display().to_string(),
+            })
+            .unwrap();
+
+        assert_eq!(store.audio_playback(id, &app_data).unwrap(), None);
+
+        fs::remove_dir_all(app_data).unwrap();
+        fs::remove_dir_all(external_dir).unwrap();
     }
 
     #[test]

@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useState } from "react";
 
 const markUrl = new URL(
@@ -150,6 +150,19 @@ interface HistoryPurgeOutcome {
   sessions_deleted: number;
   audio_files_removed: number;
   export_files_removed: number;
+}
+
+interface HistoryAudioPlayback {
+  asset_path: string;
+  mime_type: string;
+  byte_length: number;
+}
+
+interface ActiveHistoryAudio {
+  sessionId: string;
+  src: string;
+  mimeType: string;
+  byteLength: number;
 }
 
 const previewSnapshot: AppSnapshot = {
@@ -321,6 +334,10 @@ export function App(): JSX.Element {
   const [historyPurgeOutcome, setHistoryPurgeOutcome] =
     useState<HistoryPurgeOutcome | null>(null);
   const [purgingHistory, setPurgingHistory] = useState(false);
+  const [loadingHistoryAudioId, setLoadingHistoryAudioId] = useState<string | null>(null);
+  const [activeHistoryAudio, setActiveHistoryAudio] =
+    useState<ActiveHistoryAudio | null>(null);
+  const [historyPlaybackIssue, setHistoryPlaybackIssue] = useState<string | null>(null);
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
@@ -418,6 +435,12 @@ export function App(): JSX.Element {
       .then((sessions) => {
         setHistorySessions(sessions);
         setHistoryPurgeOutcome(null);
+        setHistoryPlaybackIssue(null);
+        setActiveHistoryAudio((current) =>
+          current && sessions.some((session) => session.id === current.sessionId)
+            ? current
+            : null,
+        );
       })
       .catch((error) => {
         console.error("Kaydence history refresh failed", error);
@@ -440,6 +463,9 @@ export function App(): JSX.Element {
       .then((sessions) => {
         setHistorySessions(sessions);
         setHistoryExportOutcome(null);
+        setActiveHistoryAudio((current) =>
+          current?.sessionId === sessionId ? null : current,
+        );
       })
       .catch((error) => {
         console.error("Kaydence history delete failed", error);
@@ -453,6 +479,7 @@ export function App(): JSX.Element {
     setExportingHistoryId(sessionId);
     setHistoryExportOutcome(null);
     setHistoryPurgeOutcome(null);
+    setHistoryPlaybackIssue(null);
     void invoke<HistoryExportOutcome>("export_history_session", { sessionId })
       .then((outcome) => {
         setHistoryExportOutcome(outcome);
@@ -462,6 +489,32 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setExportingHistoryId(null);
+      });
+  }
+
+  function playHistoryAudio(sessionId: string) {
+    setLoadingHistoryAudioId(sessionId);
+    setHistoryPlaybackIssue(null);
+    void invoke<HistoryAudioPlayback | null>("play_history_audio", { sessionId })
+      .then((playback) => {
+        if (!playback) {
+          setActiveHistoryAudio(null);
+          setHistoryPlaybackIssue("No safe local audio is available for playback.");
+          return;
+        }
+        setActiveHistoryAudio({
+          sessionId,
+          src: convertFileSrc(playback.asset_path),
+          mimeType: playback.mime_type,
+          byteLength: playback.byte_length,
+        });
+      })
+      .catch((error) => {
+        console.error("Kaydence history audio playback failed", error);
+        setHistoryPlaybackIssue("Audio playback could not be prepared.");
+      })
+      .finally(() => {
+        setLoadingHistoryAudioId(null);
       });
   }
 
@@ -476,6 +529,8 @@ export function App(): JSX.Element {
     setPurgingHistory(true);
     setHistoryExportOutcome(null);
     setHistoryPurgeOutcome(null);
+    setActiveHistoryAudio(null);
+    setHistoryPlaybackIssue(null);
     void invoke<HistoryPurgeOutcome>("purge_history")
       .then((outcome) => {
         setHistoryPurgeOutcome(outcome);
@@ -638,6 +693,9 @@ export function App(): JSX.Element {
                     : "No matching local session to export."}
                 </p>
               ) : null}
+              {historyPlaybackIssue ? (
+                <p className="history-export-note">{historyPlaybackIssue}</p>
+              ) : null}
               {historySessions.length > 0 ? (
                 <div className="history-list">
                   {historySessions.map((session) => (
@@ -645,9 +703,40 @@ export function App(): JSX.Element {
                       <div className="history-row-main">
                         <strong>{session.target_app?.name ?? "Local session"}</strong>
                         <span>{historySummary(session)}</span>
+                        {activeHistoryAudio?.sessionId === session.id ? (
+                          <div className="history-audio-player">
+                            <audio
+                              aria-label={`Audio for ${session.target_app?.name ?? "local history session"}`}
+                              controls
+                              preload="metadata"
+                            >
+                              <source
+                                src={activeHistoryAudio.src}
+                                type={activeHistoryAudio.mimeType}
+                              />
+                            </audio>
+                            <small>
+                              {Math.max(1, Math.ceil(activeHistoryAudio.byteLength / 1024))} KB
+                            </small>
+                          </div>
+                        ) : null}
                       </div>
                       <div className="history-row-actions">
                         <em>{historyStatus(session)}</em>
+                        <button
+                          aria-label={`Play ${session.target_app?.name ?? "local history session"} audio`}
+                          className="mini-action"
+                          disabled={
+                            !session.audio_path ||
+                            loadingHistoryAudioId !== null ||
+                            deletingHistoryId !== null ||
+                            purgingHistory
+                          }
+                          onClick={() => playHistoryAudio(session.id)}
+                          type="button"
+                        >
+                          {loadingHistoryAudioId === session.id ? "Loading" : "Play"}
+                        </button>
                         <button
                           aria-label={`Export ${session.target_app?.name ?? "local history session"}`}
                           className="mini-action"

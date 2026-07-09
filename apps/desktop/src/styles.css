@@ -397,6 +397,23 @@ button {
   line-height: 1.35;
 }
 
+.history-audio-player {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.history-audio-player audio {
+  width: min(100%, 360px);
+  height: 34px;
+}
+
+.history-audio-player small {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
 .history-row-actions {
   display: flex;
   flex: 0 0 auto;
