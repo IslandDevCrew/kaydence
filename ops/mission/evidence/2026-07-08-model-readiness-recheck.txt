@@ -1,0 +1,68 @@
+Kaydence model readiness recheck evidence
+Date: 2026-07-08 local / 2026-07-09T04:16Z
+
+Intent
+- Let first-run setup re-scan app-data model artifacts after a user or build
+  agent installs reviewed files, without requiring an app restart.
+- Keep readiness authority in Rust. React only sends the recheck intent and
+  renders the returned AppSnapshot.
+- Reuse the startup model refresh path so manual recheck and app boot cannot
+  drift apart.
+
+Changed files
+- apps/desktop/src-tauri/src/lib.rs
+  - Added refresh_model_readiness as a Tauri command.
+  - Added RuntimeSnapshot::refresh_models and
+    RuntimeSnapshot::refresh_models_from_app_data.
+  - Tauri setup now calls the same refresh_models_from_app_data helper used by
+    the command.
+  - Added runtime_snapshot_rechecks_models_after_artifact_install, proving
+    missing ASR/VAD models become Ready after artifacts are added and rechecked
+    on the same RuntimeSnapshot.
+- apps/desktop/src/App.tsx
+  - Added a Recheck Models action in the first-run setup panel.
+  - The action invokes refresh_model_readiness and replaces the current snapshot
+    with the backend response.
+- apps/desktop/src/styles.css
+  - Added compact secondary-action styling and focus state for the recheck
+    control.
+- ops/mission/state.json
+  - Recorded P1-P0-2 manual recheck progress and the local PR-log entry.
+- docs/CODEX_SUPER_GOAL_PROMPT.md
+  - Updated the continuation prompt so future sessions know recheck is already
+    wired.
+- ops/mission/journal.md
+  - Added the session note.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot_rechecks_models_after_artifact_install
+  - 1 focused test passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot
+  - 8 runtime snapshot tests passed.
+- PASS: npm --prefix apps/desktop run check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 151 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 remains the only by-design Proposed waiver.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run build
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This does not download model bytes and adds no network fetch.
+- This does not add progress, cancellation, retry, or resume UI.
+- This does not replace registry TODO hashes/sources with reviewed published
+  artifacts.
+- This does not implement Parakeet or Whisper inference adapters.
+- This does not provide WER or latency evidence for real ASR output.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.

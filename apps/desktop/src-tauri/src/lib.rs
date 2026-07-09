@@ -45,6 +45,30 @@ fn select_asr_model(
         .map_err(|err| err.to_string())
 }
 
+#[tauri::command]
+fn refresh_model_readiness(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
+) -> Result<settings::AppSnapshot, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        state
+            .refresh_models_from_app_data(&app_data_dir)
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        Ok(state.snapshot())
+    }
+}
+
 #[derive(Debug)]
 struct RuntimeSnapshot {
     inner: Mutex<settings::AppSnapshot>,
@@ -116,6 +140,26 @@ impl RuntimeSnapshot {
             first_run.recommended_asr_model_id = readiness.recommended_asr_model_id;
             first_run.selected_asr_model_id = readiness.selected_asr_model_id;
         });
+    }
+
+    #[cfg(desktop)]
+    fn refresh_models(
+        &self,
+        registry_path: &Path,
+        app_data_dir: &Path,
+    ) -> Result<settings::AppSnapshot, settings::SettingsStoreError> {
+        self.set_settings_store(app_data_dir);
+        self.refresh_model_readiness(registry_path, &app_data_dir.join("models"));
+        self.apply_persisted_user_settings()?;
+        Ok(self.snapshot())
+    }
+
+    #[cfg(desktop)]
+    fn refresh_models_from_app_data(
+        &self,
+        app_data_dir: &Path,
+    ) -> Result<settings::AppSnapshot, settings::SettingsStoreError> {
+        self.refresh_models(&models::source_tree_registry_path(), app_data_dir)
     }
 
     #[cfg(desktop)]
@@ -747,7 +791,11 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 pub fn run() {
     tauri::Builder::default()
         .manage(RuntimeSnapshot::default())
-        .invoke_handler(tauri::generate_handler![app_snapshot, select_asr_model])
+        .invoke_handler(tauri::generate_handler![
+            app_snapshot,
+            select_asr_model,
+            refresh_model_readiness
+        ])
         .setup(|app| {
             #[cfg(desktop)]
             {
@@ -756,12 +804,7 @@ pub fn run() {
                 let snapshot = app.state::<RuntimeSnapshot>();
                 match app.path().app_data_dir() {
                     Ok(app_data_dir) => {
-                        snapshot.set_settings_store(&app_data_dir);
-                        snapshot.refresh_model_readiness(
-                            &models::source_tree_registry_path(),
-                            &app_data_dir.join("models"),
-                        );
-                        if let Err(err) = snapshot.apply_persisted_user_settings() {
+                        if let Err(err) = snapshot.refresh_models_from_app_data(&app_data_dir) {
                             eprintln!("Kaydence settings load failed: {err}");
                         }
                     }
@@ -1162,6 +1205,42 @@ mod tests {
             .all(|model| model.download_available
                 && model.download_size_mb == Some(1)
                 && model.download_source_count == 1));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn runtime_snapshot_rechecks_models_after_artifact_install() {
+        let app_data = tmp();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
+        let state = RuntimeSnapshot::default();
+
+        let initial = state.refresh_models(&registry_path, &app_data).unwrap();
+
+        assert!(!initial.settings.first_run.model_ready);
+        assert!(initial
+            .settings
+            .first_run
+            .required_models
+            .iter()
+            .all(|model| model.state == settings::FirstRunModelState::Missing));
+
+        let models_dir = app_data.join("models");
+        std::fs::create_dir_all(&models_dir).unwrap();
+        std::fs::write(models_dir.join("fixture-asr.onnx"), b"asr").unwrap();
+        std::fs::write(models_dir.join("fixture-vad.onnx"), b"vad").unwrap();
+
+        let refreshed = state.refresh_models(&registry_path, &app_data).unwrap();
+
+        assert!(refreshed.settings.first_run.model_ready);
+        assert_eq!(refreshed.settings.first_run.model_readiness_error, None);
+        assert!(refreshed
+            .settings
+            .first_run
+            .required_models
+            .iter()
+            .all(|model| model.state == settings::FirstRunModelState::Ready));
+        assert!(state.snapshot().settings.first_run.model_ready);
         let _ = std::fs::remove_dir_all(app_data);
     }
 

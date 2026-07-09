@@ -65,7 +65,9 @@ Next best work:
    settings.json and reapplies it on startup; ModelDownloadPlan validates safe
    destination paths, expected sha256 values, and HTTPS sources before first-run
    can show Download required; checksum mismatches quarantine the suspect
-   artifact before readiness blocks load.
+   artifact before readiness blocks load; refresh_model_readiness lets first-run
+   recheck app-data model artifacts without restarting after a user/build agent
+   installs reviewed files.
 3. Continue injection backends behind TextInjector: Windows UIA+SendInput still
    needs the Windows Codex session; Linux AT-SPI/uinput needs human-focus VM
    validation; macOS AX/CGEvent/NSPasteboard has local evidence.

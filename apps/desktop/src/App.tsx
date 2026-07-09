@@ -244,6 +244,7 @@ export function App(): JSX.Element {
   const [activeLane, setActiveLane] = useState<OsLane>("mac");
   const [snapshot, setSnapshot] = useState<AppSnapshot>(previewSnapshot);
   const [snapshotSource, setSnapshotSource] = useState<"backend" | "preview">("preview");
+  const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
@@ -272,6 +273,10 @@ export function App(): JSX.Element {
     snapshot.settings.first_run.input_permission_ready &&
     snapshot.settings.first_run.hotkey_registered;
   const requiredModels = snapshot.settings.first_run.required_models;
+  const showModelRecheck =
+    !snapshot.settings.first_run.model_ready &&
+    (requiredModels.length > 0 ||
+      snapshot.settings.first_run.model_readiness_error !== null);
 
   useEffect(() => {
     let active = true;
@@ -301,6 +306,21 @@ export function App(): JSX.Element {
       })
       .catch((error) => {
         console.error("Kaydence ASR selection failed", error);
+      });
+  }
+
+  function refreshModelReadiness() {
+    setModelRefreshPending(true);
+    void invoke<AppSnapshot>("refresh_model_readiness")
+      .then((nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setSnapshotSource("backend");
+      })
+      .catch((error) => {
+        console.error("Kaydence model readiness refresh failed", error);
+      })
+      .finally(() => {
+        setModelRefreshPending(false);
       });
   }
 
@@ -533,6 +553,16 @@ export function App(): JSX.Element {
                   </div>
                 ))}
               </div>
+            ) : null}
+            {showModelRecheck ? (
+              <button
+                className="secondary-action"
+                disabled={modelRefreshPending}
+                onClick={refreshModelReadiness}
+                type="button"
+              >
+                {modelRefreshPending ? "Checking Models" : "Recheck Models"}
+              </button>
             ) : null}
             <button className="primary-action" disabled={!firstRunReady} type="button">
               {firstRunReady ? "Start Dictating" : "Resolve Setup"}

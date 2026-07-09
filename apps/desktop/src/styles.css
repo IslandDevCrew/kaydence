@@ -513,7 +513,22 @@ button {
   cursor: not-allowed;
 }
 
+.secondary-action {
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: color-mix(in srgb, var(--accent) 80%, #15313a);
+  font-weight: 800;
+}
+
+.secondary-action:disabled {
+  color: var(--muted);
+  cursor: wait;
+}
+
 .primary-action:focus-visible,
+.secondary-action:focus-visible,
 .lane:focus-visible,
 .segmented button:focus-visible,
 .nav-item:focus-visible {
