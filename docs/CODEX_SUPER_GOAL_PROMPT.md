@@ -31,18 +31,18 @@ Read first, in order:
 Current verified state:
 - GitHub remote access is restored; `IslandDevCrew/kaydence` resolves as a
   PRIVATE repo with ADMIN permission and `git fetch origin` succeeds.
-- Current verified remote baseline before the first-run setup-timing slice:
-  main at `699ff3b` had green 3-OS Actions CI in run 29022084029, completed
-  2026-07-09T13:50:44Z on macOS, Ubuntu, and Windows.
+- Current verified remote baseline before the first-run proof-export slice:
+  main at `5bd35e0` had green 3-OS Actions CI in run 29029907649, completed
+  2026-07-09T15:44:45Z on macOS, Ubuntu, and Windows.
 - P0 is complete: 7/7 tasks and 7/7 gates, including windowed `cargo tauri dev`
   observed on macOS, Linux, and Windows.
 - P1 is active; P1-P0-7 privacy posture is done with evidence, P1-G1 is locally
   passed with a repaired real `crash_recovery` filter, and P1-G2 has a runnable
   capture/WAL short-utterance suite. P1-G2 remains pending for ASR golden clips.
-- Fresh local gates passed on 2026-07-09 for the first-run setup-timing
-  slice: cargo fmt, cargo clippy, cargo test (195 lib tests + 2
+- Fresh local gates passed on 2026-07-09 for the first-run proof-export
+  slice: cargo fmt, cargo clippy, cargo test (200 lib tests + 2
   crash-recovery tests + 5 event-sequence tests + 5 short-utterance tests),
-  scripts/check-frontend.sh, scripts/check-privacy-posture.sh --check,
+  pnpm --dir apps/desktop run check, scripts/check-privacy-posture.sh,
   scripts/check-adr-status.sh, scripts/bench.sh --check, production frontend
   build, desktop verify/build, and Browser UI smoke at desktop plus narrow
   window widths.
@@ -70,8 +70,13 @@ Current verified state:
   proof_requirement for the setup UI. FirstRunSetupTiming now records
   first_run_started_at_ms, first_dictation_completed_at_ms, elapsed_ms,
   target_ms=60000, and within_target in Rust-owned AppSnapshot/settings truth;
-  the setup UI renders a 60-second setup proof strip. This is not fake detection
-  or fake timing proof: default
+  the setup UI renders a 60-second setup proof strip. FirstRunStatus also
+  carries a backend-owned next_step sequence, and export_first_run_proof_plan
+  writes app-data exports/first-run-proof-plan.json from Rust-owned AppSnapshot
+  truth with next_step, setup_timing, model/ASR state, permission requirements,
+  hotkey state, first-dictation state, and proof_items for build-agent handoff.
+  Screen Family 10 exposes the Export Proof action and reports the returned
+  path/item count. This is not fake detection or fake timing proof: default
   permission states remain needs_hardware or needs_review until live platform
   proof exists. P1-P0-8 remains in progress for live permission prompts/proof,
   model download, live first-dictation journey, and <=60s reference proof.
@@ -126,8 +131,10 @@ Next best work:
 1. Continue P1-P0-8 first run: the final checklist step now has durable Rust
    truth after a real injected dictation, the setup card renders the
    backend-owned OS permission requirements contract, permission rows can ask
-   Rust for a manual step/proof boundary, and FirstRunSetupTiming drives the
-   60-second setup proof strip. Next are live permission prompts/proof, model
+   Rust for a manual step/proof boundary, FirstRunSetupTiming drives the
+   60-second setup proof strip, FirstRunStatus.next_step sequences the next
+   setup action, and export_first_run_proof_plan writes the local proof-plan
+   JSON under app-data exports/. Next are live permission prompts/proof, model
    download/progress UI, a live first-dictation journey, and <=60s reference
    proof.
 2. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict

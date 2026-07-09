@@ -17,6 +17,7 @@ use thiserror::Error;
 pub const SCHEMA_VERSION: u16 = 1;
 pub const SETTINGS_FILE_NAME: &str = "settings.json";
 pub const FIRST_RUN_SETUP_TARGET_MS: u64 = 60_000;
+pub const FIRST_RUN_PROOF_PLAN_SCHEMA_VERSION: u16 = 1;
 /// The product brand string. Never hardcode "Kaydence" anywhere else.
 pub const APP_NAME: &str = "Kaydence";
 pub const DEFAULT_HOTKEY_BINDING: &str = "RightAlt";
@@ -708,6 +709,223 @@ pub enum FirstRunNextStepKind {
     Complete,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunProofPlan {
+    pub schema_version: u16,
+    pub generated_at_ms: u64,
+    pub app_name: String,
+    pub app_identifier: String,
+    pub os_lane: String,
+    pub ready_to_dictate: bool,
+    pub first_dictation_completed: bool,
+    pub next_step: FirstRunNextStep,
+    pub setup_timing: FirstRunSetupTiming,
+    pub model_ready: bool,
+    pub model_readiness_error: Option<String>,
+    pub selected_asr_model_id: Option<String>,
+    pub required_models: Vec<FirstRunModelStatus>,
+    pub asr_candidates: Vec<FirstRunAsrCandidate>,
+    pub permission_requirements: Vec<FirstRunPermissionRequirement>,
+    pub hotkey_registered: bool,
+    pub hotkey_registration_error: Option<String>,
+    pub proof_items: Vec<FirstRunProofItem>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunProofItem {
+    pub id: String,
+    pub label: String,
+    pub state: FirstRunProofItemState,
+    pub target_id: Option<String>,
+    pub detail: String,
+    pub operator_action: String,
+    pub proof_requirement: String,
+    pub proof_command: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FirstRunProofItemState {
+    Ready,
+    Pending,
+    Missing,
+    NeedsHardware,
+    NeedsReview,
+    Blocked,
+    Complete,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunProofExportOutcome {
+    pub exported: bool,
+    pub json_path: Option<String>,
+    pub item_count: usize,
+}
+
+pub fn first_run_proof_plan(snapshot: &AppSnapshot, generated_at_ms: u64) -> FirstRunProofPlan {
+    let first_run = &snapshot.settings.first_run;
+    let mut proof_items = Vec::new();
+    proof_items.push(first_run_next_step_proof_item(&first_run.next_step));
+
+    proof_items.extend(
+        first_run
+            .required_models
+            .iter()
+            .map(first_run_model_proof_item),
+    );
+    proof_items.extend(
+        first_run
+            .permission_requirements
+            .iter()
+            .map(first_run_permission_proof_item),
+    );
+    proof_items.push(first_run_hotkey_proof_item(first_run));
+    proof_items.push(first_run_dictation_proof_item(first_run));
+
+    FirstRunProofPlan {
+        schema_version: FIRST_RUN_PROOF_PLAN_SCHEMA_VERSION,
+        generated_at_ms,
+        app_name: snapshot.app_name.clone(),
+        app_identifier: snapshot.app_identifier.clone(),
+        os_lane: first_run_os_lane().to_string(),
+        ready_to_dictate: first_run.ready_to_dictate(),
+        first_dictation_completed: first_run.first_dictation_completed,
+        next_step: first_run.next_step.clone(),
+        setup_timing: first_run.setup_timing.clone(),
+        model_ready: first_run.model_ready,
+        model_readiness_error: first_run.model_readiness_error.clone(),
+        selected_asr_model_id: first_run.selected_asr_model_id.clone(),
+        required_models: first_run.required_models.clone(),
+        asr_candidates: first_run.asr_candidates.clone(),
+        permission_requirements: first_run.permission_requirements.clone(),
+        hotkey_registered: first_run.hotkey_registered,
+        hotkey_registration_error: first_run.hotkey_registration_error.clone(),
+        proof_items,
+    }
+}
+
+fn first_run_next_step_proof_item(next_step: &FirstRunNextStep) -> FirstRunProofItem {
+    FirstRunProofItem {
+        id: "next_step".to_string(),
+        label: "Next setup step".to_string(),
+        state: if next_step.kind == FirstRunNextStepKind::Complete {
+            FirstRunProofItemState::Complete
+        } else {
+            FirstRunProofItemState::Pending
+        },
+        target_id: next_step.target_id.clone(),
+        detail: next_step.detail.clone(),
+        operator_action: next_step.action_label.clone(),
+        proof_requirement: next_step.proof_requirement.clone(),
+        proof_command: None,
+    }
+}
+
+fn first_run_model_proof_item(model: &FirstRunModelStatus) -> FirstRunProofItem {
+    FirstRunProofItem {
+        id: format!("model:{}", model.id),
+        label: format!("{} model {}", model.task, model.id),
+        state: match model.state {
+            FirstRunModelState::Ready => FirstRunProofItemState::Ready,
+            FirstRunModelState::Missing => FirstRunProofItemState::Missing,
+            FirstRunModelState::Blocked => FirstRunProofItemState::Blocked,
+        },
+        target_id: Some(model.id.clone()),
+        detail: model.detail.clone(),
+        operator_action: if model.state == FirstRunModelState::Ready {
+            "Keep the verified app-data artifact in place.".to_string()
+        } else {
+            "Install a reviewed local artifact through the Kaydence model picker.".to_string()
+        },
+        proof_requirement: format!(
+            "Model artifact must verify against registry sha256 before {} can be ready.",
+            model.id
+        ),
+        proof_command: None,
+    }
+}
+
+fn first_run_permission_proof_item(
+    requirement: &FirstRunPermissionRequirement,
+) -> FirstRunProofItem {
+    FirstRunProofItem {
+        id: format!("permission:{}", requirement.id),
+        label: requirement.label.clone(),
+        state: match requirement.state {
+            FirstRunPermissionState::Ready => FirstRunProofItemState::Ready,
+            FirstRunPermissionState::NeedsHardware => FirstRunProofItemState::NeedsHardware,
+            FirstRunPermissionState::NeedsReview => FirstRunProofItemState::NeedsReview,
+            FirstRunPermissionState::Blocked => FirstRunProofItemState::Blocked,
+        },
+        target_id: Some(requirement.id.clone()),
+        detail: requirement.detail.clone(),
+        operator_action: requirement.action.clone(),
+        proof_requirement: first_run_permission_proof(&requirement.id).to_string(),
+        proof_command: first_run_permission_proof_command(&requirement.id).map(str::to_string),
+    }
+}
+
+fn first_run_hotkey_proof_item(first_run: &FirstRunStatus) -> FirstRunProofItem {
+    FirstRunProofItem {
+        id: "hotkey".to_string(),
+        label: "Global hotkey".to_string(),
+        state: if first_run.hotkey_registered {
+            FirstRunProofItemState::Ready
+        } else if first_run.hotkey_registration_error.is_some() {
+            FirstRunProofItemState::Blocked
+        } else {
+            FirstRunProofItemState::Pending
+        },
+        target_id: None,
+        detail: first_run
+            .hotkey_registration_error
+            .clone()
+            .unwrap_or_else(|| "Register and trigger the selected global hotkey.".to_string()),
+        operator_action: "Choose an allowlisted hotkey and prove it fires on this OS.".to_string(),
+        proof_requirement:
+            "Hotkey registration must succeed and a real trigger must reach the runtime."
+                .to_string(),
+        proof_command: None,
+    }
+}
+
+fn first_run_dictation_proof_item(first_run: &FirstRunStatus) -> FirstRunProofItem {
+    FirstRunProofItem {
+        id: "first_dictation".to_string(),
+        label: "First dictation".to_string(),
+        state: if first_run.first_dictation_completed {
+            FirstRunProofItemState::Complete
+        } else {
+            FirstRunProofItemState::Pending
+        },
+        target_id: None,
+        detail: if first_run.first_dictation_completed {
+            "A real Injected event completed first run.".to_string()
+        } else {
+            "No persisted Injected event has completed first run yet.".to_string()
+        },
+        operator_action:
+            "Speak a short phrase through the registered hotkey into a normal editable field."
+                .to_string(),
+        proof_requirement:
+            "History must contain an Injected event and settings.json must record completion timing."
+                .to_string(),
+        proof_command: None,
+    }
+}
+
+fn first_run_os_lane() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "macos"
+    } else if cfg!(target_os = "windows") {
+        "windows"
+    } else if cfg!(target_os = "linux") {
+        "linux"
+    } else {
+        "desktop"
+    }
+}
+
 pub fn first_run_permission_requirements() -> Vec<FirstRunPermissionRequirement> {
     platform_permission_specs()
         .into_iter()
@@ -760,10 +978,28 @@ fn first_run_permission_proof(requirement_id: &str) -> &'static str {
             "Run the Windows fallback injection proof against a non-native editable field."
         }
         "accessibility_bus" => {
-            "Run `cargo run --bin atspi-selftest -- focus-track` in the Linux desktop session."
+            "Run `cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml --bin atspi-selftest` in the Linux desktop session."
         }
         "uinput" => "Run the Linux human-focus proof: normal field types, password field refuses.",
         _ => "Record OS-specific setup evidence before marking the requirement ready.",
+    }
+}
+
+fn first_run_permission_proof_command(requirement_id: &str) -> Option<&'static str> {
+    match requirement_id {
+        "uia_focus" => Some(
+            "cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml --bin uia-selftest -- --probe 5",
+        ),
+        "sendinput" => Some(
+            "cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml --bin uia-selftest -- --synth 5 \"Kaydence SendInput proof\"",
+        ),
+        "accessibility_bus" => Some(
+            "cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml --bin atspi-selftest",
+        ),
+        "uinput" => Some(
+            "cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml --bin atspi-selftest -- --type \"Kaydence uinput proof\"",
+        ),
+        _ => None,
     }
 }
 
@@ -844,7 +1080,7 @@ fn platform_permission_specs() -> Vec<(
                 "AT-SPI accessibility bus",
                 FirstRunPermissionState::NeedsReview,
                 "Required to identify focus and refuse secure fields before injection.",
-                "Run cargo run --bin atspi-selftest -- focus-track on the GNOME VM.",
+                "Run cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml --bin atspi-selftest on the GNOME VM.",
                 "Show AT-SPI proof",
             ),
             (
@@ -1382,6 +1618,72 @@ mod tests {
                 "not-a-real-permission".to_string()
             ))
         );
+    }
+
+    #[test]
+    fn first_run_proof_plan_exports_backend_setup_truth() {
+        let mut snapshot = AppSnapshot::default();
+        snapshot.settings.first_run = FirstRunStatus {
+            model_ready: true,
+            required_models: vec![FirstRunModelStatus {
+                id: "fixture-asr".to_string(),
+                task: "ASR".to_string(),
+                lane: Some("cpu".to_string()),
+                runtime: "onnxruntime".to_string(),
+                file: "fixture-asr.onnx".to_string(),
+                state: FirstRunModelState::Ready,
+                detail: "Verified artifact, 1 MB on disk".to_string(),
+                download_available: true,
+                download_size_mb: Some(1),
+                download_source_count: 1,
+                license: "Apache-2.0".to_string(),
+                license_review_required: false,
+            }],
+            selected_asr_model_id: Some("fixture-asr".to_string()),
+            permission_requirements: vec![FirstRunPermissionRequirement {
+                id: "uia_focus".to_string(),
+                label: "UI Automation focus access".to_string(),
+                state: FirstRunPermissionState::NeedsReview,
+                detail: "Validate focus and secure-field refusal.".to_string(),
+                action: "Run the Windows UIA self-test.".to_string(),
+                action_label: "Show UIA proof".to_string(),
+            }],
+            hotkey_registered: true,
+            setup_timing: FirstRunSetupTiming::from_parts(Some(1_000), None),
+            ..FirstRunStatus::default()
+        };
+        snapshot.settings.first_run.recompute_next_step();
+
+        let plan = first_run_proof_plan(&snapshot, 12_345);
+
+        assert_eq!(plan.schema_version, FIRST_RUN_PROOF_PLAN_SCHEMA_VERSION);
+        assert_eq!(plan.generated_at_ms, 12_345);
+        assert_eq!(plan.app_name, APP_NAME);
+        assert_eq!(plan.selected_asr_model_id.as_deref(), Some("fixture-asr"));
+        assert_eq!(plan.next_step.kind, FirstRunNextStepKind::Permission);
+        assert!(!plan.ready_to_dictate);
+        assert!(plan.proof_items.iter().any(|item| item.id == "next_step"
+            && item.state == FirstRunProofItemState::Pending
+            && item.target_id.as_deref() == Some("uia_focus")));
+        assert!(plan
+            .proof_items
+            .iter()
+            .any(|item| item.id == "model:fixture-asr"
+                && item.state == FirstRunProofItemState::Ready));
+        assert!(plan
+            .proof_items
+            .iter()
+            .any(|item| item.id == "permission:uia_focus"
+                && item.state == FirstRunProofItemState::NeedsReview
+                && item
+                    .proof_command
+                    .as_deref()
+                    .is_some_and(|command| command.contains("uia-selftest"))));
+        assert!(plan
+            .proof_items
+            .iter()
+            .any(|item| item.id == "first_dictation"
+                && item.state == FirstRunProofItemState::Pending));
     }
 
     #[test]

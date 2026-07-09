@@ -176,6 +176,35 @@ fn first_run_permission_action(
 }
 
 #[tauri::command]
+fn export_first_run_proof_plan(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
+) -> Result<settings::FirstRunProofExportOutcome, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        export_first_run_proof_plan_to_app_data(&state.snapshot(), &app_data_dir, current_unix_ms())
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = state;
+        Ok(settings::FirstRunProofExportOutcome {
+            exported: false,
+            json_path: None,
+            item_count: 0,
+        })
+    }
+}
+
+#[tauri::command]
 fn recent_history(
     app: tauri::AppHandle,
     state: tauri::State<'_, RuntimeSnapshot>,
@@ -390,6 +419,34 @@ fn parse_history_session_id(session_id: &str) -> Result<events::SessionId, Strin
     ulid::Ulid::from_string(session_id)
         .map(events::SessionId::new)
         .map_err(|_| format!("Invalid history session id: {session_id}"))
+}
+
+#[cfg(desktop)]
+fn export_first_run_proof_plan_to_app_data(
+    snapshot: &settings::AppSnapshot,
+    app_data_dir: &Path,
+    generated_at_ms: u64,
+) -> Result<settings::FirstRunProofExportOutcome, FirstRunProofExportError> {
+    let plan = settings::first_run_proof_plan(snapshot, generated_at_ms);
+    let exports_dir = app_data_dir.join(history::EXPORTS_DIR);
+    std::fs::create_dir_all(&exports_dir)?;
+    let json_path = exports_dir.join("first-run-proof-plan.json");
+    std::fs::write(&json_path, serde_json::to_string_pretty(&plan)?)?;
+
+    Ok(settings::FirstRunProofExportOutcome {
+        exported: true,
+        json_path: Some(json_path.display().to_string()),
+        item_count: plan.proof_items.len(),
+    })
+}
+
+#[cfg(desktop)]
+#[derive(Debug, thiserror::Error)]
+enum FirstRunProofExportError {
+    #[error("first-run proof export io: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("first-run proof export json: {0}")]
+    Json(#[from] serde_json::Error),
 }
 
 #[derive(Debug)]
@@ -1589,6 +1646,7 @@ pub fn run() {
             refresh_model_readiness,
             install_model_artifact,
             first_run_permission_action,
+            export_first_run_proof_plan,
             recent_history,
             delete_history_session,
             export_history_session,
@@ -2020,6 +2078,47 @@ mod tests {
         let persisted = settings::SettingsStore::new(&app_data).load().unwrap();
         assert_eq!(persisted.first_run_started_at_ms, Some(1_000));
         assert_eq!(persisted.first_dictation_completed_at_ms, Some(60_500));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn first_run_proof_export_writes_json_under_app_data() {
+        let app_data = tmp();
+        let state = RuntimeSnapshot::default();
+        state.mark_hotkey_registered();
+
+        let outcome =
+            export_first_run_proof_plan_to_app_data(&state.snapshot(), &app_data, 42_4242).unwrap();
+
+        assert!(outcome.exported);
+        assert!(outcome.item_count >= 3);
+        let json_path = std::path::PathBuf::from(outcome.json_path.unwrap());
+        assert_eq!(
+            json_path,
+            app_data
+                .join(history::EXPORTS_DIR)
+                .join("first-run-proof-plan.json")
+        );
+        assert!(json_path.exists());
+
+        let exported: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&json_path).unwrap()).unwrap();
+        assert_eq!(
+            exported["schema_version"].as_u64(),
+            Some(u64::from(settings::FIRST_RUN_PROOF_PLAN_SCHEMA_VERSION))
+        );
+        assert_eq!(exported["generated_at_ms"].as_u64(), Some(42_4242));
+        assert_eq!(exported["app_name"].as_str(), Some(settings::APP_NAME));
+        assert!(exported["next_step"]["kind"].is_string());
+        assert_eq!(
+            exported["proof_items"].as_array().unwrap().len(),
+            outcome.item_count
+        );
+        assert!(exported["proof_items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["id"] == "next_step"));
         let _ = std::fs::remove_dir_all(app_data);
     }
 

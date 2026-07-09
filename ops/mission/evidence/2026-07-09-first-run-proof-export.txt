@@ -1,0 +1,78 @@
+Kaydence P1-P0-8 first-run proof export
+Date: 2026-07-09T15:53Z
+
+Scope
+- Added a Rust-owned FirstRunProofPlan generated from AppSnapshot.
+- Added export_first_run_proof_plan Tauri command, writing:
+  app-data/exports/first-run-proof-plan.json
+- Screen Family 10 now exposes a compact Export Proof action and reports the
+  returned JSON path plus proof item count.
+- Corrected the Linux AT-SPI permission proof wording so it matches the actual
+  atspi-selftest modes: focus tracking is the default command, not
+  `-- focus-track`.
+
+Export payload
+- schema_version
+- generated_at_ms
+- app_name / app_identifier / os_lane
+- ready_to_dictate / first_dictation_completed
+- next_step
+- setup_timing
+- model readiness and ASR candidate state
+- permission requirements
+- hotkey registration state
+- proof_items for next step, models, permissions, hotkey, and first dictation
+- proof_command only where the repo has a real selftest command
+
+Local verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  settings::tests::first_run_proof_plan_exports_backend_setup_truth
+  PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  first_run_proof_export_writes_json_under_app_data
+  PASS
+- pnpm --dir apps/desktop run check
+  PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  -- -D warnings
+  PASS
+- pnpm --dir apps/desktop run build
+  PASS
+- bash scripts/check-privacy-posture.sh
+  PASS
+- bash scripts/check-adr-status.sh
+  PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  PASS: 200 lib tests, 2 crash_recovery tests, 5 event_sequences tests,
+  5 short_utterance tests
+- bash scripts/bench.sh --check
+  PASS/PARTIAL: hotkey_to_capture=4ms, partial_lag=120ms,
+  release_to_inject_cpu=5ms, light_cleanup_added=1ms; real ASR/GPU/idle
+  footprint/reference-machine p95 remain unmeasured.
+- ./script/build_and_run.sh --verify
+  PASS
+- ./script/build_and_run.sh build
+  PASS
+
+Browser smoke
+- Dev server: http://localhost:1420/
+- Browser path: system Google Chrome via Playwright
+- Desktop viewport: 1280x720
+  Screenshot:
+  ops/mission/evidence/2026-07-09-first-run-proof-export-desktop.png
+  PASS: no console errors, no page errors, no horizontal overflow, no checked
+  fixed-format overflow, proof export card visible.
+- Narrow viewport: 390x844
+  Screenshot:
+  ops/mission/evidence/2026-07-09-first-run-proof-export-narrow.png
+  PASS: no console errors, no page errors, no horizontal overflow, no checked
+  fixed-format overflow, proof export card visible.
+
+Honest boundary
+- This is a local proof-plan export and build-agent handoff artifact.
+- It does not mark any OS permission ready.
+- It does not add a network model downloader.
+- It does not claim first dictation or <=60s setup completion without a real
+  Injected event and reference-machine proof.

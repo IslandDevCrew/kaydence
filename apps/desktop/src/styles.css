@@ -1007,6 +1007,60 @@ button {
   line-height: 1.35;
 }
 
+.proof-export-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(114px, auto);
+  gap: 10px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 10px 12px;
+}
+
+.proof-export-card > div {
+  min-width: 0;
+}
+
+.proof-export-card span,
+.proof-export-card strong,
+.proof-export-card small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.proof-export-card span {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.proof-export-card strong {
+  margin-top: 3px;
+  font-size: .95rem;
+}
+
+.proof-export-card small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.proof-export-action {
+  width: 100%;
+  min-width: 114px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.proof-export-issue {
+  grid-column: 1 / -1;
+  color: var(--danger);
+  font-weight: 800;
+}
+
 .primary-action {
   min-height: 40px;
   border: 0;
@@ -1109,6 +1163,14 @@ button {
   }
 
   .next-step-action {
+    max-width: 220px;
+  }
+
+  .proof-export-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .proof-export-action {
     max-width: 220px;
   }
 }

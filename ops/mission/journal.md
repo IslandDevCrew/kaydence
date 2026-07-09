@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T15:53Z — Codex P1 slice (first-run proof export)
+- Added a Rust-owned `FirstRunProofPlan` for P1-P0-8, generated from `AppSnapshot` with schema_version, generated_at_ms, os_lane, ready_to_dictate, first_dictation_completed, next_step, setup_timing, model/ASR state, permission requirements, hotkey state, and proof_items for next step, models, permissions, hotkey, and first dictation.
+- Added `export_first_run_proof_plan`, which writes app-data `exports/first-run-proof-plan.json` and returns the local path plus proof item count. Screen Family 10 now exposes a compact Export Proof action and displays the backend-returned status/path.
+- Corrected the Linux AT-SPI permission proof wording so it matches the actual selftest surface: `atspi-selftest` focus tracking is the default command; `--type` is the uinput typing proof.
+- Evidence saved at `ops/mission/evidence/2026-07-09-first-run-proof-export.txt` plus desktop/narrow screenshots. Local gates passed: fmt, focused proof tests, frontend check, clippy, full Rust suite (200 lib + 2 crash + 5 event + 5 short), privacy/ADR gates, bench PASS/PARTIAL, production build, desktop verify/build, and Chrome smoke at 1280x720 plus 390x844.
+- Honest boundary remains: this is a local proof-plan export and build-agent handoff; it does not mark OS permissions ready, add model network download, claim first dictation, or claim <=60s reference-machine proof.
+
 ## 2026-07-09T15:30Z — Codex P1 slice (first-run next-step orchestration)
 - Added backend-owned first-run sequencing for P1-P0-8. `FirstRunStatus` now carries `next_step`, recomputed after model readiness, ASR selection, permission/hotkey state, and first-dictation completion updates.
 - The Rust sequence is explicit and evidence-safe: model metadata review -> reviewed model install -> OS permission proof -> hotkey recovery -> real first dictation -> complete. This does not add a network downloader, fake OS permission detection, or fake completion proof.

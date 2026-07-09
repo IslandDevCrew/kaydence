@@ -123,6 +123,12 @@ interface FirstRunSetupTiming {
   within_target: boolean | null;
 }
 
+interface FirstRunProofExportOutcome {
+  exported: boolean;
+  json_path: string | null;
+  item_count: number;
+}
+
 interface HotkeyBindingOption {
   id: string;
   label: string;
@@ -581,6 +587,10 @@ export function App(): JSX.Element {
     useState<FirstRunPermissionActionOutcome | null>(null);
   const [permissionActionIssue, setPermissionActionIssue] = useState<string | null>(null);
   const [firstRunActionNote, setFirstRunActionNote] = useState<string | null>(null);
+  const [exportingFirstRunProof, setExportingFirstRunProof] = useState(false);
+  const [firstRunProofExport, setFirstRunProofExport] =
+    useState<FirstRunProofExportOutcome | null>(null);
+  const [firstRunProofIssue, setFirstRunProofIssue] = useState<string | null>(null);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
@@ -620,6 +630,9 @@ export function App(): JSX.Element {
     installingModelId !== null ||
     permissionActionPendingId !== null ||
     modelRefreshPending;
+  const firstRunProofExportLabel = firstRunProofExport?.exported
+    ? `${firstRunProofExport.item_count} proof items`
+    : "Build-agent handoff";
   const requiredModels = snapshot.settings.first_run.required_models;
   const showModelRecheck =
     !snapshot.settings.first_run.model_ready &&
@@ -806,6 +819,29 @@ export function App(): JSX.Element {
     if (nextStep.kind === "complete") {
       setFirstRunActionNote(nextStep.proof_requirement);
     }
+  }
+
+  function exportFirstRunProofPlan() {
+    setFirstRunProofExport(null);
+    setFirstRunProofIssue(null);
+
+    if (snapshotSource === "preview") {
+      setFirstRunProofIssue("Open the desktop runtime to write the local proof JSON.");
+      return;
+    }
+
+    setExportingFirstRunProof(true);
+    void invoke<FirstRunProofExportOutcome>("export_first_run_proof_plan")
+      .then((outcome) => {
+        setFirstRunProofExport(outcome);
+      })
+      .catch((error) => {
+        console.error("Kaydence first-run proof export failed", error);
+        setFirstRunProofIssue("First-run proof export failed.");
+      })
+      .finally(() => {
+        setExportingFirstRunProof(false);
+      });
   }
 
   function refreshHistory() {
@@ -1309,6 +1345,29 @@ export function App(): JSX.Element {
               <span>60-second setup proof</span>
               <strong>{setupTimingLabel(setupTiming)}</strong>
               <small>{setupTimingDetail(setupTiming)}</small>
+            </div>
+            <div className="proof-export-card" aria-label="First-run proof export">
+              <div>
+                <span>Local proof JSON</span>
+                <strong>{firstRunProofExportLabel}</strong>
+                <small>
+                  {firstRunProofExport?.json_path ??
+                    "Rust snapshot, next step, permissions, models, hotkey, dictation."}
+                </small>
+              </div>
+              <button
+                className="secondary-action proof-export-action"
+                disabled={exportingFirstRunProof}
+                onClick={exportFirstRunProofPlan}
+                type="button"
+              >
+                {exportingFirstRunProof ? "Exporting" : "Export Proof"}
+              </button>
+              {firstRunProofIssue ? (
+                <small className="proof-export-issue" role="status">
+                  {firstRunProofIssue}
+                </small>
+              ) : null}
             </div>
             {permissionRequirements.length > 0 ? (
               <div className="permission-list" aria-label="OS permission requirements">
