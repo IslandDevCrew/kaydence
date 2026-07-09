@@ -90,6 +90,8 @@ pub struct UserSettingsFile {
     pub schema_version: u16,
     #[serde(default)]
     pub selected_asr_model_id: Option<String>,
+    #[serde(default)]
+    pub hotkey_mode: Option<HotkeyModeSetting>,
 }
 
 impl Default for UserSettingsFile {
@@ -97,6 +99,7 @@ impl Default for UserSettingsFile {
         Self {
             schema_version: SCHEMA_VERSION,
             selected_asr_model_id: None,
+            hotkey_mode: None,
         }
     }
 }
@@ -195,6 +198,16 @@ impl HotkeySettings {
 pub enum HotkeyModeSetting {
     PushToTalk,
     Toggle,
+}
+
+impl HotkeyModeSetting {
+    pub fn parse(value: &str) -> Result<Self, SettingsError> {
+        match value.trim().to_ascii_lowercase().replace('-', "_").as_str() {
+            "push_to_talk" | "ptt" => Ok(Self::PushToTalk),
+            "toggle" => Ok(Self::Toggle),
+            other => Err(SettingsError::InvalidHotkeyMode(other.to_string())),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -401,6 +414,8 @@ pub enum SettingsError {
     OcrRequiresContext,
     #[error("selected ASR model id cannot be empty")]
     EmptyModelSelection,
+    #[error("invalid hotkey mode: {0}")]
+    InvalidHotkeyMode(String),
 }
 
 #[derive(Debug, Error)]
@@ -513,6 +528,44 @@ mod tests {
             .unwrap()
             .contains("whisper-large-v3-turbo"));
         let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn settings_store_saves_hotkey_mode() {
+        let dir = tmp();
+        let store = SettingsStore::new(&dir);
+        let settings = UserSettingsFile {
+            hotkey_mode: Some(HotkeyModeSetting::Toggle),
+            ..UserSettingsFile::default()
+        };
+
+        store.save(&settings).unwrap();
+
+        assert_eq!(store.load().unwrap(), settings);
+        assert!(fs::read_to_string(store.path())
+            .unwrap()
+            .contains("\"hotkey_mode\": \"toggle\""));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn hotkey_mode_parser_accepts_ui_values() {
+        assert_eq!(
+            HotkeyModeSetting::parse("push_to_talk").unwrap(),
+            HotkeyModeSetting::PushToTalk
+        );
+        assert_eq!(
+            HotkeyModeSetting::parse("push-to-talk").unwrap(),
+            HotkeyModeSetting::PushToTalk
+        );
+        assert_eq!(
+            HotkeyModeSetting::parse("toggle").unwrap(),
+            HotkeyModeSetting::Toggle
+        );
+        assert!(matches!(
+            HotkeyModeSetting::parse("hold"),
+            Err(SettingsError::InvalidHotkeyMode(mode)) if mode == "hold"
+        ));
     }
 
     #[test]

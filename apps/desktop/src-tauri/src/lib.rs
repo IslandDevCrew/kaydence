@@ -46,6 +46,36 @@ fn select_asr_model(
 }
 
 #[tauri::command]
+fn set_hotkey_mode(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
+    runtime: tauri::State<'_, HotkeyRuntimeHandle>,
+    mode: String,
+) -> Result<settings::AppSnapshot, String> {
+    let mode = settings::HotkeyModeSetting::parse(&mode).map_err(|err| err.to_string())?;
+
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        state
+            .set_hotkey_mode(mode, &app_data_dir, &runtime)
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = runtime;
+        Ok(state.apply_hotkey_mode(mode))
+    }
+}
+
+#[tauri::command]
 fn refresh_model_readiness(
     app: tauri::AppHandle,
     state: tauri::State<'_, RuntimeSnapshot>,
@@ -326,6 +356,42 @@ struct RuntimeSnapshot {
     settings_store: Mutex<Option<settings::SettingsStore>>,
 }
 
+#[derive(Default)]
+struct HotkeyRuntimeHandle {
+    #[cfg(desktop)]
+    inner: Mutex<Option<Arc<Mutex<HotkeyRuntime>>>>,
+}
+
+#[cfg(desktop)]
+impl HotkeyRuntimeHandle {
+    fn set_runtime(&self, runtime: Arc<Mutex<HotkeyRuntime>>) {
+        *self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(runtime);
+    }
+
+    fn apply_mode(
+        &self,
+        mode: settings::HotkeyModeSetting,
+        capture: settings::CaptureSettings,
+    ) -> Result<(), HotkeyModeUpdateError> {
+        let Some(runtime) = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+        else {
+            return Ok(());
+        };
+
+        let mut runtime = runtime
+            .lock()
+            .map_err(|_| HotkeyModeUpdateError::RuntimePoisoned)?;
+        runtime.set_hotkey_mode(mode, capture)
+    }
+}
+
 impl Default for RuntimeSnapshot {
     fn default() -> Self {
         Self {
@@ -377,7 +443,41 @@ impl RuntimeSnapshot {
         if let Some(model_id) = settings.selected_asr_model_id {
             let _ = self.apply_asr_selection(&model_id);
         }
+        if let Some(mode) = settings.hotkey_mode {
+            self.apply_hotkey_mode(mode);
+        }
         Ok(())
+    }
+
+    fn apply_hotkey_mode(&self, mode: settings::HotkeyModeSetting) -> settings::AppSnapshot {
+        {
+            let mut snapshot = self
+                .inner
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            snapshot.settings.hotkey.mode = mode;
+        }
+        self.snapshot()
+    }
+
+    #[cfg(desktop)]
+    fn set_hotkey_mode(
+        &self,
+        mode: settings::HotkeyModeSetting,
+        app_data_dir: &Path,
+        runtime: &HotkeyRuntimeHandle,
+    ) -> Result<settings::AppSnapshot, SetHotkeyModeError> {
+        self.set_settings_store(app_data_dir);
+        let capture = self.snapshot().settings.capture;
+        runtime.apply_mode(mode, capture)?;
+
+        if let Some(store) = self.settings_store() {
+            let mut settings = store.load()?;
+            settings.hotkey_mode = Some(mode);
+            store.save(&settings)?;
+        }
+
+        Ok(self.apply_hotkey_mode(mode))
     }
 
     #[cfg(desktop)]
@@ -520,6 +620,22 @@ enum SelectModelError {
     EmptyModelId,
     #[error("unknown ASR model id: {0}")]
     UnknownModel(String),
+    #[error("settings store: {0}")]
+    SettingsStore(#[from] settings::SettingsStoreError),
+}
+
+#[derive(Debug, thiserror::Error)]
+enum HotkeyModeUpdateError {
+    #[error("hotkey mode cannot be changed during an active capture")]
+    CaptureActive,
+    #[error("hotkey runtime lock poisoned")]
+    RuntimePoisoned,
+}
+
+#[derive(Debug, thiserror::Error)]
+enum SetHotkeyModeError {
+    #[error("hotkey runtime: {0}")]
+    Runtime(#[from] HotkeyModeUpdateError),
     #[error("settings store: {0}")]
     SettingsStore(#[from] settings::SettingsStoreError),
 }
@@ -790,13 +906,13 @@ enum HotkeyRuntimeError {
 impl HotkeyRuntime {
     fn new(
         app_data_dir: impl Into<PathBuf>,
-        first_run: &settings::FirstRunStatus,
+        settings: &settings::AppSettings,
     ) -> Result<Self, HotkeyRuntimeError> {
         let app_data_dir = app_data_dir.into();
         let recorder = audio::WalCaptureRuntime::new(app_data_dir.clone());
         let history = history::HistoryStore::open(&app_data_dir)?;
-        let asr_context = selected_asr_runtime_context(first_run);
-        Ok(Self::with_recorder(
+        let asr_context = selected_asr_runtime_context(&settings.first_run);
+        let mut runtime = Self::with_recorder(
             recorder,
             history,
             Box::new(profiles::platform_target_resolver()),
@@ -805,7 +921,10 @@ impl HotkeyRuntime {
                 asr_context.lane.as_deref(),
             )),
             Box::new(inject::platform_injector()),
-        ))
+        );
+        runtime.coordinator =
+            hotkey_coordinator_from_settings(settings.hotkey.mode, settings.capture);
+        Ok(runtime)
     }
 
     #[cfg(test)]
@@ -864,6 +983,18 @@ impl HotkeyRuntime {
     fn with_injector(mut self, injector: Box<dyn inject::TextInjector + Send>) -> Self {
         self.injector = injector;
         self
+    }
+
+    fn set_hotkey_mode(
+        &mut self,
+        mode: settings::HotkeyModeSetting,
+        capture: settings::CaptureSettings,
+    ) -> Result<(), HotkeyModeUpdateError> {
+        if self.coordinator.state() != hotkeys::CaptureState::Idle {
+            return Err(HotkeyModeUpdateError::CaptureActive);
+        }
+        self.coordinator = hotkey_coordinator_from_settings(mode, capture);
+        Ok(())
     }
 
     fn handle_signal(
@@ -1017,6 +1148,29 @@ fn signal_at_ms(signal: hotkeys::Signal) -> u64 {
 }
 
 #[cfg(desktop)]
+fn hotkey_coordinator_from_settings(
+    mode: settings::HotkeyModeSetting,
+    capture: settings::CaptureSettings,
+) -> hotkeys::CaptureCoordinator {
+    hotkeys::CaptureCoordinator::new(
+        hotkey_mode_from_setting(mode),
+        hotkeys::CaptureConfig {
+            min_capture_ms: capture.min_capture_ms,
+            tail_buffer_ms: capture.tail_buffer_ms,
+            debounce_ms: capture.debounce_ms,
+        },
+    )
+}
+
+#[cfg(desktop)]
+fn hotkey_mode_from_setting(mode: settings::HotkeyModeSetting) -> hotkeys::HotkeyMode {
+    match mode {
+        settings::HotkeyModeSetting::PushToTalk => hotkeys::HotkeyMode::PushToTalk,
+        settings::HotkeyModeSetting::Toggle => hotkeys::HotkeyMode::Toggle,
+    }
+}
+
+#[cfg(desktop)]
 fn elapsed_ms(started: Instant) -> u64 {
     started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64
 }
@@ -1051,8 +1205,8 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 
     let shortcut = Shortcut::new(None, Code::AltRight);
     let app_data_dir = app.path().app_data_dir()?;
-    let first_run = app.state::<RuntimeSnapshot>().snapshot().settings.first_run;
-    let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir, &first_run)?));
+    let settings = app.state::<RuntimeSnapshot>().snapshot().settings;
+    let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir, &settings)?));
     let started = Instant::now();
     let handler_runtime = Arc::clone(&runtime);
 
@@ -1091,6 +1245,8 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
     )?;
 
     app.global_shortcut().register(shortcut)?;
+    app.state::<HotkeyRuntimeHandle>()
+        .set_runtime(Arc::clone(&runtime));
     app.state::<RuntimeSnapshot>().mark_hotkey_registered();
     Ok(())
 }
@@ -1105,9 +1261,11 @@ pub fn run() {
 
     builder
         .manage(RuntimeSnapshot::default())
+        .manage(HotkeyRuntimeHandle::default())
         .invoke_handler(tauri::generate_handler![
             app_snapshot,
             select_asr_model,
+            set_hotkey_mode,
             refresh_model_readiness,
             install_model_artifact,
             recent_history,
@@ -1861,6 +2019,52 @@ mod tests {
     }
 
     #[test]
+    fn persisted_hotkey_mode_applies_after_settings_load() {
+        let app_data = tmp();
+        let store = settings::SettingsStore::new(&app_data);
+        store
+            .save(&settings::UserSettingsFile {
+                hotkey_mode: Some(settings::HotkeyModeSetting::Toggle),
+                ..settings::UserSettingsFile::default()
+            })
+            .unwrap();
+        let state = RuntimeSnapshot::default();
+        state.set_settings_store(&app_data);
+
+        state.apply_persisted_user_settings().unwrap();
+
+        assert_eq!(
+            state.snapshot().settings.hotkey.mode,
+            settings::HotkeyModeSetting::Toggle
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn selecting_hotkey_mode_updates_snapshot_and_persists_settings() {
+        let app_data = tmp();
+        let state = RuntimeSnapshot::default();
+        let runtime = HotkeyRuntimeHandle::default();
+
+        let snapshot = state
+            .set_hotkey_mode(settings::HotkeyModeSetting::Toggle, &app_data, &runtime)
+            .unwrap();
+
+        assert_eq!(
+            snapshot.settings.hotkey.mode,
+            settings::HotkeyModeSetting::Toggle
+        );
+        assert_eq!(
+            settings::SettingsStore::new(&app_data)
+                .load()
+                .unwrap()
+                .hotkey_mode,
+            Some(settings::HotkeyModeSetting::Toggle)
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
     fn selecting_unknown_asr_model_is_rejected() {
         let app_data = tmp();
         let registry_path = write_selectable_asr_registry(&app_data);
@@ -1911,6 +2115,72 @@ mod tests {
                 lane: Some("gpu".to_string())
             }
         );
+    }
+
+    #[test]
+    fn hotkey_runtime_switches_to_toggle_mode_when_idle() {
+        let app_data = tmp();
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data).unwrap();
+
+        runtime
+            .set_hotkey_mode(
+                settings::HotkeyModeSetting::Toggle,
+                settings::CaptureSettings::default(),
+            )
+            .unwrap();
+
+        assert_eq!(
+            runtime
+                .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+                .unwrap(),
+            None
+        );
+        assert!(matches!(
+            runtime.coordinator.state(),
+            hotkeys::CaptureState::Capturing { .. }
+        ));
+        assert_eq!(
+            runtime
+                .handle_signal(hotkeys::Signal::Release { at_ms: 200 })
+                .unwrap(),
+            None
+        );
+        assert!(matches!(
+            runtime.coordinator.state(),
+            hotkeys::CaptureState::Capturing { .. }
+        ));
+        assert_eq!(
+            runtime
+                .handle_signal(hotkeys::Signal::Press { at_ms: 500 })
+                .unwrap(),
+            Some(800)
+        );
+        assert!(matches!(
+            runtime.coordinator.state(),
+            hotkeys::CaptureState::Finalizing { ends_ms: 800, .. }
+        ));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_refuses_mode_change_during_capture() {
+        let app_data = tmp();
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data).unwrap();
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+        let err = runtime
+            .set_hotkey_mode(
+                settings::HotkeyModeSetting::Toggle,
+                settings::CaptureSettings::default(),
+            )
+            .unwrap_err();
+
+        assert!(matches!(err, HotkeyModeUpdateError::CaptureActive));
+        let _ = runtime.handle_signal(hotkeys::Signal::Release { at_ms: 400 });
+        let _ = runtime.handle_signal(hotkeys::Signal::Tick { at_ms: 700 });
+        let _ = std::fs::remove_dir_all(app_data);
     }
 
     #[test]

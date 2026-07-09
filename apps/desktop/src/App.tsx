@@ -8,6 +8,7 @@ const markUrl = new URL(
 ).href;
 
 type OsLane = "mac" | "windows" | "linux";
+type HotkeyMode = "push_to_talk" | "toggle";
 
 interface LaneSpec {
   id: OsLane;
@@ -342,6 +343,8 @@ export function App(): JSX.Element {
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const [installingModelId, setInstallingModelId] = useState<string | null>(null);
   const [modelInstallIssue, setModelInstallIssue] = useState<string | null>(null);
+  const [hotkeyModePending, setHotkeyModePending] = useState<HotkeyMode | null>(null);
+  const [hotkeyModeIssue, setHotkeyModeIssue] = useState<string | null>(null);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
@@ -414,6 +417,23 @@ export function App(): JSX.Element {
       })
       .catch((error) => {
         console.error("Kaydence ASR selection failed", error);
+      });
+  }
+
+  function setHotkeyMode(mode: HotkeyMode) {
+    setHotkeyModePending(mode);
+    setHotkeyModeIssue(null);
+    void invoke<AppSnapshot>("set_hotkey_mode", { mode })
+      .then((nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setSnapshotSource("backend");
+      })
+      .catch((error) => {
+        console.error("Kaydence hotkey mode update failed", error);
+        setHotkeyModeIssue("Hotkey mode can be changed when capture is idle.");
+      })
+      .finally(() => {
+        setHotkeyModePending(null);
       });
   }
 
@@ -826,6 +846,27 @@ export function App(): JSX.Element {
                 Full
               </button>
             </div>
+            <div className="segmented hotkey-mode-control" role="group" aria-label="Hotkey mode">
+              <button
+                className={snapshot.settings.hotkey.mode === "push_to_talk" ? "selected" : ""}
+                disabled={hotkeyModePending !== null}
+                onClick={() => setHotkeyMode("push_to_talk")}
+                type="button"
+              >
+                Hold
+              </button>
+              <button
+                className={snapshot.settings.hotkey.mode === "toggle" ? "selected" : ""}
+                disabled={hotkeyModePending !== null}
+                onClick={() => setHotkeyMode("toggle")}
+                type="button"
+              >
+                Toggle
+              </button>
+            </div>
+            {hotkeyModeIssue ? (
+              <p className="hotkey-mode-note">{hotkeyModeIssue}</p>
+            ) : null}
             <ul className="rule-list">
               <li>{hotkeyMode} on {snapshot.settings.hotkey.primary_binding}</li>
               <li>Filler removal enabled</li>
