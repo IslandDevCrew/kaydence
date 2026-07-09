@@ -21,7 +21,7 @@ const KILL_THRESHOLD_SAMPLES: u64 = 8_000;
 /// env marker is absent). When re-invoked by `killing_the_writer_mid_dictation
 /// _loses_no_flushed_audio` with the marker set, it writes forever until killed.
 #[test]
-fn child_writer_process() {
+fn crash_recovery_child_writer_process() {
     let Ok(dir) = std::env::var(CHILD_ENV) else {
         return; // normal test run: nothing to do
     };
@@ -37,7 +37,7 @@ fn child_writer_process() {
 }
 
 #[test]
-fn killing_the_writer_mid_dictation_loses_no_flushed_audio() {
+fn crash_recovery_killing_the_writer_mid_dictation_loses_no_flushed_audio() {
     let dir = std::env::temp_dir().join(format!("kaydence-crash-test-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("mk tmp");
@@ -46,7 +46,11 @@ fn killing_the_writer_mid_dictation_loses_no_flushed_audio() {
     // Re-invoke this test binary in child mode, filtered to the writer "test".
     let exe = std::env::current_exe().expect("current_exe");
     let mut child = std::process::Command::new(exe)
-        .args(["child_writer_process", "--exact", "--nocapture"])
+        .args([
+            "crash_recovery_child_writer_process",
+            "--exact",
+            "--nocapture",
+        ])
         .env(CHILD_ENV, &dir)
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())

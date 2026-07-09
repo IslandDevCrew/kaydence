@@ -265,3 +265,9 @@
 - Operator `go` received at the merge gate. PR #2 squash-merged to main as `bdbe8d6`; branch deleted. 3-OS CI was green twice pre-merge (runs 29007885003 push + 29007908105 pull_request; macos/windows/ubuntu all success); the post-merge main run is being watched to completion.
 - Gate P0-G5 flipped to **passed** — all three `tauri dev` window legs now operator-observed (macOS host 2026-07-08, Debian VM 2026-07-08, Windows Fable box 2026-07-09 with screenshot evidence).
 - P1-P0-3 state: Windows lane DONE + merged (native UIA primary / SendInput / clipboard-restore, secure-field refusal hard-tested). Remaining on the task: the Linux operator-in-the-loop human-focus check, unicode-beyond-ASCII on the Linux uinput keymap, and the optional portal/libei alternative.
+
+## 2026-07-09T10:56Z — Codex P1 gate hardening (crash + short utterance)
+- Synced to `ae8c00b` after PR #2; verified the latest main baseline CI run `29009328311` was green on macOS, Ubuntu, and Windows.
+- Fixed a gate-quality bug: `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery` previously ran 0 integration tests because the test names lacked the filter string. Renamed the crash-recovery tests so the documented command now runs the real 2-test kill/recover suite.
+- Added `apps/desktop/src-tauri/tests/short_utterance.rs`, a named capture/WAL suite for the implemented Pitfall-P1 contract: 0.3s push-to-talk, 1.5s toggle, <250ms discard/removal, and 0.3s/1.5s WAL recovery without truncation.
+- Evidence saved at `ops/mission/evidence/2026-07-09-short-utterance-gates.txt`. Local gates passed: fmt, clippy, focused crash_recovery, focused short_utterance, full backend tests (184 lib + 2 crash + 5 short), frontend check, privacy posture, ADR status, and pnpm build. Honest boundary: P1-G2 stays pending until real ASR adapters prove golden clips have zero empty/truncated finals.

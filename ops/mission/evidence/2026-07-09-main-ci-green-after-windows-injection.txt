@@ -1,0 +1,28 @@
+Kaydence main CI green after Windows injection merge
+Date checked: 2026-07-09T10:56Z
+Repository: IslandDevCrew/kaydence
+Branch: main
+Head: ae8c00b673c17360c4d6497dcb3b8734d1f63954
+Run: 29009328311
+URL: https://github.com/IslandDevCrew/kaydence/actions/runs/29009328311
+
+Result
+- PASS: macos-latest, completed 2026-07-09T09:49:50Z
+- PASS: ubuntu-latest, completed 2026-07-09T09:58:34Z
+- PASS: windows-latest, completed 2026-07-09T10:02:50Z
+
+Steps passed on each OS leg
+- fmt
+- clippy
+- test
+- install
+- typecheck + lint
+- network audit
+- privacy posture
+- ADR status
+- latency budget gate step
+
+Use
+- This run is the latest remote green baseline before the local
+  crash_recovery/short_utterance gate-hardening slice.
+- A fresh Actions run is still required after pushing that new slice.

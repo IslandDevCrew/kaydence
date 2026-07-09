@@ -1,0 +1,56 @@
+Kaydence P1 gate hardening: crash_recovery filter + short_utterance capture/WAL suite
+Date: 2026-07-09T10:56Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Base head before slice: ae8c00b chore(mission): heartbeat -- Windows injection lane merged (PR #2), P0-G5 passed on all 3 OSes
+
+What changed
+- Renamed the crash_recovery integration tests so the documented command
+  `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery`
+  actually executes the kill/recover suite instead of passing with 0 tests.
+- Added apps/desktop/src-tauri/tests/short_utterance.rs.
+- The new short_utterance suite covers the currently implemented P1 portion of
+  Pitfall P1:
+  - 0.3s push-to-talk capture is accepted and finalizes only after the 300ms tail.
+  - 1.5s toggle capture is accepted and finalizes only after the 300ms tail.
+  - <250ms accidental tap is discarded and its WAL file is removed.
+  - 0.3s and 1.5s short WAL clips recover without truncation after a no-finalize/crash shape.
+
+Focused gate results
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery
+  - crash_recovery_child_writer_process ... ok
+  - crash_recovery_killing_the_writer_mid_dictation_loses_no_flushed_audio ... ok
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml short_utterance
+  - audio::wal::tests::short_utterance_survives_without_finalize ... ok
+  - short_utterance_0_3s_ptt_is_accepted_and_finalizes_after_tail ... ok
+  - short_utterance_1_5s_toggle_is_accepted_and_finalizes_after_tail ... ok
+  - short_utterance_under_250ms_is_discarded_and_removes_wal ... ok
+  - short_utterance_0_3s_wal_is_recoverable_and_not_truncated ... ok
+  - short_utterance_1_5s_wal_is_recoverable_and_not_truncated ... ok
+
+Local standing gates
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all
+  - 184 lib tests passed
+  - 2 crash_recovery integration tests passed
+  - 5 short_utterance integration tests passed
+- PASS: bash scripts/check-frontend.sh
+- PASS: bash scripts/check-privacy-posture.sh --check
+- PASS: bash scripts/check-adr-status.sh
+- PASS: pnpm --filter kaydence-desktop build
+
+Remote baseline checked before this slice
+- PASS: GitHub Actions run 29009328311 on ae8c00b
+  - macos-latest success
+  - ubuntu-latest success
+  - windows-latest success
+  - URL: https://github.com/IslandDevCrew/kaydence/actions/runs/29009328311
+
+Honest boundary
+- P1-G1 can now use the documented crash_recovery command as a real gate.
+- P1-G2 is partially hardened but not fully closed: this commit proves the
+  capture/WAL short-utterance contract. The full PRD wording still requires
+  golden ASR clips with zero empty/truncated finals after real Parakeet/Whisper
+  adapters land.
+- Fresh 3-OS CI must run on the pushed commit before claiming remote parity for
+  this exact change.
