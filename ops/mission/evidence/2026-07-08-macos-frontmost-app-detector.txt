@@ -1,0 +1,55 @@
+Kaydence evidence: macOS frontmost-app detector
+Date: 2026-07-08
+
+Intent
+- Replace the platform target resolver's macOS Unknown fallback with a real app-identity detector.
+- Bind and re-check capture targets using only frontmost application bundle id and app name.
+- Preserve the privacy invariant: do not read window titles, screen contents, or field contents.
+- Fail closed to Unknown when System Events access fails or returns incomplete identity.
+
+Changed
+- apps/desktop/src-tauri/src/profiles/mod.rs
+  - Added MacOsFrontmostAppDetector behind cfg(target_os = "macos").
+  - Implemented frontmost app lookup through /usr/bin/osascript + System Events.
+  - Parser accepts only "bundle-id<TAB>app-name" and rejects missing value / incomplete output.
+  - platform_target_resolver now uses MacOsFrontmostAppDetector on macOS and UnknownFrontmostAppDetector elsewhere.
+
+Live macOS evidence
+- /usr/bin/osascript -e 'tell application "System Events"' -e 'set frontApp to first application process whose frontmost is true' -e 'set frontName to name of frontApp' -e 'set frontBundle to bundle identifier of frontApp' -e 'return frontBundle & tab & frontName' -e 'end tell'
+  - PASS on this host: returned "com.openai.codex	Codex"
+
+Focused verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml profiles:: --lib
+  - PASS: 8 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - PASS: 5 passed
+
+Full verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - PASS: 108 lib tests passed, 2 crash-recovery tests passed
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+- npm --prefix apps/desktop run check
+  - PASS
+- npm --prefix apps/desktop run build
+  - PASS
+- bash scripts/audit-network.sh --check
+  - PASS: 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  - PASS: ADR-0009 waiver only
+- ./script/build_and_run.sh build
+  - PASS
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Post-verify hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - PASS: no leftover desktop/dev processes
+- apps/desktop/dist/index.html restored; generated apps/desktop/dist/assets and apps/desktop/dist/favicon.svg removed after build verification.
+
+Remaining outside this slice
+- Native Windows GetForegroundWindow/process detector.
+- Linux frontmost-app detector for X11/Wayland/portal realities.
+- macOS TextInjector backend for AX native insert / CGEvent fallback / secure-field detection.

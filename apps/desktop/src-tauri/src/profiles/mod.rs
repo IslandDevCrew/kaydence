@@ -6,6 +6,8 @@
 //! window titles or content.
 
 use crate::events::{AppRef, CleanupDial};
+#[cfg(target_os = "macos")]
+use std::process::Command;
 
 pub const DEFAULT_PROFILE_ID: &str = "default";
 pub const UNKNOWN_APP_ID: &str = "unknown";
@@ -143,6 +145,38 @@ impl FrontmostAppDetector for UnknownFrontmostAppDetector {
     }
 }
 
+#[cfg(target_os = "macos")]
+#[derive(Debug, Default)]
+pub struct MacOsFrontmostAppDetector;
+
+#[cfg(target_os = "macos")]
+impl FrontmostAppDetector for MacOsFrontmostAppDetector {
+    fn frontmost_app(&mut self) -> Option<AppRef> {
+        let output = Command::new("/usr/bin/osascript")
+            .args([
+                "-e",
+                r#"tell application "System Events""#,
+                "-e",
+                "set frontApp to first application process whose frontmost is true",
+                "-e",
+                "set frontName to name of frontApp",
+                "-e",
+                "set frontBundle to bundle identifier of frontApp",
+                "-e",
+                "return frontBundle & tab & frontName",
+                "-e",
+                "end tell",
+            ])
+            .output()
+            .ok()?;
+        if !output.status.success() {
+            return None;
+        }
+        let stdout = String::from_utf8(output.stdout).ok()?;
+        parse_macos_frontmost_app(&stdout)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct StaticFrontmostAppDetector {
     app: Option<AppRef>,
@@ -205,8 +239,17 @@ where
     }
 }
 
-pub fn platform_target_resolver() -> SessionTargetResolver<UnknownFrontmostAppDetector> {
-    SessionTargetResolver::new(UnknownFrontmostAppDetector, ProfileStore::default())
+#[cfg(target_os = "macos")]
+pub type PlatformFrontmostAppDetector = MacOsFrontmostAppDetector;
+
+#[cfg(not(target_os = "macos"))]
+pub type PlatformFrontmostAppDetector = UnknownFrontmostAppDetector;
+
+pub fn platform_target_resolver() -> SessionTargetResolver<PlatformFrontmostAppDetector> {
+    SessionTargetResolver::new(
+        PlatformFrontmostAppDetector::default(),
+        ProfileStore::default(),
+    )
 }
 
 pub fn unknown_app_ref() -> AppRef {
@@ -214,6 +257,21 @@ pub fn unknown_app_ref() -> AppRef {
         id: UNKNOWN_APP_ID.to_string(),
         name: UNKNOWN_APP_NAME.to_string(),
     }
+}
+
+#[cfg(target_os = "macos")]
+fn parse_macos_frontmost_app(stdout: &str) -> Option<AppRef> {
+    let trimmed = stdout.trim();
+    let mut parts = trimmed.splitn(2, '\t');
+    let id = parts.next()?.trim();
+    let name = parts.next()?.trim();
+    if id.is_empty() || id == "missing value" || name.is_empty() {
+        return None;
+    }
+    Some(AppRef {
+        id: id.to_string(),
+        name: name.to_string(),
+    })
 }
 
 #[cfg(test)]
@@ -294,6 +352,26 @@ mod tests {
         assert_eq!(target.app, unknown_app_ref());
         assert_eq!(target.profile.id, DEFAULT_PROFILE_ID);
         assert_eq!(target.source, TargetSource::Unknown);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_frontmost_parser_reads_bundle_id_and_name() {
+        assert_eq!(
+            parse_macos_frontmost_app("com.apple.Safari\tSafari\n"),
+            Some(AppRef {
+                id: "com.apple.Safari".to_string(),
+                name: "Safari".to_string(),
+            })
+        );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_frontmost_parser_rejects_missing_identity() {
+        assert_eq!(parse_macos_frontmost_app("missing value\tFinder\n"), None);
+        assert_eq!(parse_macos_frontmost_app("Finder\n"), None);
+        assert_eq!(parse_macos_frontmost_app("com.apple.finder\t\n"), None);
     }
 
     #[test]
