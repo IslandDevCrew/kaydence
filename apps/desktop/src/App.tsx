@@ -653,6 +653,8 @@ export function App(): JSX.Element {
   const [activeHistoryAudio, setActiveHistoryAudio] =
     useState<ActiveHistoryAudio | null>(null);
   const [historyPlaybackIssue, setHistoryPlaybackIssue] = useState<string | null>(null);
+  const [setupRefreshPending, setSetupRefreshPending] = useState(false);
+  const [setupRefreshIssue, setSetupRefreshIssue] = useState<string | null>(null);
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const [installingModelId, setInstallingModelId] = useState<string | null>(null);
   const [modelInstallIssue, setModelInstallIssue] = useState<string | null>(null);
@@ -714,6 +716,7 @@ export function App(): JSX.Element {
       nextStep.target_id === null) ||
     installingModelId !== null ||
     permissionActionPendingId !== null ||
+    setupRefreshPending ||
     modelRefreshPending ||
     modelPreflightPendingId !== null;
   const firstRunProofExportLabel = firstRunProofExport?.exported
@@ -756,6 +759,30 @@ export function App(): JSX.Element {
       active = false;
     };
   }, []);
+
+  function refreshSetupSnapshot() {
+    setSetupRefreshPending(true);
+    setSetupRefreshIssue(null);
+
+    if (snapshotSource === "preview") {
+      setSetupRefreshIssue("Open the desktop runtime to refresh first-run proof state.");
+      setSetupRefreshPending(false);
+      return;
+    }
+
+    void invoke<AppSnapshot>("refresh_first_run_runtime_proofs")
+      .then((nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setSnapshotSource("backend");
+      })
+      .catch((error) => {
+        console.error("Kaydence setup snapshot refresh failed", error);
+        setSetupRefreshIssue("First-run proof state could not be refreshed.");
+      })
+      .finally(() => {
+        setSetupRefreshPending(false);
+      });
+  }
 
   function selectAsrModel(modelId: string) {
     void invoke<AppSnapshot>("select_asr_model", { modelId })
@@ -1436,8 +1463,19 @@ export function App(): JSX.Element {
                 <p className="eyebrow">Screen family 10</p>
                 <h2>First run</h2>
               </div>
-              <span className="pill">Free selected</span>
+              <div className="setup-header-actions">
+                <button
+                  className="mini-action"
+                  disabled={setupRefreshPending}
+                  onClick={refreshSetupSnapshot}
+                  type="button"
+                >
+                  {setupRefreshPending ? "Refreshing" : "Refresh"}
+                </button>
+                <span className="pill">Free selected</span>
+              </div>
             </div>
+            {setupRefreshIssue ? <p className="hotkey-mode-note">{setupRefreshIssue}</p> : null}
             <div className={`next-step-card step-${nextStep.kind}`} aria-label="First-run next step">
               <div>
                 <span>Next step</span>

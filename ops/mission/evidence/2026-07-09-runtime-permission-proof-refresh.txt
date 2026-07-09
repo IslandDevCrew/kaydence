@@ -1,0 +1,61 @@
+Kaydence evidence - runtime permission proof refresh
+Date: 2026-07-09T17:11Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Branch: main
+
+Scope
+- Added a backend-owned refresh path for first-run permission proof state based on runtime evidence already observed by the app.
+- Real active global-shortcut events now mark input proof in FirstRunStatus.
+- Non-empty finalized capture audio now marks microphone proof in FirstRunStatus.
+- First-dictation completion syncs the same proof rows because a real Injected outcome proves the hotkey, capture, and injection path reached a real delivery.
+- Added a Screen Family 10 Refresh action that asks the Tauri backend to drain pending hotkey runtime proofs and return a fresh AppSnapshot.
+
+Changed source files
+- apps/desktop/src-tauri/src/settings/mod.rs
+- apps/desktop/src-tauri/src/lib.rs
+- apps/desktop/src/App.tsx
+- apps/desktop/src/styles.css
+
+Behavior
+- settings::sync_first_run_permission_requirements updates only runtime-proven rows:
+  - microphone -> Ready after capture produced persisted local audio.
+  - macOS input_monitoring -> Ready after the selected hotkey reached Kaydence from the OS event stream.
+- The hotkey runtime records microphone proof only when finalized capture audio has samples_written > 0.
+- Zero-sample WAL-only captures do not mark microphone proof ready.
+- Tail-tick completion proof can be drained after the release handler via refresh_first_run_runtime_proofs.
+- The first-run setup panel has a compact Refresh action beside Free selected. In Vite preview it refuses native IPC and shows the desktop-runtime boundary note.
+
+Honest boundary
+- This is not a fake OS-permission detector.
+- Windows UIA, Windows SendInput, Linux AT-SPI, Linux uinput, and other OS-specific permission rows remain manual/review-gated until their platform proof exists.
+- Live OS permission prompts, approved network model download/progress UI, a live first-dictation journey, and the <=60s reference-machine proof remain open.
+- Remote CI for newer local commits is still blocked before checkout by GitHub Actions billing/spending-limit state.
+
+Verification commands and results
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
+  - PASS: 211 lib tests including first_run_permission_requirements_sync_runtime_evidence, runtime_snapshot_marks_input_permission_ready_from_hotkey_event, runtime_snapshot_marks_microphone_permission_ready_from_audio_proof, runtime_snapshot_persists_first_dictation_completion, and hotkey_runtime_first_run_proof_keeps_zero_sample_microphone_pending
+- pnpm --dir apps/desktop run check
+  - PASS: tsc --noEmit && eslint . --max-warnings 0
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  - PASS: 211 lib tests, 2 crash_recovery tests, 5 event_sequences tests, 5 short_utterance tests
+- bash scripts/check-privacy-posture.sh
+  - PASS: 0 network call sites, README privacy promises present, no screen-capture primitives
+- bash scripts/check-adr-status.sh
+  - PASS: all ADRs Accepted except declared by-design exception ADR-0009
+- bash scripts/bench.sh --check
+  - PASS/PARTIAL: measured Raw-path metrics within section 5 budgets; real ASR/GPU/idle footprint/reference p95 still unmeasured
+- pnpm --dir apps/desktop run build
+  - PASS: tsc --noEmit && vite build
+- ./script/build_and_run.sh --verify
+  - PASS
+- Browser smoke in system Chrome at http://localhost:1420/
+  - PASS: Setup P1 navigation rendered, Refresh shows the preview desktop-runtime boundary, 10 nav items present, zero console/page errors
+  - Screenshot: ops/mission/evidence/2026-07-09-runtime-permission-proof-refresh-preview.png
+
+Generated build artifacts
+- pnpm build rewrote apps/desktop/dist/index.html and produced untracked hashed assets/favicon.
+- These generated outputs must be cleaned/restored before commit so the diff remains source + mission evidence only.

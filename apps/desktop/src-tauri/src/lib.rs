@@ -12,6 +12,8 @@ use std::sync::Arc;
 use std::sync::Mutex;
 #[cfg(desktop)]
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+#[cfg(desktop)]
+use tauri::Manager;
 
 pub mod events;
 
@@ -250,6 +252,15 @@ fn first_run_permission_action(
     requirement_id: String,
 ) -> Result<settings::FirstRunPermissionActionOutcome, String> {
     settings::first_run_permission_action(&requirement_id).map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+fn refresh_first_run_runtime_proofs(
+    state: tauri::State<'_, RuntimeSnapshot>,
+    runtime: tauri::State<'_, HotkeyRuntimeHandle>,
+) -> settings::AppSnapshot {
+    apply_hotkey_first_run_proof_to_snapshot(&state, runtime.take_first_run_proof());
+    state.snapshot()
 }
 
 #[tauri::command]
@@ -627,6 +638,23 @@ impl HotkeyRuntimeHandle {
         runtime.set_asr_adapter_state(state)
     }
 
+    fn take_first_run_proof(&self) -> HotkeyRuntimeFirstRunProof {
+        let Some(runtime) = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+        else {
+            return HotkeyRuntimeFirstRunProof::default();
+        };
+
+        let proof = match runtime.lock() {
+            Ok(mut runtime) => runtime.take_first_run_proof(),
+            Err(_) => HotkeyRuntimeFirstRunProof::default(),
+        };
+        proof
+    }
+
     fn apply_binding<R: tauri::Runtime>(
         &self,
         app: &tauri::AppHandle<R>,
@@ -701,6 +729,22 @@ impl RuntimeSnapshot {
     }
 
     #[cfg(desktop)]
+    fn mark_input_permission_ready(&self) {
+        self.update_first_run(|first_run| {
+            first_run.input_permission_ready = true;
+            settings::sync_first_run_permission_requirements(first_run);
+        });
+    }
+
+    #[cfg(desktop)]
+    fn mark_microphone_permission_ready(&self) {
+        self.update_first_run(|first_run| {
+            first_run.microphone_permission_ready = true;
+            settings::sync_first_run_permission_requirements(first_run);
+        });
+    }
+
+    #[cfg(desktop)]
     fn mark_hotkey_registration_failed(&self, error: String) {
         self.update_first_run(|first_run| {
             first_run.hotkey_registered = false;
@@ -731,6 +775,9 @@ impl RuntimeSnapshot {
             self.update_first_run(|first_run| {
                 first_run.first_dictation_completed = true;
                 first_run.setup_timing = setup_timing;
+                first_run.microphone_permission_ready = true;
+                first_run.input_permission_ready = true;
+                settings::sync_first_run_permission_requirements(first_run);
             });
         } else {
             self.update_first_run(|first_run| {
@@ -741,6 +788,9 @@ impl RuntimeSnapshot {
                         Some(completed_at_ms),
                     );
                 }
+                first_run.microphone_permission_ready = true;
+                first_run.input_permission_ready = true;
+                settings::sync_first_run_permission_requirements(first_run);
             });
         }
 
@@ -778,6 +828,9 @@ impl RuntimeSnapshot {
             first_run.setup_timing = setup_timing;
             if first_dictation_completed {
                 first_run.first_dictation_completed = true;
+                first_run.microphone_permission_ready = true;
+                first_run.input_permission_ready = true;
+                settings::sync_first_run_permission_requirements(first_run);
             }
         });
         Ok(())
@@ -1485,6 +1538,7 @@ struct HotkeyRuntime {
     injector: Box<dyn inject::TextInjector + Send>,
     unknown_field_policy: inject::UnknownFieldPolicy,
     prefer_clipboard: bool,
+    microphone_permission_ready_pending: bool,
     first_dictation_completion_pending: bool,
 }
 
@@ -1497,6 +1551,13 @@ enum HotkeyRuntimeError {
     History(#[from] history::HistoryError),
     #[error("pipeline: {0}")]
     Pipeline(#[from] pipeline::PipelineError),
+}
+
+#[cfg(desktop)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+struct HotkeyRuntimeFirstRunProof {
+    microphone_permission_ready: bool,
+    first_dictation_completed: bool,
 }
 
 #[cfg(desktop)]
@@ -1564,6 +1625,7 @@ impl HotkeyRuntime {
             injector,
             unknown_field_policy: inject::UnknownFieldPolicy::default(),
             prefer_clipboard: false,
+            microphone_permission_ready_pending: false,
             first_dictation_completion_pending: false,
         }
     }
@@ -1616,10 +1678,21 @@ impl HotkeyRuntime {
         self.coordinator.state() == hotkeys::CaptureState::Idle
     }
 
+    #[cfg(test)]
     fn take_first_dictation_completion(&mut self) -> bool {
         let completed = self.first_dictation_completion_pending;
         self.first_dictation_completion_pending = false;
         completed
+    }
+
+    fn take_first_run_proof(&mut self) -> HotkeyRuntimeFirstRunProof {
+        let proof = HotkeyRuntimeFirstRunProof {
+            microphone_permission_ready: self.microphone_permission_ready_pending,
+            first_dictation_completed: self.first_dictation_completion_pending,
+        };
+        self.microphone_permission_ready_pending = false;
+        self.first_dictation_completion_pending = false;
+        proof
     }
 
     fn handle_signal(
@@ -1665,6 +1738,9 @@ impl HotkeyRuntime {
             }
             hotkeys::Action::FinalizeCapture => {
                 let summary = self.recorder.finalize_capture(at_ms)?;
+                if summary.samples_written > 0 {
+                    self.microphone_permission_ready_pending = true;
+                }
                 let bound_target = self.active_target.take();
                 if let Some(target) = &bound_target {
                     self.processor.set_cleanup_dial(target.profile.cleanup_dial);
@@ -2004,6 +2080,30 @@ fn elapsed_ms(started: Instant) -> u64 {
 }
 
 #[cfg(desktop)]
+fn apply_hotkey_first_run_proof_to_snapshot(
+    state: &RuntimeSnapshot,
+    proof: HotkeyRuntimeFirstRunProof,
+) {
+    if proof.microphone_permission_ready {
+        state.mark_microphone_permission_ready();
+    }
+
+    if proof.first_dictation_completed {
+        if let Err(err) = state.mark_first_dictation_completed() {
+            eprintln!("Kaydence first dictation completion save failed: {err}");
+        }
+    }
+}
+
+#[cfg(desktop)]
+fn apply_hotkey_first_run_proof<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    proof: HotkeyRuntimeFirstRunProof,
+) {
+    apply_hotkey_first_run_proof_to_snapshot(&app.state::<RuntimeSnapshot>(), proof);
+}
+
+#[cfg(desktop)]
 fn schedule_tail_tick(runtime: &Arc<Mutex<HotkeyRuntime>>, started: Instant, ends_ms: u64) {
     let runtime = Arc::clone(runtime);
     std::thread::spawn(move || {
@@ -2047,6 +2147,7 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
                 {
                     return;
                 }
+                app.state::<RuntimeSnapshot>().mark_input_permission_ready();
 
                 let at_ms = started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
                 let signal = match event.state() {
@@ -2054,30 +2155,21 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
                     ShortcutState::Released => Signal::Release { at_ms },
                 };
 
-                let (tail_wake_ms, first_dictation_completed) = match handler_runtime.lock() {
+                let (tail_wake_ms, proof) = match handler_runtime.lock() {
                     Ok(mut runtime) => match runtime.handle_signal(signal) {
-                        Ok(tail_wake_ms) => {
-                            (tail_wake_ms, runtime.take_first_dictation_completion())
-                        }
+                        Ok(tail_wake_ms) => (tail_wake_ms, runtime.take_first_run_proof()),
                         Err(err) => {
                             eprintln!("Kaydence hotkey runtime failed: {err}");
-                            (None, false)
+                            (None, HotkeyRuntimeFirstRunProof::default())
                         }
                     },
                     Err(_) => {
                         eprintln!("Kaydence hotkey runtime lock poisoned");
-                        (None, false)
+                        (None, HotkeyRuntimeFirstRunProof::default())
                     }
                 };
 
-                if first_dictation_completed {
-                    if let Err(err) = app
-                        .state::<RuntimeSnapshot>()
-                        .mark_first_dictation_completed()
-                    {
-                        eprintln!("Kaydence first dictation completion save failed: {err}");
-                    }
-                }
+                apply_hotkey_first_run_proof(app, proof);
 
                 if let Some(ends_ms) = tail_wake_ms {
                     schedule_tail_tick(&handler_runtime, started, ends_ms);
@@ -2114,6 +2206,7 @@ pub fn run() {
             install_model_artifact,
             first_run_model_download_preflight,
             first_run_permission_action,
+            refresh_first_run_runtime_proofs,
             export_first_run_proof_plan,
             recent_history,
             delete_history_session,
@@ -2447,6 +2540,53 @@ mod tests {
     }
 
     #[test]
+    fn runtime_snapshot_marks_input_permission_ready_from_hotkey_event() {
+        let state = RuntimeSnapshot::default();
+
+        assert!(!state.snapshot().settings.first_run.input_permission_ready);
+        state.mark_input_permission_ready();
+
+        let first_run = state.snapshot().settings.first_run;
+        assert!(first_run.input_permission_ready);
+        if cfg!(target_os = "macos") {
+            let input_monitoring = first_run
+                .permission_requirements
+                .iter()
+                .find(|requirement| requirement.id == "input_monitoring")
+                .unwrap();
+            assert_eq!(
+                input_monitoring.state,
+                settings::FirstRunPermissionState::Ready
+            );
+            assert!(input_monitoring.detail.contains("OS event stream"));
+        }
+    }
+
+    #[test]
+    fn runtime_snapshot_marks_microphone_permission_ready_from_audio_proof() {
+        let state = RuntimeSnapshot::default();
+
+        assert!(
+            !state
+                .snapshot()
+                .settings
+                .first_run
+                .microphone_permission_ready
+        );
+        state.mark_microphone_permission_ready();
+
+        let first_run = state.snapshot().settings.first_run;
+        assert!(first_run.microphone_permission_ready);
+        let microphone = first_run
+            .permission_requirements
+            .iter()
+            .find(|requirement| requirement.id == "microphone")
+            .unwrap();
+        assert_eq!(microphone.state, settings::FirstRunPermissionState::Ready);
+        assert!(microphone.detail.contains("persisted local audio"));
+    }
+
+    #[test]
     fn runtime_snapshot_records_hotkey_registration_failure() {
         let state = RuntimeSnapshot::default();
         state.mark_hotkey_registered();
@@ -2469,6 +2609,8 @@ mod tests {
         let snapshot = state.mark_first_dictation_completed().unwrap();
 
         assert!(snapshot.settings.first_run.first_dictation_completed);
+        assert!(snapshot.settings.first_run.microphone_permission_ready);
+        assert!(snapshot.settings.first_run.input_permission_ready);
         assert!(
             settings::SettingsStore::new(&app_data)
                 .load()
@@ -3544,6 +3686,37 @@ mod tests {
         );
         assert!(runtime.take_first_dictation_completion());
         assert!(!runtime.take_first_dictation_completion());
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_first_run_proof_keeps_zero_sample_microphone_pending() {
+        let app_data = tmp();
+        let delivered = Arc::new(Mutex::new(Vec::new()));
+        let seen_dials = Arc::new(Mutex::new(Vec::new()));
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_target_resolver(Box::new(profiles::SessionTargetResolver::new(
+                profiles::StaticFrontmostAppDetector::new(detected_app()),
+                matching_profiles(CleanupDial::Light),
+            )))
+            .with_processor(Box::new(ScriptedProcessor::new(Arc::clone(&seen_dials))))
+            .with_injector(Box::new(TestInjector::native(Arc::clone(&delivered))));
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Release { at_ms: 400 })
+            .unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 700 })
+            .unwrap();
+
+        let proof = runtime.take_first_run_proof();
+
+        assert!(proof.first_dictation_completed);
+        assert!(!proof.microphone_permission_ready);
         let _ = std::fs::remove_dir_all(app_data);
     }
 

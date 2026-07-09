@@ -363,6 +363,12 @@ button {
   color: var(--muted);
 }
 
+.setup-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .waveform {
   display: flex;
   align-items: center;

@@ -498,6 +498,32 @@ impl FirstRunStatus {
     }
 }
 
+pub fn sync_first_run_permission_requirements(status: &mut FirstRunStatus) {
+    for requirement in &mut status.permission_requirements {
+        match requirement.id.as_str() {
+            "microphone" if status.microphone_permission_ready => {
+                requirement.state = FirstRunPermissionState::Ready;
+                requirement.detail =
+                    "Runtime proof observed: capture produced persisted local audio.".to_string();
+                requirement.action =
+                    "No action needed; microphone proof is recorded for this runtime.".to_string();
+                requirement.action_label = "Review proof".to_string();
+            }
+            "input_monitoring" if status.input_permission_ready => {
+                requirement.state = FirstRunPermissionState::Ready;
+                requirement.detail =
+                    "Runtime proof observed: the selected hotkey reached Kaydence from the OS event stream."
+                        .to_string();
+                requirement.action =
+                    "No action needed; hotkey event proof is recorded for this runtime."
+                        .to_string();
+                requirement.action_label = "Review proof".to_string();
+            }
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FirstRunSetupTiming {
     pub started_at_ms: Option<u64>,
@@ -1756,6 +1782,35 @@ mod tests {
                 "not-a-real-permission".to_string()
             ))
         );
+    }
+
+    #[test]
+    fn first_run_permission_requirements_sync_runtime_evidence() {
+        let mut status = FirstRunStatus {
+            microphone_permission_ready: true,
+            input_permission_ready: true,
+            ..FirstRunStatus::default()
+        };
+
+        sync_first_run_permission_requirements(&mut status);
+
+        let microphone = status
+            .permission_requirements
+            .iter()
+            .find(|requirement| requirement.id == "microphone")
+            .expect("microphone requirement exists");
+        assert_eq!(microphone.state, FirstRunPermissionState::Ready);
+        assert!(microphone.detail.contains("persisted local audio"));
+
+        if cfg!(target_os = "macos") {
+            let input_monitoring = status
+                .permission_requirements
+                .iter()
+                .find(|requirement| requirement.id == "input_monitoring")
+                .expect("macOS input monitoring requirement exists");
+            assert_eq!(input_monitoring.state, FirstRunPermissionState::Ready);
+            assert!(input_monitoring.detail.contains("OS event stream"));
+        }
     }
 
     #[test]

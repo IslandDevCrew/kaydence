@@ -1,5 +1,12 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T17:11Z — Codex P1 slice (runtime permission proof refresh)
+- Added a backend-owned runtime proof refresh for first-run setup: real active global-shortcut events mark input proof, non-empty finalized capture audio marks microphone proof, and first-dictation completion syncs those runtime-proven rows.
+- Screen Family 10 now has a compact Refresh action beside Free selected. In the desktop runtime it drains pending hotkey proofs through `refresh_first_run_runtime_proofs`; in Vite preview it shows the desktop-runtime boundary instead of pretending native IPC ran.
+- Kept the boundary honest: zero-sample WAL-only captures do not mark microphone ready, and Windows UIA/SendInput plus Linux AT-SPI/uinput proof rows remain manual/review-gated until their platform evidence exists.
+- Evidence saved at `ops/mission/evidence/2026-07-09-runtime-permission-proof-refresh.txt` plus preview screenshot `ops/mission/evidence/2026-07-09-runtime-permission-proof-refresh-preview.png`. Local gates passed: fmt, lib tests (211), frontend check, clippy, full Rust suite, privacy posture, ADR status, bench PASS/PARTIAL, production build, desktop verify, and Chrome smoke.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T16:57Z — Codex P1 slice (ASR runtime status snapshot + UI)
 - Promoted the selected ASR runtime boundary into the user/build-agent surfaces: `FirstRunStatus.asr_runtime`, `FirstRunProofPlan.asr_runtime`, recording meta, and the Screen Family 10 first-run panel now all show Pending / Blocked / VerifiedArtifact truth from Rust.
 - The visible status includes selected model id, lane, runtime, artifact path, artifact byte size, adapter readiness, detail, and proof requirement. Verified artifacts still render as adapter pending until a real ASR adapter emits transcript events.
