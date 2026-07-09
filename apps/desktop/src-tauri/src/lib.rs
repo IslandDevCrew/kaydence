@@ -280,12 +280,13 @@ fn first_run_model_status(
     status: Result<models::ModelArtifactStatus, models::ModelRegistryError>,
     models_dir: &Path,
 ) -> settings::FirstRunModelStatus {
+    let download_plan = model.download_plan(models_dir);
     let (state, detail) = match status {
         Ok(models::ModelArtifactStatus::Ready { size_bytes, .. }) => (
             settings::FirstRunModelState::Ready,
             format!("Verified artifact, {} MB on disk", bytes_to_mb(size_bytes)),
         ),
-        Ok(models::ModelArtifactStatus::Missing { .. }) => match model.download_plan(models_dir) {
+        Ok(models::ModelArtifactStatus::Missing { .. }) => match &download_plan {
             Ok(_) => (
                 settings::FirstRunModelState::Missing,
                 "Download required before first dictation".to_string(),
@@ -320,6 +321,13 @@ fn first_run_model_status(
         file: model.file.clone(),
         state,
         detail,
+        download_available: download_plan.is_ok(),
+        download_size_mb: download_plan.as_ref().ok().map(|plan| plan.size_mb),
+        download_source_count: download_plan
+            .as_ref()
+            .ok()
+            .map(|plan| plan.sources.len().min(usize::from(u16::MAX)) as u16)
+            .unwrap_or(0),
         license: model.license.clone(),
         license_review_required: model.license_review_required,
     }
@@ -344,6 +352,9 @@ fn first_run_asr_candidate(
         min_hw: model.min_hw.clone(),
         state: base.state,
         detail: base.detail,
+        download_available: base.download_available,
+        download_size_mb: base.download_size_mb,
+        download_source_count: base.download_source_count,
         selected,
         recommendation: selected.then(|| recommendation_reason(model, platform_tag).to_string()),
         license: model.license.clone(),
@@ -1136,9 +1147,21 @@ mod tests {
             .iter()
             .all(|model| model.state == settings::FirstRunModelState::Missing));
         assert!(first_run
+            .required_models
+            .iter()
+            .all(|model| model.download_available
+                && model.download_size_mb == Some(1)
+                && model.download_source_count == 1));
+        assert!(first_run
             .asr_candidates
             .iter()
             .all(|model| model.state == settings::FirstRunModelState::Missing));
+        assert!(first_run
+            .asr_candidates
+            .iter()
+            .all(|model| model.download_available
+                && model.download_size_mb == Some(1)
+                && model.download_source_count == 1));
         let _ = std::fs::remove_dir_all(app_data);
     }
 
@@ -1193,6 +1216,9 @@ mod tests {
         assert!(first_run.required_models[0]
             .detail
             .contains("Download unavailable"));
+        assert!(!first_run.required_models[0].download_available);
+        assert_eq!(first_run.required_models[0].download_size_mb, None);
+        assert_eq!(first_run.required_models[0].download_source_count, 0);
         let _ = std::fs::remove_dir_all(app_data);
     }
 

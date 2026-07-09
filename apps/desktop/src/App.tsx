@@ -41,6 +41,9 @@ interface FirstRunModelStatus {
   file: string;
   state: "ready" | "missing" | "blocked";
   detail: string;
+  download_available: boolean;
+  download_size_mb: number | null;
+  download_source_count: number;
   license: string;
   license_review_required: boolean;
 }
@@ -53,6 +56,9 @@ interface FirstRunAsrCandidate {
   min_hw: string;
   state: "ready" | "missing" | "blocked";
   detail: string;
+  download_available: boolean;
+  download_size_mb: number | null;
+  download_source_count: number;
   selected: boolean;
   recommendation: string | null;
   license: string;
@@ -496,6 +502,11 @@ export function App(): JSX.Element {
                     <span>
                       <strong>{model.id}</strong>
                       <small>{model.recommendation ?? `${model.runtime} / ${model.min_hw}`}</small>
+                      {model.download_available ? (
+                        <small>
+                          {model.download_size_mb ?? model.size_mb} MB / {model.download_source_count} sources
+                        </small>
+                      ) : null}
                     </span>
                     <em>{model.state}</em>
                   </button>
@@ -513,6 +524,11 @@ export function App(): JSX.Element {
                     <div>
                       <em>{model.state}</em>
                       <small>{model.detail}</small>
+                      {model.download_available ? (
+                        <small>
+                          {model.download_size_mb ?? 0} MB / {model.download_source_count} sources
+                        </small>
+                      ) : null}
                     </div>
                   </div>
                 ))}

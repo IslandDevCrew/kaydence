@@ -60,7 +60,7 @@ Next best work:
    reviewed artifacts, implement the network fetch/progress UI, and
    Parakeet/Whisper engine adapters. AppSnapshot already
    exposes ready/missing/blocked model states plus backend-owned ASR candidates,
-   selected model id, and recommended model id from registry verification; the
+   selected/recommended model ids, and validated download metadata; the
    select_asr_model command persists the selected ASR model id to app-data
    settings.json and reapplies it on startup; ModelDownloadPlan validates safe
    destination paths, expected sha256 values, and HTTPS sources before first-run

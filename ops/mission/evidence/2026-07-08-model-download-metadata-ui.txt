@@ -1,0 +1,62 @@
+Kaydence model download metadata UI evidence
+Date: 2026-07-08
+
+Intent
+- Carry validated model download-plan metadata into AppSnapshot so first-run can
+  explain missing local artifacts without frontend guesswork.
+- Render download availability, size, and source count in the first-run ASR
+  picker and required-model list.
+- Keep React presentation-only: Rust computes availability; React only renders
+  the fields.
+
+Changed files
+- apps/desktop/src-tauri/src/settings/mod.rs
+  - Added download_available, download_size_mb, and download_source_count to
+    FirstRunModelStatus and FirstRunAsrCandidate.
+  - Updated serialization tests for the expanded first-run model/candidate
+    contract.
+- apps/desktop/src-tauri/src/lib.rs
+  - First-run model mapping now copies ModelDownloadPlan metadata into the
+    AppSnapshot rows.
+  - Missing artifacts with a valid plan carry size/source metadata.
+  - Missing artifacts without usable metadata remain Blocked and report zero
+    download metadata.
+  - Runtime tests assert both the downloadable-missing and blocked-metadata
+    states.
+- apps/desktop/src/App.tsx
+  - Added the new snapshot fields to the TypeScript shapes.
+  - Renders "MB / source count" for downloadable ASR candidates and required
+    models.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml settings:: --lib
+  - 11 settings tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot --lib
+  - 7 runtime snapshot tests passed.
+- PASS: npm --prefix apps/desktop run check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 150 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run build
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 waiver only.
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This does not download bytes or perform any network request.
+- This does not implement progress UI, cancellation, retry, or resume.
+- This does not replace registry TODO hashes or TODO sources with reviewed
+  published artifacts.
+- This does not implement Parakeet/Whisper inference adapters.
+- This does not provide WER or latency evidence for real ASR output.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.
