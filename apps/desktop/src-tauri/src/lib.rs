@@ -174,20 +174,37 @@ impl HotkeyRuntime {
             }
             hotkeys::Action::FinalizeCapture => {
                 let summary = self.recorder.finalize_capture(at_ms)?;
-                if let Some(target) = self.active_target.take() {
+                let bound_target = self.active_target.take();
+                if let Some(target) = &bound_target {
                     self.processor.set_cleanup_dial(target.profile.cleanup_dial);
                 }
                 let events = self.processor.process_capture(&summary)?;
                 let committed = pipeline::committed_text(&events);
                 self.history.record_events(&events)?;
-                let injection_event = committed.map(|committed| {
-                    inject::inject_committed_text(
-                        self.injector.as_mut(),
-                        committed.id,
-                        &committed.text,
-                        self.unknown_field_policy,
-                        self.prefer_clipboard,
-                    )
+                let injection_event = committed.map(|committed| match &bound_target {
+                    Some(bound) => {
+                        let current = self.target_resolver.resolve_session_target();
+                        match inject::verify_focus_binding(
+                            &focus_target(bound),
+                            &focus_target(&current),
+                        ) {
+                            Ok(()) => inject::inject_committed_text(
+                                self.injector.as_mut(),
+                                committed.id,
+                                &committed.text,
+                                self.unknown_field_policy,
+                                self.prefer_clipboard,
+                            ),
+                            Err(reason) => events::SessionEvent::Held {
+                                id: committed.id,
+                                reason,
+                            },
+                        }
+                    }
+                    None => events::SessionEvent::Held {
+                        id: committed.id,
+                        reason: events::HoldReason::FocusChanged,
+                    },
                 });
                 if let Some(event) = injection_event {
                     self.history.record_event(&event)?;
@@ -223,6 +240,14 @@ impl HotkeyRuntime {
             }
         }
         Ok(None)
+    }
+}
+
+#[cfg(desktop)]
+fn focus_target(target: &profiles::SessionTarget) -> inject::FocusTarget {
+    match target.source {
+        profiles::TargetSource::Detected => inject::FocusTarget::detected(target.app.clone()),
+        profiles::TargetSource::Unknown => inject::FocusTarget::unknown(target.app.clone()),
     }
 }
 
@@ -331,6 +356,7 @@ pub fn run() {
 mod tests {
     use super::*;
     use crate::events::{CleanupDial, HoldReason, InjectMethod};
+    use std::collections::VecDeque;
     use std::sync::{Arc, Mutex};
 
     fn tmp() -> std::path::PathBuf {
@@ -347,6 +373,55 @@ mod tests {
         events::AppRef {
             id: "com.example.editor".to_string(),
             name: "Example Editor".to_string(),
+        }
+    }
+
+    fn other_app() -> events::AppRef {
+        events::AppRef {
+            id: "com.example.mail".to_string(),
+            name: "Example Mail".to_string(),
+        }
+    }
+
+    fn session_target(app: events::AppRef, cleanup_dial: CleanupDial) -> profiles::SessionTarget {
+        profiles::SessionTarget {
+            app: app.clone(),
+            profile: profiles::AppProfile::user_edited(
+                "test-profile",
+                "Test Profile",
+                vec![app.id.clone()],
+                cleanup_dial,
+            ),
+            source: profiles::TargetSource::Detected,
+        }
+    }
+
+    struct QueueTargetResolver {
+        targets: VecDeque<profiles::SessionTarget>,
+        last: profiles::SessionTarget,
+    }
+
+    impl QueueTargetResolver {
+        fn new(targets: Vec<profiles::SessionTarget>) -> Self {
+            let last = targets
+                .last()
+                .expect("queue target resolver needs at least one target")
+                .clone();
+            Self {
+                targets: targets.into(),
+                last,
+            }
+        }
+    }
+
+    impl profiles::ResolveSessionTarget for QueueTargetResolver {
+        fn resolve_session_target(&mut self) -> profiles::SessionTarget {
+            if let Some(target) = self.targets.pop_front() {
+                self.last = target.clone();
+                target
+            } else {
+                self.last.clone()
+            }
         }
     }
 
@@ -569,6 +644,78 @@ mod tests {
                 method: InjectMethod::Native,
             })
         );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_holds_when_focus_changes_before_delivery() {
+        let app_data = tmp();
+        let delivered = Arc::new(Mutex::new(Vec::new()));
+        let seen_dials = Arc::new(Mutex::new(Vec::new()));
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_target_resolver(Box::new(QueueTargetResolver::new(vec![
+                session_target(detected_app(), CleanupDial::Light),
+                session_target(other_app(), CleanupDial::Light),
+            ])))
+            .with_processor(Box::new(ScriptedProcessor::new(Arc::clone(&seen_dials))))
+            .with_injector(Box::new(TestInjector::native(Arc::clone(&delivered))));
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+        let id = runtime.recorder.active_session_id().unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Release { at_ms: 400 })
+            .unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 700 })
+            .unwrap();
+
+        assert!(delivered.lock().unwrap().is_empty());
+        let session = runtime.history.get_session(id).unwrap().unwrap();
+        assert_eq!(session.held_reason, Some(HoldReason::FocusChanged));
+        assert_eq!(session.injected_method, None);
+        assert_eq!(
+            runtime.history.events_for_session(id).unwrap().last(),
+            Some(&events::SessionEvent::Held {
+                id,
+                reason: HoldReason::FocusChanged,
+            })
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_holds_when_target_identity_is_unknown() {
+        let app_data = tmp();
+        let delivered = Arc::new(Mutex::new(Vec::new()));
+        let seen_dials = Arc::new(Mutex::new(Vec::new()));
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_target_resolver(Box::new(profiles::SessionTargetResolver::new(
+                profiles::StaticFrontmostAppDetector::unknown(),
+                profiles::ProfileStore::default(),
+            )))
+            .with_processor(Box::new(ScriptedProcessor::new(Arc::clone(&seen_dials))))
+            .with_injector(Box::new(TestInjector::native(Arc::clone(&delivered))));
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+        let id = runtime.recorder.active_session_id().unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Release { at_ms: 400 })
+            .unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 700 })
+            .unwrap();
+
+        assert!(delivered.lock().unwrap().is_empty());
+        let session = runtime.history.get_session(id).unwrap().unwrap();
+        assert_eq!(session.target_app, Some(profiles::unknown_app_ref()));
+        assert_eq!(session.held_reason, Some(HoldReason::FocusChanged));
+        assert_eq!(session.injected_method, None);
         let _ = std::fs::remove_dir_all(app_data);
     }
 

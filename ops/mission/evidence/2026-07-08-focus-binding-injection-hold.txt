@@ -1,0 +1,53 @@
+Kaydence evidence: focus binding before injection
+Date: 2026-07-08
+
+Intent
+- Close the runtime P9 safety gap: do not inject committed text if focus moved after capture started.
+- Fail closed when app identity is unknown; unknown is not a trustworthy delivery binding.
+- Preserve finalized text in history while recording Held(FocusChanged) instead of calling the injector.
+
+Changed
+- apps/desktop/src-tauri/src/inject/mod.rs
+  - Added FocusTarget for detected versus unknown app identity.
+  - Added verify_focus_binding(bound, current), which succeeds only when both app identities are verified and app ids match.
+  - Added unit coverage for same verified app, changed app, and unknown identity.
+- apps/desktop/src-tauri/src/lib.rs
+  - FinalizeCapture now re-resolves the frontmost target before delivery.
+  - If delivery-time focus does not match the capture-start target, runtime records SessionEvent::Held { reason: FocusChanged } and skips TextInjector entirely.
+  - Unknown capture/delivery targets also hold as FocusChanged.
+
+Focused verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml inject:: --lib
+  - PASS: 16 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - PASS: 5 passed
+
+Full verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - PASS: 106 lib tests passed, 2 crash-recovery tests passed
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+- npm --prefix apps/desktop run check
+  - PASS
+- npm --prefix apps/desktop run build
+  - PASS
+- bash scripts/audit-network.sh --check
+  - PASS: 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  - PASS: ADR-0009 waiver only
+- ./script/build_and_run.sh build
+  - PASS
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Post-verify hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - PASS: no leftover desktop/dev processes
+- apps/desktop/dist/index.html restored; generated apps/desktop/dist/assets and apps/desktop/dist/favicon.svg removed after build verification.
+
+Remaining outside this slice
+- Real macOS, Windows, and Linux frontmost-app detectors behind profiles::FrontmostAppDetector.
+- Real TextInjector backends for macOS AX, Windows UIA/SendInput, and Linux AT-SPI/uinput/portal paths.
+- HUD affordance for Held(FocusChanged): insert here / copy.

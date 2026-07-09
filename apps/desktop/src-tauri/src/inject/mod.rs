@@ -13,7 +13,7 @@
 //! No stage imports another's internals — communicate only via `SessionEvent`.
 #![allow(dead_code)]
 
-use crate::events::{HoldReason, InjectMethod, SessionEvent, SessionId, Stage};
+use crate::events::{AppRef, HoldReason, InjectMethod, SessionEvent, SessionId, Stage};
 
 #[cfg(target_os = "linux")]
 pub mod linux;
@@ -69,6 +69,40 @@ pub fn decide_secure(kind: FieldKind, policy: UnknownFieldPolicy) -> PolicyDecis
             UnknownFieldPolicy::Strict => PolicyDecision::Refuse(HoldReason::SecureField),
             UnknownFieldPolicy::Lenient => PolicyDecision::Inject { verified: false },
         },
+    }
+}
+
+// ─────────────────────────────── focus binding ────────────────────────────
+
+/// The app identity used to prove delivery-time focus still matches the capture
+/// target. Unknown targets are represented but not trusted for delivery.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FocusTarget {
+    pub app: AppRef,
+    pub verified: bool,
+}
+
+impl FocusTarget {
+    pub fn detected(app: AppRef) -> Self {
+        Self {
+            app,
+            verified: true,
+        }
+    }
+
+    pub fn unknown(app: AppRef) -> Self {
+        Self {
+            app,
+            verified: false,
+        }
+    }
+}
+
+pub fn verify_focus_binding(bound: &FocusTarget, current: &FocusTarget) -> Result<(), HoldReason> {
+    if bound.verified && current.verified && bound.app.id == current.app.id {
+        Ok(())
+    } else {
+        Err(HoldReason::FocusChanged)
     }
 }
 
@@ -358,6 +392,36 @@ mod tests {
         assert_eq!(
             decide_secure(FieldKind::Unknown, UnknownFieldPolicy::Strict),
             PolicyDecision::Refuse(HoldReason::SecureField)
+        );
+    }
+
+    #[test]
+    fn focus_binding_requires_same_verified_app() {
+        let bound = FocusTarget::detected(AppRef {
+            id: "com.example.editor".to_string(),
+            name: "Editor".to_string(),
+        });
+        let same = FocusTarget::detected(AppRef {
+            id: "com.example.editor".to_string(),
+            name: "Editor".to_string(),
+        });
+        let other = FocusTarget::detected(AppRef {
+            id: "com.example.mail".to_string(),
+            name: "Mail".to_string(),
+        });
+        let unknown = FocusTarget::unknown(AppRef {
+            id: "unknown".to_string(),
+            name: "Unknown app".to_string(),
+        });
+
+        assert_eq!(verify_focus_binding(&bound, &same), Ok(()));
+        assert_eq!(
+            verify_focus_binding(&bound, &other),
+            Err(HoldReason::FocusChanged)
+        );
+        assert_eq!(
+            verify_focus_binding(&unknown, &unknown),
+            Err(HoldReason::FocusChanged)
         );
     }
 
