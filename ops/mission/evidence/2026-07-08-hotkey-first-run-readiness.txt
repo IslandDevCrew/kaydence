@@ -1,0 +1,71 @@
+Kaydence hotkey first-run readiness evidence
+Date: 2026-07-08
+
+Intent
+- Make the frontend first-run setup panel reflect real backend runtime state
+  instead of the default snapshot forever.
+- Preserve the hotkey invariant that registration failures surface in onboarding
+  and do not crash the app.
+- Keep React presentation-only: readiness truth stays in Rust and is exposed
+  through the existing Tauri app_snapshot command.
+
+Changed files
+- apps/desktop/src-tauri/src/lib.rs
+  - Added managed RuntimeSnapshot state for app_snapshot.
+  - Tauri setup now manages the snapshot before registering commands.
+  - Global shortcut registration marks first_run.hotkey_registered on success.
+  - Registration failure is captured as hotkey_registration_error and logged,
+    while setup still returns Ok so the window can open.
+  - Added unit tests for success and failure snapshot transitions.
+- apps/desktop/src-tauri/src/settings/mod.rs
+  - Added first_run.hotkey_registration_error: Option<String>.
+  - Added serialization/readiness coverage for the error state.
+- apps/desktop/src-tauri/src/hotkeys/mod.rs
+  - Updated the module comment now that OS registration is wired through Tauri
+    setup instead of future-gated.
+- apps/desktop/src/App.tsx
+  - First-run checklist now derives from AppSnapshot instead of static UI state.
+  - Hotkey registration errors render as an Issue row.
+  - Start action disables until model, microphone, input, and hotkey readiness
+    are all true.
+- apps/desktop/src/styles.css
+  - Added compact issue and disabled-action styles for the setup panel.
+- ops/mission/state.json and docs/CODEX_SUPER_GOAL_PROMPT.md
+  - Updated stale hotkey notes so future sessions do not chase closed work.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: npm --prefix apps/desktop run check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml settings:: --lib
+  - 6 settings tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - 5 hotkey runtime tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot --lib
+  - 2 runtime snapshot tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 130 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run build
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 waiver only.
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This proves the app-level snapshot contract and the graceful registration
+  failure path. It does not prove OS-specific permission/conflict/rebind UX on
+  macOS, Windows, or Linux.
+- It does not close P1-P0-1 yet: toggle/rebind UI, live permission proof, the
+  short-utterance suite, and latency/footprint gates remain.
+- The first-run action is still a presentation entry point; model download,
+  microphone permission prompts, and first dictation completion remain future
+  P1-P0-8 work.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.

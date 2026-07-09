@@ -29,7 +29,8 @@ interface Metric {
 
 interface ChecklistItem {
   label: string;
-  status: "Ready" | "Needs hardware" | "Next";
+  status: "Ready" | "Needs hardware" | "Next" | "Issue";
+  detail?: string;
 }
 
 interface AppSnapshot {
@@ -68,6 +69,7 @@ interface AppSnapshot {
       microphone_permission_ready: boolean;
       input_permission_ready: boolean;
       hotkey_registered: boolean;
+      hotkey_registration_error: string | null;
       first_dictation_completed: boolean;
     };
   };
@@ -109,6 +111,7 @@ const previewSnapshot: AppSnapshot = {
       microphone_permission_ready: false,
       input_permission_ready: false,
       hotkey_registered: false,
+      hotkey_registration_error: null,
       first_dictation_completed: false,
     },
   },
@@ -158,13 +161,36 @@ const metrics: Metric[] = [
   { label: "Remote", value: "404", detail: "local-first recovery" },
 ];
 
-const checklist: ChecklistItem[] = [
-  { label: "Choose local ASR engine", status: "Next" },
-  { label: "Grant OS permissions", status: "Needs hardware" },
-  { label: "Set global hotkey", status: "Next" },
-  { label: "Confirm privacy defaults", status: "Ready" },
-  { label: "Start first dictation", status: "Next" },
-];
+function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
+  const firstRun = snapshot.settings.first_run;
+  const permissionsReady =
+    firstRun.microphone_permission_ready && firstRun.input_permission_ready;
+
+  return [
+    {
+      label: "Choose local ASR engine",
+      status: firstRun.model_ready ? "Ready" : "Next",
+    },
+    {
+      label: "Grant OS permissions",
+      status: permissionsReady ? "Ready" : "Needs hardware",
+    },
+    {
+      label: "Set global hotkey",
+      status: firstRun.hotkey_registered
+        ? "Ready"
+        : firstRun.hotkey_registration_error
+          ? "Issue"
+          : "Next",
+      detail: firstRun.hotkey_registration_error ?? undefined,
+    },
+    { label: "Confirm privacy defaults", status: "Ready" },
+    {
+      label: "Start first dictation",
+      status: firstRun.first_dictation_completed ? "Ready" : "Next",
+    },
+  ];
+}
 
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
@@ -189,6 +215,12 @@ export function App(): JSX.Element {
   const privacyLabel = snapshot.settings.privacy.local_context_enabled
     ? "Local context on"
     : "Local context off";
+  const checklist = firstRunChecklist(snapshot);
+  const firstRunReady =
+    snapshot.settings.first_run.model_ready &&
+    snapshot.settings.first_run.microphone_permission_ready &&
+    snapshot.settings.first_run.input_permission_ready &&
+    snapshot.settings.first_run.hotkey_registered;
 
   useEffect(() => {
     let active = true;
@@ -215,7 +247,7 @@ export function App(): JSX.Element {
       className="app-shell"
       style={{ "--accent": lane.accent } as React.CSSProperties}
     >
-      <aside className="sidebar" aria-label="Kaydence navigation">
+      <aside className="sidebar" aria-label={`${snapshot.app_name} navigation`}>
         <div className="brand-lockup">
           <img className="brand-mark" src={markUrl} alt="" />
           <div>
@@ -249,7 +281,7 @@ export function App(): JSX.Element {
         </div>
       </aside>
 
-      <section className="workspace" aria-label="Kaydence cockpit">
+      <section className="workspace" aria-label={`${snapshot.app_name} cockpit`}>
         <header className="topbar">
           <div>
             <p className="eyebrow">P1 recovery build</p>
@@ -382,14 +414,17 @@ export function App(): JSX.Element {
             </div>
             <ol className="setup-list">
               {checklist.map((item) => (
-                <li key={item.label}>
-                  <span>{item.label}</span>
+                <li className={`setup-item status-${item.status.toLowerCase()}`} key={item.label}>
+                  <span>
+                    {item.label}
+                    {item.detail ? <small>{item.detail}</small> : null}
+                  </span>
                   <strong>{item.status}</strong>
                 </li>
               ))}
             </ol>
-            <button className="primary-action" type="button">
-              Start Dictating
+            <button className="primary-action" disabled={!firstRunReady} type="button">
+              {firstRunReady ? "Start Dictating" : "Resolve Setup"}
             </button>
           </article>
         </section>

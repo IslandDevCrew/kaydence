@@ -240,12 +240,13 @@ impl PrivacySettings {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct FirstRunStatus {
     pub model_ready: bool,
     pub microphone_permission_ready: bool,
     pub input_permission_ready: bool,
     pub hotkey_registered: bool,
+    pub hotkey_registration_error: Option<String>,
     pub first_dictation_completed: bool,
 }
 
@@ -342,5 +343,19 @@ mod tests {
         status.input_permission_ready = true;
         status.hotkey_registered = true;
         assert!(status.ready_to_dictate());
+    }
+
+    #[test]
+    fn first_run_status_carries_hotkey_registration_errors() {
+        let status = FirstRunStatus {
+            hotkey_registration_error: Some("shortcut already registered".to_string()),
+            ..FirstRunStatus::default()
+        };
+
+        assert!(!status.ready_to_dictate());
+        assert_eq!(
+            serde_json::to_string(&status).unwrap(),
+            "{\"model_ready\":false,\"microphone_permission_ready\":false,\"input_permission_ready\":false,\"hotkey_registered\":false,\"hotkey_registration_error\":\"shortcut already registered\",\"first_dictation_completed\":false}"
+        );
     }
 }

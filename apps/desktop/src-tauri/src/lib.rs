@@ -8,7 +8,8 @@
 #[cfg(desktop)]
 use std::path::PathBuf;
 #[cfg(desktop)]
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use std::sync::Mutex;
 #[cfg(desktop)]
 use std::time::{Duration, Instant};
 
@@ -30,8 +31,55 @@ pub mod settings;
 
 /// Initial app/config snapshot for the presentation layer.
 #[tauri::command]
-fn app_snapshot() -> settings::AppSnapshot {
-    settings::AppSnapshot::default()
+fn app_snapshot(state: tauri::State<'_, RuntimeSnapshot>) -> settings::AppSnapshot {
+    state.snapshot()
+}
+
+#[derive(Debug)]
+struct RuntimeSnapshot {
+    inner: Mutex<settings::AppSnapshot>,
+}
+
+impl Default for RuntimeSnapshot {
+    fn default() -> Self {
+        Self {
+            inner: Mutex::new(settings::AppSnapshot::default()),
+        }
+    }
+}
+
+impl RuntimeSnapshot {
+    fn snapshot(&self) -> settings::AppSnapshot {
+        self.inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+    }
+
+    #[cfg(desktop)]
+    fn mark_hotkey_registered(&self) {
+        self.update_first_run(|first_run| {
+            first_run.hotkey_registered = true;
+            first_run.hotkey_registration_error = None;
+        });
+    }
+
+    #[cfg(desktop)]
+    fn mark_hotkey_registration_failed(&self, error: String) {
+        self.update_first_run(|first_run| {
+            first_run.hotkey_registered = false;
+            first_run.hotkey_registration_error = Some(error);
+        });
+    }
+
+    #[cfg(desktop)]
+    fn update_first_run(&self, update: impl FnOnce(&mut settings::FirstRunStatus)) {
+        let mut snapshot = self
+            .inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        update(&mut snapshot.settings.first_run);
+    }
 }
 
 #[cfg(desktop)]
@@ -334,6 +382,7 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
     )?;
 
     app.global_shortcut().register(shortcut)?;
+    app.state::<RuntimeSnapshot>().mark_hotkey_registered();
     Ok(())
 }
 
@@ -342,10 +391,17 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 /// Run the Tauri shell plus the current hotkey/audio/pipeline runtime.
 pub fn run() {
     tauri::Builder::default()
+        .manage(RuntimeSnapshot::default())
         .invoke_handler(tauri::generate_handler![app_snapshot])
         .setup(|app| {
             #[cfg(desktop)]
-            install_global_hotkey(app)?;
+            if let Err(err) = install_global_hotkey(app) {
+                use tauri::Manager;
+
+                app.state::<RuntimeSnapshot>()
+                    .mark_hotkey_registration_failed(err.to_string());
+                eprintln!("Kaydence global hotkey disabled: {err}");
+            }
             Ok(())
         })
         .run(tauri::generate_context!())
@@ -524,6 +580,32 @@ mod tests {
             vec![app.id],
             cleanup_dial,
         )])
+    }
+
+    #[test]
+    fn runtime_snapshot_reflects_hotkey_registration_success() {
+        let state = RuntimeSnapshot::default();
+
+        assert!(!state.snapshot().settings.first_run.hotkey_registered);
+        state.mark_hotkey_registered();
+
+        let snapshot = state.snapshot();
+        assert!(snapshot.settings.first_run.hotkey_registered);
+        assert_eq!(snapshot.settings.first_run.hotkey_registration_error, None);
+    }
+
+    #[test]
+    fn runtime_snapshot_records_hotkey_registration_failure() {
+        let state = RuntimeSnapshot::default();
+        state.mark_hotkey_registered();
+        state.mark_hotkey_registration_failed("shortcut already registered".to_string());
+
+        let snapshot = state.snapshot();
+        assert!(!snapshot.settings.first_run.hotkey_registered);
+        assert_eq!(
+            snapshot.settings.first_run.hotkey_registration_error,
+            Some("shortcut already registered".to_string())
+        );
     }
 
     #[test]

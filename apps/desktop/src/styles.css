@@ -350,6 +350,23 @@ button {
   font-size: .82rem;
 }
 
+.setup-list small {
+  display: block;
+  margin-top: 4px;
+  color: var(--danger);
+  font-size: .76rem;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.setup-item.status-issue strong {
+  color: var(--danger);
+}
+
+.setup-item.status-ready strong {
+  color: color-mix(in srgb, var(--accent) 78%, #15313a);
+}
+
 .primary-action {
   min-height: 40px;
   border: 0;
@@ -357,6 +374,12 @@ button {
   background: var(--accent);
   color: #ffffff;
   font-weight: 800;
+}
+
+.primary-action:disabled {
+  background: var(--surface-soft);
+  color: var(--muted);
+  cursor: not-allowed;
 }
 
 .primary-action:focus-visible,

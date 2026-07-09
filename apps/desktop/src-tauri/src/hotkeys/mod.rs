@@ -1,7 +1,6 @@
-//! Global hotkey capture coordination (push-to-talk + toggle). The OS hotkey
-//! *registration* (tauri global-shortcut plugin) is a dependency add gated by a
-//! future ADR; this module implements the platform-agnostic **capture state
-//! machine** that every registration path feeds — the production answer to
+//! Global hotkey capture coordination (push-to-talk + toggle). Tauri setup owns
+//! OS registration and feeds this platform-agnostic **capture state machine** —
+//! the production answer to
 //! Pitfall P1 (hotkey races truncating short utterances) adopted from Handy's
 //! `TranscriptionCoordinator` (ADR-0004 study): a single serialized owner with a
 //! debounce, min-capture floor, and tail buffer. Modelled as a pure state
