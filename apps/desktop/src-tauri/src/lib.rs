@@ -507,15 +507,22 @@ enum HotkeyRuntimeError {
 
 #[cfg(desktop)]
 impl HotkeyRuntime {
-    fn new(app_data_dir: impl Into<PathBuf>) -> Result<Self, HotkeyRuntimeError> {
+    fn new(
+        app_data_dir: impl Into<PathBuf>,
+        first_run: &settings::FirstRunStatus,
+    ) -> Result<Self, HotkeyRuntimeError> {
         let app_data_dir = app_data_dir.into();
         let recorder = audio::WalCaptureRuntime::new(app_data_dir.clone());
         let history = history::HistoryStore::open(&app_data_dir)?;
+        let asr_context = selected_asr_runtime_context(first_run);
         Ok(Self::with_recorder(
             recorder,
             history,
             Box::new(profiles::platform_target_resolver()),
-            Box::new(pipeline::default_runtime_pipeline()),
+            Box::new(pipeline::default_runtime_pipeline(
+                asr_context.model_id.as_deref(),
+                asr_context.lane.as_deref(),
+            )),
             Box::new(inject::platform_injector()),
         ))
     }
@@ -529,7 +536,7 @@ impl HotkeyRuntime {
             recorder,
             history,
             Box::new(profiles::platform_target_resolver()),
-            Box::new(pipeline::default_runtime_pipeline()),
+            Box::new(pipeline::default_runtime_pipeline(None, None)),
             Box::new(inject::platform_injector()),
         ))
     }
@@ -691,6 +698,27 @@ impl HotkeyRuntime {
 }
 
 #[cfg(desktop)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct AsrRuntimeContext {
+    model_id: Option<String>,
+    lane: Option<String>,
+}
+
+#[cfg(desktop)]
+fn selected_asr_runtime_context(first_run: &settings::FirstRunStatus) -> AsrRuntimeContext {
+    let model_id = first_run.selected_asr_model_id.clone();
+    let lane = model_id.as_deref().and_then(|model_id| {
+        first_run
+            .asr_candidates
+            .iter()
+            .find(|candidate| candidate.id == model_id)
+            .and_then(|candidate| candidate.lane.clone())
+    });
+
+    AsrRuntimeContext { model_id, lane }
+}
+
+#[cfg(desktop)]
 fn focus_target(target: &profiles::SessionTarget) -> inject::FocusTarget {
     match target.source {
         profiles::TargetSource::Detected => inject::FocusTarget::detected(target.app.clone()),
@@ -742,7 +770,8 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 
     let shortcut = Shortcut::new(None, Code::AltRight);
     let app_data_dir = app.path().app_data_dir()?;
-    let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir)?));
+    let first_run = app.state::<RuntimeSnapshot>().snapshot().settings.first_run;
+    let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir, &first_run)?));
     let started = Instant::now();
     let handler_runtime = Arc::clone(&runtime);
 
@@ -1481,6 +1510,38 @@ mod tests {
             None
         );
         let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn selected_asr_runtime_context_carries_model_and_lane() {
+        let first_run = settings::FirstRunStatus {
+            selected_asr_model_id: Some("fixture-gpu".to_string()),
+            asr_candidates: vec![settings::FirstRunAsrCandidate {
+                id: "fixture-gpu".to_string(),
+                lane: Some("gpu".to_string()),
+                runtime: "whisper.cpp".to_string(),
+                size_mb: 2,
+                min_hw: "metal_or_dgpu".to_string(),
+                state: settings::FirstRunModelState::Ready,
+                detail: "Verified artifact, 2 MB on disk".to_string(),
+                download_available: true,
+                download_size_mb: Some(2),
+                download_source_count: 1,
+                selected: true,
+                recommendation: Some("Recommended for this OS lane".to_string()),
+                license: "MIT".to_string(),
+                license_review_required: false,
+            }],
+            ..settings::FirstRunStatus::default()
+        };
+
+        assert_eq!(
+            selected_asr_runtime_context(&first_run),
+            AsrRuntimeContext {
+                model_id: Some("fixture-gpu".to_string()),
+                lane: Some("gpu".to_string())
+            }
+        );
     }
 
     #[test]

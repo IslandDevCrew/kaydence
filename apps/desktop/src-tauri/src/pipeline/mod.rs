@@ -10,7 +10,7 @@ use crate::audio::{
 };
 use crate::cleanup;
 use crate::dictionary;
-use crate::engine::{AsrError, AsrRequest, EngineStack};
+use crate::engine::{self, AsrError, AsrRequest, EngineLane, EngineStack};
 use crate::events::{CleanupDial, SessionEvent, SessionId, Stage};
 
 #[derive(Debug, thiserror::Error)]
@@ -169,11 +169,19 @@ pub fn committed_text(events: &[SessionEvent]) -> Option<CommittedText> {
     (!text.is_empty()).then_some(CommittedText { id, text })
 }
 
-pub fn default_runtime_pipeline() -> TranscriptionPipeline<crate::audio::vad::EnergyVad> {
+pub fn default_runtime_pipeline(
+    selected_model_id: Option<&str>,
+    selected_lane: Option<&str>,
+) -> TranscriptionPipeline<crate::audio::vad::EnergyVad> {
+    let engine_lane = match selected_lane {
+        Some("gpu") => EngineLane::LocalGpu,
+        _ => EngineLane::LocalCpu,
+    };
+
     TranscriptionPipeline::new(
         crate::audio::vad::EnergyVad::new(0.01),
         SpeechGateConfig::default(),
-        EngineStack::empty(),
+        engine::pending_local_asr_stack(engine_lane, selected_model_id),
     )
 }
 
@@ -421,6 +429,27 @@ mod tests {
                 error: "all configured ASR engines failed".to_string()
             }
         );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn default_runtime_pipeline_reports_pending_selected_asr_adapter() {
+        let (summary, app_data) = summary_for_samples(&[0.0, 0.0, 0.5, 0.5]);
+        let mut pipeline = default_runtime_pipeline(Some("fixture-asr"), Some("cpu"));
+
+        let events = pipeline.process_capture(&summary).unwrap();
+
+        assert_eq!(events[0], summary.audio_persisted_event());
+        assert_eq!(events.len(), 2);
+        assert_eq!(
+            events[1],
+            SessionEvent::Failed {
+                id: summary.id,
+                stage: Stage::Recognize,
+                error: "all configured ASR engines failed: local_cpu: engine unavailable: local ASR adapter is not loaded yet for selected model 'fixture-asr'".to_string()
+            }
+        );
+        assert!(committed_text(&events).is_none());
         let _ = std::fs::remove_dir_all(app_data);
     }
 

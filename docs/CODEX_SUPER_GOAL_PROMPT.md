@@ -67,7 +67,10 @@ Next best work:
    can show Download required; checksum mismatches quarantine the suspect
    artifact before readiness blocks load; refresh_model_readiness lets first-run
    recheck app-data model artifacts without restarting after a user/build agent
-   installs reviewed files.
+   installs reviewed files; the default hotkey runtime carries a
+   PendingLocalAsrEngine keyed to the selected model/lane, so recordings persist
+   audio then record a specific Recognize failure until real Parakeet/Whisper
+   adapters are implemented.
 3. Continue injection backends behind TextInjector: Windows UIA+SendInput still
    needs the Windows Codex session; Linux AT-SPI/uinput needs human-focus VM
    validation; macOS AX/CGEvent/NSPasteboard has local evidence.

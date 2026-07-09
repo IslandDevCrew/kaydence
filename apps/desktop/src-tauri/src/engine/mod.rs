@@ -73,7 +73,7 @@ pub enum AsrError {
     Inference(String),
     EmptyTranscript,
     NoSpeech { probability: f32, threshold: f32 },
-    AllEnginesFailed,
+    AllEnginesFailed { failures: Vec<String> },
 }
 
 impl std::fmt::Display for AsrError {
@@ -90,7 +90,14 @@ impl std::fmt::Display for AsrError {
                 f,
                 "engine rejected likely no-speech final: probability {probability:.2}, threshold {threshold:.2}"
             ),
-            Self::AllEnginesFailed => write!(f, "all configured ASR engines failed"),
+            Self::AllEnginesFailed { failures } if failures.is_empty() => {
+                write!(f, "all configured ASR engines failed")
+            }
+            Self::AllEnginesFailed { failures } => write!(
+                f,
+                "all configured ASR engines failed: {}",
+                failures.join("; ")
+            ),
         }
     }
 }
@@ -146,6 +153,7 @@ impl EngineStack {
 
     pub fn transcribe(&mut self, request: &AsrRequest) -> Result<EngineRun, AsrError> {
         let mut attempts = Vec::new();
+        let mut failures = Vec::new();
 
         for engine in &mut self.engines {
             let lane = engine.lane();
@@ -165,6 +173,7 @@ impl EngineStack {
                     });
                 }
                 Err(err) => {
+                    failures.push(format!("{}: {err}", engine_lane_label(lane)));
                     attempts.push(EngineAttempt {
                         lane,
                         outcome: EngineAttemptOutcome::Failed(err),
@@ -173,7 +182,46 @@ impl EngineStack {
             }
         }
 
-        Err(AsrError::AllEnginesFailed)
+        Err(AsrError::AllEnginesFailed { failures })
+    }
+}
+
+pub struct PendingLocalAsrEngine {
+    lane: EngineLane,
+    selected_model_id: Option<String>,
+}
+
+impl PendingLocalAsrEngine {
+    pub fn boxed(lane: EngineLane, selected_model_id: Option<&str>) -> Box<dyn AsrEngine + Send> {
+        Box::new(Self {
+            lane,
+            selected_model_id: selected_model_id.map(str::to_string),
+        })
+    }
+}
+
+impl AsrEngine for PendingLocalAsrEngine {
+    fn lane(&self) -> EngineLane {
+        self.lane
+    }
+
+    fn transcribe(&mut self, _request: &AsrRequest) -> Result<AsrTranscript, AsrError> {
+        let model = self.selected_model_id.as_deref().unwrap_or("none selected");
+        Err(AsrError::Unavailable(format!(
+            "local ASR adapter is not loaded yet for selected model '{model}'"
+        )))
+    }
+}
+
+pub fn pending_local_asr_stack(lane: EngineLane, selected_model_id: Option<&str>) -> EngineStack {
+    EngineStack::new(vec![PendingLocalAsrEngine::boxed(lane, selected_model_id)])
+}
+
+fn engine_lane_label(lane: EngineLane) -> &'static str {
+    match lane {
+        EngineLane::ByokCloud => "byok_cloud",
+        EngineLane::LocalGpu => "local_gpu",
+        EngineLane::LocalCpu => "local_cpu",
     }
 }
 
@@ -383,6 +431,28 @@ mod tests {
 
         let err = stack.transcribe(&request(id)).unwrap_err();
 
-        assert_eq!(err, AsrError::AllEnginesFailed);
+        assert_eq!(
+            err,
+            AsrError::AllEnginesFailed {
+                failures: vec!["local_cpu: engine inference failed: model missing".to_string()]
+            }
+        );
+        assert_eq!(
+            err.to_string(),
+            "all configured ASR engines failed: local_cpu: engine inference failed: model missing"
+        );
+    }
+
+    #[test]
+    fn pending_local_asr_reports_selected_model_without_fake_output() {
+        let id = session_id();
+        let mut stack = pending_local_asr_stack(EngineLane::LocalCpu, Some("fixture-asr"));
+
+        let err = stack.transcribe(&request(id)).unwrap_err();
+
+        assert_eq!(
+            err.to_string(),
+            "all configured ASR engines failed: local_cpu: engine unavailable: local ASR adapter is not loaded yet for selected model 'fixture-asr'"
+        );
     }
 }

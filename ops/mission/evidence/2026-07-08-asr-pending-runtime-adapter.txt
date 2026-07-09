@@ -1,0 +1,67 @@
+Kaydence ASR pending runtime adapter evidence
+Date: 2026-07-08 23:22 CDT / 2026-07-09T04:22Z
+
+Intent
+- Replace the default runtime's empty ASR stack with an honest pending local-ASR
+  adapter, so real hotkey captures persist audio and record a specific
+  Recognize failure while Parakeet/Whisper adapters are still unimplemented.
+- Preserve the no-fake-output rule: this does not synthesize transcripts,
+  debug-recognize text, or pretend model inference exists.
+- Thread first-run's selected ASR model/lane into the runtime diagnostic so
+  history/debugging can explain which selected model is awaiting an adapter.
+
+Changed files
+- apps/desktop/src-tauri/src/engine/mod.rs
+  - Expanded AllEnginesFailed to retain per-lane failure summaries.
+  - Added PendingLocalAsrEngine and pending_local_asr_stack.
+  - Added tests for detailed terminal failures and the selected-model pending
+    adapter path.
+- apps/desktop/src-tauri/src/pipeline/mod.rs
+  - default_runtime_pipeline now uses pending_local_asr_stack instead of an
+    empty EngineStack.
+  - Added a regression proving the default runtime records AudioPersisted first,
+    then a specific Recognize failure naming the selected ASR model.
+- apps/desktop/src-tauri/src/lib.rs
+  - HotkeyRuntime::new now accepts first-run state, extracts the selected ASR
+    model/lane, and passes that context to the default runtime pipeline.
+  - Added selected_asr_runtime_context_carries_model_and_lane.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml pending_local_asr_reports_selected_model_without_fake_output
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml default_runtime_pipeline_reports_pending_selected_asr_adapter
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml selected_asr_runtime_context_carries_model_and_lane
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml engine::
+  - 7 engine tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml pipeline::
+  - 9 pipeline tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 154 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run check
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 remains the only by-design Proposed waiver.
+- PASS: npm --prefix apps/desktop run build
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This does not implement Parakeet, Whisper, or BYOK inference adapters.
+- This does not download model bytes or add a network path.
+- This does not prove WER, latency, or first successful dictation.
+- Runtime selection is captured at hotkey runtime startup; full hot-swapping on
+  later model changes still belongs with the real adapter lifecycle.
+
+Remote truth checked during the slice
+- git remote -v points origin at https://github.com/IslandDevCrew/kaydence.git.
+- git fetch origin still fails with "Repository not found."
+- gh auth is logged in as Navigata1 with IslandDevCrew also present but inactive.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.
