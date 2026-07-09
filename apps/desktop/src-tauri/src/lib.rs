@@ -6,7 +6,7 @@
 //! parallel local-only layer. Stages couple only through `events::SessionEvent`.
 
 #[cfg(desktop)]
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 #[cfg(desktop)]
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -73,12 +73,135 @@ impl RuntimeSnapshot {
     }
 
     #[cfg(desktop)]
+    fn refresh_model_readiness(&self, registry_path: &Path, models_dir: &Path) {
+        let (model_ready, model_readiness_error, required_models) =
+            first_run_model_readiness(registry_path, models_dir);
+        self.update_first_run(|first_run| {
+            first_run.model_ready = model_ready;
+            first_run.model_readiness_error = model_readiness_error;
+            first_run.required_models = required_models;
+        });
+    }
+
+    #[cfg(desktop)]
+    fn mark_model_readiness_failed(&self, error: String) {
+        self.update_first_run(|first_run| {
+            first_run.model_ready = false;
+            first_run.model_readiness_error = Some(error);
+            first_run.required_models.clear();
+        });
+    }
+
+    #[cfg(desktop)]
     fn update_first_run(&self, update: impl FnOnce(&mut settings::FirstRunStatus)) {
         let mut snapshot = self
             .inner
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         update(&mut snapshot.settings.first_run);
+    }
+}
+
+#[cfg(desktop)]
+fn first_run_model_readiness(
+    registry_path: &Path,
+    models_dir: &Path,
+) -> (bool, Option<String>, Vec<settings::FirstRunModelStatus>) {
+    let registry = match models::ModelRegistry::load(registry_path) {
+        Ok(registry) => registry,
+        Err(err) => {
+            return (
+                false,
+                Some(format!("Model registry unavailable: {err}")),
+                Vec::new(),
+            );
+        }
+    };
+
+    let required_models = registry
+        .verify_required_first_run_models(models_dir)
+        .into_iter()
+        .map(|(model, status)| first_run_model_status(model, status))
+        .collect::<Vec<_>>();
+
+    let model_ready = !required_models.is_empty()
+        && required_models
+            .iter()
+            .all(|model| model.state == settings::FirstRunModelState::Ready);
+    let model_readiness_error = model_readiness_error(&required_models);
+
+    (model_ready, model_readiness_error, required_models)
+}
+
+#[cfg(desktop)]
+fn first_run_model_status(
+    model: &models::ModelEntry,
+    status: Result<models::ModelArtifactStatus, models::ModelRegistryError>,
+) -> settings::FirstRunModelStatus {
+    let (state, detail) = match status {
+        Ok(models::ModelArtifactStatus::Ready { size_bytes, .. }) => (
+            settings::FirstRunModelState::Ready,
+            format!("Verified artifact, {} MB on disk", bytes_to_mb(size_bytes)),
+        ),
+        Ok(models::ModelArtifactStatus::Missing { .. }) => (
+            settings::FirstRunModelState::Missing,
+            "Download required before first dictation".to_string(),
+        ),
+        Err(models::ModelRegistryError::PlaceholderChecksum { .. }) => (
+            settings::FirstRunModelState::Blocked,
+            "Registry checksum pending".to_string(),
+        ),
+        Err(models::ModelRegistryError::ChecksumMismatch { .. }) => (
+            settings::FirstRunModelState::Blocked,
+            "Checksum mismatch; replace the local artifact".to_string(),
+        ),
+        Err(err) => (
+            settings::FirstRunModelState::Blocked,
+            format!("Registry error: {err}"),
+        ),
+    };
+
+    settings::FirstRunModelStatus {
+        id: model.id.clone(),
+        task: model_task_label(model.task).to_string(),
+        lane: model.lane.clone(),
+        runtime: model.runtime.clone(),
+        file: model.file.clone(),
+        state,
+        detail,
+        license: model.license.clone(),
+        license_review_required: model.license_review_required,
+    }
+}
+
+#[cfg(desktop)]
+fn model_readiness_error(models: &[settings::FirstRunModelStatus]) -> Option<String> {
+    if models.is_empty() {
+        return Some("No required first-run models are registered".to_string());
+    }
+
+    if models
+        .iter()
+        .any(|model| model.state == settings::FirstRunModelState::Blocked)
+    {
+        return Some("Model registry needs verified checksums or artifact repair".to_string());
+    }
+
+    None
+}
+
+#[cfg(desktop)]
+fn bytes_to_mb(size_bytes: u64) -> u64 {
+    size_bytes.div_ceil(1024 * 1024)
+}
+
+#[cfg(desktop)]
+fn model_task_label(task: models::ModelTask) -> &'static str {
+    match task {
+        models::ModelTask::Asr => "ASR",
+        models::ModelTask::Vad => "VAD",
+        models::ModelTask::Cleanup => "Cleanup",
+        models::ModelTask::Prediction => "Prediction",
     }
 }
 
@@ -395,12 +518,25 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![app_snapshot])
         .setup(|app| {
             #[cfg(desktop)]
-            if let Err(err) = install_global_hotkey(app) {
+            {
                 use tauri::Manager;
 
-                app.state::<RuntimeSnapshot>()
-                    .mark_hotkey_registration_failed(err.to_string());
-                eprintln!("Kaydence global hotkey disabled: {err}");
+                let snapshot = app.state::<RuntimeSnapshot>();
+                match app.path().app_data_dir() {
+                    Ok(app_data_dir) => snapshot.refresh_model_readiness(
+                        &models::source_tree_registry_path(),
+                        &app_data_dir.join("models"),
+                    ),
+                    Err(err) => snapshot.mark_model_readiness_failed(format!(
+                        "App data directory unavailable: {err}"
+                    )),
+                }
+
+                if let Err(err) = install_global_hotkey(app) {
+                    app.state::<RuntimeSnapshot>()
+                        .mark_hotkey_registration_failed(err.to_string());
+                    eprintln!("Kaydence global hotkey disabled: {err}");
+                }
             }
             Ok(())
         })
@@ -412,6 +548,7 @@ pub fn run() {
 mod tests {
     use super::*;
     use crate::events::{CleanupDial, HoldReason, InjectMethod};
+    use sha2::{Digest, Sha256};
     use std::collections::VecDeque;
     use std::sync::{Arc, Mutex};
 
@@ -582,6 +719,61 @@ mod tests {
         )])
     }
 
+    fn sha256_for(bytes: &[u8]) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(bytes);
+        hasher
+            .finalize()
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect()
+    }
+
+    fn first_run_registry_json(asr_hash: &str, vad_hash: &str) -> String {
+        format!(
+            r#"{{
+              "schema_version": 1,
+              "models": [
+                {{
+                  "id": "fixture-asr",
+                  "task": "asr",
+                  "lane": "cpu",
+                  "runtime": "onnxruntime",
+                  "file": "fixture-asr.onnx",
+                  "sha256": "{asr_hash}",
+                  "size_mb": 1,
+                  "license": "Apache-2.0",
+                  "min_hw": "any",
+                  "recommended": true
+                }},
+                {{
+                  "id": "fixture-vad",
+                  "task": "vad",
+                  "runtime": "onnxruntime",
+                  "file": "fixture-vad.onnx",
+                  "sha256": "{vad_hash}",
+                  "size_mb": 1,
+                  "license": "MIT",
+                  "min_hw": "any",
+                  "recommended": true
+                }}
+              ]
+            }}"#
+        )
+    }
+
+    fn write_first_run_registry(
+        app_data: &std::path::Path,
+        asr_hash: &str,
+        vad_hash: &str,
+    ) -> std::path::PathBuf {
+        let registry_dir = app_data.join("registry");
+        std::fs::create_dir_all(&registry_dir).unwrap();
+        let registry_path = registry_dir.join("registry.json");
+        std::fs::write(&registry_path, first_run_registry_json(asr_hash, vad_hash)).unwrap();
+        registry_path
+    }
+
     #[test]
     fn runtime_snapshot_reflects_hotkey_registration_success() {
         let state = RuntimeSnapshot::default();
@@ -606,6 +798,71 @@ mod tests {
             snapshot.settings.first_run.hotkey_registration_error,
             Some("shortcut already registered".to_string())
         );
+    }
+
+    #[test]
+    fn runtime_snapshot_blocks_placeholder_model_checksums() {
+        let app_data = tmp();
+        let registry_path = write_first_run_registry(&app_data, "TODO", "TODO");
+        let state = RuntimeSnapshot::default();
+
+        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
+
+        let first_run = state.snapshot().settings.first_run;
+        assert!(!first_run.model_ready);
+        assert_eq!(
+            first_run.model_readiness_error,
+            Some("Model registry needs verified checksums or artifact repair".to_string())
+        );
+        assert_eq!(first_run.required_models.len(), 2);
+        assert!(first_run
+            .required_models
+            .iter()
+            .all(|model| model.state == settings::FirstRunModelState::Blocked));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn runtime_snapshot_reports_missing_first_run_models() {
+        let app_data = tmp();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
+        let state = RuntimeSnapshot::default();
+
+        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
+
+        let first_run = state.snapshot().settings.first_run;
+        assert!(!first_run.model_ready);
+        assert_eq!(first_run.model_readiness_error, None);
+        assert!(first_run
+            .required_models
+            .iter()
+            .all(|model| model.state == settings::FirstRunModelState::Missing));
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn runtime_snapshot_marks_verified_first_run_models_ready() {
+        let app_data = tmp();
+        let models_dir = app_data.join("models");
+        std::fs::create_dir_all(&models_dir).unwrap();
+        std::fs::write(models_dir.join("fixture-asr.onnx"), b"asr").unwrap();
+        std::fs::write(models_dir.join("fixture-vad.onnx"), b"vad").unwrap();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
+        let state = RuntimeSnapshot::default();
+
+        state.refresh_model_readiness(&registry_path, &models_dir);
+
+        let first_run = state.snapshot().settings.first_run;
+        assert!(first_run.model_ready);
+        assert_eq!(first_run.model_readiness_error, None);
+        assert_eq!(first_run.required_models.len(), 2);
+        assert!(first_run
+            .required_models
+            .iter()
+            .all(|model| model.state == settings::FirstRunModelState::Ready));
+        let _ = std::fs::remove_dir_all(app_data);
     }
 
     #[test]

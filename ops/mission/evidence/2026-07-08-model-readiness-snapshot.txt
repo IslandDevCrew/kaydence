@@ -1,0 +1,69 @@
+Kaydence first-run model readiness evidence
+Date: 2026-07-08
+
+Intent
+- Make first-run model readiness truthful and backend-owned.
+- Fail closed when registry entries still have placeholder checksums.
+- Give the setup UI enough detail to distinguish ready, missing, and blocked
+  required local models without moving registry logic into React.
+
+Changed files
+- apps/desktop/src-tauri/src/models/mod.rs
+  - Added source_tree_models_dir and source_tree_registry_path helpers for the
+    current dev/runtime registry location.
+- apps/desktop/src-tauri/src/settings/mod.rs
+  - Extended FirstRunStatus with model_readiness_error and required_models.
+  - Added FirstRunModelStatus and FirstRunModelState for serialized setup UI
+    state.
+- apps/desktop/src-tauri/src/lib.rs
+  - RuntimeSnapshot refreshes model readiness during Tauri setup.
+  - Startup loads the source-tree registry and verifies required ASR/VAD model
+    artifacts under app_data_dir/models.
+  - Placeholder checksums become blocked model states.
+  - Missing verified artifacts become missing/download-required states.
+  - Verified artifacts mark model_ready only when every required ASR/VAD model is
+    ready.
+  - Added runtime snapshot tests for placeholder, missing, and ready states.
+- apps/desktop/src/App.tsx
+  - First-run checklist uses model_readiness_error for the local ASR step.
+  - Setup panel renders required model id/task/lane/state/detail from the
+    backend snapshot.
+- apps/desktop/src/styles.css
+  - Added compact model status rows for ready/missing/blocked states.
+- ops/mission/state.json and docs/CODEX_SUPER_GOAL_PROMPT.md
+  - Updated P1-P0-2/P1-P0-8 state and next-action guidance.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml runtime_snapshot --lib
+  - 5 runtime snapshot tests passed.
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml models:: --lib
+  - 7 model registry tests passed.
+- PASS: npm --prefix apps/desktop run check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 134 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: npm --prefix apps/desktop run build
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 waiver only.
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This does not download model artifacts.
+- This does not replace registry TODO checksums/sources with reviewed published
+  artifacts.
+- This does not implement Parakeet/Whisper inference adapters or hardware
+  recommendation.
+- Current repo registry intentionally keeps placeholder checksums, so first-run
+  model readiness correctly reports blocked until integration fills real artifact
+  metadata.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.

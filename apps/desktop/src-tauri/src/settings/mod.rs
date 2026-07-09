@@ -243,6 +243,8 @@ impl PrivacySettings {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct FirstRunStatus {
     pub model_ready: bool,
+    pub model_readiness_error: Option<String>,
+    pub required_models: Vec<FirstRunModelStatus>,
     pub microphone_permission_ready: bool,
     pub input_permission_ready: bool,
     pub hotkey_registered: bool,
@@ -257,6 +259,27 @@ impl FirstRunStatus {
             && self.input_permission_ready
             && self.hotkey_registered
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FirstRunModelStatus {
+    pub id: String,
+    pub task: String,
+    pub lane: Option<String>,
+    pub runtime: String,
+    pub file: String,
+    pub state: FirstRunModelState,
+    pub detail: String,
+    pub license: String,
+    pub license_review_required: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FirstRunModelState {
+    Ready,
+    Missing,
+    Blocked,
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
@@ -355,7 +378,27 @@ mod tests {
         assert!(!status.ready_to_dictate());
         assert_eq!(
             serde_json::to_string(&status).unwrap(),
-            "{\"model_ready\":false,\"microphone_permission_ready\":false,\"input_permission_ready\":false,\"hotkey_registered\":false,\"hotkey_registration_error\":\"shortcut already registered\",\"first_dictation_completed\":false}"
+            "{\"model_ready\":false,\"model_readiness_error\":null,\"required_models\":[],\"microphone_permission_ready\":false,\"input_permission_ready\":false,\"hotkey_registered\":false,\"hotkey_registration_error\":\"shortcut already registered\",\"first_dictation_completed\":false}"
         );
+    }
+
+    #[test]
+    fn first_run_model_status_serializes_for_setup_ui() {
+        let status = FirstRunModelStatus {
+            id: "parakeet-v3".to_string(),
+            task: "ASR".to_string(),
+            lane: Some("cpu".to_string()),
+            runtime: "onnxruntime".to_string(),
+            file: "parakeet-v3-int8.onnx".to_string(),
+            state: FirstRunModelState::Blocked,
+            detail: "Registry checksum pending".to_string(),
+            license: "Apache-2.0".to_string(),
+            license_review_required: false,
+        };
+
+        let json = serde_json::to_string(&status).unwrap();
+
+        assert!(json.contains("\"state\":\"blocked\""));
+        assert!(json.contains("\"id\":\"parakeet-v3\""));
     }
 }

@@ -350,6 +350,61 @@ button {
   font-size: .82rem;
 }
 
+.model-status-list {
+  display: grid;
+  gap: 8px;
+}
+
+.model-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, .72fr);
+  gap: 10px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 10px 12px;
+}
+
+.model-status strong,
+.model-status span,
+.model-status em,
+.model-status small {
+  display: block;
+}
+
+.model-status strong {
+  overflow-wrap: anywhere;
+}
+
+.model-status span,
+.model-status small {
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.model-status em {
+  color: var(--muted);
+  font-size: .72rem;
+  font-style: normal;
+  font-weight: 900;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.model-status small {
+  margin-top: 3px;
+  text-align: right;
+}
+
+.model-status.status-ready em {
+  color: color-mix(in srgb, var(--accent) 78%, #15313a);
+}
+
+.model-status.status-blocked em {
+  color: var(--danger);
+}
+
 .setup-list small {
   display: block;
   margin-top: 4px;

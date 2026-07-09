@@ -33,6 +33,18 @@ interface ChecklistItem {
   detail?: string;
 }
 
+interface FirstRunModelStatus {
+  id: string;
+  task: string;
+  lane: string | null;
+  runtime: string;
+  file: string;
+  state: "ready" | "missing" | "blocked";
+  detail: string;
+  license: string;
+  license_review_required: boolean;
+}
+
 interface AppSnapshot {
   app_name: string;
   app_identifier: string;
@@ -66,6 +78,8 @@ interface AppSnapshot {
     };
     first_run: {
       model_ready: boolean;
+      model_readiness_error: string | null;
+      required_models: FirstRunModelStatus[];
       microphone_permission_ready: boolean;
       input_permission_ready: boolean;
       hotkey_registered: boolean;
@@ -108,6 +122,8 @@ const previewSnapshot: AppSnapshot = {
     },
     first_run: {
       model_ready: false,
+      model_readiness_error: null,
+      required_models: [],
       microphone_permission_ready: false,
       input_permission_ready: false,
       hotkey_registered: false,
@@ -169,7 +185,12 @@ function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
   return [
     {
       label: "Choose local ASR engine",
-      status: firstRun.model_ready ? "Ready" : "Next",
+      status: firstRun.model_ready
+        ? "Ready"
+        : firstRun.model_readiness_error
+          ? "Issue"
+          : "Next",
+      detail: firstRun.model_readiness_error ?? undefined,
     },
     {
       label: "Grant OS permissions",
@@ -221,6 +242,7 @@ export function App(): JSX.Element {
     snapshot.settings.first_run.microphone_permission_ready &&
     snapshot.settings.first_run.input_permission_ready &&
     snapshot.settings.first_run.hotkey_registered;
+  const requiredModels = snapshot.settings.first_run.required_models;
 
   useEffect(() => {
     let active = true;
@@ -423,6 +445,22 @@ export function App(): JSX.Element {
                 </li>
               ))}
             </ol>
+            {requiredModels.length > 0 ? (
+              <div className="model-status-list" aria-label="Required local models">
+                {requiredModels.map((model) => (
+                  <div className={`model-status status-${model.state}`} key={model.id}>
+                    <div>
+                      <strong>{model.id}</strong>
+                      <span>{model.task}{model.lane ? ` / ${model.lane}` : ""}</span>
+                    </div>
+                    <div>
+                      <em>{model.state}</em>
+                      <small>{model.detail}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <button className="primary-action" disabled={!firstRunReady} type="button">
               {firstRunReady ? "Start Dictating" : "Resolve Setup"}
             </button>

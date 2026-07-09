@@ -16,6 +16,16 @@ use std::{
 pub const SUPPORTED_SCHEMA_VERSION: u16 = 1;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
 
+pub fn source_tree_models_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .join("models")
+}
+
+pub fn source_tree_registry_path() -> PathBuf {
+    source_tree_models_dir().join("registry.json")
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum ModelRegistryError {
     #[error("unsupported model registry schema version {actual}; expected {expected}")]
@@ -255,16 +265,11 @@ mod tests {
     }
 
     fn registry_path() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../..")
-            .join("models")
-            .join("registry.json")
+        source_tree_registry_path()
     }
 
     fn repo_models_dir() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../..")
-            .join("models")
+        source_tree_models_dir()
     }
 
     fn entry(id: &str, file: &str, sha256: String) -> ModelEntry {

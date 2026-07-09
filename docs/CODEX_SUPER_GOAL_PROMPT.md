@@ -56,12 +56,16 @@ Next best work:
 1. Close the remaining P1-P0-1 hotkey proof: live OS permission/conflict/rebind
    validation on macOS, Windows, and Linux; toggle/rebind UI; P1-G2/P1-G3 gates.
    The global-shortcut plugin and WAL runtime path are already wired locally.
-2. Continue injection backends behind TextInjector: Windows UIA+SendInput still
+2. Advance P1-P0-2 ASR readiness: replace TODO model hashes/sources with
+   reviewed artifacts, implement download/quarantine, hardware recommendation,
+   and Parakeet/Whisper engine adapters. AppSnapshot already exposes
+   ready/missing/blocked first-run model states from registry verification.
+3. Continue injection backends behind TextInjector: Windows UIA+SendInput still
    needs the Windows Codex session; Linux AT-SPI/uinput needs human-focus VM
    validation; macOS AX/CGEvent/NSPasteboard has local evidence.
-3. Build first-run permission/setup and dictation cockpit against screen
+4. Build first-run permission/setup and dictation cockpit against screen
    families 01, 03, 07, and 10.
-4. Prepare remote recovery only after preserving local commits: either restore
+5. Prepare remote recovery only after preserving local commits: either restore
    IslandDevCrew/kaydence, create Navigata1/kaydence, or fork one from the other
    once one exists.
 
