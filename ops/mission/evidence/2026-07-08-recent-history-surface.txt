@@ -1,0 +1,58 @@
+Kaydence recent history surface evidence
+Date: 2026-07-08 23:28 CDT / 2026-07-09T04:28Z
+
+Intent
+- Surface the local SQLite history safety net in the cockpit so users/build
+  agents can see persisted sessions, held text, and Recognize failures.
+- Keep React presentation-only: Rust reads the database and returns serialized
+  session rows; React renders them and sends only a refresh intent.
+- Make the ASR pending-adapter failure visible to the UI through the same
+  history path that protects audio and text.
+
+Changed files
+- apps/desktop/src-tauri/src/history/mod.rs
+  - Added Serialize for HistorySession and HistoryFailure.
+  - Added history_session_serializes_for_frontend.
+- apps/desktop/src-tauri/src/lib.rs
+  - Added the recent_history Tauri command.
+  - The command opens the app-data HistoryStore and returns a bounded recent
+    session list.
+- apps/desktop/src/App.tsx
+  - Added HistorySession frontend shapes.
+  - Invokes recent_history on load and via a Refresh button.
+  - Renders recent local history rows under the main dictation panel.
+- apps/desktop/src/styles.css
+  - Added compact history-list and mini-action styling.
+- ops/mission/state.json, ops/mission/journal.md, docs/CODEX_SUPER_GOAL_PROMPT.md
+  - Recorded the read-only history surface and remaining recovery/history work.
+
+Verification
+- PASS: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml history_session_serializes_for_frontend
+- PASS: npm --prefix apps/desktop run check
+- PASS: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - 155 library tests passed.
+  - 2 crash recovery tests passed.
+- PASS: cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- PASS: bash scripts/audit-network.sh --check
+  - 0 network call sites found.
+- PASS: bash scripts/check-adr-status.sh
+  - ADR-0009 remains the only by-design Proposed waiver.
+- PASS: npm --prefix apps/desktop run build
+- PASS: ./script/build_and_run.sh build
+- PASS: ./script/build_and_run.sh --verify
+
+Honest limits
+- This is a read-only recent-history surface.
+- This does not implement audio playback, export, purge/delete-all, retention
+  sweep, or crash-orphan recovery UI.
+- This does not auto-refresh during active dictation; users can refresh the
+  visible recent list manually.
+- This does not complete P1-P0-4 on all three OSes; CI/remote remain separate
+  trust anchors once the remote is restored.
+
+Post-verify hygiene
+- Generated Vite dist files were restored/removed after build verification.
+- Process check after verification:
+  ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - Expected: no output.

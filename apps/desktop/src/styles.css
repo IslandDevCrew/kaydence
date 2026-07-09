@@ -297,6 +297,7 @@ button {
 
 .recording-meta div,
 .transcript-card,
+.history-strip,
 .capability-list > div,
 .setup-list li {
   border: 1px solid var(--line);
@@ -319,6 +320,90 @@ button {
 .transcript-card p {
   margin-top: 6px;
   font-size: 1.04rem;
+}
+
+.history-strip {
+  display: grid;
+  gap: 10px;
+}
+
+.history-strip-heading,
+.history-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.history-strip-heading span,
+.history-row span,
+.empty-history {
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.history-strip-heading strong,
+.history-row strong,
+.history-row span {
+  display: block;
+}
+
+.history-strip-heading strong {
+  margin-top: 3px;
+  font-size: .9rem;
+}
+
+.history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.history-row {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.history-row div {
+  min-width: 0;
+}
+
+.history-row strong,
+.history-row span {
+  overflow-wrap: anywhere;
+}
+
+.history-row span {
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+.history-row em {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--accent) 76%, #14313a);
+  font-size: .72rem;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.empty-history {
+  margin: 0;
+}
+
+.mini-action {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .78rem;
+  font-weight: 800;
+  padding: 0 10px;
+}
+
+.mini-action:disabled {
+  color: var(--muted);
+  cursor: wait;
 }
 
 .rule-list,
@@ -529,6 +614,7 @@ button {
 
 .primary-action:focus-visible,
 .secondary-action:focus-visible,
+.mini-action:focus-visible,
 .lane:focus-visible,
 .segmented button:focus-visible,
 .nav-item:focus-visible {

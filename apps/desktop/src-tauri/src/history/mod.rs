@@ -8,6 +8,7 @@ use crate::events::{
     AppRef, CleanupDial, HoldReason, InjectMethod, SessionEvent, SessionId, Stage,
 };
 use rusqlite::{params, Connection, OptionalExtension};
+use serde::Serialize;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -238,7 +239,7 @@ impl HistoryStore {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct HistorySession {
     pub id: String,
     pub started_ms: Option<u64>,
@@ -253,7 +254,7 @@ pub struct HistorySession {
     pub event_count: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct HistoryFailure {
     pub stage: Stage,
     pub error: String,
@@ -631,6 +632,32 @@ mod tests {
                 error: "native insert unavailable".to_string()
             })
         );
+    }
+
+    #[test]
+    fn history_session_serializes_for_frontend() {
+        let session = HistorySession {
+            id: "01HX0000000000000000000000".to_string(),
+            started_ms: Some(10),
+            target_app: Some(app()),
+            audio_path: Some("/tmp/session.wav".to_string()),
+            raw_text: None,
+            clean_text: None,
+            cleanup_dial: None,
+            injected_method: None,
+            held_reason: None,
+            failure: Some(HistoryFailure {
+                stage: Stage::Recognize,
+                error: "local ASR adapter pending".to_string(),
+            }),
+            event_count: 3,
+        };
+
+        let json = serde_json::to_string(&session).unwrap();
+
+        assert!(json.contains("\"target_app\""));
+        assert!(json.contains("\"stage\":\"recognize\""));
+        assert!(json.contains("local ASR adapter pending"));
     }
 
     #[test]

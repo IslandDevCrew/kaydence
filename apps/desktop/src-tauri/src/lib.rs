@@ -69,6 +69,33 @@ fn refresh_model_readiness(
     }
 }
 
+#[tauri::command]
+fn recent_history(
+    app: tauri::AppHandle,
+    limit: Option<usize>,
+) -> Result<Vec<history::HistorySession>, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        let store = history::HistoryStore::open(&app_data_dir).map_err(|err| err.to_string())?;
+        store
+            .list_recent(limit.unwrap_or(5).clamp(1, 20))
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = limit;
+        Ok(Vec::new())
+    }
+}
+
 #[derive(Debug)]
 struct RuntimeSnapshot {
     inner: Mutex<settings::AppSnapshot>,
@@ -823,7 +850,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             app_snapshot,
             select_asr_model,
-            refresh_model_readiness
+            refresh_model_readiness,
+            recent_history
         ])
         .setup(|app| {
             #[cfg(desktop)]

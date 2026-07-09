@@ -33,6 +33,11 @@ interface ChecklistItem {
   detail?: string;
 }
 
+interface AppRef {
+  id: string;
+  name: string;
+}
+
 interface FirstRunModelStatus {
   id: string;
   task: string;
@@ -112,6 +117,29 @@ interface AppSnapshot {
   };
 }
 
+type HistoryStage = "capture" | "vad" | "recognize" | "clean" | "inject" | "history";
+type InjectMethod = "native" | "keystroke" | "clipboard_restore";
+type HoldReason = "focus_changed" | "secure_field" | "no_target";
+
+interface HistoryFailure {
+  stage: HistoryStage;
+  error: string;
+}
+
+interface HistorySession {
+  id: string;
+  started_ms: number | null;
+  target_app: AppRef | null;
+  audio_path: string | null;
+  raw_text: string | null;
+  clean_text: string | null;
+  cleanup_dial: "raw" | "light" | "full" | null;
+  injected_method: InjectMethod | null;
+  held_reason: HoldReason | null;
+  failure: HistoryFailure | null;
+  event_count: number;
+}
+
 const previewSnapshot: AppSnapshot = {
   app_name: "Kaydence",
   app_identifier: "io.kaydence.app",
@@ -158,6 +186,8 @@ const previewSnapshot: AppSnapshot = {
     },
   },
 };
+
+const previewHistory: HistorySession[] = [];
 
 const lanes: LaneSpec[] = [
   {
@@ -239,11 +269,39 @@ function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
   ];
 }
 
+function historyStatus(session: HistorySession): string {
+  if (session.failure) {
+    return `Failed: ${session.failure.stage}`;
+  }
+  if (session.held_reason) {
+    return `Held: ${session.held_reason}`;
+  }
+  if (session.injected_method) {
+    return `Injected: ${session.injected_method}`;
+  }
+  if (session.audio_path) {
+    return "Audio saved";
+  }
+  return "Started";
+}
+
+function historySummary(session: HistorySession): string {
+  return (
+    session.clean_text ??
+    session.raw_text ??
+    session.failure?.error ??
+    session.audio_path ??
+    "Session opened"
+  );
+}
+
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
   const [activeLane, setActiveLane] = useState<OsLane>("mac");
   const [snapshot, setSnapshot] = useState<AppSnapshot>(previewSnapshot);
   const [snapshotSource, setSnapshotSource] = useState<"backend" | "preview">("preview");
+  const [historySessions, setHistorySessions] = useState<HistorySession[]>(previewHistory);
+  const [historyRefreshPending, setHistoryRefreshPending] = useState(false);
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
@@ -293,6 +351,17 @@ export function App(): JSX.Element {
           setSnapshotSource("preview");
         }
       });
+    void invoke<HistorySession[]>("recent_history", { limit: 4 })
+      .then((sessions) => {
+        if (active) {
+          setHistorySessions(sessions);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHistorySessions(previewHistory);
+        }
+      });
     return () => {
       active = false;
     };
@@ -321,6 +390,20 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setModelRefreshPending(false);
+      });
+  }
+
+  function refreshHistory() {
+    setHistoryRefreshPending(true);
+    void invoke<HistorySession[]>("recent_history", { limit: 4 })
+      .then((sessions) => {
+        setHistorySessions(sessions);
+      })
+      .catch((error) => {
+        console.error("Kaydence history refresh failed", error);
+      })
+      .finally(() => {
+        setHistoryRefreshPending(false);
       });
   }
 
@@ -432,6 +515,38 @@ export function App(): JSX.Element {
                 Refactor the auth module and then migrate the session guard into
                 the shared middleware.
               </p>
+            </div>
+
+            <div className="history-strip" aria-label="Recent local history">
+              <div className="history-strip-heading">
+                <div>
+                  <span>Local history</span>
+                  <strong>{historySessions.length} recent sessions</strong>
+                </div>
+                <button
+                  className="mini-action"
+                  disabled={historyRefreshPending}
+                  onClick={refreshHistory}
+                  type="button"
+                >
+                  {historyRefreshPending ? "Refreshing" : "Refresh"}
+                </button>
+              </div>
+              {historySessions.length > 0 ? (
+                <div className="history-list">
+                  {historySessions.map((session) => (
+                    <div className="history-row" key={session.id}>
+                      <div>
+                        <strong>{session.target_app?.name ?? "Local session"}</strong>
+                        <span>{historySummary(session)}</span>
+                      </div>
+                      <em>{historyStatus(session)}</em>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="empty-history">No local sessions recorded yet.</p>
+              )}
             </div>
           </article>
 
