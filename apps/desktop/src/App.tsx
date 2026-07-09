@@ -710,12 +710,6 @@ export function App(): JSX.Element {
   const permissionSummaryText = permissionSummary(permissionRequirements);
   const setupTiming = snapshot.settings.first_run.setup_timing;
   const nextStep = snapshot.settings.first_run.next_step;
-  const firstRunReady =
-    snapshot.settings.first_run.model_ready &&
-    permissionRequirementsReady(permissionRequirements) &&
-    snapshot.settings.first_run.microphone_permission_ready &&
-    snapshot.settings.first_run.input_permission_ready &&
-    snapshot.settings.first_run.hotkey_registered;
   const firstRunActionDisabled =
     nextStep.kind === "setup" ||
     ((nextStep.kind === "model_install" || nextStep.kind === "permission") &&
@@ -1763,7 +1757,7 @@ export function App(): JSX.Element {
               onClick={() => void handleFirstRunAction()}
               type="button"
             >
-              {firstRunReady ? nextStep.action_label : "Resolve Setup"}
+              {nextStep.action_label}
             </button>
           </article>
         </section>

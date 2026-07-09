@@ -1,5 +1,11 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T17:31Z — Codex P1 slice (first-run action label)
+- Aligned the bottom Screen Family 10 setup primary action with backend-owned `next_step.action_label` instead of showing the generic `Resolve Setup` label while first-run readiness is still false.
+- The next-step card action and bottom primary action now say the same thing in the current model-metadata state: `Review models`.
+- Evidence saved at `ops/mission/evidence/2026-07-09-first-run-action-label.txt` plus in-app browser screenshot `ops/mission/evidence/2026-07-09-first-run-action-label-preview.png`. Local gates passed: frontend check, fmt check, Browser smoke, production build, desktop verify, and clippy.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T17:24Z — Codex P1 slice (first-run UI permission contract)
 - Aligned the React first-run checklist with the stricter backend readiness contract: the visible `Grant OS permissions` row now requires every rendered permission requirement row to be Ready, not just the coarse microphone/input booleans.
 - The setup action readiness flag now uses the same helper, preventing the UI from looking ready while Windows UIA/SendInput, Linux AT-SPI/uinput, or native secure-field proof rows still need hardware/review evidence.

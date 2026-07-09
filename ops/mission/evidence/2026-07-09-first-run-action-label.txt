@@ -1,0 +1,28 @@
+Kaydence evidence: first-run action label alignment
+Timestamp: 2026-07-09T17:31Z
+
+Scope
+- P1-P0-8 Screen Family 10 first-run setup action label alignment.
+- The bottom primary setup action now renders backend-selected `nextStep.action_label` directly instead of substituting the generic `Resolve Setup` label whenever first-run readiness is false.
+- This keeps the primary action consistent with the next-step card action. In the current reviewed-model-metadata state, both action surfaces show `Review models`.
+
+Files changed
+- apps/desktop/src/App.tsx
+
+Browser smoke
+- Started the Vite preview at http://localhost:1420/.
+- In-app Browser verified the next-step card action text and bottom primary action text were both `Review models`.
+- In-app Browser verified the old `Resolve Setup` primary action text was absent.
+- Console errors: none.
+- Screenshot: ops/mission/evidence/2026-07-09-first-run-action-label-preview.png
+
+Local gates
+- pnpm --dir apps/desktop run check
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- pnpm --dir apps/desktop run build
+- ./script/build_and_run.sh --verify
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+
+Honest boundary
+- This only aligns the visible action label contract. It does not add live OS permission prompts, approved model-download/network fetch behavior, real Parakeet/Whisper inference, or <=60s reference-machine proof.
+- Remote CI remains blocked before checkout by GitHub Actions billing/spending-limit state; do not claim remote parity for this local slice until billing is fixed and CI is rerun.
