@@ -1,4 +1,5 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useEffect, useMemo, useState } from "react";
 
 const markUrl = new URL(
@@ -339,6 +340,8 @@ export function App(): JSX.Element {
     useState<ActiveHistoryAudio | null>(null);
   const [historyPlaybackIssue, setHistoryPlaybackIssue] = useState<string | null>(null);
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
+  const [installingModelId, setInstallingModelId] = useState<string | null>(null);
+  const [modelInstallIssue, setModelInstallIssue] = useState<string | null>(null);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
@@ -416,6 +419,7 @@ export function App(): JSX.Element {
 
   function refreshModelReadiness() {
     setModelRefreshPending(true);
+    setModelInstallIssue(null);
     void invoke<AppSnapshot>("refresh_model_readiness")
       .then((nextSnapshot) => {
         setSnapshot(nextSnapshot);
@@ -427,6 +431,37 @@ export function App(): JSX.Element {
       .finally(() => {
         setModelRefreshPending(false);
       });
+  }
+
+  async function installModelArtifact(modelId: string) {
+    setInstallingModelId(modelId);
+    setModelInstallIssue(null);
+    try {
+      const selected = await openDialog({
+        multiple: false,
+        directory: false,
+        filters: [
+          {
+            name: "Model artifact",
+            extensions: ["onnx", "bin", "gguf"],
+          },
+        ],
+      });
+      if (selected === null || Array.isArray(selected)) {
+        return;
+      }
+      const nextSnapshot = await invoke<AppSnapshot>("install_model_artifact", {
+        modelId,
+        sourcePath: selected,
+      });
+      setSnapshot(nextSnapshot);
+      setSnapshotSource("backend");
+    } catch (error) {
+      console.error("Kaydence model artifact install failed", error);
+      setModelInstallIssue("Model artifact was not installed.");
+    } finally {
+      setInstallingModelId(null);
+    }
   }
 
   function refreshHistory() {
@@ -887,10 +922,27 @@ export function App(): JSX.Element {
                           {model.download_size_mb ?? 0} MB / {model.download_source_count} sources
                         </small>
                       ) : null}
+                      {model.state !== "ready" ? (
+                        <button
+                          className="mini-action model-install-action"
+                          disabled={
+                            !model.download_available ||
+                            installingModelId !== null ||
+                            modelRefreshPending
+                          }
+                          onClick={() => void installModelArtifact(model.id)}
+                          type="button"
+                        >
+                          {installingModelId === model.id ? "Installing" : "Install"}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 ))}
               </div>
+            ) : null}
+            {modelInstallIssue ? (
+              <p className="model-install-note">{modelInstallIssue}</p>
             ) : null}
             {showModelRecheck ? (
               <button

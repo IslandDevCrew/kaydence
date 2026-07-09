@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Kaydence default capability set. Minimal by design (non-negotiable #1) — surfaces are added per feature, never broadly.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "dialog:allow-open"]
 }

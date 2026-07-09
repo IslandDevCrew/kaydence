@@ -618,6 +618,19 @@ button {
   text-align: right;
 }
 
+.model-install-action {
+  margin-top: 8px;
+  min-width: 82px;
+}
+
+.model-install-note {
+  margin: -2px 0 0;
+  color: var(--danger);
+  font-size: .78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .model-status.status-ready em {
   color: color-mix(in srgb, var(--accent) 78%, #15313a);
 }

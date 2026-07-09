@@ -70,6 +70,40 @@ fn refresh_model_readiness(
 }
 
 #[tauri::command]
+fn install_model_artifact(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
+    model_id: String,
+    source_path: String,
+) -> Result<settings::AppSnapshot, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        state
+            .install_model_artifact(
+                &models::source_tree_registry_path(),
+                &app_data_dir,
+                &model_id,
+                &PathBuf::from(source_path),
+            )
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        let _ = model_id;
+        let _ = source_path;
+        Ok(state.snapshot())
+    }
+}
+
+#[tauri::command]
 fn recent_history(
     app: tauri::AppHandle,
     state: tauri::State<'_, RuntimeSnapshot>,
@@ -380,6 +414,26 @@ impl RuntimeSnapshot {
     }
 
     #[cfg(desktop)]
+    fn install_model_artifact(
+        &self,
+        registry_path: &Path,
+        app_data_dir: &Path,
+        model_id: &str,
+        source_path: &Path,
+    ) -> Result<settings::AppSnapshot, InstallModelArtifactError> {
+        let model_id = model_id.trim();
+        if model_id.is_empty() {
+            return Err(InstallModelArtifactError::EmptyModelId);
+        }
+
+        self.set_settings_store(app_data_dir);
+        let registry = models::ModelRegistry::load(registry_path)?;
+        let model = registry.require(model_id)?;
+        model.install_artifact_from_path(source_path, &app_data_dir.join("models"))?;
+        Ok(self.refresh_models(registry_path, app_data_dir)?)
+    }
+
+    #[cfg(desktop)]
     fn mark_model_readiness_failed(&self, error: String) {
         self.update_first_run(|first_run| {
             first_run.model_ready = false;
@@ -466,6 +520,16 @@ enum SelectModelError {
     EmptyModelId,
     #[error("unknown ASR model id: {0}")]
     UnknownModel(String),
+    #[error("settings store: {0}")]
+    SettingsStore(#[from] settings::SettingsStoreError),
+}
+
+#[derive(Debug, thiserror::Error)]
+enum InstallModelArtifactError {
+    #[error("model id cannot be empty")]
+    EmptyModelId,
+    #[error("model registry: {0}")]
+    ModelRegistry(#[from] models::ModelRegistryError),
     #[error("settings store: {0}")]
     SettingsStore(#[from] settings::SettingsStoreError),
 }
@@ -1035,12 +1099,17 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 ///
 /// Run the Tauri shell plus the current hotkey/audio/pipeline runtime.
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    let builder = builder.plugin(tauri_plugin_dialog::init());
+
+    builder
         .manage(RuntimeSnapshot::default())
         .invoke_handler(tauri::generate_handler![
             app_snapshot,
             select_asr_model,
             refresh_model_readiness,
+            install_model_artifact,
             recent_history,
             delete_history_session,
             export_history_session,
@@ -1493,6 +1562,84 @@ mod tests {
             .all(|model| model.state == settings::FirstRunModelState::Ready));
         assert!(state.snapshot().settings.first_run.model_ready);
         let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn runtime_snapshot_installs_reviewed_model_artifacts() {
+        let app_data = tmp();
+        let source_dir = tmp();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
+        let asr_source = source_dir.join("reviewed-asr.onnx");
+        let vad_source = source_dir.join("reviewed-vad.onnx");
+        std::fs::write(&asr_source, b"asr").unwrap();
+        std::fs::write(&vad_source, b"vad").unwrap();
+        let state = RuntimeSnapshot::default();
+
+        let asr_snapshot = state
+            .install_model_artifact(&registry_path, &app_data, "fixture-asr", &asr_source)
+            .unwrap();
+
+        assert!(!asr_snapshot.settings.first_run.model_ready);
+        assert_eq!(
+            std::fs::read(app_data.join("models/fixture-asr.onnx")).unwrap(),
+            b"asr"
+        );
+        assert_eq!(
+            asr_snapshot
+                .settings
+                .first_run
+                .required_models
+                .iter()
+                .find(|model| model.id == "fixture-asr")
+                .unwrap()
+                .state,
+            settings::FirstRunModelState::Ready
+        );
+
+        let ready_snapshot = state
+            .install_model_artifact(&registry_path, &app_data, "fixture-vad", &vad_source)
+            .unwrap();
+
+        assert!(ready_snapshot.settings.first_run.model_ready);
+        assert_eq!(
+            std::fs::read(app_data.join("models/fixture-vad.onnx")).unwrap(),
+            b"vad"
+        );
+        assert!(ready_snapshot
+            .settings
+            .first_run
+            .required_models
+            .iter()
+            .all(|model| model.state == settings::FirstRunModelState::Ready));
+        let _ = std::fs::remove_dir_all(app_data);
+        let _ = std::fs::remove_dir_all(source_dir);
+    }
+
+    #[test]
+    fn runtime_snapshot_refuses_unreviewed_model_artifact() {
+        let app_data = tmp();
+        let source_dir = tmp();
+        let registry_path =
+            write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
+        let source = source_dir.join("wrong-asr.onnx");
+        std::fs::write(&source, b"wrong").unwrap();
+        let state = RuntimeSnapshot::default();
+
+        let err = state
+            .install_model_artifact(&registry_path, &app_data, "fixture-asr", &source)
+            .unwrap_err();
+
+        assert!(matches!(
+            err,
+            InstallModelArtifactError::ModelRegistry(
+                models::ModelRegistryError::InstallChecksumMismatch { .. }
+            )
+        ));
+        assert!(!app_data.join("models/fixture-asr.onnx").exists());
+        assert!(!state.snapshot().settings.first_run.model_ready);
+        let _ = std::fs::remove_dir_all(app_data);
+        let _ = std::fs::remove_dir_all(source_dir);
     }
 
     #[test]

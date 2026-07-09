@@ -1,0 +1,63 @@
+Kaydence evidence: P1-P0-2 local model artifact install
+Date: 2026-07-08
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Slice: backend-owned reviewed model artifact install for first-run ASR readiness
+
+What changed
+- Added ModelEntry::install_artifact_from_path.
+- Added install_model_artifact Tauri command.
+- Added native file picker support through Tauri's dialog plugin.
+- Added first-run Install actions for required local model rows.
+- Expanded model readiness tests so reviewed app-data artifacts can be installed from selected local files and immediately refresh AppSnapshot truth.
+
+Safety and boundaries
+- The installer requires a registered model id and a non-placeholder registry sha256.
+- The selected source file is hashed before copy; checksum mismatch leaves the source untouched and does not create an active model artifact.
+- Existing bad app-data artifacts are quarantined through the existing checksum mismatch path before replacement.
+- The frontend never verifies, copies, or trusts model bytes; it opens a native file picker and sends the selected path to Rust.
+- This adds a local file-open UI capability only. It does not add model download networking or any new app egress.
+- Current source-tree registry entries still have TODO checksums/sources, so production readiness remains blocked until reviewed artifact metadata is landed.
+
+Documentation checked
+- Context7 Tauri v2 docs for dialog plugin setup:
+  @tauri-apps/plugin-dialog is the JavaScript package, tauri-plugin-dialog is registered in Rust, open() returns selected file paths, and the capability permission is dialog:allow-open.
+
+Focused proof
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  RESULT: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml install
+  RESULT: PASS
+  Tests: installs_reviewed_local_artifact_into_model_store; install_refuses_unreviewed_checksum_without_copying; install_quarantines_bad_existing_artifact_before_replacement; runtime_snapshot_rechecks_models_after_artifact_install; runtime_snapshot_installs_reviewed_model_artifacts.
+- npm --prefix apps/desktop run check
+  RESULT: PASS
+
+Standing local gates
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  RESULT: PASS
+  Tests: 172 lib tests + 2 crash_recovery tests.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  RESULT: PASS
+- npm --prefix apps/desktop run build
+  RESULT: PASS
+- scripts/audit-network.sh
+  RESULT: PASS
+  Network-capable call sites found: 0; unreviewed: 0.
+- scripts/check-adr-status.sh
+  RESULT: PASS
+  All ADRs Accepted except declared by-design exception 0009.
+- jq empty ops/mission/state.json
+  RESULT: PASS
+- ./script/build_and_run.sh build
+  RESULT: PASS
+  Note: pnpm still warns that package.json pnpm.onlyBuiltDependencies is ignored; workspace allowBuilds remains the active fix.
+- ./script/build_and_run.sh --verify
+  RESULT: PASS
+- git restore apps/desktop/dist/index.html && rm -rf apps/desktop/dist/assets apps/desktop/dist/favicon.svg
+  RESULT: PASS
+
+Remote truth
+- git fetch origin
+  RESULT: FAIL, expected current blocker
+  remote: Repository not found.
+  fatal: repository 'https://github.com/IslandDevCrew/kaydence.git/' not found
+  This checkpoint is local-only until the operator restores/repoints the remote.

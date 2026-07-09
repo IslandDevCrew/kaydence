@@ -58,6 +58,16 @@ pub enum ModelRegistryError {
         #[source]
         source: io::Error,
     },
+    #[error("model {id} selected artifact is not a readable file: {}", path.display())]
+    InvalidInstallSource { id: String, path: PathBuf },
+    #[error(
+        "model {id} selected artifact checksum mismatch: expected {expected}, actual {actual}; source left untouched"
+    )]
+    InstallChecksumMismatch {
+        id: String,
+        expected: String,
+        actual: String,
+    },
     #[error("model {id} does not have usable download sources yet")]
     PlaceholderSources { id: String },
     #[error("model {id} has an invalid download source: {url}")]
@@ -260,6 +270,89 @@ impl ModelEntry {
         })
     }
 
+    pub fn install_artifact_from_path(
+        &self,
+        source_path: &Path,
+        models_dir: &Path,
+    ) -> Result<ModelInstallOutcome, ModelRegistryError> {
+        if self.is_checksum_placeholder() {
+            return Err(ModelRegistryError::PlaceholderChecksum {
+                id: self.id.clone(),
+            });
+        }
+
+        let source_path = fs::canonicalize(source_path)?;
+        if !source_path.is_file() {
+            return Err(ModelRegistryError::InvalidInstallSource {
+                id: self.id.clone(),
+                path: source_path,
+            });
+        }
+
+        let expected = self.sha256.trim().to_ascii_lowercase();
+        let actual = hash_file_sha256(&source_path)?;
+        if actual != expected {
+            return Err(ModelRegistryError::InstallChecksumMismatch {
+                id: self.id.clone(),
+                expected,
+                actual,
+            });
+        }
+
+        fs::create_dir_all(models_dir)?;
+        let destination_path = self.artifact_path(models_dir)?;
+        match self.verify_artifact(models_dir) {
+            Ok(ModelArtifactStatus::Ready { path, size_bytes }) => {
+                return Ok(ModelInstallOutcome {
+                    id: self.id.clone(),
+                    path,
+                    size_bytes,
+                });
+            }
+            Ok(ModelArtifactStatus::Missing { .. })
+            | Err(ModelRegistryError::ChecksumMismatch { .. }) => {}
+            Err(err) => return Err(err),
+        }
+
+        let temp_path = install_temp_path(&destination_path)?;
+        if let Err(err) = fs::copy(&source_path, &temp_path) {
+            let _ = fs::remove_file(&temp_path);
+            return Err(err.into());
+        }
+
+        let copied = match hash_file_sha256(&temp_path) {
+            Ok(copied) => copied,
+            Err(err) => {
+                let _ = fs::remove_file(&temp_path);
+                return Err(err.into());
+            }
+        };
+        if copied != expected {
+            let _ = fs::remove_file(&temp_path);
+            return Err(ModelRegistryError::InstallChecksumMismatch {
+                id: self.id.clone(),
+                expected,
+                actual: copied,
+            });
+        }
+
+        fs::rename(&temp_path, &destination_path)?;
+        let ModelArtifactStatus::Ready { path, size_bytes } = self.verify_artifact(models_dir)?
+        else {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "installed model artifact was not found after rename",
+            )
+            .into());
+        };
+
+        Ok(ModelInstallOutcome {
+            id: self.id.clone(),
+            path,
+            size_bytes,
+        })
+    }
+
     fn validated_sources(&self) -> Result<Vec<String>, ModelRegistryError> {
         let mut sources = Vec::new();
         for source in &self.sources {
@@ -315,6 +408,13 @@ pub struct ModelDownloadPlan {
     pub license: String,
     pub license_review_required: bool,
     pub sources: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ModelInstallOutcome {
+    pub id: String,
+    pub path: PathBuf,
+    pub size_bytes: u64,
 }
 
 fn is_sha256_hex(value: &str) -> bool {
@@ -378,6 +478,38 @@ fn quarantine_artifact(path: &Path, actual_hash: &str) -> io::Result<PathBuf> {
     Err(io::Error::new(
         io::ErrorKind::AlreadyExists,
         "too many quarantined artifacts with the same checksum",
+    ))
+}
+
+fn install_temp_path(destination_path: &Path) -> io::Result<PathBuf> {
+    let parent = destination_path.parent().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "model artifact destination has no parent directory",
+        )
+    })?;
+    let file_name = destination_path.file_name().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "model artifact destination has no filename",
+        )
+    })?;
+    let file_name = file_name.to_string_lossy();
+
+    for index in 0..1000 {
+        let candidate = parent.join(format!(
+            ".{file_name}.{}.{}.installing",
+            std::process::id(),
+            index
+        ));
+        if !candidate.exists() {
+            return Ok(candidate);
+        }
+    }
+
+    Err(io::Error::new(
+        io::ErrorKind::AlreadyExists,
+        "too many temporary model install files",
     ))
 }
 
@@ -608,6 +740,86 @@ mod tests {
             ));
         }
         let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn installs_reviewed_local_artifact_into_model_store() {
+        let dir = tmp();
+        let source_dir = tmp();
+        let bytes = b"reviewed local artifact";
+        let model = entry("fixture-asr", "fixture.onnx", sha256_for(bytes));
+        let source = source_dir.join("candidate.onnx");
+        std::fs::write(&source, bytes).unwrap();
+
+        let outcome = model.install_artifact_from_path(&source, &dir).unwrap();
+
+        assert_eq!(
+            outcome,
+            ModelInstallOutcome {
+                id: "fixture-asr".to_string(),
+                path: dir.join("fixture.onnx"),
+                size_bytes: bytes.len() as u64,
+            }
+        );
+        assert_eq!(std::fs::read(dir.join("fixture.onnx")).unwrap(), bytes);
+        assert_eq!(std::fs::read(source).unwrap(), bytes);
+        assert_eq!(
+            model.verify_artifact(&dir).unwrap(),
+            ModelArtifactStatus::Ready {
+                path: dir.join("fixture.onnx"),
+                size_bytes: bytes.len() as u64,
+            }
+        );
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(source_dir);
+    }
+
+    #[test]
+    fn install_refuses_unreviewed_checksum_without_copying() {
+        let dir = tmp();
+        let source_dir = tmp();
+        let model = entry("fixture-asr", "fixture.onnx", sha256_for(b"expected"));
+        let source = source_dir.join("candidate.onnx");
+        std::fs::write(&source, b"actual").unwrap();
+
+        let err = model.install_artifact_from_path(&source, &dir).unwrap_err();
+
+        assert!(matches!(
+            err,
+            ModelRegistryError::InstallChecksumMismatch { id, actual, .. }
+                if id == "fixture-asr" && actual == sha256_for(b"actual")
+        ));
+        assert!(!dir.join("fixture.onnx").exists());
+        assert_eq!(std::fs::read(source).unwrap(), b"actual");
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(source_dir);
+    }
+
+    #[test]
+    fn install_quarantines_bad_existing_artifact_before_replacement() {
+        let dir = tmp();
+        let source_dir = tmp();
+        let model = entry("fixture-asr", "fixture.onnx", sha256_for(b"expected"));
+        let destination = dir.join("fixture.onnx");
+        std::fs::write(&destination, b"stale bad").unwrap();
+        let source = source_dir.join("candidate.onnx");
+        std::fs::write(&source, b"expected").unwrap();
+
+        let outcome = model.install_artifact_from_path(&source, &dir).unwrap();
+
+        assert_eq!(outcome.path, destination);
+        assert_eq!(
+            std::fs::read(dir.join("fixture.onnx")).unwrap(),
+            b"expected"
+        );
+        let quarantined = std::fs::read_dir(dir.join(QUARANTINE_DIR_NAME))
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        assert_eq!(quarantined.len(), 1);
+        assert_eq!(std::fs::read(quarantined[0].path()).unwrap(), b"stale bad");
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(source_dir);
     }
 
     #[test]
