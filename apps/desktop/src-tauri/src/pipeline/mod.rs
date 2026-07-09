@@ -10,7 +10,7 @@ use crate::audio::{
 };
 use crate::cleanup;
 use crate::engine::{AsrError, AsrRequest, EngineStack};
-use crate::events::{CleanupDial, SessionEvent};
+use crate::events::{CleanupDial, SessionEvent, SessionId, Stage};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PipelineError {
@@ -18,6 +18,15 @@ pub enum PipelineError {
     Wal(#[from] audio::wal::WalError),
     #[error("asr: {0}")]
     Asr(#[from] AsrError),
+}
+
+pub trait CaptureProcessor {
+    fn set_cleanup_dial(&mut self, cleanup_dial: CleanupDial);
+
+    fn process_capture(
+        &mut self,
+        summary: &audio::CaptureSessionSummary,
+    ) -> Result<Vec<SessionEvent>, PipelineError>;
 }
 
 pub struct TranscriptionPipeline<D> {
@@ -72,22 +81,91 @@ where
                 segment.samples,
                 self.dictionary_hints.clone(),
             );
-            let run = self.engines.transcribe(&request)?;
-            for event in run.events {
-                let clean_event = match &event {
-                    SessionEvent::RawFinal { id, text } => {
-                        cleanup::clean_final_event(*id, text, self.cleanup_dial)
+            match self.engines.transcribe(&request) {
+                Ok(run) => {
+                    for event in run.events {
+                        let clean_event = match &event {
+                            SessionEvent::RawFinal { id, text } => {
+                                cleanup::clean_final_event(*id, text, self.cleanup_dial)
+                            }
+                            _ => None,
+                        };
+                        events.push(event);
+                        if let Some(clean_event) = clean_event {
+                            events.push(clean_event);
+                        }
                     }
-                    _ => None,
-                };
-                events.push(event);
-                if let Some(clean_event) = clean_event {
-                    events.push(clean_event);
                 }
+                Err(err) => events.push(SessionEvent::Failed {
+                    id: summary.id,
+                    stage: Stage::Recognize,
+                    error: err.to_string(),
+                }),
             }
         }
         Ok(events)
     }
+}
+
+impl<D> CaptureProcessor for TranscriptionPipeline<D>
+where
+    D: VadDetector,
+{
+    fn set_cleanup_dial(&mut self, cleanup_dial: CleanupDial) {
+        self.cleanup_dial = cleanup_dial;
+    }
+
+    fn process_capture(
+        &mut self,
+        summary: &audio::CaptureSessionSummary,
+    ) -> Result<Vec<SessionEvent>, PipelineError> {
+        TranscriptionPipeline::process_capture(self, summary)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CommittedText {
+    pub id: SessionId,
+    pub text: String,
+}
+
+pub fn committed_text(events: &[SessionEvent]) -> Option<CommittedText> {
+    let mut clean_segments = Vec::new();
+    let mut raw_segments = Vec::new();
+    let mut id = None;
+
+    for event in events {
+        match event {
+            SessionEvent::CleanFinal {
+                id: event_id, text, ..
+            } => {
+                id = Some(*event_id);
+                clean_segments.push(text.as_str());
+            }
+            SessionEvent::RawFinal { id: event_id, text } => {
+                id.get_or_insert(*event_id);
+                raw_segments.push(text.as_str());
+            }
+            _ => {}
+        }
+    }
+
+    let segments = if clean_segments.is_empty() {
+        raw_segments
+    } else {
+        clean_segments
+    };
+    let text = segments.join(" ").trim().to_string();
+    let id = id?;
+    (!text.is_empty()).then_some(CommittedText { id, text })
+}
+
+pub fn default_runtime_pipeline() -> TranscriptionPipeline<crate::audio::vad::EnergyVad> {
+    TranscriptionPipeline::new(
+        crate::audio::vad::EnergyVad::new(0.01),
+        SpeechGateConfig::default(),
+        EngineStack::empty(),
+    )
 }
 
 #[cfg(test)]
@@ -95,7 +173,7 @@ mod tests {
     use super::*;
     use crate::audio::{vad::EnergyVad, wal};
     use crate::engine::{AsrEngine, AsrTranscript, EngineLane};
-    use crate::events::{CleanupDial, SessionId};
+    use crate::events::{CleanupDial, SessionId, Stage};
     use std::collections::VecDeque;
     use std::sync::{Arc, Mutex};
     use ulid::Ulid;
@@ -108,6 +186,10 @@ mod tests {
         ));
         let _ = std::fs::remove_dir_all(&dir);
         dir
+    }
+
+    fn session_id() -> SessionId {
+        SessionId::new(Ulid::new())
     }
 
     fn test_vad_config() -> SpeechGateConfig {
@@ -306,5 +388,85 @@ mod tests {
             ]
         );
         let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn recognize_failure_is_recorded_after_audio_persisted() {
+        let (summary, app_data) = summary_for_samples(&[0.0, 0.0, 0.5, 0.5]);
+        let mut pipeline = TranscriptionPipeline::new(
+            EnergyVad::new(0.2),
+            test_vad_config(),
+            EngineStack::empty(),
+        );
+
+        let events = pipeline.process_capture(&summary).unwrap();
+
+        assert_eq!(events[0], summary.audio_persisted_event());
+        assert_eq!(events.len(), 2);
+        assert_eq!(
+            events[1],
+            SessionEvent::Failed {
+                id: summary.id,
+                stage: Stage::Recognize,
+                error: "all configured ASR engines failed".to_string()
+            }
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn committed_text_prefers_clean_segments() {
+        let id = session_id();
+        let events = vec![
+            SessionEvent::RawFinal {
+                id,
+                text: "um first".to_string(),
+            },
+            SessionEvent::CleanFinal {
+                id,
+                text: "First.".to_string(),
+                dial: CleanupDial::Light,
+            },
+            SessionEvent::RawFinal {
+                id,
+                text: "um second".to_string(),
+            },
+            SessionEvent::CleanFinal {
+                id,
+                text: "Second.".to_string(),
+                dial: CleanupDial::Light,
+            },
+        ];
+
+        assert_eq!(
+            committed_text(&events),
+            Some(CommittedText {
+                id,
+                text: "First. Second.".to_string()
+            })
+        );
+    }
+
+    #[test]
+    fn committed_text_uses_raw_when_cleanup_is_absent() {
+        let id = session_id();
+        let events = vec![
+            SessionEvent::RawFinal {
+                id,
+                text: "first raw".to_string(),
+            },
+            SessionEvent::RawFinal {
+                id,
+                text: "second raw".to_string(),
+            },
+        ];
+
+        assert_eq!(
+            committed_text(&events),
+            Some(CommittedText {
+                id,
+                text: "first raw second raw".to_string()
+            })
+        );
     }
 }

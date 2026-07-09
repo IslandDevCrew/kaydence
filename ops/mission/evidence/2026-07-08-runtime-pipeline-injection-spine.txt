@@ -1,0 +1,67 @@
+Kaydence evidence: finalized capture pipeline and injection spine
+Date: 2026-07-08
+
+Intent
+- Move the live hotkey runtime beyond AudioPersisted-only history.
+- Process finalized WAL captures through the existing VAD -> ASR -> cleanup event pipeline.
+- Persist all downstream events before attempting delivery.
+- Attempt injection only for committed text: CleanFinal segments when present, otherwise RawFinal segments.
+- Preserve honesty while platform backends are incomplete: unavailable injection records Held/Failed events instead of pretending text was typed.
+
+Changed
+- apps/desktop/src-tauri/src/engine/mod.rs
+  - Added EngineStack::empty for the current no-runtime-ASR-engine path.
+- apps/desktop/src-tauri/src/pipeline/mod.rs
+  - Added CaptureProcessor trait for runtime-owned finalized-capture processing.
+  - Added default_runtime_pipeline using EnergyVad + default gate config + empty engine stack.
+  - Changed ASR errors inside speech segments into SessionEvent::Failed { stage: Recognize } after AudioPersisted, keeping the session recoverable in history.
+  - Added committed_text helper that prefers cleaned text and aggregates multi-segment finals.
+- apps/desktop/src-tauri/src/inject/mod.rs
+  - Added TextInjector::paste_clipboard default hook.
+  - Added inject_committed_text orchestration: secure-field decision -> method selection -> backend call -> typed Injected/Held/Failed event.
+  - Refreshed ADR-0013 wording to reflect Accepted status.
+- apps/desktop/src-tauri/src/lib.rs
+  - HotkeyRuntime now owns a CaptureProcessor, TextInjector, and the active SessionTarget selected at start.
+  - FinalizeCapture now processes the WAL, persists pipeline events, extracts committed text, then records injection outcome.
+  - Profile cleanup dial selected at capture start is applied to the finalized capture processor.
+  - Short-tap discard still deletes the started session/event stream.
+
+Focused verification
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  - PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml pipeline:: --lib
+  - PASS: 7 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml inject:: --lib
+  - PASS: 15 passed
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime --lib
+  - PASS: 3 passed
+
+Full verification
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+  - PASS: 95 lib tests passed, 2 crash-recovery tests passed
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  - PASS
+- npm --prefix apps/desktop run check
+  - PASS
+- npm --prefix apps/desktop run build
+  - PASS
+- bash scripts/audit-network.sh --check
+  - PASS: 0 network-capable call sites
+- bash scripts/check-adr-status.sh
+  - PASS: ADR-0009 waiver only; ADR-0013 accepted
+- ./script/build_and_run.sh build
+  - PASS
+- ./script/build_and_run.sh --verify
+  - PASS
+
+Post-verify hygiene
+- ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true
+  - PASS: no leftover desktop/dev processes
+- apps/desktop/dist/index.html restored; generated apps/desktop/dist/assets and apps/desktop/dist/favicon.svg removed after build verification.
+
+Remaining outside this slice
+- Real runtime ASR engines: Parakeet CPU, Whisper GPU, and BYOK fallback chain.
+- Real macOS, Windows, and Linux TextInjector backends.
+- Focus-change comparison between capture-start target and delivery-time target.
+- Dictionary replacement/snippet pass between cleanup and injection.
+- Frontend HUD/history subscription to display the new Held/Failed/Injected outcomes live.

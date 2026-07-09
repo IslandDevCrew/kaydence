@@ -6,10 +6,9 @@
 //! display server (verified on the macOS host + 3-OS CI).
 //!
 //! The per-compositor feasibility matrix and the chosen Linux strategy are in
-//! `docs/spikes/P1-P0-3-wayland-injection.md` and ADR-0013 (Proposed — operator
-//! gate). The platform syscall bodies are deliberately unimplemented until that
-//! ADR's dependency set is approved and validated on the reference machines; the
-//! tested policy/selection/fallback logic below is final.
+//! `docs/spikes/P1-P0-3-wayland-injection.md` and accepted ADR-0013. Platform
+//! syscall bodies land incrementally after reference-machine validation; the
+//! tested policy/selection/fallback logic below is the shared core.
 //!
 //! No stage imports another's internals — communicate only via `SessionEvent`.
 #![allow(dead_code)]
@@ -225,6 +224,47 @@ pub trait TextInjector {
     fn focused_field(&self) -> FieldKind;
     fn insert_native(&mut self, text: &str) -> Result<(), InjectError>;
     fn synth_text(&mut self, text: &str) -> Result<(), InjectError>;
+    fn paste_clipboard(&mut self, _text: &str) -> Result<(), InjectError> {
+        Err(InjectError(
+            "clipboard paste not implemented for this backend".to_string(),
+        ))
+    }
+}
+
+pub fn inject_committed_text<I>(
+    injector: &mut I,
+    id: SessionId,
+    text: &str,
+    unknown_policy: UnknownFieldPolicy,
+    prefer_clipboard: bool,
+) -> SessionEvent
+where
+    I: TextInjector + ?Sized,
+{
+    match decide_secure(injector.focused_field(), unknown_policy) {
+        PolicyDecision::Refuse(reason) => outcome_event(id, Err(InjectFailure::Held(reason))),
+        PolicyDecision::Inject { .. } => {
+            let plan = select_plan(injector.caps(), prefer_clipboard);
+            let result = match plan {
+                InjectPlan::Native => injector
+                    .insert_native(text)
+                    .map(|_| InjectMethod::Native)
+                    .map_err(|err| InjectFailure::Error(err.0)),
+                InjectPlan::Keystroke(_) => injector
+                    .synth_text(text)
+                    .map(|_| InjectMethod::Keystroke)
+                    .map_err(|err| InjectFailure::Error(err.0)),
+                InjectPlan::Clipboard(_) => injector
+                    .paste_clipboard(text)
+                    .map(|_| InjectMethod::ClipboardRestore)
+                    .map_err(|err| InjectFailure::Error(err.0)),
+                InjectPlan::Unavailable => Err(InjectFailure::Error(
+                    "no injection channel available".to_string(),
+                )),
+            };
+            outcome_event(id, result)
+        }
+    }
 }
 
 /// Placeholder backend used until ADR-0013's per-OS implementations land. It
@@ -247,13 +287,13 @@ impl TextInjector for UnimplementedInjector {
     }
     fn insert_native(&mut self, _text: &str) -> Result<(), InjectError> {
         Err(InjectError(format!(
-            "native insert not yet implemented on {} (ADR-0013 pending)",
+            "native insert not yet implemented on {}",
             self.platform
         )))
     }
     fn synth_text(&mut self, _text: &str) -> Result<(), InjectError> {
         Err(InjectError(format!(
-            "keystroke synth not yet implemented on {} (ADR-0013 pending)",
+            "keystroke synth not yet implemented on {}",
             self.platform
         )))
     }
@@ -457,6 +497,141 @@ mod tests {
                 ..
             }
         ));
+    }
+
+    struct ScriptedInjector {
+        caps: InjectorCaps,
+        field: FieldKind,
+        native_error: Option<String>,
+        synth_error: Option<String>,
+        paste_error: Option<String>,
+        delivered: Vec<String>,
+    }
+
+    impl ScriptedInjector {
+        fn native(field: FieldKind) -> Self {
+            Self {
+                caps: caps(true, KeystrokeChannel::None, false),
+                field,
+                native_error: None,
+                synth_error: None,
+                paste_error: None,
+                delivered: Vec::new(),
+            }
+        }
+
+        fn unavailable(field: FieldKind) -> Self {
+            Self {
+                caps: caps(false, KeystrokeChannel::None, false),
+                field,
+                native_error: None,
+                synth_error: None,
+                paste_error: None,
+                delivered: Vec::new(),
+            }
+        }
+    }
+
+    impl TextInjector for ScriptedInjector {
+        fn caps(&self) -> InjectorCaps {
+            self.caps
+        }
+
+        fn focused_field(&self) -> FieldKind {
+            self.field
+        }
+
+        fn insert_native(&mut self, text: &str) -> Result<(), InjectError> {
+            if let Some(error) = &self.native_error {
+                Err(InjectError(error.clone()))
+            } else {
+                self.delivered.push(text.to_string());
+                Ok(())
+            }
+        }
+
+        fn synth_text(&mut self, text: &str) -> Result<(), InjectError> {
+            if let Some(error) = &self.synth_error {
+                Err(InjectError(error.clone()))
+            } else {
+                self.delivered.push(text.to_string());
+                Ok(())
+            }
+        }
+
+        fn paste_clipboard(&mut self, text: &str) -> Result<(), InjectError> {
+            if let Some(error) = &self.paste_error {
+                Err(InjectError(error.clone()))
+            } else {
+                self.delivered.push(text.to_string());
+                Ok(())
+            }
+        }
+    }
+
+    #[test]
+    fn inject_committed_text_holds_when_no_target_is_focused() {
+        let id = SessionId(ulid::Ulid::new());
+        let mut injector = ScriptedInjector::unavailable(FieldKind::NoTarget);
+
+        assert_eq!(
+            inject_committed_text(
+                &mut injector,
+                id,
+                "hello",
+                UnknownFieldPolicy::Lenient,
+                false
+            ),
+            SessionEvent::Held {
+                id,
+                reason: HoldReason::NoTarget
+            }
+        );
+        assert!(injector.delivered.is_empty());
+    }
+
+    #[test]
+    fn inject_committed_text_uses_native_path_when_available() {
+        let id = SessionId(ulid::Ulid::new());
+        let mut injector = ScriptedInjector::native(FieldKind::Editable);
+
+        assert_eq!(
+            inject_committed_text(
+                &mut injector,
+                id,
+                "clean text",
+                UnknownFieldPolicy::Lenient,
+                false
+            ),
+            SessionEvent::Injected {
+                id,
+                method: InjectMethod::Native
+            }
+        );
+        assert_eq!(injector.delivered, vec!["clean text"]);
+    }
+
+    #[test]
+    fn inject_committed_text_records_backend_errors() {
+        let id = SessionId(ulid::Ulid::new());
+        let mut injector = ScriptedInjector::native(FieldKind::Editable);
+        injector.native_error = Some("AX insert failed".to_string());
+
+        assert_eq!(
+            inject_committed_text(
+                &mut injector,
+                id,
+                "clean text",
+                UnknownFieldPolicy::Lenient,
+                false
+            ),
+            SessionEvent::Failed {
+                id,
+                stage: Stage::Inject,
+                error: "AX insert failed".to_string()
+            }
+        );
+        assert!(injector.delivered.is_empty());
     }
 
     #[test]

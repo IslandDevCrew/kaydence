@@ -135,6 +135,10 @@ impl EngineStack {
         }
     }
 
+    pub fn empty() -> Self {
+        Self::new(Vec::new())
+    }
+
     pub fn with_no_speech_threshold(mut self, threshold: f32) -> Self {
         self.no_speech_threshold = threshold;
         self

@@ -1,7 +1,7 @@
 //! Kaydence backend library — the real product (root `AGENTS.md`).
 //!
-//! Wires the pipeline modules (each a P0-T3 stub for now) and the Tauri app
-//! shell. The pipeline is: hotkeys -> audio(+VAD) -> engine -> cleanup ->
+//! Wires the pipeline modules and the Tauri app shell. The runtime path is:
+//! hotkeys -> audio(+VAD) -> engine -> cleanup ->
 //! dictionary -> profiles -> inject -> history, with prediction/context as a
 //! parallel local-only layer. Stages couple only through `events::SessionEvent`.
 
@@ -40,6 +40,11 @@ struct HotkeyRuntime {
     recorder: audio::WalCaptureRuntime,
     history: history::HistoryStore,
     target_resolver: Box<dyn profiles::ResolveSessionTarget + Send>,
+    active_target: Option<profiles::SessionTarget>,
+    processor: Box<dyn pipeline::CaptureProcessor + Send>,
+    injector: Box<dyn inject::TextInjector + Send>,
+    unknown_field_policy: inject::UnknownFieldPolicy,
+    prefer_clipboard: bool,
 }
 
 #[cfg(desktop)]
@@ -49,6 +54,8 @@ enum HotkeyRuntimeError {
     Audio(#[from] audio::CaptureRuntimeError),
     #[error("history: {0}")]
     History(#[from] history::HistoryError),
+    #[error("pipeline: {0}")]
+    Pipeline(#[from] pipeline::PipelineError),
 }
 
 #[cfg(desktop)]
@@ -61,6 +68,8 @@ impl HotkeyRuntime {
             recorder,
             history,
             Box::new(profiles::platform_target_resolver()),
+            Box::new(pipeline::default_runtime_pipeline()),
+            Box::new(inject::platform_injector()),
         ))
     }
 
@@ -73,6 +82,8 @@ impl HotkeyRuntime {
             recorder,
             history,
             Box::new(profiles::platform_target_resolver()),
+            Box::new(pipeline::default_runtime_pipeline()),
+            Box::new(inject::platform_injector()),
         ))
     }
 
@@ -80,6 +91,8 @@ impl HotkeyRuntime {
         recorder: audio::WalCaptureRuntime,
         history: history::HistoryStore,
         target_resolver: Box<dyn profiles::ResolveSessionTarget + Send>,
+        processor: Box<dyn pipeline::CaptureProcessor + Send>,
+        injector: Box<dyn inject::TextInjector + Send>,
     ) -> Self {
         Self {
             coordinator: hotkeys::CaptureCoordinator::new(
@@ -89,6 +102,11 @@ impl HotkeyRuntime {
             recorder,
             history,
             target_resolver,
+            active_target: None,
+            processor,
+            injector,
+            unknown_field_policy: inject::UnknownFieldPolicy::default(),
+            prefer_clipboard: false,
         }
     }
 
@@ -98,6 +116,18 @@ impl HotkeyRuntime {
         target_resolver: Box<dyn profiles::ResolveSessionTarget + Send>,
     ) -> Self {
         self.target_resolver = target_resolver;
+        self
+    }
+
+    #[cfg(test)]
+    fn with_processor(mut self, processor: Box<dyn pipeline::CaptureProcessor + Send>) -> Self {
+        self.processor = processor;
+        self
+    }
+
+    #[cfg(test)]
+    fn with_injector(mut self, injector: Box<dyn inject::TextInjector + Send>) -> Self {
+        self.injector = injector;
         self
     }
 
@@ -133,6 +163,7 @@ impl HotkeyRuntime {
                     self.coordinator.reset();
                     return Err(err.into());
                 }
+                self.active_target = Some(target.clone());
                 println!(
                     "Kaydence capture started: id={:?} target_app={} profile={} sessions_dir={}",
                     id,
@@ -143,15 +174,37 @@ impl HotkeyRuntime {
             }
             hotkeys::Action::FinalizeCapture => {
                 let summary = self.recorder.finalize_capture(at_ms)?;
-                let event = summary.audio_persisted_event();
-                self.history.record_event(&event)?;
+                if let Some(target) = self.active_target.take() {
+                    self.processor.set_cleanup_dial(target.profile.cleanup_dial);
+                }
+                let events = self.processor.process_capture(&summary)?;
+                let committed = pipeline::committed_text(&events);
+                self.history.record_events(&events)?;
+                let injection_event = committed.map(|committed| {
+                    inject::inject_committed_text(
+                        self.injector.as_mut(),
+                        committed.id,
+                        &committed.text,
+                        self.unknown_field_policy,
+                        self.prefer_clipboard,
+                    )
+                });
+                if let Some(event) = injection_event {
+                    self.history.record_event(&event)?;
+                    println!("Kaydence injection outcome: event={event:?}");
+                }
                 println!(
-                    "Kaydence audio persisted: event={:?} samples={} started_ms={} finalized_ms={}",
-                    event, summary.samples_written, summary.started_ms, summary.finalized_ms
+                    "Kaydence capture processed: id={:?} events={} samples={} started_ms={} finalized_ms={}",
+                    summary.id,
+                    events.len(),
+                    summary.samples_written,
+                    summary.started_ms,
+                    summary.finalized_ms
                 );
             }
             hotkeys::Action::DiscardCapture => {
                 let discarded = self.recorder.discard_capture(at_ms)?;
+                self.active_target = None;
                 self.history.delete_session(discarded.id)?;
                 println!(
                     "Kaydence capture discarded: id={:?} path={} started_ms={} discarded_ms={} removed={}",
@@ -261,7 +314,7 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 
 /// Run the Kaydence desktop app. Called by the thin `main.rs` binary.
 ///
-/// P0 scaffold: brings up the Tauri window only. Pipeline wiring lands in P1.
+/// Run the Tauri shell plus the current hotkey/audio/pipeline runtime.
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![app_snapshot])
@@ -277,6 +330,8 @@ pub fn run() {
 #[cfg(all(test, desktop))]
 mod tests {
     use super::*;
+    use crate::events::{CleanupDial, HoldReason, InjectMethod};
+    use std::sync::{Arc, Mutex};
 
     fn tmp() -> std::path::PathBuf {
         let dir = std::env::temp_dir().join(format!(
@@ -295,15 +350,119 @@ mod tests {
         }
     }
 
+    struct ScriptedProcessor {
+        cleanup_dial: CleanupDial,
+        seen_dials: Arc<Mutex<Vec<CleanupDial>>>,
+    }
+
+    impl ScriptedProcessor {
+        fn new(seen_dials: Arc<Mutex<Vec<CleanupDial>>>) -> Self {
+            Self {
+                cleanup_dial: CleanupDial::Light,
+                seen_dials,
+            }
+        }
+    }
+
+    impl pipeline::CaptureProcessor for ScriptedProcessor {
+        fn set_cleanup_dial(&mut self, cleanup_dial: CleanupDial) {
+            self.cleanup_dial = cleanup_dial;
+            self.seen_dials.lock().unwrap().push(cleanup_dial);
+        }
+
+        fn process_capture(
+            &mut self,
+            summary: &audio::CaptureSessionSummary,
+        ) -> Result<Vec<events::SessionEvent>, pipeline::PipelineError> {
+            Ok(vec![
+                summary.audio_persisted_event(),
+                events::SessionEvent::RawFinal {
+                    id: summary.id,
+                    text: "um hello captain".to_string(),
+                },
+                events::SessionEvent::CleanFinal {
+                    id: summary.id,
+                    text: "Hello captain.".to_string(),
+                    dial: self.cleanup_dial,
+                },
+            ])
+        }
+    }
+
+    struct TestInjector {
+        caps: inject::InjectorCaps,
+        field: inject::FieldKind,
+        delivered: Arc<Mutex<Vec<String>>>,
+    }
+
+    impl TestInjector {
+        fn no_target() -> Self {
+            Self {
+                caps: inject::InjectorCaps {
+                    native_text_insert: false,
+                    keystroke: inject::KeystrokeChannel::None,
+                    clipboard: false,
+                },
+                field: inject::FieldKind::NoTarget,
+                delivered: Arc::new(Mutex::new(Vec::new())),
+            }
+        }
+
+        fn native(delivered: Arc<Mutex<Vec<String>>>) -> Self {
+            Self {
+                caps: inject::InjectorCaps {
+                    native_text_insert: true,
+                    keystroke: inject::KeystrokeChannel::None,
+                    clipboard: false,
+                },
+                field: inject::FieldKind::Editable,
+                delivered,
+            }
+        }
+    }
+
+    impl inject::TextInjector for TestInjector {
+        fn caps(&self) -> inject::InjectorCaps {
+            self.caps
+        }
+
+        fn focused_field(&self) -> inject::FieldKind {
+            self.field
+        }
+
+        fn insert_native(&mut self, text: &str) -> Result<(), inject::InjectError> {
+            self.delivered.lock().unwrap().push(text.to_string());
+            Ok(())
+        }
+
+        fn synth_text(&mut self, text: &str) -> Result<(), inject::InjectError> {
+            self.delivered.lock().unwrap().push(text.to_string());
+            Ok(())
+        }
+    }
+
+    fn matching_profiles(cleanup_dial: CleanupDial) -> profiles::ProfileStore {
+        let app = detected_app();
+        profiles::ProfileStore::with_profiles(vec![profiles::AppProfile::user_edited(
+            "example-editor",
+            "Example Editor",
+            vec![app.id],
+            cleanup_dial,
+        )])
+    }
+
     #[test]
-    fn hotkey_runtime_finalizes_wal_after_tail_tick() {
+    fn hotkey_runtime_processes_finalized_capture_and_holds_when_no_target() {
         let app_data = tmp();
+        let seen_dials = Arc::new(Mutex::new(Vec::new()));
         let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
             .unwrap()
             .with_target_resolver(Box::new(profiles::SessionTargetResolver::new(
                 profiles::StaticFrontmostAppDetector::new(detected_app()),
-                profiles::ProfileStore::default(),
-            )));
+                matching_profiles(CleanupDial::Full),
+            )))
+            .with_processor(Box::new(ScriptedProcessor::new(Arc::clone(&seen_dials))))
+            .with_injector(Box::new(TestInjector::no_target()));
 
         assert_eq!(
             runtime
@@ -334,7 +493,12 @@ mod tests {
         let session = runtime.history.get_session(id).unwrap().unwrap();
         assert_eq!(session.target_app, Some(detected_app()));
         assert_eq!(session.audio_path.as_deref(), Some(path.to_str().unwrap()));
-        assert_eq!(session.event_count, 2);
+        assert_eq!(session.raw_text.as_deref(), Some("um hello captain"));
+        assert_eq!(session.clean_text.as_deref(), Some("Hello captain."));
+        assert_eq!(session.cleanup_dial, Some(CleanupDial::Full));
+        assert_eq!(session.held_reason, Some(HoldReason::NoTarget));
+        assert_eq!(session.event_count, 5);
+        assert_eq!(*seen_dials.lock().unwrap(), vec![CleanupDial::Full]);
         assert_eq!(
             runtime.history.events_for_session(id).unwrap(),
             vec![
@@ -352,7 +516,58 @@ mod tests {
                     finalized_ms: 700
                 }
                 .audio_persisted_event(),
+                events::SessionEvent::RawFinal {
+                    id,
+                    text: "um hello captain".to_string(),
+                },
+                events::SessionEvent::CleanFinal {
+                    id,
+                    text: "Hello captain.".to_string(),
+                    dial: CleanupDial::Full,
+                },
+                events::SessionEvent::Held {
+                    id,
+                    reason: HoldReason::NoTarget,
+                },
             ]
+        );
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_injects_committed_text_when_backend_succeeds() {
+        let app_data = tmp();
+        let delivered = Arc::new(Mutex::new(Vec::new()));
+        let seen_dials = Arc::new(Mutex::new(Vec::new()));
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_target_resolver(Box::new(profiles::SessionTargetResolver::new(
+                profiles::StaticFrontmostAppDetector::new(detected_app()),
+                matching_profiles(CleanupDial::Light),
+            )))
+            .with_processor(Box::new(ScriptedProcessor::new(Arc::clone(&seen_dials))))
+            .with_injector(Box::new(TestInjector::native(Arc::clone(&delivered))));
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 0 })
+            .unwrap();
+        let id = runtime.recorder.active_session_id().unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Release { at_ms: 400 })
+            .unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 700 })
+            .unwrap();
+
+        assert_eq!(*delivered.lock().unwrap(), vec!["Hello captain."]);
+        let session = runtime.history.get_session(id).unwrap().unwrap();
+        assert_eq!(session.injected_method, Some(InjectMethod::Native));
+        assert_eq!(
+            runtime.history.events_for_session(id).unwrap().last(),
+            Some(&events::SessionEvent::Injected {
+                id,
+                method: InjectMethod::Native,
+            })
         );
         let _ = std::fs::remove_dir_all(app_data);
     }
