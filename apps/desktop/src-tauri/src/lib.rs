@@ -72,18 +72,23 @@ fn refresh_model_readiness(
 #[tauri::command]
 fn recent_history(
     app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
     limit: Option<usize>,
 ) -> Result<Vec<history::HistorySession>, String> {
     #[cfg(desktop)]
     {
         use tauri::Manager;
 
+        let retention_days = state.snapshot().settings.privacy.history_retention_days;
         let app_data_dir = app
             .path()
             .app_data_dir()
             .map_err(|err| format!("App data directory unavailable: {err}"))?;
         let mut store =
             history::HistoryStore::open(&app_data_dir).map_err(|err| err.to_string())?;
+        store
+            .sweep_retention(retention_days, &app_data_dir)
+            .map_err(|err| err.to_string())?;
         recover_history_audio(&mut store, &app_data_dir).map_err(|err| err.to_string())?;
         store
             .list_recent(limit.unwrap_or(5).clamp(1, 20))
@@ -93,6 +98,7 @@ fn recent_history(
     #[cfg(not(desktop))]
     {
         let _ = app;
+        let _ = state;
         let _ = limit;
         Ok(Vec::new())
     }
@@ -208,6 +214,34 @@ fn export_history_session(
             exported: false,
             json_path: None,
             text_path: None,
+        })
+    }
+}
+
+#[tauri::command]
+fn purge_history(app: tauri::AppHandle) -> Result<history::PurgeHistoryOutcome, String> {
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        let mut store =
+            history::HistoryStore::open(&app_data_dir).map_err(|err| err.to_string())?;
+        store
+            .purge_all(&app_data_dir)
+            .map_err(|err| err.to_string())
+    }
+
+    #[cfg(not(desktop))]
+    {
+        let _ = app;
+        Ok(history::PurgeHistoryOutcome {
+            sessions_deleted: 0,
+            audio_files_removed: 0,
+            export_files_removed: 0,
         })
     }
 }
@@ -979,7 +1013,8 @@ pub fn run() {
             refresh_model_readiness,
             recent_history,
             delete_history_session,
-            export_history_session
+            export_history_session,
+            purge_history
         ])
         .setup(|app| {
             #[cfg(desktop)]

@@ -335,6 +335,14 @@ button {
   gap: 12px;
 }
 
+.history-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
 .history-strip-heading span,
 .history-row span,
 .empty-history {

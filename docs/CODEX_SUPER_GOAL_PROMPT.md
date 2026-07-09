@@ -40,9 +40,10 @@ Current verified state:
   delete now removes the DB row plus safe app-data session audio after confirm.
   recent_history also surfaces untracked recoverable app-data WAVs as Capture
   failures so crash-orphan audio is visible. export_history_session now writes
-  JSON + text exports under app-data exports/. Audio playback, purge/delete-all,
-  retention sweep, and recovered-audio re-transcription remain follow-up
-  history/recovery work.
+  JSON + text exports under app-data exports/. purge_history clears rows,
+  app-data session audio, and app-data exports; recent_history applies the
+  Rust settings retention window before listing. Audio playback and
+  recovered-audio re-transcription remain follow-up history/recovery work.
 
 Operating rules:
 - Work from evidence, not assertions.

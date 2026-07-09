@@ -146,6 +146,12 @@ interface HistoryExportOutcome {
   text_path: string | null;
 }
 
+interface HistoryPurgeOutcome {
+  sessions_deleted: number;
+  audio_files_removed: number;
+  export_files_removed: number;
+}
+
 const previewSnapshot: AppSnapshot = {
   app_name: "Kaydence",
   app_identifier: "io.kaydence.app",
@@ -312,6 +318,9 @@ export function App(): JSX.Element {
   const [exportingHistoryId, setExportingHistoryId] = useState<string | null>(null);
   const [historyExportOutcome, setHistoryExportOutcome] =
     useState<HistoryExportOutcome | null>(null);
+  const [historyPurgeOutcome, setHistoryPurgeOutcome] =
+    useState<HistoryPurgeOutcome | null>(null);
+  const [purgingHistory, setPurgingHistory] = useState(false);
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
@@ -408,6 +417,7 @@ export function App(): JSX.Element {
     void invoke<HistorySession[]>("recent_history", { limit: 4 })
       .then((sessions) => {
         setHistorySessions(sessions);
+        setHistoryPurgeOutcome(null);
       })
       .catch((error) => {
         console.error("Kaydence history refresh failed", error);
@@ -429,6 +439,7 @@ export function App(): JSX.Element {
     void invoke<HistorySession[]>("delete_history_session", { sessionId })
       .then((sessions) => {
         setHistorySessions(sessions);
+        setHistoryExportOutcome(null);
       })
       .catch((error) => {
         console.error("Kaydence history delete failed", error);
@@ -441,6 +452,7 @@ export function App(): JSX.Element {
   function exportHistorySession(sessionId: string) {
     setExportingHistoryId(sessionId);
     setHistoryExportOutcome(null);
+    setHistoryPurgeOutcome(null);
     void invoke<HistoryExportOutcome>("export_history_session", { sessionId })
       .then((outcome) => {
         setHistoryExportOutcome(outcome);
@@ -450,6 +462,30 @@ export function App(): JSX.Element {
       })
       .finally(() => {
         setExportingHistoryId(null);
+      });
+  }
+
+  function purgeHistory() {
+    const confirmed = window.confirm(
+      "Purge all local history sessions, audio, and exports from this device?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setPurgingHistory(true);
+    setHistoryExportOutcome(null);
+    setHistoryPurgeOutcome(null);
+    void invoke<HistoryPurgeOutcome>("purge_history")
+      .then((outcome) => {
+        setHistoryPurgeOutcome(outcome);
+        setHistorySessions([]);
+      })
+      .catch((error) => {
+        console.error("Kaydence history purge failed", error);
+      })
+      .finally(() => {
+        setPurgingHistory(false);
       });
   }
 
@@ -569,24 +605,41 @@ export function App(): JSX.Element {
                   <span>Local history</span>
                   <strong>{historySessions.length} recent sessions</strong>
                 </div>
-                <button
-                  className="mini-action"
-                  disabled={historyRefreshPending}
-                  onClick={refreshHistory}
-                  type="button"
-                >
-                  {historyRefreshPending ? "Refreshing" : "Refresh"}
-                </button>
+                <div className="history-header-actions">
+                  <button
+                    className="mini-action"
+                    disabled={historyRefreshPending || purgingHistory}
+                    onClick={refreshHistory}
+                    type="button"
+                  >
+                    {historyRefreshPending ? "Refreshing" : "Refresh"}
+                  </button>
+                  <button
+                    className="danger-action"
+                    disabled={purgingHistory || historyRefreshPending || historySessions.length === 0}
+                    onClick={purgeHistory}
+                    type="button"
+                  >
+                    {purgingHistory ? "Purging" : "Purge All"}
+                  </button>
+                </div>
               </div>
+              {historyPurgeOutcome ? (
+                <p className="history-export-note">
+                  Purged {historyPurgeOutcome.sessions_deleted} sessions,{" "}
+                  {historyPurgeOutcome.audio_files_removed} audio files, and{" "}
+                  {historyPurgeOutcome.export_files_removed} exports.
+                </p>
+              ) : null}
+              {historyExportOutcome ? (
+                <p className="history-export-note">
+                  {historyExportOutcome.exported
+                    ? `Exported to ${historyExportOutcome.text_path ?? historyExportOutcome.json_path}`
+                    : "No matching local session to export."}
+                </p>
+              ) : null}
               {historySessions.length > 0 ? (
                 <div className="history-list">
-                  {historyExportOutcome ? (
-                    <p className="history-export-note">
-                      {historyExportOutcome.exported
-                        ? `Exported to ${historyExportOutcome.text_path ?? historyExportOutcome.json_path}`
-                        : "No matching local session to export."}
-                    </p>
-                  ) : null}
                   {historySessions.map((session) => (
                     <div className="history-row" key={session.id}>
                       <div className="history-row-main">
@@ -598,7 +651,11 @@ export function App(): JSX.Element {
                         <button
                           aria-label={`Export ${session.target_app?.name ?? "local history session"}`}
                           className="mini-action"
-                          disabled={exportingHistoryId !== null || deletingHistoryId !== null}
+                          disabled={
+                            exportingHistoryId !== null ||
+                            deletingHistoryId !== null ||
+                            purgingHistory
+                          }
                           onClick={() => exportHistorySession(session.id)}
                           type="button"
                         >
@@ -607,7 +664,11 @@ export function App(): JSX.Element {
                         <button
                           aria-label={`Delete ${session.target_app?.name ?? "local history session"}`}
                           className="danger-action"
-                          disabled={deletingHistoryId !== null || exportingHistoryId !== null}
+                          disabled={
+                            deletingHistoryId !== null ||
+                            exportingHistoryId !== null ||
+                            purgingHistory
+                          }
                           onClick={() => deleteHistorySession(session.id)}
                           type="button"
                         >

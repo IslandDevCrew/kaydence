@@ -14,7 +14,7 @@ use std::{
     fs,
     io::ErrorKind,
     path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 pub const HISTORY_DB_FILE: &str = "history.sqlite3";
@@ -43,6 +43,7 @@ pub struct DeleteSessionOutcome {
     pub deleted: bool,
     pub audio_removed: bool,
     pub audio_path: Option<String>,
+    pub exports_removed: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -50,6 +51,20 @@ pub struct ExportSessionOutcome {
     pub exported: bool,
     pub json_path: Option<String>,
     pub text_path: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PurgeHistoryOutcome {
+    pub sessions_deleted: usize,
+    pub audio_files_removed: usize,
+    pub export_files_removed: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct RetentionSweepOutcome {
+    pub sessions_deleted: usize,
+    pub audio_files_removed: usize,
+    pub export_files_removed: usize,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -146,6 +161,7 @@ impl HistoryStore {
                 deleted: false,
                 audio_removed: false,
                 audio_path: None,
+                exports_removed: 0,
             });
         }
 
@@ -154,16 +170,19 @@ impl HistoryStore {
                 deleted: false,
                 audio_removed: false,
                 audio_path: None,
+                exports_removed: 0,
             });
         };
 
         let audio_removed = remove_safe_session_audio(audio_path.as_deref(), app_data_dir)?;
+        let exports_removed = remove_session_exports(session_id, app_data_dir)?;
         let deleted = self.delete_session_by_string(session_id)?;
 
         Ok(DeleteSessionOutcome {
             deleted,
             audio_removed,
             audio_path,
+            exports_removed,
         })
     }
 
@@ -200,6 +219,63 @@ impl HistoryStore {
             exported: true,
             json_path: Some(json_path.display().to_string()),
             text_path: Some(text_path.display().to_string()),
+        })
+    }
+
+    pub fn purge_all(&mut self, app_data_dir: &Path) -> Result<PurgeHistoryOutcome, HistoryError> {
+        let sessions_deleted = self.session_count()?;
+        let audio_files_removed = remove_owned_dir_files(app_data_dir, "sessions")?;
+        let export_files_removed = remove_owned_dir_files(app_data_dir, EXPORTS_DIR)?;
+
+        self.conn.execute("DELETE FROM sessions", [])?;
+
+        Ok(PurgeHistoryOutcome {
+            sessions_deleted,
+            audio_files_removed,
+            export_files_removed,
+        })
+    }
+
+    pub fn sweep_retention(
+        &mut self,
+        retention_days: u16,
+        app_data_dir: &Path,
+    ) -> Result<RetentionSweepOutcome, HistoryError> {
+        let now_ms = now_ms()?.max(0) as u64;
+        let retention_ms = Duration::from_secs(u64::from(retention_days.max(1)) * 24 * 60 * 60)
+            .as_millis()
+            .min(u128::from(u64::MAX)) as u64;
+        self.sweep_retention_before(now_ms.saturating_sub(retention_ms), app_data_dir)
+    }
+
+    pub fn sweep_retention_before(
+        &mut self,
+        cutoff_ms: u64,
+        app_data_dir: &Path,
+    ) -> Result<RetentionSweepOutcome, HistoryError> {
+        let expired = self.expired_sessions(cutoff_ms)?;
+        let mut audio_files_removed = 0usize;
+        let mut export_files_removed = 0usize;
+        let mut sessions_deleted = 0usize;
+
+        for session in expired {
+            if remove_safe_session_audio(session.audio_path.as_deref(), app_data_dir)? {
+                audio_files_removed += 1;
+            }
+            export_files_removed += remove_session_exports(&session.id, app_data_dir)?;
+            if self.delete_session_by_string(&session.id)? {
+                sessions_deleted += 1;
+            }
+        }
+
+        audio_files_removed += remove_expired_owned_dir_files(app_data_dir, "sessions", cutoff_ms)?;
+        export_files_removed +=
+            remove_expired_owned_dir_files(app_data_dir, EXPORTS_DIR, cutoff_ms)?;
+
+        Ok(RetentionSweepOutcome {
+            sessions_deleted,
+            audio_files_removed,
+            export_files_removed,
         })
     }
 
@@ -334,6 +410,30 @@ impl HistoryStore {
         )? > 0)
     }
 
+    fn session_count(&self) -> Result<usize, HistoryError> {
+        let count: i64 = self
+            .conn
+            .query_row("SELECT COUNT(*) FROM sessions", [], |row| row.get(0))?;
+        Ok(count.max(0) as usize)
+    }
+
+    fn expired_sessions(&self, cutoff_ms: u64) -> Result<Vec<ExpiredSession>, HistoryError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT session_id, audio_path
+               FROM sessions
+              WHERE COALESCE(started_ms, updated_ms, created_ms, 0) < ?1
+           ORDER BY session_id ASC",
+        )?;
+        let rows = stmt.query_map(params![sqlite_ms(cutoff_ms)], |row| {
+            Ok(ExpiredSession {
+                id: row.get(0)?,
+                audio_path: row.get(1)?,
+            })
+        })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(HistoryError::from)
+    }
+
     fn migrate(&self) -> Result<(), HistoryError> {
         self.conn.execute_batch(
             "
@@ -425,6 +525,11 @@ struct RawSessionRow {
     failed_stage_json: Option<String>,
     failed_error: Option<String>,
     event_count: i64,
+}
+
+struct ExpiredSession {
+    id: String,
+    audio_path: Option<String>,
 }
 
 impl RawSessionRow {
@@ -678,6 +783,102 @@ fn remove_safe_session_audio(
 
     fs::remove_file(audio_path)?;
     Ok(true)
+}
+
+fn remove_session_exports(session_id: &str, app_data_dir: &Path) -> Result<usize, HistoryError> {
+    if ulid::Ulid::from_string(session_id).is_err() {
+        return Ok(0);
+    }
+
+    let Some(exports_dir) = canonical_owned_child_dir(app_data_dir, EXPORTS_DIR)? else {
+        return Ok(0);
+    };
+
+    let mut removed = 0usize;
+    for extension in ["json", "txt"] {
+        let path = exports_dir.join(format!("{session_id}.{extension}"));
+        if remove_owned_file(&path)? {
+            removed += 1;
+        }
+    }
+    Ok(removed)
+}
+
+fn remove_owned_dir_files(app_data_dir: &Path, child: &str) -> Result<usize, HistoryError> {
+    remove_owned_dir_files_matching(app_data_dir, child, |_| Ok(true))
+}
+
+fn remove_expired_owned_dir_files(
+    app_data_dir: &Path,
+    child: &str,
+    cutoff_ms: u64,
+) -> Result<usize, HistoryError> {
+    remove_owned_dir_files_matching(app_data_dir, child, |path| {
+        Ok(file_modified_ms(path)?.is_some_and(|modified_ms| modified_ms < cutoff_ms))
+    })
+}
+
+fn remove_owned_dir_files_matching(
+    app_data_dir: &Path,
+    child: &str,
+    should_remove: impl Fn(&Path) -> Result<bool, HistoryError>,
+) -> Result<usize, HistoryError> {
+    let Some(dir) = canonical_owned_child_dir(app_data_dir, child)? else {
+        return Ok(0);
+    };
+
+    let mut removed = 0usize;
+    for entry in fs::read_dir(dir)? {
+        let path = entry?.path();
+        if should_remove(&path)? && remove_owned_file(&path)? {
+            removed += 1;
+        }
+    }
+    Ok(removed)
+}
+
+fn canonical_owned_child_dir(
+    app_data_dir: &Path,
+    child: &str,
+) -> Result<Option<PathBuf>, HistoryError> {
+    let app_data_dir = fs::canonicalize(app_data_dir)?;
+    let child_dir = match fs::canonicalize(app_data_dir.join(child)) {
+        Ok(path) => path,
+        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(None),
+        Err(err) => return Err(err.into()),
+    };
+    if child_dir.starts_with(&app_data_dir) && child_dir.is_dir() {
+        Ok(Some(child_dir))
+    } else {
+        Ok(None)
+    }
+}
+
+fn remove_owned_file(path: &Path) -> Result<bool, HistoryError> {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(false),
+        Err(err) => return Err(err.into()),
+    };
+    let file_type = metadata.file_type();
+    if !file_type.is_file() && !file_type.is_symlink() {
+        return Ok(false);
+    }
+    fs::remove_file(path)?;
+    Ok(true)
+}
+
+fn file_modified_ms(path: &Path) -> Result<Option<u64>, HistoryError> {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(None),
+        Err(err) => return Err(err.into()),
+    };
+    let modified = metadata.modified()?;
+    let duration = modified
+        .duration_since(UNIX_EPOCH)
+        .map_err(|_| HistoryError::Clock)?;
+    Ok(Some(duration.as_millis().min(u128::from(u64::MAX)) as u64))
 }
 
 fn render_session_text_export(export: &HistorySessionExport) -> String {
@@ -1022,6 +1223,7 @@ mod tests {
                 deleted: true,
                 audio_removed: true,
                 audio_path: Some(audio_path.display().to_string()),
+                exports_removed: 0,
             }
         );
         assert!(!audio_path.exists());
@@ -1061,6 +1263,7 @@ mod tests {
                 deleted: true,
                 audio_removed: false,
                 audio_path: Some(audio_path.display().to_string()),
+                exports_removed: 0,
             }
         );
         assert!(audio_path.exists());
@@ -1068,6 +1271,41 @@ mod tests {
 
         fs::remove_dir_all(app_data).unwrap();
         fs::remove_dir_all(external_dir).unwrap();
+    }
+
+    #[test]
+    fn delete_session_and_audio_removes_session_exports() {
+        let id = sid(54);
+        let app_data = temp_app_data("delete-exports");
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        store
+            .record_event(&SessionEvent::RawFinal {
+                id,
+                text: "export then delete".to_string(),
+            })
+            .unwrap();
+        let export = store.export_session(id, &app_data).unwrap();
+        let json_path = PathBuf::from(export.json_path.unwrap());
+        let text_path = PathBuf::from(export.text_path.unwrap());
+
+        let outcome = store
+            .delete_session_and_audio(&session_id_string(id), &app_data)
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            DeleteSessionOutcome {
+                deleted: true,
+                audio_removed: false,
+                audio_path: None,
+                exports_removed: 2,
+            }
+        );
+        assert!(!json_path.exists());
+        assert!(!text_path.exists());
+        assert!(store.get_session(id).unwrap().is_none());
+
+        fs::remove_dir_all(app_data).unwrap();
     }
 
     #[test]
@@ -1149,6 +1387,128 @@ mod tests {
             }
         );
         assert!(!app_data.join(EXPORTS_DIR).exists());
+
+        fs::remove_dir_all(app_data).unwrap();
+    }
+
+    #[test]
+    fn purge_all_removes_rows_audio_exports_and_untracked_session_files() {
+        let id = sid(55);
+        let app_data = temp_app_data("purge-all");
+        let sessions_dir = app_data.join("sessions");
+        fs::create_dir_all(&sessions_dir).unwrap();
+        let audio_path = sessions_dir.join(format!("{}.wav", id.0));
+        let untracked_audio = sessions_dir.join("untracked.wav");
+        fs::write(&audio_path, b"fixture audio").unwrap();
+        fs::write(&untracked_audio, b"orphan audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        store
+            .record_events(&[
+                SessionEvent::AudioPersisted {
+                    id,
+                    wal_path: audio_path.display().to_string(),
+                },
+                SessionEvent::RawFinal {
+                    id,
+                    text: "purge this".to_string(),
+                },
+            ])
+            .unwrap();
+        let export = store.export_session(id, &app_data).unwrap();
+        let json_path = PathBuf::from(export.json_path.unwrap());
+        let text_path = PathBuf::from(export.text_path.unwrap());
+
+        let outcome = store.purge_all(&app_data).unwrap();
+
+        assert_eq!(
+            outcome,
+            PurgeHistoryOutcome {
+                sessions_deleted: 1,
+                audio_files_removed: 2,
+                export_files_removed: 2,
+            }
+        );
+        assert!(!audio_path.exists());
+        assert!(!untracked_audio.exists());
+        assert!(!json_path.exists());
+        assert!(!text_path.exists());
+        assert!(store.list_recent(10).unwrap().is_empty());
+        assert!(store.events_for_session(id).unwrap().is_empty());
+
+        fs::remove_dir_all(app_data).unwrap();
+    }
+
+    #[test]
+    fn retention_sweep_removes_only_expired_sessions_and_exports() {
+        let old_id = sid(56);
+        let fresh_id = sid(57);
+        let app_data = temp_app_data("retention-sweep");
+        let sessions_dir = app_data.join("sessions");
+        fs::create_dir_all(&sessions_dir).unwrap();
+        let old_audio = sessions_dir.join(format!("{}.wav", old_id.0));
+        let fresh_audio = sessions_dir.join(format!("{}.wav", fresh_id.0));
+        fs::write(&old_audio, b"old audio").unwrap();
+        fs::write(&fresh_audio, b"fresh audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        for (id, audio_path, text) in [
+            (old_id, old_audio.as_path(), "old"),
+            (fresh_id, fresh_audio.as_path(), "fresh"),
+        ] {
+            store
+                .record_events(&[
+                    SessionEvent::AudioPersisted {
+                        id,
+                        wal_path: audio_path.display().to_string(),
+                    },
+                    SessionEvent::RawFinal {
+                        id,
+                        text: text.to_string(),
+                    },
+                ])
+                .unwrap();
+            store.export_session(id, &app_data).unwrap();
+        }
+        store
+            .conn
+            .execute(
+                "UPDATE sessions
+                    SET started_ms = ?2, created_ms = ?2, updated_ms = ?2
+                  WHERE session_id = ?1",
+                params![session_id_string(old_id), 1_000i64],
+            )
+            .unwrap();
+        store
+            .conn
+            .execute(
+                "UPDATE sessions
+                    SET started_ms = ?2, created_ms = ?2, updated_ms = ?2
+                  WHERE session_id = ?1",
+                params![session_id_string(fresh_id), 3_000i64],
+            )
+            .unwrap();
+
+        let outcome = store.sweep_retention_before(2_000, &app_data).unwrap();
+
+        assert_eq!(
+            outcome,
+            RetentionSweepOutcome {
+                sessions_deleted: 1,
+                audio_files_removed: 1,
+                export_files_removed: 2,
+            }
+        );
+        assert!(store.get_session(old_id).unwrap().is_none());
+        assert!(store.get_session(fresh_id).unwrap().is_some());
+        assert!(!old_audio.exists());
+        assert!(fresh_audio.exists());
+        assert!(!app_data
+            .join(EXPORTS_DIR)
+            .join(format!("{}.json", old_id.0))
+            .exists());
+        assert!(app_data
+            .join(EXPORTS_DIR)
+            .join(format!("{}.json", fresh_id.0))
+            .exists());
 
         fs::remove_dir_all(app_data).unwrap();
     }
