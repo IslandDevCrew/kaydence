@@ -150,6 +150,43 @@ impl HistoryStore {
         })
     }
 
+    pub fn record_recovered_audio(
+        &mut self,
+        session_id: SessionId,
+        wal_path: &Path,
+        samples: u64,
+    ) -> Result<bool, HistoryError> {
+        if self
+            .audio_path_for_session(&session_id_string(session_id))?
+            .flatten()
+            .is_some()
+        {
+            return Ok(false);
+        }
+
+        self.record_events(&[
+            SessionEvent::AudioPersisted {
+                id: session_id,
+                wal_path: wal_path.display().to_string(),
+            },
+            SessionEvent::Failed {
+                id: session_id,
+                stage: Stage::Capture,
+                error: format!(
+                    "Recovered audio after app exit before transcription; {samples} samples preserved on disk."
+                ),
+            },
+        ])?;
+        Ok(true)
+    }
+
+    pub fn session_has_audio(&self, session_id: SessionId) -> Result<bool, HistoryError> {
+        Ok(self
+            .audio_path_for_session(&session_id_string(session_id))?
+            .flatten()
+            .is_some())
+    }
+
     pub fn get_session(
         &self,
         session_id: SessionId,
@@ -924,5 +961,76 @@ mod tests {
 
         fs::remove_dir_all(app_data).unwrap();
         fs::remove_dir_all(external_dir).unwrap();
+    }
+
+    #[test]
+    fn record_recovered_audio_surfaces_orphan_wal_as_capture_failure() {
+        let id = sid(50);
+        let app_data = temp_app_data("recover-orphan");
+        let audio_path = app_data.join("sessions").join(format!("{}.wav", id.0));
+        fs::create_dir_all(audio_path.parent().unwrap()).unwrap();
+        fs::write(&audio_path, b"fixture audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+
+        assert!(store.record_recovered_audio(id, &audio_path, 320).unwrap());
+
+        let session = store.get_session(id).unwrap().unwrap();
+        assert_eq!(
+            session.audio_path.as_deref(),
+            Some(audio_path.to_str().unwrap())
+        );
+        assert_eq!(
+            session.failure,
+            Some(HistoryFailure {
+                stage: Stage::Capture,
+                error: "Recovered audio after app exit before transcription; 320 samples preserved on disk."
+                    .to_string(),
+            })
+        );
+        assert_eq!(session.event_count, 2);
+        assert_eq!(
+            store.events_for_session(id).unwrap(),
+            vec![
+                SessionEvent::AudioPersisted {
+                    id,
+                    wal_path: audio_path.display().to_string(),
+                },
+                SessionEvent::Failed {
+                    id,
+                    stage: Stage::Capture,
+                    error:
+                        "Recovered audio after app exit before transcription; 320 samples preserved on disk."
+                            .to_string(),
+                },
+            ]
+        );
+
+        fs::remove_dir_all(app_data).unwrap();
+    }
+
+    #[test]
+    fn record_recovered_audio_is_idempotent_for_existing_audio_path() {
+        let id = sid(51);
+        let app_data = temp_app_data("recover-existing");
+        let audio_path = app_data.join("sessions").join(format!("{}.wav", id.0));
+        fs::create_dir_all(audio_path.parent().unwrap()).unwrap();
+        fs::write(&audio_path, b"fixture audio").unwrap();
+        let mut store = HistoryStore::open(&app_data).unwrap();
+        store
+            .record_event(&SessionEvent::Started {
+                id,
+                target_app: app(),
+                at_ms: 12,
+            })
+            .unwrap();
+
+        assert!(store.record_recovered_audio(id, &audio_path, 640).unwrap());
+        assert!(!store.record_recovered_audio(id, &audio_path, 640).unwrap());
+
+        let session = store.get_session(id).unwrap().unwrap();
+        assert_eq!(session.target_app, Some(app()));
+        assert_eq!(session.event_count, 3);
+
+        fs::remove_dir_all(app_data).unwrap();
     }
 }

@@ -82,7 +82,9 @@ fn recent_history(
             .path()
             .app_data_dir()
             .map_err(|err| format!("App data directory unavailable: {err}"))?;
-        let store = history::HistoryStore::open(&app_data_dir).map_err(|err| err.to_string())?;
+        let mut store =
+            history::HistoryStore::open(&app_data_dir).map_err(|err| err.to_string())?;
+        recover_history_audio(&mut store, &app_data_dir).map_err(|err| err.to_string())?;
         store
             .list_recent(limit.unwrap_or(5).clamp(1, 20))
             .map_err(|err| err.to_string())
@@ -94,6 +96,57 @@ fn recent_history(
         let _ = limit;
         Ok(Vec::new())
     }
+}
+
+#[cfg(desktop)]
+fn recover_history_audio(
+    store: &mut history::HistoryStore,
+    app_data_dir: &Path,
+) -> Result<usize, HistoryRecoveryError> {
+    let sessions_dir = app_data_dir.join("sessions");
+    if !sessions_dir.exists() {
+        return Ok(0);
+    }
+
+    let mut surfaced = 0;
+    for entry in std::fs::read_dir(&sessions_dir)? {
+        let path = entry?.path();
+        if path.extension().and_then(|extension| extension.to_str()) != Some("wav") {
+            continue;
+        };
+        let Some(session_id) = session_id_from_wal_path(&path) else {
+            continue;
+        };
+        if store.session_has_audio(session_id)? {
+            continue;
+        }
+        let Ok(recovered) = audio::wal::recover(&path) else {
+            continue;
+        };
+        if store.record_recovered_audio(session_id, &recovered.path, recovered.samples)? {
+            surfaced += 1;
+        }
+    }
+    Ok(surfaced)
+}
+
+#[cfg(desktop)]
+fn session_id_from_wal_path(path: &Path) -> Option<events::SessionId> {
+    path.file_stem()
+        .and_then(|stem| stem.to_str())
+        .and_then(|stem| ulid::Ulid::from_string(stem).ok())
+        .map(events::SessionId::new)
+}
+
+#[cfg(desktop)]
+#[derive(Debug, thiserror::Error)]
+enum HistoryRecoveryError {
+    #[error("history recovery io: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("audio recovery: {0}")]
+    Wal(#[from] audio::wal::WalError),
+    #[error("history: {0}")]
+    History(#[from] history::HistoryError),
 }
 
 #[tauri::command]
@@ -1600,6 +1653,39 @@ mod tests {
                 lane: Some("gpu".to_string())
             }
         );
+    }
+
+    #[test]
+    fn recover_history_audio_surfaces_untracked_wal_once() {
+        let app_data = tmp();
+        let id = events::SessionId::new(ulid::Ulid::new());
+        let sessions_dir = app_data.join("sessions");
+        let mut writer = audio::wal::WalWriter::create(&sessions_dir, &id.0.to_string()).unwrap();
+        writer.append(&vec![0.1f32; 240]).unwrap();
+        let wal_path = writer.path().to_path_buf();
+        drop(writer);
+        let mut store = history::HistoryStore::open(&app_data).unwrap();
+
+        assert_eq!(recover_history_audio(&mut store, &app_data).unwrap(), 1);
+        assert_eq!(recover_history_audio(&mut store, &app_data).unwrap(), 0);
+
+        let session = store.get_session(id).unwrap().unwrap();
+        assert_eq!(
+            session.audio_path.as_deref(),
+            Some(wal_path.to_str().unwrap())
+        );
+        assert_eq!(
+            session.failure.as_ref().map(|failure| failure.stage),
+            Some(events::Stage::Capture)
+        );
+        assert!(session
+            .failure
+            .as_ref()
+            .unwrap()
+            .error
+            .contains("240 samples preserved"));
+        assert_eq!(session.event_count, 2);
+        let _ = std::fs::remove_dir_all(app_data);
     }
 
     #[test]

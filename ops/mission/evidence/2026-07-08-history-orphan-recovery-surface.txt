@@ -1,0 +1,84 @@
+# P1-P0-4 Crash-Orphan Recovery Surface
+
+Date: 2026-07-09T04:43Z
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Slice: surface orphaned WAL audio in local history
+
+## Changes
+
+- Added `HistoryStore::record_recovered_audio`.
+  - Records an `AudioPersisted` event for a recovered WAL path.
+  - Records a `Failed { stage: Capture }` event explaining that audio was
+    preserved after app exit before transcription.
+  - Is idempotent for sessions that already have an audio path.
+- Added `HistoryStore::session_has_audio` so recovery can skip already tracked
+  sessions without rewriting known WAV files.
+- Added `recover_history_audio` to the Tauri backend path.
+  - `recent_history` now scans app-data `sessions/` before listing.
+  - It parses ULID session ids from `{ulid}.wav`, patches recoverable WAL headers
+    in place, and surfaces only files not already represented in SQLite.
+  - Invalid filenames and unrecoverable WAV-like files are skipped and never
+    deleted.
+- The existing cockpit history strip now shows recovered audio automatically as a
+  failed Capture session with the preserved audio path.
+
+## Focused Verification
+
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml record_recovered_audio`
+  - PASS: 2 tests
+  - `record_recovered_audio_surfaces_orphan_wal_as_capture_failure`
+  - `record_recovered_audio_is_idempotent_for_existing_audio_path`
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml recover_history_audio`
+  - PASS: 1 test
+  - `recover_history_audio_surfaces_untracked_wal_once`
+- `npm --prefix apps/desktop run check`
+  - PASS
+
+## Standing Gates
+
+- `cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check`
+  - PASS
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml`
+  - PASS: 160 lib tests + 2 crash recovery tests
+- `cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings`
+  - PASS
+- `scripts/audit-network.sh`
+  - PASS: 0 network-capable call sites, 0 unreviewed
+- `scripts/check-adr-status.sh`
+  - PASS: all ADRs Accepted except ADR-0009 waived by design
+- `jq empty ops/mission/state.json`
+  - PASS
+- `npm --prefix apps/desktop run build`
+  - PASS
+- `./script/build_and_run.sh build`
+  - PASS
+- `./script/build_and_run.sh --verify`
+  - PASS
+- `ps axww -o pid=,command= | rg "[c]argo tauri dev|[v]ite --host|target/debug/[k]aydence|/[K]aydence.app" || true`
+  - PASS: no lingering Kaydence/Tauri/Vite processes
+
+## Cleanup
+
+- Removed generated Vite build outputs after verification:
+  - `git restore apps/desktop/dist/index.html`
+  - `rm -rf apps/desktop/dist/assets apps/desktop/dist/favicon.svg`
+
+## Remote Check
+
+- `git fetch origin`
+  - FAIL: `Repository not found.`
+  - Action: kept this as a local commit + backup bundle; no push attempted.
+
+## Honest Boundary
+
+- This surfaces orphaned WAL files in history and preserves audio visibility after
+  a crash/app exit before transcription.
+- It does not yet re-transcribe recovered audio because the real Parakeet/Whisper
+  ASR adapters are still pending.
+- Still remaining under history/recovery polish:
+  - audio playback
+  - export
+  - purge/delete-all
+  - retention sweep
+  - recovered-audio re-transcription once real ASR adapters land
+  - 3-OS validation beyond the locally runnable gates
