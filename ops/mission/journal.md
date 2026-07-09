@@ -1,5 +1,11 @@
 # Kaydence Mission Journal
 
+## 2026-07-09T17:52Z — Codex P1 slice (secondary cleanup override hotkey)
+- Added runtime support for the secondary per-invocation cleanup override chord: `Shift+RightAlt` / `Shift+RightOption` can register alongside the selected primary global shortcut as a Raw-only capture path.
+- The hotkey runtime now tracks which shortcut role started a capture, ignores mismatched release edges, applies `CleanupDial::Raw` only to the override capture, and returns the next primary capture to the detected profile cleanup dial.
+- Evidence saved at `ops/mission/evidence/2026-07-09-secondary-cleanup-override.txt`. Local gates passed: fmt, focused override/shortcut tests, full Rust lib suite (215 tests), clippy with `-D warnings`, and diff whitespace check.
+- Remote boundary unchanged: local work remains unpushed because GitHub Actions hosted runners are still blocked before checkout by billing/spending-limit state. Latest green remote baseline remains `ca60244` / run `29031546518`; latest checked blocked run remains `f61ab49` / `29033270673`.
+
 ## 2026-07-09T17:42Z — Codex continuation slice (current handoff docs)
 - Refreshed `docs/CODEX_SUPER_GOAL_PROMPT.md` from current repo truth: private GitHub access restored, `origin/main` at `f61ab49`, local `main` ahead by 8 commits, latest green 3-OS baseline `ca60244` / run `29031546518`, and hosted Actions currently billing/spending-limit blocked before checkout.
 - Added `docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md` and marked the July 8 Windows handoff as superseded. The new handoff reflects that Windows injection is merged/proven and now focuses the Windows session on rerunning proof after local follow-up commits, Windows first-run permission proof, Screen Family 10, hotkey/first-dictation proof, and reference-machine timing.

@@ -1,0 +1,29 @@
+# Kaydence P1-P0-1 secondary cleanup override hotkey evidence
+
+Timestamp: 2026-07-09T17:52Z
+
+Scope:
+- PRD P0-1 global hotkey.
+- PRD P0-5 cleanup dial per-invocation override.
+- `apps/desktop/src-tauri/src/hotkeys/AGENTS.md` secondary dial-override chord.
+
+Implemented:
+- Added shortcut roles for primary vs cleanup override runtime paths.
+- Added `Shift+RightAlt` / `Shift+RightOption` parser for the secondary override chord.
+- Desktop startup still treats primary registration as the readiness gate, but now tries to register the secondary Raw override chord alongside it.
+- Runtime ignores mismatched release edges, so a primary release cannot end an override capture.
+- Override captures apply `CleanupDial::Raw` only for that invocation; the next primary capture returns to the detected profile cleanup dial.
+
+Verification:
+- `cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml`
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml hotkey_runtime_cleanup_override_uses_raw_for_one_capture --lib` PASS
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml cleanup_override_shortcut_mapping_accepts_shift_right_alt_only --lib` PASS
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml shortcut_mapping_accepts_recommended_bindings_only --lib` PASS
+- `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib` PASS, 215 tests
+- `cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml -- -D warnings` PASS
+- `git diff --check` PASS
+
+Honest boundary:
+- This does not prove OS-level shortcut availability on macOS, Windows, or Linux hardware.
+- This does not implement real ASR adapters.
+- Secondary override registration is optional: a failure logs locally and does not block the primary first-run hotkey readiness path.

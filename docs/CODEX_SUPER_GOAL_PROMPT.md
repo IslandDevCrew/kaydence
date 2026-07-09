@@ -27,12 +27,15 @@ Read first, in order:
 9. prompts/BUILD-LOOP.md
 10. prompts/JUDGE-AUDITOR.md
 
-Repository truth as of 2026-07-09T17:42Z:
+Repository truth as of 2026-07-09T17:52Z:
 - The private GitHub repo resolves as IslandDevCrew/kaydence with ADMIN
   permission for the active GitHub auth.
 - origin/main is f61ab49 docs(ops): record actions billing block.
-- Local main is intentionally ahead of origin/main by 8 commits:
+- Local main is intentionally ahead of origin/main with unpublished follow-up
+  commits including:
   - c64a2b7 feat(p1): open first-run permission settings
+  - b7bab46 docs(ops): refresh current continuation handoff
+  - the current P1-P0-1 secondary cleanup override hotkey slice
   - 36f538d feat(p1): align first-run action labels
   - f4e0853 feat(p1): align first-run permission checklist
   - bb2542f feat(p1): require permission rows for first-run readiness
@@ -94,7 +97,10 @@ Current product state:
 - P1-P0-1 hotkey core is wired: push-to-talk/toggle, selected binding
   persistence, global shortcut registration, idle-only switching/rebinding,
   runtime proof refresh for hotkey and microphone evidence, and short-utterance
-  tests. Live OS permission/conflict proof and ASR golden clips remain.
+  tests. The secondary cleanup override chord can now register Shift+RightAlt/
+  Option as a Raw-only per-invocation capture path while the next primary
+  capture returns to the profile cleanup dial. Live OS permission/conflict proof
+  and ASR golden clips remain.
 - P1-P0-2 first-run model readiness is honest but not finished: registry
   verification, ASR picker, selected/recommended model ids, local artifact
   install, mismatch quarantine, read-only download preflight, and

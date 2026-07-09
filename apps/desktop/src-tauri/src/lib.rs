@@ -32,6 +32,9 @@ pub mod prediction;
 pub mod profiles;
 pub mod settings;
 
+#[cfg(desktop)]
+use crate::events::CleanupDial;
+
 pub fn run_bench_json() -> Result<String, bench::BenchError> {
     bench::run_bench_json()
 }
@@ -625,7 +628,16 @@ struct HotkeyRuntimeHandle {
     #[cfg(desktop)]
     inner: Mutex<Option<Arc<Mutex<HotkeyRuntime>>>>,
     #[cfg(desktop)]
-    active_shortcut: Mutex<Option<tauri_plugin_global_shortcut::Shortcut>>,
+    primary_shortcut: Mutex<Option<tauri_plugin_global_shortcut::Shortcut>>,
+    #[cfg(desktop)]
+    cleanup_override_shortcut: Mutex<Option<tauri_plugin_global_shortcut::Shortcut>>,
+}
+
+#[cfg(desktop)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HotkeyShortcutRole {
+    Primary,
+    CleanupOverride,
 }
 
 #[cfg(desktop)]
@@ -637,23 +649,54 @@ impl HotkeyRuntimeHandle {
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(runtime);
     }
 
-    fn set_active_shortcut(&self, shortcut: tauri_plugin_global_shortcut::Shortcut) {
+    fn set_primary_shortcut(&self, shortcut: tauri_plugin_global_shortcut::Shortcut) {
         *self
-            .active_shortcut
+            .primary_shortcut
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(shortcut);
     }
 
+    fn set_cleanup_override_shortcut(
+        &self,
+        shortcut: Option<tauri_plugin_global_shortcut::Shortcut>,
+    ) {
+        *self
+            .cleanup_override_shortcut
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = shortcut;
+    }
+
     fn active_shortcut(&self) -> Option<tauri_plugin_global_shortcut::Shortcut> {
         *self
-            .active_shortcut
+            .primary_shortcut
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
-    fn is_active_shortcut(&self, observed: &tauri_plugin_global_shortcut::Shortcut) -> bool {
-        self.active_shortcut()
-            .is_some_and(|active| active == *observed)
+    fn cleanup_override_shortcut(&self) -> Option<tauri_plugin_global_shortcut::Shortcut> {
+        *self
+            .cleanup_override_shortcut
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    fn shortcut_role(
+        &self,
+        observed: &tauri_plugin_global_shortcut::Shortcut,
+    ) -> Option<HotkeyShortcutRole> {
+        if self
+            .active_shortcut()
+            .is_some_and(|primary| primary == *observed)
+        {
+            return Some(HotkeyShortcutRole::Primary);
+        }
+        if self
+            .cleanup_override_shortcut()
+            .is_some_and(|override_shortcut| override_shortcut == *observed)
+        {
+            return Some(HotkeyShortcutRole::CleanupOverride);
+        }
+        None
     }
 
     fn ensure_idle(&self) -> Result<(), HotkeyBindingUpdateError> {
@@ -741,6 +784,14 @@ impl HotkeyRuntimeHandle {
 
         let binding = settings::normalize_hotkey_binding(binding)?;
         let shortcut = shortcut_from_binding(&binding)?;
+        if self
+            .cleanup_override_shortcut()
+            .is_some_and(|override_shortcut| override_shortcut == shortcut)
+        {
+            return Err(HotkeyBindingUpdateError::Register(
+                "primary hotkey cannot match the cleanup override chord".to_string(),
+            ));
+        }
         if self.active_shortcut() == Some(shortcut) {
             return Ok(binding);
         }
@@ -755,7 +806,7 @@ impl HotkeyRuntimeHandle {
                 eprintln!("Kaydence old global hotkey unregister failed after rebind: {err}");
             }
         }
-        self.set_active_shortcut(shortcut);
+        self.set_primary_shortcut(shortcut);
         Ok(binding)
     }
 
@@ -1615,6 +1666,8 @@ struct HotkeyRuntime {
     injector: Box<dyn inject::TextInjector + Send>,
     unknown_field_policy: inject::UnknownFieldPolicy,
     prefer_clipboard: bool,
+    active_shortcut_role: Option<HotkeyShortcutRole>,
+    capture_cleanup_override: Option<CleanupDial>,
     microphone_permission_ready_pending: bool,
     first_dictation_completion_pending: bool,
 }
@@ -1702,6 +1755,8 @@ impl HotkeyRuntime {
             injector,
             unknown_field_policy: inject::UnknownFieldPolicy::default(),
             prefer_clipboard: false,
+            active_shortcut_role: None,
+            capture_cleanup_override: None,
             microphone_permission_ready_pending: false,
             first_dictation_completion_pending: false,
         }
@@ -1776,6 +1831,28 @@ impl HotkeyRuntime {
         &mut self,
         signal: hotkeys::Signal,
     ) -> Result<Option<u64>, HotkeyRuntimeError> {
+        self.handle_shortcut_signal(HotkeyShortcutRole::Primary, signal)
+    }
+
+    fn handle_shortcut_signal(
+        &mut self,
+        role: HotkeyShortcutRole,
+        signal: hotkeys::Signal,
+    ) -> Result<Option<u64>, HotkeyRuntimeError> {
+        if !self.should_accept_shortcut_signal(role, signal) {
+            return Ok(None);
+        }
+
+        let starts_new_capture = matches!(self.coordinator.state(), hotkeys::CaptureState::Idle)
+            && matches!(signal, hotkeys::Signal::Press { .. });
+        if starts_new_capture {
+            self.active_shortcut_role = Some(role);
+            self.capture_cleanup_override = match role {
+                HotkeyShortcutRole::Primary => None,
+                HotkeyShortcutRole::CleanupOverride => Some(CleanupDial::Raw),
+            };
+        }
+
         let was_finalizing = matches!(
             self.coordinator.state(),
             hotkeys::CaptureState::Finalizing { .. }
@@ -1790,6 +1867,8 @@ impl HotkeyRuntime {
                     Ok(id) => id,
                     Err(err) => {
                         self.coordinator.reset();
+                        self.active_shortcut_role = None;
+                        self.capture_cleanup_override = None;
                         return Err(err.into());
                     }
                 };
@@ -1820,7 +1899,10 @@ impl HotkeyRuntime {
                 }
                 let bound_target = self.active_target.take();
                 if let Some(target) = &bound_target {
-                    self.processor.set_cleanup_dial(target.profile.cleanup_dial);
+                    let cleanup_dial = self
+                        .capture_cleanup_override
+                        .unwrap_or(target.profile.cleanup_dial);
+                    self.processor.set_cleanup_dial(cleanup_dial);
                 }
                 let events = self.processor.process_capture(&summary)?;
                 let committed = pipeline::committed_text(&events);
@@ -1867,10 +1949,14 @@ impl HotkeyRuntime {
                     summary.started_ms,
                     summary.finalized_ms
                 );
+                self.active_shortcut_role = None;
+                self.capture_cleanup_override = None;
             }
             hotkeys::Action::DiscardCapture => {
                 let discarded = self.recorder.discard_capture(at_ms)?;
                 self.active_target = None;
+                self.active_shortcut_role = None;
+                self.capture_cleanup_override = None;
                 self.history.delete_session(discarded.id)?;
                 println!(
                     "Kaydence capture discarded: id={:?} path={} started_ms={} discarded_ms={} removed={}",
@@ -1889,6 +1975,22 @@ impl HotkeyRuntime {
             }
         }
         Ok(None)
+    }
+
+    fn should_accept_shortcut_signal(
+        &self,
+        role: HotkeyShortcutRole,
+        signal: hotkeys::Signal,
+    ) -> bool {
+        if matches!(signal, hotkeys::Signal::Tick { .. }) {
+            return true;
+        }
+        if matches!(self.coordinator.state(), hotkeys::CaptureState::Idle)
+            && matches!(signal, hotkeys::Signal::Press { .. })
+        {
+            return true;
+        }
+        self.active_shortcut_role == Some(role)
     }
 }
 
@@ -2152,6 +2254,29 @@ fn shortcut_from_binding(
 }
 
 #[cfg(desktop)]
+fn cleanup_override_shortcut_from_binding(
+    binding: &str,
+) -> Result<tauri_plugin_global_shortcut::Shortcut, settings::SettingsError> {
+    use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
+
+    let compact = binding
+        .trim()
+        .chars()
+        .filter(|ch| !ch.is_whitespace() && *ch != '-' && *ch != '_')
+        .flat_map(char::to_lowercase)
+        .collect::<String>();
+
+    match compact.as_str() {
+        "shift+rightalt" | "shiftrightalt" | "shift+rightoption" | "shiftrightoption" => {
+            Ok(Shortcut::new(Some(Modifiers::SHIFT), Code::AltRight))
+        }
+        _ => Err(settings::SettingsError::InvalidHotkeyBinding(
+            binding.trim().to_string(),
+        )),
+    }
+}
+
+#[cfg(desktop)]
 fn elapsed_ms(started: Instant) -> u64 {
     started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64
 }
@@ -2211,6 +2336,21 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
     let app_data_dir = app.path().app_data_dir()?;
     let settings = app.state::<RuntimeSnapshot>().snapshot().settings;
     let shortcut = shortcut_from_binding(&settings.hotkey.primary_binding)?;
+    let cleanup_override_shortcut = match cleanup_override_shortcut_from_binding(
+        &settings.hotkey.secondary_dial_override_binding,
+    ) {
+        Ok(override_shortcut) if override_shortcut != shortcut => Some(override_shortcut),
+        Ok(_) => {
+            eprintln!(
+                "Kaydence cleanup override hotkey disabled: override chord matches primary hotkey"
+            );
+            None
+        }
+        Err(err) => {
+            eprintln!("Kaydence cleanup override hotkey disabled: {err}");
+            None
+        }
+    };
     let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir, &settings)?));
     let started = Instant::now();
     let handler_runtime = Arc::clone(&runtime);
@@ -2218,12 +2358,10 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
     app.handle().plugin(
         tauri_plugin_global_shortcut::Builder::new()
             .with_handler(move |app, observed, event| {
-                if !app
-                    .state::<HotkeyRuntimeHandle>()
-                    .is_active_shortcut(observed)
-                {
+                let shortcut_role = app.state::<HotkeyRuntimeHandle>().shortcut_role(observed);
+                let Some(shortcut_role) = shortcut_role else {
                     return;
-                }
+                };
                 app.state::<RuntimeSnapshot>().mark_input_permission_ready();
 
                 let at_ms = started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
@@ -2233,13 +2371,15 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
                 };
 
                 let (tail_wake_ms, proof) = match handler_runtime.lock() {
-                    Ok(mut runtime) => match runtime.handle_signal(signal) {
-                        Ok(tail_wake_ms) => (tail_wake_ms, runtime.take_first_run_proof()),
-                        Err(err) => {
-                            eprintln!("Kaydence hotkey runtime failed: {err}");
-                            (None, HotkeyRuntimeFirstRunProof::default())
+                    Ok(mut runtime) => {
+                        match runtime.handle_shortcut_signal(shortcut_role, signal) {
+                            Ok(tail_wake_ms) => (tail_wake_ms, runtime.take_first_run_proof()),
+                            Err(err) => {
+                                eprintln!("Kaydence hotkey runtime failed: {err}");
+                                (None, HotkeyRuntimeFirstRunProof::default())
+                            }
                         }
-                    },
+                    }
                     Err(_) => {
                         eprintln!("Kaydence hotkey runtime lock poisoned");
                         (None, HotkeyRuntimeFirstRunProof::default())
@@ -2258,7 +2398,18 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
     let handle = app.state::<HotkeyRuntimeHandle>();
     handle.set_runtime(Arc::clone(&runtime));
     app.global_shortcut().register(shortcut)?;
-    handle.set_active_shortcut(shortcut);
+    handle.set_primary_shortcut(shortcut);
+    if let Some(override_shortcut) = cleanup_override_shortcut {
+        match app.global_shortcut().register(override_shortcut) {
+            Ok(()) => handle.set_cleanup_override_shortcut(Some(override_shortcut)),
+            Err(err) => {
+                eprintln!("Kaydence cleanup override hotkey registration failed: {err}");
+                handle.set_cleanup_override_shortcut(None);
+            }
+        }
+    } else {
+        handle.set_cleanup_override_shortcut(None);
+    }
     app.state::<RuntimeSnapshot>().mark_hotkey_registered();
     Ok(())
 }
@@ -2419,18 +2570,21 @@ mod tests {
             &mut self,
             summary: &audio::CaptureSessionSummary,
         ) -> Result<Vec<events::SessionEvent>, pipeline::PipelineError> {
-            Ok(vec![
+            let mut events = vec![
                 summary.audio_persisted_event(),
                 events::SessionEvent::RawFinal {
                     id: summary.id,
                     text: "um hello captain".to_string(),
                 },
-                events::SessionEvent::CleanFinal {
+            ];
+            if self.cleanup_dial != CleanupDial::Raw {
+                events.push(events::SessionEvent::CleanFinal {
                     id: summary.id,
                     text: "Hello captain.".to_string(),
                     dial: self.cleanup_dial,
-                },
-            ])
+                });
+            }
+            Ok(events)
         }
     }
 
@@ -3397,6 +3551,18 @@ mod tests {
     }
 
     #[test]
+    fn cleanup_override_shortcut_mapping_accepts_shift_right_alt_only() {
+        assert_eq!(
+            cleanup_override_shortcut_from_binding("Shift + RightAlt").unwrap(),
+            cleanup_override_shortcut_from_binding("shift-right-option").unwrap()
+        );
+        assert!(matches!(
+            cleanup_override_shortcut_from_binding("F13"),
+            Err(settings::SettingsError::InvalidHotkeyBinding(binding)) if binding == "F13"
+        ));
+    }
+
+    #[test]
     fn selecting_hotkey_mode_updates_snapshot_and_persists_settings() {
         let app_data = tmp();
         let state = RuntimeSnapshot::default();
@@ -3764,6 +3930,84 @@ mod tests {
         );
         assert!(runtime.take_first_dictation_completion());
         assert!(!runtime.take_first_dictation_completion());
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_cleanup_override_uses_raw_for_one_capture() {
+        let app_data = tmp();
+        let delivered = Arc::new(Mutex::new(Vec::new()));
+        let seen_dials = Arc::new(Mutex::new(Vec::new()));
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_target_resolver(Box::new(profiles::SessionTargetResolver::new(
+                profiles::StaticFrontmostAppDetector::new(detected_app()),
+                matching_profiles(CleanupDial::Light),
+            )))
+            .with_processor(Box::new(ScriptedProcessor::new(Arc::clone(&seen_dials))))
+            .with_injector(Box::new(TestInjector::native(Arc::clone(&delivered))));
+
+        runtime
+            .handle_shortcut_signal(
+                HotkeyShortcutRole::CleanupOverride,
+                hotkeys::Signal::Press { at_ms: 0 },
+            )
+            .unwrap();
+        let raw_id = runtime.recorder.active_session_id().unwrap();
+        assert_eq!(
+            runtime
+                .handle_signal(hotkeys::Signal::Release { at_ms: 400 })
+                .unwrap(),
+            None
+        );
+        assert!(matches!(
+            runtime.coordinator.state(),
+            hotkeys::CaptureState::Capturing { .. }
+        ));
+        assert_eq!(
+            runtime
+                .handle_shortcut_signal(
+                    HotkeyShortcutRole::CleanupOverride,
+                    hotkeys::Signal::Release { at_ms: 500 },
+                )
+                .unwrap(),
+            Some(800)
+        );
+        runtime
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 800 })
+            .unwrap();
+
+        runtime
+            .handle_signal(hotkeys::Signal::Press { at_ms: 1_000 })
+            .unwrap();
+        let light_id = runtime.recorder.active_session_id().unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Release { at_ms: 1_400 })
+            .unwrap();
+        runtime
+            .handle_signal(hotkeys::Signal::Tick { at_ms: 1_700 })
+            .unwrap();
+
+        assert_eq!(
+            *delivered.lock().unwrap(),
+            vec!["um hello captain", "Hello captain."]
+        );
+        assert_eq!(
+            *seen_dials.lock().unwrap(),
+            vec![CleanupDial::Raw, CleanupDial::Light]
+        );
+
+        let raw_session = runtime.history.get_session(raw_id).unwrap().unwrap();
+        assert_eq!(raw_session.raw_text.as_deref(), Some("um hello captain"));
+        assert_eq!(raw_session.clean_text, None);
+        assert_eq!(raw_session.cleanup_dial, None);
+        assert_eq!(raw_session.injected_method, Some(InjectMethod::Native));
+
+        let light_session = runtime.history.get_session(light_id).unwrap().unwrap();
+        assert_eq!(light_session.raw_text.as_deref(), Some("um hello captain"));
+        assert_eq!(light_session.clean_text.as_deref(), Some("Hello captain."));
+        assert_eq!(light_session.cleanup_dial, Some(CleanupDial::Light));
+        assert_eq!(light_session.injected_method, Some(InjectMethod::Native));
         let _ = std::fs::remove_dir_all(app_data);
     }
 
