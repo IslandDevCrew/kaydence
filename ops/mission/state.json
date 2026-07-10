@@ -139,7 +139,7 @@
   "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
   "status": "active",
   "started": "2026-07-07",
-  "updated": "2026-07-10T18:35Z",
+  "updated": "2026-07-10T18:37Z",
   "sessionCount": 8
  },
  "policies": {
@@ -910,6 +910,11 @@
    "title": "Wayland secure-field detection gap on opaque clients",
    "severity": "medium",
    "note": "Non-AT-SPI Wayland apps expose no password-field signal — Kaydence cannot always confirm a field is non-secure (ADR-0013 §secure-field). Mitigated: default Lenient flags the result unverified (UI warns per app, board 07); opt-in Strict refuses opaque focus. A real platform limitation, surfaced to the user rather than papered over."
+  },
+  {
+   "id": "R-ASR-HEDGE",
+   "severity": "medium",
+   "note": "ADR-0002 two-independent-ASR-runtimes hedge not yet met: CPU lane currently uses whisper.cpp (same runtime as GPU). Independent Parakeet/ort adapter (mel + RNNT decode) still owed."
   }
  ],
  "prLog": [
@@ -1365,6 +1370,13 @@
    "number": null,
    "title": "P1-G2 golden ASR proof — real whisper.cpp finals, 4/4 corpus, 0 content-word WER, RTF 0.10-0.39 on Metal",
    "url": "local:mission/p1-g2-golden-asr",
+   "phase": "P1",
+   "mergedAt": "2026-07-10"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 lane-aware whisper adapter — real GPU->CPU fallback proven on corpus (both lanes genuine whisper.cpp)",
+   "url": "local:mission/p1-p0-2-whisper-cpu-lane",
    "phase": "P1",
    "mergedAt": "2026-07-10"
   }
