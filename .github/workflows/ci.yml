@@ -51,6 +51,10 @@ jobs:
       - name: typecheck + lint
         shell: bash
         run: bash scripts/check-frontend.sh
+      - name: macOS build/run harness contract
+        if: runner.os == 'macOS'
+        shell: bash
+        run: bash tests/build_and_run.sh
       # --- Gates (bash on all three runners incl. Windows Git Bash) ---
       - name: network audit (non-negotiable #1)
         shell: bash

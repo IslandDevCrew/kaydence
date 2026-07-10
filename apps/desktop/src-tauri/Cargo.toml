@@ -69,6 +69,7 @@ objc2-app-kit = { version = "0.3.2", default-features = false, features = ["NSPa
 objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSData", "NSString"] }
 
 [features]
+custom-protocol = ["tauri/custom-protocol"]
 # Feature-gated network surfaces stay OFF by default (non-negotiable #1).
 byok = []
 relay = []

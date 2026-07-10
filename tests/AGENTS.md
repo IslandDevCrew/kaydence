@@ -10,6 +10,10 @@ boundaries.
   (pitfall P1).
 - ⛔ `event_sequences` — assert the SessionEvent order for: happy path,
   focus-change hold, secure-field hold, LLM timeout fallback, engine fallback.
+- `build_and_run.sh` — macOS Run/Verify harness contract: failed launchers are
+  rejected, live app processes survive terminal handoff, the release bundle is
+  staged and ad-hoc signed with `io.kaydence.app`, and Tauri's embedded custom
+  protocol is enabled.
 - `inject_matrix.md` — the per-app manual/automated checklist (see inject/).
 - `corpus/` — golden audio + expected outputs powering the ≥95% zero-edit
   metric; grow it with every real-world miss (a user-reported transcription
