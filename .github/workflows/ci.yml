@@ -1,13 +1,43 @@
 name: ci
-on: [push, pull_request]
+# Cost-aware triggers (metered private-repo Actions; macOS bills ×10, Windows ×2):
+#   - push to main .......... Linux only (×1) — the cheap everyday gate
+#   - pull_request to main .. full 3-OS — the trust anchor before a merge
+#   - workflow_dispatch ..... full 3-OS on demand (manual "Run workflow")
+# This keeps non-negotiable #5 (ADR-0011, 3-OS) intact where it matters — every
+# merge to main goes through a PR that runs all three — while heartbeat pushes
+# stop burning the ×10 macOS runner. Removing the old `on: [push, pull_request]`
+# also ends the duplicate-run waste (was 6 jobs per branch push, now Linux-only).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
+  # Emits the OS matrix: Linux-only for pushes, all three otherwise.
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.pick.outputs.matrix }}
+    steps:
+      - id: pick
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo 'matrix={"os":["ubuntu-latest"]}' >> "$GITHUB_OUTPUT"
+          else
+            echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"]}' >> "$GITHUB_OUTPUT"
+          fi
+
   build-test:
+    needs: setup
     strategy:
       fail-fast: false
-      matrix:
-        # non-negotiable #5 (ADR-0011) — 3-OS, permanent. Linux needs display-server +
-        # injection deps; Wayland/X11 injection tests run headless where possible.
-        os: [macos-latest, windows-latest, ubuntu-latest]
+      # non-negotiable #5 (ADR-0011) — 3-OS, permanent — enforced on every PR to
+      # main and on manual dispatch. Linux needs display-server + injection deps;
+      # Wayland/X11 injection tests run headless where possible.
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
