@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaydence — State of the Union & Plan of Attack v4 · Codex Handoff · 2026-07-10</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#070f1c; --paper:#0d1b2f; --paper-2:#10243b;
+    --ink:#eef6ff; --muted:#a9bdd3; --line:rgba(169,189,211,.18);
+    --accent:#58d7b3; --blue:#77b7ff; --amber:#ffd166; --red:#ff8f8f;
+    --good:#8ef2c0; --violet:#c4a7ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+    radial-gradient(circle at top left,rgba(88,215,179,.16),transparent 30rem),
+    radial-gradient(circle at top right,rgba(119,183,255,.14),transparent 32rem),
+    var(--bg);color:var(--ink);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+  main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:42px 0 64px}
+  h1,h2,h3{margin:0;line-height:1.14}
+  h1{max-width:960px;margin-top:10px;font-size:clamp(2rem,4.8vw,3.8rem);letter-spacing:-.035em;text-wrap:balance}
+  h2{margin-bottom:16px;font-size:clamp(1.4rem,2.8vw,2rem);text-wrap:balance}
+  h3{margin-bottom:8px;font-size:1.05rem;color:#fff}
+  p{margin:0} a{color:var(--blue)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;color:#dff7ef}
+  .eyebrow{color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;align-items:end;padding:24px 0 30px;border-bottom:1px solid var(--line)}
+  .hero .summary{max-width:780px;margin-top:16px;color:var(--muted);font-size:1.06rem}
+  .panel,.verdict-card,.metric,.card{border:1px solid var(--line);border-radius:16px;
+    background:linear-gradient(180deg,var(--paper-2),var(--paper));box-shadow:0 18px 46px rgba(0,0,0,.25)}
+  .verdict-card{padding:22px}
+  .metric{padding:18px}
+  .verdict-card strong{display:block;color:var(--accent);font-size:1.6rem;line-height:1.15}
+  .verdict-card span{display:block;margin-top:10px;color:var(--muted);font-size:.95rem}
+  section{padding-top:38px}
+  .grid{display:grid;gap:16px}
+  .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .panel{padding:20px}
+  .panel p,li,.muted{color:var(--muted)}
+  .metric strong{display:block;margin-bottom:6px;color:#fff;font-size:1.8rem;line-height:1;font-variant-numeric:tabular-nums}
+  .chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;margin:2px 4px 2px 0;background:rgba(255,255,255,.05);color:var(--muted);font-size:.78rem;font-weight:800}
+  .chip.red{color:var(--red);border-color:rgba(255,143,143,.4)}
+  .chip.amber{color:var(--amber);border-color:rgba(255,209,102,.4)}
+  .chip.green{color:var(--good);border-color:rgba(142,242,192,.4)}
+  .chip.blue{color:var(--blue);border-color:rgba(119,183,255,.4)}
+  .chip.violet{color:var(--violet);border-color:rgba(196,167,255,.4)}
+  ul{margin:10px 0 0;padding-left:20px}
+  li+li{margin-top:7px}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  th{background:rgba(255,255,255,.05);color:#fff;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
+  td{color:var(--muted)} td b,td strong{color:#fff}
+  .table-wrap{overflow-x:auto;border-radius:12px}
+  .st{font-weight:900;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+  .st.pass{color:var(--good)} .st.pend{color:var(--amber)} .st.block{color:var(--red)} .st.prog{color:var(--blue)}
+  .kicker{color:var(--muted);margin-bottom:14px;max-width:900px}
+  .phase-card{display:grid;grid-template-columns:64px 1fr;gap:18px;padding:20px;margin-top:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--paper-2),var(--paper))}
+  .phase-num{display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:rgba(88,215,179,.12);color:var(--accent);font-weight:950;font-size:1.15rem}
+  .phase-card.p1 .phase-num{background:rgba(255,209,102,.12);color:var(--amber)}
+  .phase-card.p3 .phase-num{background:rgba(119,183,255,.12);color:var(--blue)}
+  .phase-card.p4 .phase-num{background:rgba(196,167,255,.12);color:var(--violet)}
+  .phase-meta{margin-top:2px;font-size:.85rem;color:var(--accent);font-weight:800}
+  details{border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--paper-2),var(--paper));margin-top:12px;overflow:hidden}
+  details summary{cursor:pointer;padding:15px 18px;color:#fff;font-weight:800;font-size:.95rem;list-style:none;display:flex;align-items:center;gap:10px}
+  details summary::before{content:'▸';color:var(--accent);transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  details .body{padding:0 18px 18px}
+  .copy-btn{margin-left:auto;border:1px solid rgba(119,183,255,.4);background:rgba(119,183,255,.08);color:var(--blue);border-radius:8px;padding:5px 12px;font-size:.78rem;font-weight:800;cursor:pointer;font-family:inherit}
+  .copy-btn.done{color:var(--good);border-color:rgba(142,242,192,.4)}
+  .code-block{display:block;margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#081120;color:#dff7ef;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.83rem;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:12px;background:rgba(255,209,102,.06);padding:14px 16px;margin-top:14px;color:var(--muted);font-size:.92rem}
+  .callout.good{border-left-color:var(--good);background:rgba(142,242,192,.06)}
+  .callout.blue{border-left-color:var(--blue);background:rgba(119,183,255,.06)}
+  .footer-note{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.9rem}
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr}
+    .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+    .phase-card{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Kaydence · State of the Union &amp; Plan of Attack · v4 — Codex Handoff</p>
+      <h1>Speech becomes text. Now make the screens as good as the engine.</h1>
+      <p class="summary">As of <b>July 10, 2026</b>, Kaydence transcribes for real (local whisper.cpp, GPU + CPU, 0-WER golden corpus), P0 is closed, and CI billing is fixed with a $5 hard cap. The engine and the constitution are ahead of the interface — the next work is dressing the four P1 screens to their locked boards, then the cleanup differentiator. This document is the handoff for a fresh Codex (GPT-5.6 Sol Ultra) session to pick up without re-discovering anything.</p>
+      <div style="margin-top:16px">
+        <span class="chip green">P0 closed · 138 commits</span>
+        <span class="chip green">P1-G2 real ASR — 0 WER</span>
+        <span class="chip amber">10 / 23 gates passed</span>
+        <span class="chip blue">CI green (Linux) · $5 cap</span>
+        <span class="chip violet">design locked — Visual System v1</span>
+      </div>
+    </div>
+    <div class="verdict-card">
+      <strong>Do the screens next.</strong>
+      <span>The bones are right — nav order, backend-driven views, privacy line. The polish isn't: build the four P1 screens to boards 01/03/07/10, board by board, starting with the Dictation Cockpit. That's the differentiator work, and it needs no new dependencies.</span>
+    </div>
+  </header>
+
+  <!-- STATE OF THE UNION -->
+  <section aria-labelledby="sotu-h">
+    <h2 id="sotu-h">State of the Union</h2>
+    <p class="kicker">Everything below is verified against real git + CI truth, not claims. Repo: <code>/Users/IDC2.5/Kaydence/kaydence</code> · remote <code>IslandDevCrew/kaydence</code> (private) · HEAD <code>4327651</code>.</p>
+
+    <div class="grid four">
+      <div class="metric"><strong>P0</strong><p>Toolchain &amp; law — <b style="color:var(--good)">closed</b>. Tauri on 3 OSes, 3-OS CI, ADRs 0001–0014.</p></div>
+      <div class="metric"><strong>10/23</strong><p>Gates passed. P1 in progress (G1/G2/G5 green; G3 latency + G4 screens pending).</p></div>
+      <div class="metric"><strong>0 WER</strong><p>Real whisper.cpp finals on a golden corpus, GPU (Metal) + CPU lanes, 249–263 ms.</p></div>
+      <div class="metric"><strong>$5</strong><p>Actions budget cap set; CI unblocked &amp; green on Linux. Diet keeps spend near $0.</p></div>
+    </div>
+
+    <h3 style="margin-top:24px">Gate ledger</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gate</th><th>Status</th><th>What it proves / what remains</th></tr></thead>
+        <tbody>
+          <tr><td><b>P0-G1…G7</b></td><td><span class="st pass">passed</span></td><td>fmt · clippy -D · test · frontend check · <code>cargo tauri dev</code> on 3 OSes · 3-OS CI green · ADRs accepted (0009 Proposed by design)</td></tr>
+          <tr><td><b>P1-G1</b> crash recovery</td><td><span class="st pass">passed</span></td><td>Real WAL; audio survives a genuine <code>kill -9</code> mid-dictation (SIGKILL child-process test)</td></tr>
+          <tr><td><b>P1-G2</b> real ASR finals</td><td><span class="st pass">passed</span></td><td>whisper.cpp adapter (ADR-0014); golden corpus 4/4 correct, 0 content-word WER, RTF 0.10–0.39, GPU+CPU. <em>Caveat: synthetic-TTS corpus; human-voice WER is P2.</em></td></tr>
+          <tr><td><b>P1-G5</b> event sequences</td><td><span class="st pass">passed</span></td><td>Typed event order for happy path, focus-change hold, secure-field hold, engine + cleanup fallback</td></tr>
+          <tr><td><b>P1-G3</b> latency + footprint</td><td><span class="st pend">pending</span></td><td>4 bench metrics green locally; needs real-ASR/GPU/idle-footprint numbers on the reference machines</td></tr>
+          <tr><td><b>P1-G4</b> screen fidelity</td><td><span class="st pend">pending</span></td><td><b>The immediate work.</b> Boards 01/03/07/10 — invariants hold, composition not yet matched (see gap analysis below)</td></tr>
+          <tr><td><b>P2 · P3 · P4</b></td><td><span class="st pend">pending</span></td><td>Cleanup dial → prediction + installers → flagship trio. Each phase carries a screen-family fidelity gate.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:24px">What changed this session (July 10)</h3>
+    <div class="grid three">
+      <div class="panel"><h3>Real transcription</h3><p>ADR-0014 authored; <code>WhisperCppEngine</code> (whisper-rs 0.16, MIT) plugged into the existing <code>AsrEngine</code> trait behind an off-by-default <code>asr-whisper</code> feature. Lane-aware (GPU→CPU fallback). Model download stays a separate, still-gated surface — no new egress.</p></div>
+      <div class="panel"><h3>Billing fixed</h3><p><code>IslandDevCrew</code> is a personal account whose $0 Actions budget hard-stopped CI once July's free minutes were spent. Card added (…6046) + Actions budget set to $5. CI proven unblocked &amp; green on Linux.</p></div>
+      <div class="panel"><h3>CI diet</h3><p>Pushes now run <b>Linux-only</b> (×1); full 3-OS runs on PRs into main + manual dispatch. Ends the macOS ×10 burn and the old duplicate-run waste. CI immediately caught a feature-gated <code>fmt</code> miss — the system working.</p></div>
+    </div>
+  </section>
+
+  <!-- THE IMMEDIATE WORK: P1-G4 GAP -->
+  <section aria-labelledby="gap-h">
+    <h2 id="gap-h">The immediate work — P1-G4 screen fidelity</h2>
+    <p class="kicker">Verdict: <b style="color:var(--amber)">pending</b>. The invariants hold — left-nav order matches the boards, all four P1 views are backend-driven with real data (real history + audio playback, live permission proofs, privacy posture), and no cloud-sync copy appears on core screens. What's missing is board-level composition. The whole frontend is one 1,914-line <code>App.tsx</code> + 1,336-line <code>styles.css</code> (<code>views/</code> and <code>components/</code> are empty) — the build pass should split per-view components too. Full analysis: <code>ops/mission/evidence/2026-07-10-p1-g4-fidelity-gap.txt</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Board</th><th>Have</th><th>Missing (the work list)</th></tr></thead>
+        <tbody>
+          <tr><td><b>01 Dictation Cockpit</b></td><td>Transcript card; real history strip (play/export/delete/purge)</td><td>Waveform record header + circular record/stop + elapsed; left status cards (Engine, Target App, Global Hotkey, Privacy "Local Only", WAL "Healthy"); right cleanup dial + output checklist + Output destination + Auto-paste; 5-icon bottom nav; status footer</td></tr>
+          <tr><td><b>03 Cleanup &amp; Injection</b></td><td>Raw/Light/Full segmented + output rules</td><td>Injection Method &amp; Status panel (per-OS AX / UIA / X11+Wayland); Latency Budget (p95); Test Gates; Before/After examples; Output Destination per app</td></tr>
+          <tr><td><b>07 Privacy &amp; Context</b></td><td>Privacy posture grid</td><td>Privacy Constitution 4-card row; Context Reader (Tier-1 AX toggle, Tier-2 OCR, Secure-Field, In-Memory buffer, Network Audit, Audit Policy); Audit Log (7 days); per-OS Permissions panel</td></tr>
+          <tr><td><b>10 First Run &amp; License</b></td><td>Strong: ASR picker, permission proofs, hotkey binding + recovery, cleanup default, ASR runtime, next-step sequencing, setup timing</td><td>9-step wizard stepper header; Whisper-Ahead enable toggle; Privacy Confirmation row; the 4 pricing cards (Free $0 MIT / Pro $79 / Captain $189 / Harbor) + Start Dictating</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout blue"><b>Shared invariants that must never drift</b> (a change to these HALTS for operator go + ADR): left-nav order · 8px card radius · prediction-blue · ~0.5s amber-gold merge pulse · destructive confirm gate · OS accent (macOS aqua / Windows cobalt / Linux emerald) is the <em>only</em> per-OS variation · Option 1 K-waveform mark in the reserved top-left slot · no cloud-sync copy on core screens · keyboard/a11y.</div>
+  </section>
+
+  <!-- PLAN OF ATTACK -->
+  <section aria-labelledby="plan-h">
+    <h2 id="plan-h">Plan of Attack — the road from here</h2>
+    <p class="kicker">Ordered by the operator: <b>screens → cleanup → parakeet later</b>. Each phase closes on runnable gates; the loop halts at every human gate for a <code>go</code>.</p>
+
+    <div class="phase-card p1"><div class="phase-num">P1</div><div>
+      <h3>Finish MVP dictation</h3><p class="phase-meta">now · P1-G4 (screens) + P1-G3 (latency)</p>
+      <p class="muted"><b>1. Board-01 Cockpit build</b> — the primary surface; sets the component vocabulary (StatusCard, SegmentedDial, NavRail, StatusFooter) the other three reuse. Split <code>App.tsx</code> per view as you go. <b>2. Boards 03 / 07 / 10</b> to fidelity. <b>3. Run + screenshot</b> each view against its board for the human sign-off → close P1-G4. <b>4. P1-G3</b> — capture real ASR/GPU/idle-footprint numbers.</p></div></div>
+
+    <div class="phase-card"><div class="phase-num">P2</div><div>
+      <h3>The cleanup differentiator</h3><p class="phase-meta">next · P2-G1…G3</p>
+      <p class="muted">The actual moat: Raw/Light/Full dial (rule engine + constrained local LLM), filler removal + self-correction collapse, streaming partials, dictionary + Wispr/Glaido import. Gate: ≥95% zero-edit at Light on a golden corpus (this is where human-voice WER lives). Closes board-03 fidelity too.</p></div></div>
+
+    <div class="phase-card p3"><div class="phase-num">P3</div><div>
+      <h3>Polish + Whisper-Ahead + installers</h3><p class="phase-meta">P3-G1…G4</p>
+      <p class="muted">Per-app profiles, snippets, <b>signed installers (notarized .dmg, signed .msi, AppImage/deb)</b>, then the prediction layer (dual-line HUD, gold merge, timing ladder). <b>Parakeet/ort independent runtime lands here</b> — its native streaming payoff is a P3 concern, and it doubles as the ADR-0002 two-runtime hedge (tracked as risk <code>R-ASR-HEDGE</code>).</p></div></div>
+
+    <div class="phase-card p4"><div class="phase-num">P4</div><div>
+      <h3>The Flagship Trio</h3><p class="phase-meta">post-beta · Voiceprint → Relay → Conductor</p>
+      <p class="muted">On-device personalization, then local-network Relay (crypto design review HALTS the build — ADR-0009 still Proposed by design), then Conductor (confirm-gated agent control plane). Each has its board and a hard gate.</p></div></div>
+  </section>
+
+  <!-- CODEX HANDOFF PROMPT PACK -->
+  <section aria-labelledby="pack-h">
+    <h2 id="pack-h">Codex handoff prompt pack</h2>
+    <p class="kicker">Paste-ready for a fresh Codex (GPT-5.6 Sol Ultra, fast mode) session. These assume Codex works from the real repo and verifies reality against <code>ops/mission/state.json</code> — it does not trust claims. The repo also ships <code>docs/CODEX_SUPER_GOAL_PROMPT.md</code> (goal-mode) and Windows handoffs.</p>
+
+    <details open>
+      <summary>① Resume &amp; orient — paste this first<button class="copy-btn" data-t="pk1">copy</button></summary>
+      <div class="body"><span class="code-block" id="pk1">Continue the Kaydence v3 build from the real local repo. Do not redefine
+completion around a smaller subset. Verify reality against git + files before acting.
+
+Repo: /Users/IDC2.5/Kaydence/kaydence
+Remote: https://github.com/IslandDevCrew/kaydence.git  (private)
+Truth files: ops/mission/state.json  ·  ops/mission/state-of-the-union.html
+
+Read first, in order:
+1. AGENTS.md  2. apps/desktop/AGENTS.md  3. apps/desktop/src-tauri/AGENTS.md
+4. apps/desktop/src/AGENTS.md  5. docs/PRD.md  6. docs/ARCHITECTURE.md
+7. docs/ROADMAP.md  8. docs/design/README.md  9. prompts/BUILD-LOOP.md
+10. prompts/JUDGE-AUDITOR.md  11. docs/decisions/0014-real-asr-engine.md
+
+State as of 2026-07-10 (HEAD 4327651): P0 closed. P1 in progress — passed:
+crash_recovery (P1-G1), real whisper.cpp ASR finals (P1-G2, ADR-0014), event
+sequences (P1-G5). Pending: P1-G3 (latency/footprint real numbers) and P1-G4
+(screen-family fidelity for boards 01/03/07/10). CI billing is fixed ($5 Actions
+budget on IslandDevCrew) and green on Linux; the CI diet runs Linux-only on push,
+full 3-OS on PRs into main + manual dispatch.
+
+Standing rules (from prompts/JUDGE-AUDITOR.md + AGENTS.md):
+- No authority without evidence: every "done" saves an artifact under ops/mission/evidence/.
+- One work unit = one branch (mission/<phaseId>-<slug>) = one merge; <=400 changed lines.
+- Never launder unverified into verified. A green Judge with a red Audit does not merge.
+- Critical decision paths (new network surface, crypto, model registry, prompt
+  contracts, changing a shared UI invariant) HALT for operator go + an ADR.
+- Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs,
+  append ops/mission/journal.md, commit.
+
+First action: recap the phase, last merge, open gates, and the next 3 units. Then wait for my go.</span></div>
+    </details>
+
+    <details>
+      <summary>② Next unit — build board-01 Dictation Cockpit to fidelity<button class="copy-btn" data-t="pk2">copy</button></summary>
+      <div class="body"><span class="code-block" id="pk2">Task: P1-G4 unit 1 — build the Dictation Cockpit to its locked board.
+
+Board (do not edit the PNG): assets/brand/screens/kaydence-screen-family-01.png
+Built surface: apps/desktop/src/App.tsx (activeView === "Dictate")
+Rules of record: docs/design/README.md + designDirection in ops/mission/state.json
+
+Bring the built Dictate view to board-01 composition:
+- Recording header: waveform + circular record/stop control + elapsed timer.
+- Left status cards: Engine, Target App, Global Hotkey, Privacy ("Local Only"),
+  WAL Recovery ("Healthy") — each backed by real AppSnapshot state, not mock text.
+- Right column IN this view: Cleanup dial (Raw/Light/Full) + output-rule checklist
+  + Output destination + Auto-paste toggle.
+- 5-icon bottom nav; status footer (mic source + "All systems operational").
+- OS accent is the ONLY per-OS variation (macOS aqua / Windows cobalt / Linux emerald);
+  8px card radius; prediction-blue; Option 1 K-waveform mark in the reserved top-left slot.
+
+While here, split the monolith: extract per-view components + shared primitives
+(StatusCard, SegmentedDial, NavRail, StatusFooter) under apps/desktop/src/components/
+and apps/desktop/src/views/ — files <=800 lines (root coding-style).
+
+Do NOT invent backend data — wire to existing AppSnapshot/commands; if a field
+is missing, add the honest backend source or mark the row pending. Keep the
+privacy line (no cloud-sync copy).
+
+Verify before merge (evidence saved under ops/mission/evidence/):
+- npm run check (tsc --noEmit + eslint) green
+- Run the app and SCREENSHOT the Dictate view; place it beside board-01 and note
+  matches/deltas in an evidence file. A UI claim with no runtime screenshot is not done.
+- cargo fmt --check · clippy -D · cargo test --all still green
+Then: one branch mission/p1-g4-cockpit, one merge, heartbeat.</span></div>
+    </details>
+
+    <details>
+      <summary>③ Standing gate command (run before every merge)<button class="copy-btn" data-t="pk3">copy</button></summary>
+      <div class="body"><span class="code-block" id="pk3"># From repo root. macOS host. Switch gh to the repo owner FIRST (see account note).
+gh auth switch --user IslandDevCrew
+
+M=apps/desktop/src-tauri/Cargo.toml
+cargo fmt --manifest-path $M --all -- --check
+cargo clippy --manifest-path $M --all-targets -- -D warnings
+cargo test --manifest-path $M --all
+bash scripts/check-frontend.sh          # tsc --noEmit + eslint
+bash scripts/audit-network.sh           # non-negotiable #1 — zero egress
+bash scripts/check-adr-status.sh         # every ADR Accepted except 0009 (by design)
+bash scripts/check-privacy-posture.sh --check
+bash scripts/bench.sh --check            # latency budget
+
+# Real ASR proof (P1-G2 reproduce) — needs a local model, no network at run time:
+#   KAYDENCE_WHISPER_MODEL=/Users/IDC2.5/Documents/Kaydence/models/ggml-base.en.bin \
+#   KAYDENCE_WHISPER_CLIP=<16kHz mono wav> KAYDENCE_WHISPER_EXPECT=<substr> \
+#   cargo test --manifest-path $M --features asr-whisper --test asr_golden -- --nocapture
+#   (add KAYDENCE_WHISPER_LANE=cpu to force the CPU fallback lane)</span></div>
+    </details>
+
+    <details>
+      <summary>④ Mid-mission controls<button class="copy-btn" data-t="pk4">copy</button></summary>
+      <div class="body"><span class="code-block" id="pk4">recap    -> phase, last merge, evidence ledger, next 3 units, open gates
+audit    -> force a Judge/Auditor pass: MERGE-READY or BLOCKED + missing artifacts
+clarify  -> surface the loop's open questions
+rewind   -> revert to the last committed checkpoint
+
+# Trigger a full 3-OS CI run on demand (costs ~$1-1.5 of the $5 cap — macOS bills x10):
+gh workflow run ci --repo IslandDevCrew/kaydence --ref main
+# Everyday pushes already run Linux-only automatically (cheap).</span></div>
+    </details>
+  </section>
+
+  <!-- ACCOUNT & BROWSER GUIDANCE -->
+  <section aria-labelledby="acct-h">
+    <h2 id="acct-h">Account &amp; browser guidance (read this — it bit us twice)</h2>
+    <p class="kicker">Two of Jon's personal GitHub accounts are in play. Getting this wrong is why <code>git push</code> intermittently failed with "Repository not found" and why billing looked broken.</p>
+    <div class="grid two">
+      <div class="panel"><h3>The two accounts</h3>
+        <ul>
+          <li><b>IslandDevCrew</b> — personal account that <b>owns the repo</b> and where <b>Actions billing lives</b> (card …6046, $5 Actions budget). Private repo, so CI minutes are metered.</li>
+          <li><b>Navigata1</b> (Jon Isaac) — a second personal account. Healthy billing, but <b>does not own the repo</b>. <code>git</code>/<code>gh</code> keep defaulting to it.</li>
+        </ul>
+        <div class="callout"><b>Before any push or gh API call:</b> <code>gh auth switch --user IslandDevCrew</code>. If a push says "Repository not found," the active account reverted — switch and retry. Both accounts are authenticated in the <code>gh</code> CLI already.</div>
+      </div>
+      <div class="panel"><h3>Chrome profiles (for billing / web UI)</h3>
+        <ul>
+          <li><b>IslandDevCrew</b> is signed into the Chrome profile named <b>"Stripe MBPro"</b> — that's the only browser where its billing pages resolve. It is <b>not</b> a remembered "switch account" in the other profile, so reaching it needs a fresh sign-in there.</li>
+          <li>Org-style URLs (<code>/organizations/IslandDevCrew/...</code>) 500/404 — IslandDevCrew is a <b>user</b>, not an org. Use <code>github.com/settings/billing</code> while signed in <em>as</em> IslandDevCrew.</li>
+          <li>Never enter card details on Kaydence's behalf — the operator enters payment; the agent may set non-credential config (e.g. the $5 budget) only.</li>
+        </ul>
+        <div class="callout good"><b>Billing is already fixed.</b> Card on file + $5 Actions budget (hard-stop, alerts). The CI diet keeps monthly spend near $0. Nothing more is needed unless the $5 alert fires.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCH-BUILD POINTER -->
+  <section aria-labelledby="arch-h">
+    <h2 id="arch-h">Arch-build skill pointer (optional for GPT)</h2>
+    <p class="kicker">You want to see how Codex/GPT performs on its own first — so this is a <b>pointer, not an instruction to invoke</b>. Hand it over only if GPT needs a workflow framework or starts crossing gates on claims.</p>
+    <div class="panel">
+      <h3>ARCHIPELAGO — Jon's evidence-gated build methodology</h3>
+      <p>A full-cycle build protocol: typed contracts at every seam, gates that <em>must be able to fail</em>, loopback routing, and a tamper-evident ledger. <b>The one rule:</b> nothing crosses a gate on claims alone — a claim is not done until a captured, hashed piece of evidence proves it. A falsified claim caps the audit at band 1; an unverified claim at band 3; a UI claim with no runtime evidence at band 4.</p>
+      <ul>
+        <li><b>Skill (Claude):</b> <code>/Users/IDC2.5/.claude/skills/arch-build/SKILL.md</code> — protocol scripts vendored under <code>protocol/</code>.</li>
+        <li><b>Source of truth:</b> <code>Navigata1/archipelago</code> (public GitHub).</li>
+        <li><b>How it maps here:</b> it's the same discipline the Kaydence loop already runs (<code>prompts/BUILD-LOOP.md</code> ORIENT→PLAN→BUILD→JUDGE→AUDIT→GATE + <code>JUDGE-AUDITOR.md</code>). If GPT's own workflow holds the "evidence before done" line, it doesn't need this. If it drifts, point it at the SKILL.</li>
+      </ul>
+      <div class="callout blue"><b>For GPT, minimal version:</b> before you mark anything done, produce a piece of evidence a skeptic could check — a test run, a screenshot, a command's output — and save it. If you can't, it isn't done; say so and mark it <code>unverified</code>. Never present <code>unverified</code> as <code>verified</code>.</div>
+    </div>
+  </section>
+
+  <p class="footer-note">
+    <b>Provenance:</b> generated 2026-07-10 by Claude (Opus/Fable session) from real repo + CI truth — HEAD <code>4327651</code>, 138 commits, gates 10/23. Evidence for every claim lives under <code>ops/mission/evidence/</code> (see <code>2026-07-10-p1-g2-golden-asr.txt</code>, <code>2026-07-10-p1-p0-2-whisper-adapter.txt</code>, <code>2026-07-10-p1-g4-fidelity-gap.txt</code>, <code>2026-07-10-ci-fmt-fix-linux.log</code>).
+    <b>Supersedes for status:</b> the July 8/9 markdown handoffs (historical). Current truth is always <code>ops/mission/state.json</code> + <code>ops/mission/state-of-the-union.html</code>.
+    <b>Governing plan:</b> Kaydence Plan of Attack v3 (2026-06-21) + <code>docs/PRD.md</code> (IDs are law) + <code>docs/ROADMAP.md</code>.
+  </p>
+
+</main>
+<script>
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation();
+      var el = document.getElementById(btn.getAttribute('data-t'));
+      navigator.clipboard.writeText(el.innerText).then(function(){
+        btn.textContent = 'copied ✓'; btn.classList.add('done');
+        setTimeout(function(){ btn.textContent = 'copy'; btn.classList.remove('done'); }, 1600);
+      });
+    });
+  });
+</script>
+</body>
+</html>
