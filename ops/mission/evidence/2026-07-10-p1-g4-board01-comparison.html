@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Board 01 comparison</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #e8edef; color: #1a2327; font: 13px system-ui, sans-serif; }
+    main { display: grid; grid-template-columns: repeat(2, 540px); gap: 24px; width: 1104px; margin: 20px auto; }
+    figure { margin: 0; }
+    figcaption { margin-bottom: 8px; font-weight: 700; }
+    .frame { position: relative; width: 540px; height: 800px; overflow: hidden; border: 1px solid #cbd5d9; background: #fff; }
+    .source { position: absolute; left: -20px; top: -30px; width: 1776px; height: 887px; max-width: none; }
+    .implementation { display: block; width: 540px; height: 800px; }
+  </style>
+</head>
+<body>
+  <main>
+    <figure>
+      <figcaption>Locked Board 01 / macOS source</figcaption>
+      <div class="frame"><img class="source" src="../../../assets/brand/screens/kaydence-screen-family-01.png" alt="Locked macOS Board 01 reference"></div>
+    </figure>
+    <figure>
+      <figcaption>Browser implementation / macOS lane / 540 x 800</figcaption>
+      <div class="frame"><img class="implementation" src="2026-07-10-p1-g4-board01-browser-540x800.png" alt="Implemented Dictation Cockpit"></div>
+    </figure>
+  </main>
+</body>
+</html>

@@ -1,0 +1,82 @@
+KAYDENCE P1-G4 UNIT 1 - BOARD 01 DICTATION COCKPIT
+Captured: 2026-07-10T23:08:15Z
+Branch: mission/p1-g4-cockpit
+Base: 3238b7b (origin/main at unit start)
+
+SCOPE AND PLAN RECONCILIATION
+- Plan v4 is compatible with v3 and is more specific for the immediate sequence:
+  Board 01 -> Boards 03/07/10 -> P1-G4 human sign-off -> P1-G3 real performance.
+- This unit implements Board 01 only. It does not close P1-G4, P1, or the
+  three-platform MVP claim.
+- No dependency, Supabase surface, account, telemetry, model-registry change,
+  runtime download, or network call was added.
+
+IMPLEMENTED
+- Replaced the old evidence-card/mock-recording Dictate page with the locked
+  Board 01 composition: recording strip, five backend-derived status cards,
+  transcript, real history actions, cleanup dial, output status, auto-paste
+  readiness, five-action bottom nav, and two-line footer.
+- Native status truth is conservative: unavailable engine/target/WAL/microphone
+  evidence renders Blocked or Pending. Browser-only ready-state fixtures exercise
+  the visual and interaction contract without changing native truth.
+- Extracted reusable NavRail, StatusCard, SegmentedDial, BottomNav, StatusFooter,
+  and glyph primitives to components/CockpitChrome.tsx (202 lines).
+- Extracted Board 01 to views/DictateView.tsx (191 lines) and DictateView.css
+  (222 lines). The remaining App.tsx/CSS monolith is intentionally reduced one
+  screen at a time as Boards 03/07/10 land in their own work units.
+
+BROWSER EVIDENCE
+- Source: assets/brand/screens/kaydence-screen-family-01.png.
+- 540 x 800: document scroll size exactly 540 x 800; three-column board layout
+  remains intact. Screenshot: 2026-07-10-p1-g4-board01-browser-540x800.png.
+- 900 x 600: document scroll size exactly 900 x 600; screenshot:
+  2026-07-10-p1-g4-board01-browser-900.png.
+- Interaction proof: preview record toggled Recording -> Ready -> Recording;
+  cleanup Light -> Full -> Light; macOS/Windows/Linux selected with accents
+  #14a7a1/#2f72f2/#1f9d63; bottom-nav Cleanup and rail Dictate round trip passed.
+- Fresh post-build Browser tab warnings/errors: [].
+- Combined source/implementation evidence:
+  2026-07-10-p1-g4-board01-comparison.png and companion HTML.
+- design-qa.md final result: passed. The pass is scoped to Board 01, not P1-G4.
+
+NATIVE MACOS EVIDENCE
+- ./script/build_and_run.sh --verify: PASS; signed release bundle launched from
+  target/release/Kaydence.app at tauri://localhost.
+- Computer Use proved the backend state and controls in the signed app:
+  F13 registered; engine Blocked rather than faked; target/WAL/microphone pending;
+  Privacy Local only; Light cleanup; no local history invented.
+- Native lane switching changed both accent and platform injection copy:
+  macOS AX native insert; Windows UI Automation + SendInput; Linux AT-SPI detect
+  + uinput. Native Raw -> Light backend update passed and was restored to Light.
+- Chromium rendered an external SVG sprite that WebKit did not. Native proof
+  caught it; the final implementation uses the same Lucide paths directly and
+  the recaptured app shows all status and navigation icons.
+- Screenshot: 2026-07-10-p1-g4-board01-native-macos.png.
+
+FRESH LOCAL GATES
+- cargo fmt --all -- --check: PASS.
+- cargo clippy --all-targets -- -D warnings: PASS.
+- cargo test --all: PASS (225 lib, 2 crash-recovery, 5 event-sequence,
+  5 short-utterance; 0 failures).
+- scripts/check-frontend.sh: PASS; production Vite build: PASS.
+- tests/build_and_run.sh: PASS.
+- audit-network: PASS, 0 network-capable call sites.
+- privacy posture: PASS; no screen-capture primitives.
+- ADR status: PASS (0009 remains the declared by-design exception).
+- bench --check: PASS for 4 implemented metrics (7/120/5/1 ms); PARTIAL for
+  real ASR GPU, prediction, idle RAM/CPU, and reference-machine p95.
+
+REMOTE AND MODEL PROVENANCE
+- GitHub Actions latest verified run at unit start: 29120511458, success, head
+  3238b7b. Full 3-OS proof is still required on this branch before merge.
+- Hugging Face's ggerganov/whisper.cpp card still identifies the converted GGML
+  model set as MIT and lists base.en plus large-v3-turbo artifacts. This unit
+  does not change the model registry or approve the gated download surface.
+
+HONEST REMAINING BOUNDARIES
+- P1-G4 stays pending for Boards 03, 07, and 10 plus final human sign-off.
+- P1-G3 stays pending for real ASR/GPU/idle/reference-machine evidence.
+- App.tsx and global styles remain over 800 lines until the next three view
+  extraction units; no claim says the full frontend decomposition is complete.
+- Windows and Linux in this unit are verified browser/native theme lanes, not
+  live OS WebView evidence. Full 3-OS CI and operator VM proof remain mandatory.

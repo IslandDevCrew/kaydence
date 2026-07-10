@@ -1,34 +1,31 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useEffect, useMemo, useState } from "react";
+import {
+  type AppView,
+  type CleanupDial,
+  NavRail,
+  type NavRailItem,
+  type OsLane,
+} from "./components/CockpitChrome";
+import {
+  type CockpitStatusItem,
+  type DictateHistoryItem,
+  DictateView,
+} from "./views/DictateView";
 
 const markUrl = new URL(
   "../../../assets/brand/logos/kaydence-logo-option-1.png",
   import.meta.url,
 ).href;
 
-type OsLane = "mac" | "windows" | "linux";
 type HotkeyMode = "push_to_talk" | "toggle";
-type CleanupDial = "raw" | "light" | "full";
-type AppView = "Dictate" | "Cleanup" | "Privacy" | "Setup";
 
 interface LaneSpec {
   id: OsLane;
   label: string;
   accent: string;
   injection: string;
-}
-
-interface NavItem {
-  label: string;
-  phase: string;
-  view?: AppView;
-}
-
-interface Metric {
-  label: string;
-  value: string;
-  detail: string;
 }
 
 interface PrivacyPostureItem {
@@ -332,7 +329,7 @@ const previewSnapshot: AppSnapshot = {
       debounce_ms: 30,
     },
     engine: {
-      default_local_asr: "parakeet_cpu",
+      default_local_asr: "whisper_gpu",
       auto_recommend_by_hardware: true,
     },
     cleanup: {
@@ -349,61 +346,60 @@ const previewSnapshot: AppSnapshot = {
       local_ocr_enabled: false,
     },
     first_run: {
-      model_ready: false,
+      model_ready: true,
       model_readiness_error: null,
       required_models: [],
       asr_candidates: [],
       recommended_asr_model_id: null,
-      selected_asr_model_id: null,
+      selected_asr_model_id: "whisper-large-v3-turbo",
       asr_runtime: {
-        state: "pending",
-        selected_model_id: null,
-        lane: null,
-        runtime: null,
-        artifact_path: null,
-        artifact_size_bytes: null,
-        adapter_ready: false,
-        detail: "Select and verify a local ASR model before runtime load.",
-        proof_requirement:
-          "A real ASR adapter must load a verified artifact and emit transcript events before first dictation can be claimed.",
+        state: "verified_artifact",
+        selected_model_id: "whisper-large-v3-turbo",
+        lane: "gpu",
+        runtime: "whisper_cpp",
+        artifact_path: "/preview/models/ggml-base.en.bin",
+        artifact_size_bytes: 147_964_211,
+        adapter_ready: true,
+        detail: "Ready-state fixture for the local whisper.cpp lane.",
+        proof_requirement: "Native readiness remains backend-owned.",
       },
       next_step: {
-        kind: "model_metadata",
+        kind: "complete",
         target_id: null,
-        title: "Resolve model readiness",
-        detail: "Model readiness has not been proven yet.",
-        action_label: "Review models",
-        proof_requirement: "Refresh model readiness with verified ASR and VAD artifacts.",
+        title: "Ready to dictate",
+        detail: "The preview fixture represents a completed local setup.",
+        action_label: "Start dictating",
+        proof_requirement: "The native app must prove this state independently.",
       },
       permission_requirements: [
         {
           id: "microphone",
           label: "Microphone",
-          state: "needs_hardware",
-          detail: "Required before local capture can produce speech audio.",
+          state: "ready",
+          detail: "Ready-state fixture for local microphone capture.",
           action: "Grant Kaydence access in System Settings -> Privacy & Security -> Microphone.",
           action_label: "Show microphone step",
         },
         {
           id: "accessibility",
           label: "Accessibility",
-          state: "needs_hardware",
-          detail: "Required for native insertion plus focus and secure-field checks.",
+          state: "ready",
+          detail: "Ready-state fixture for native insertion and focus checks.",
           action: "Enable Kaydence in System Settings -> Privacy & Security -> Accessibility.",
           action_label: "Show accessibility step",
         },
         {
           id: "input_monitoring",
           label: "Input Monitoring",
-          state: "needs_hardware",
-          detail: "Required for the global hotkey monitoring path on macOS.",
+          state: "ready",
+          detail: "Ready-state fixture for the global hotkey path.",
           action: "Enable Kaydence in System Settings -> Privacy & Security -> Input Monitoring.",
           action_label: "Show input step",
         },
       ],
-      microphone_permission_ready: false,
-      input_permission_ready: false,
-      hotkey_registered: false,
+      microphone_permission_ready: true,
+      input_permission_ready: true,
+      hotkey_registered: true,
       hotkey_registration_error: null,
       setup_timing: {
         started_at_ms: null,
@@ -412,12 +408,52 @@ const previewSnapshot: AppSnapshot = {
         target_ms: 60000,
         within_target: null,
       },
-      first_dictation_completed: false,
+      first_dictation_completed: true,
     },
   },
 };
 
-const previewHistory: HistorySession[] = [];
+const previewHistory: HistorySession[] = [
+  {
+    id: "preview-project-kickoff",
+    started_ms: 1_783_725_300_000,
+    target_app: { id: "com.todesktop.230313mzl4w4u92", name: "Cursor" },
+    audio_path: null,
+    raw_text: "This local first dictation cockpit helps me capture ideas anywhere and ship clean text everywhere. It predicts ahead, cleans up, and inserts exactly where I am working. Speak freely. Ship confidently.",
+    clean_text: "This local-first dictation cockpit helps me capture ideas anywhere and ship clean text everywhere. It predicts ahead, cleans up, and inserts exactly where I am working. Speak freely. Ship confidently.",
+    cleanup_dial: "light",
+    injected_method: "native",
+    held_reason: null,
+    failure: null,
+    event_count: 7,
+  },
+  {
+    id: "preview-bug-triage",
+    started_ms: 1_783_721_700_000,
+    target_app: { id: "com.tinyspeck.slackmacgap", name: "Slack" },
+    audio_path: null,
+    raw_text: "Bug triage summary for the injection fallback.",
+    clean_text: "Bug triage summary for the injection fallback.",
+    cleanup_dial: "light",
+    injected_method: "clipboard_restore",
+    held_reason: null,
+    failure: null,
+    event_count: 7,
+  },
+  {
+    id: "preview-design-system",
+    started_ms: 1_783_639_200_000,
+    target_app: { id: "md.obsidian", name: "Obsidian" },
+    audio_path: null,
+    raw_text: "Design system overview and screen-family notes.",
+    clean_text: "Design system overview and screen-family notes.",
+    cleanup_dial: "light",
+    injected_method: "native",
+    held_reason: null,
+    failure: null,
+    event_count: 7,
+  },
+];
 
 const lanes: LaneSpec[] = [
   {
@@ -440,7 +476,7 @@ const lanes: LaneSpec[] = [
   },
 ];
 
-const navItems: NavItem[] = [
+const navItems: NavRailItem[] = [
   { label: "Dictate", phase: "P1", view: "Dictate" },
   { label: "Whisper-Ahead", phase: "P3" },
   { label: "Cleanup", phase: "P2", view: "Cleanup" },
@@ -451,13 +487,6 @@ const navItems: NavItem[] = [
   { label: "Dictionary", phase: "P2" },
   { label: "Analytics", phase: "P3" },
   { label: "Setup", phase: "P1", view: "Setup" },
-];
-
-const metrics: Metric[] = [
-  { label: "Raw latency", value: "ready", detail: "bench gate wired" },
-  { label: "Crash recovery", value: "33/33", detail: "local tests green" },
-  { label: "Network audit", value: "0", detail: "unreviewed call sites" },
-  { label: "Remote", value: "live", detail: "private origin restored" },
 ];
 
 function privacyPosture(snapshot: AppSnapshot, lane: LaneSpec): PrivacyPostureItem[] {
@@ -655,10 +684,21 @@ function historySummary(session: HistorySession): string {
   );
 }
 
+function historyTimestamp(startedMs: number | null): string {
+  if (startedMs === null) {
+    return "Saved";
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(startedMs));
+}
+
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
   const [activeLane, setActiveLane] = useState<OsLane>("mac");
   const [activeView, setActiveView] = useState<AppView>("Dictate");
+  const [previewRecording, setPreviewRecording] = useState(true);
   const [snapshot, setSnapshot] = useState<AppSnapshot>(previewSnapshot);
   const [snapshotSource, setSnapshotSource] = useState<"backend" | "preview">("preview");
   const [historySessions, setHistorySessions] = useState<HistorySession[]>(previewHistory);
@@ -764,6 +804,85 @@ export function App(): JSX.Element {
     (requiredModels.length > 0 ||
       snapshot.settings.first_run.model_readiness_error !== null);
   const privacyItems = privacyPosture(snapshot, lane);
+  const latestHistory = historySessions[0];
+  const latestTarget = latestHistory?.target_app ?? null;
+  const cockpitTranscript = latestHistory?.clean_text ?? latestHistory?.raw_text ?? "";
+  const captureFailure = historySessions.find((session) => session.failure?.stage === "capture");
+  const permissionsReady = permissionRequirementsReady(permissionRequirements);
+  const cockpitOperational =
+    asrRuntime.adapter_ready &&
+    snapshot.settings.first_run.hotkey_registered &&
+    permissionsReady;
+  const cockpitStatuses: CockpitStatusItem[] = [
+    {
+      label: "Engine",
+      value: asrRuntime.adapter_ready ? "Ready" : asrRuntime.state === "blocked" ? "Blocked" : "Pending",
+      detail: engineLabel,
+      icon: "cpu",
+      state: asrRuntime.adapter_ready ? "ready" : asrRuntime.state === "blocked" ? "issue" : "pending",
+    },
+    {
+      label: "Target App",
+      value: latestTarget?.name ?? "Awaiting focus",
+      detail: latestTarget ? "Bound at capture start" : "Runtime source pending",
+      icon: "target",
+      state: latestTarget ? "ready" : "pending",
+    },
+    {
+      label: "Global Hotkey",
+      value: snapshot.settings.hotkey.primary_binding,
+      detail: `${hotkeyMode} / ${snapshot.settings.first_run.hotkey_registered ? "registered" : "not proven"}`,
+      icon: "keyboard",
+      state: snapshot.settings.first_run.hotkey_registration_error
+        ? "issue"
+        : snapshot.settings.first_run.hotkey_registered
+          ? "ready"
+          : "pending",
+    },
+    {
+      label: "Privacy",
+      value: "Local only",
+      detail: `No telemetry / ${snapshot.settings.privacy.history_retention_days}-day history`,
+      icon: "privacy",
+      state: "ready",
+    },
+    {
+      label: "WAL Recovery",
+      value: captureFailure ? "Review needed" : historySessions.length ? "Healthy" : "Pending proof",
+      detail: captureFailure?.failure?.error ?? `${historySessions.length} local sessions tracked`,
+      icon: "database",
+      state: captureFailure ? "issue" : historySessions.length ? "ready" : "pending",
+    },
+  ];
+  const cockpitHistory: DictateHistoryItem[] = historySessions.map((session) => ({
+    id: session.id,
+    title: `${session.target_app?.name ?? "Local"} dictation`,
+    summary: historySummary(session),
+    status: historyStatus(session),
+    timestamp: historyTimestamp(session.started_ms),
+    hasAudio: session.audio_path !== null,
+    audio:
+      activeHistoryAudio?.sessionId === session.id
+        ? {
+            src: activeHistoryAudio.src,
+            mimeType: activeHistoryAudio.mimeType,
+            byteLength: activeHistoryAudio.byteLength,
+          }
+        : undefined,
+  }));
+  const historyExportNote = historyExportOutcome
+    ? historyExportOutcome.exported
+      ? `Exported to ${historyExportOutcome.text_path ?? historyExportOutcome.json_path}`
+      : "No matching local session to export."
+    : null;
+  const historyPurgeNote = historyPurgeOutcome
+    ? `Purged ${historyPurgeOutcome.sessions_deleted} sessions and ${historyPurgeOutcome.audio_files_removed} audio files.`
+    : null;
+  const pendingHistoryAction =
+    deletingHistoryId !== null ||
+    exportingHistoryId !== null ||
+    loadingHistoryAudioId !== null ||
+    purgingHistory;
 
   useEffect(() => {
     let active = true;
@@ -851,6 +970,17 @@ export function App(): JSX.Element {
   function setCleanupDial(dial: CleanupDial) {
     setCleanupDialPending(dial);
     setCleanupDialIssue(null);
+    if (snapshotSource === "preview") {
+      setSnapshot((current) => ({
+        ...current,
+        settings: {
+          ...current.settings,
+          cleanup: { ...current.settings.cleanup, default_dial: dial },
+        },
+      }));
+      setCleanupDialPending(null);
+      return;
+    }
     void invoke<AppSnapshot>("set_cleanup_dial", { dial })
       .then((nextSnapshot) => {
         setSnapshot(nextSnapshot);
@@ -1192,47 +1322,71 @@ export function App(): JSX.Element {
       });
   }
 
+  if (activeView === "Dictate") {
+    return (
+      <main
+        className="app-shell dictate-shell"
+        style={{ "--accent": lane.accent } as React.CSSProperties}
+      >
+        <DictateView
+          activeLane={activeLane}
+          appName={snapshot.app_name}
+          autoPasteReady={permissionsReady}
+          cleanupDial={cleanupDefault}
+          cleanupIssue={cleanupDialIssue}
+          cleanupPending={cleanupDialPending !== null}
+          elapsed={snapshotSource === "preview" && previewRecording ? "00:01.24" : "--:--"}
+          historyExportNote={historyExportNote}
+          historyItems={cockpitHistory}
+          historyPlaybackIssue={historyPlaybackIssue}
+          historyPurgeNote={historyPurgeNote}
+          historyRefreshPending={historyRefreshPending}
+          laneOptions={lanes.map(({ id, label }) => ({ id, label }))}
+          markUrl={markUrl}
+          microphone={
+            snapshot.settings.first_run.microphone_permission_ready
+              ? "Microphone proof ready"
+              : "Awaiting microphone proof"
+          }
+          onCleanupChange={setCleanupDial}
+          onClearLatest={deleteHistorySession}
+          onDeleteHistory={deleteHistorySession}
+          onExportHistory={exportHistorySession}
+          onLaneChange={setActiveLane}
+          onNavigate={setActiveView}
+          onPlayHistory={playHistoryAudio}
+          onPurgeHistory={purgeHistory}
+          onRecordToggle={
+            snapshotSource === "preview"
+              ? () => setPreviewRecording((recording) => !recording)
+              : undefined
+          }
+          onRefreshHistory={refreshHistory}
+          operational={cockpitOperational}
+          outputDestination={latestTarget ? `Insert at ${latestTarget.name}` : "Insert at cursor"}
+          outputMethod={lane.injection}
+          pendingHistoryAction={pendingHistoryAction}
+          recording={snapshotSource === "preview" && previewRecording}
+          statusItems={cockpitStatuses}
+          transcript={cockpitTranscript}
+        />
+      </main>
+    );
+  }
+
   return (
     <main
       className="app-shell"
       style={{ "--accent": lane.accent } as React.CSSProperties}
     >
-      <aside className="sidebar" aria-label={`${snapshot.app_name} navigation`}>
-        <div className="brand-lockup">
-          <img className="brand-mark" src={markUrl} alt="" />
-          <div>
-            <strong>{snapshot.app_name}</strong>
-            <span>Local voice platform</span>
-          </div>
-        </div>
-
-        <nav className="nav-list">
-          {navItems.map((item) => (
-            <button
-              aria-current={item.view === activeView ? "page" : undefined}
-              className={item.view === activeView ? "nav-item active" : "nav-item"}
-              disabled={!item.view}
-              key={item.label}
-              onClick={() => item.view && setActiveView(item.view)}
-              type="button"
-            >
-              <span>{item.label}</span>
-              <small>{item.phase}</small>
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-card">
-          <span className="status-dot" aria-hidden="true" />
-          <div>
-            <strong>Local only</strong>
-            <p>
-              No telemetry. {snapshot.settings.privacy.history_retention_days}-day local
-              history. {privacyLabel}.
-            </p>
-          </div>
-        </div>
-      </aside>
+      <NavRail
+        activeView={activeView}
+        appName={snapshot.app_name}
+        items={navItems}
+        markUrl={markUrl}
+        onSelect={setActiveView}
+        privacySummary={`No telemetry. ${snapshot.settings.privacy.history_retention_days}-day local history. ${privacyLabel}.`}
+      />
 
       <section className="workspace" aria-label={`${snapshot.app_name} cockpit`}>
         <header className="topbar">
@@ -1256,182 +1410,7 @@ export function App(): JSX.Element {
           </div>
         </header>
 
-        {activeView === "Dictate" ? (
-          <section className="metric-grid" aria-label="Current build evidence">
-            {metrics.map((metric) => (
-              <article className="metric-card" key={metric.label}>
-                <span>{metric.label}</span>
-                <strong>{metric.value}</strong>
-                <p>{metric.detail}</p>
-              </article>
-            ))}
-          </section>
-        ) : null}
-
         <section className={`content-grid view-${activeView.toLowerCase()}`}>
-          {activeView === "Dictate" ? (
-          <article className="panel recording-panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Screen family 01</p>
-                <h2>Main dictation</h2>
-              </div>
-              <span className="pill">Recording</span>
-            </div>
-
-            <div className="waveform" aria-label="Mock recording waveform">
-              {Array.from({ length: 34 }, (_, index) => (
-                <span key={index} style={{ height: `${20 + (index % 7) * 9}px` }} />
-              ))}
-            </div>
-
-            <div className="recording-meta">
-              <div>
-                <span>Elapsed</span>
-                <strong>00:12.4</strong>
-              </div>
-              <div>
-                <span>Engine</span>
-                <strong>{engineLabel}</strong>
-              </div>
-              <div>
-                <span>Hotkey</span>
-                <strong>{snapshot.settings.hotkey.primary_binding}</strong>
-              </div>
-              <div>
-                <span>ASR runtime</span>
-                <strong>{asrRuntimeStateLabel(asrRuntime)}</strong>
-              </div>
-            </div>
-
-            <div className="transcript-card">
-              <span>Recent clean transcript</span>
-              <p>
-                Refactor the auth module and then migrate the session guard into
-                the shared middleware.
-              </p>
-            </div>
-
-            <div className="history-strip" aria-label="Recent local history">
-              <div className="history-strip-heading">
-                <div>
-                  <span>Local history</span>
-                  <strong>{historySessions.length} recent sessions</strong>
-                </div>
-                <div className="history-header-actions">
-                  <button
-                    className="mini-action"
-                    disabled={historyRefreshPending || purgingHistory}
-                    onClick={refreshHistory}
-                    type="button"
-                  >
-                    {historyRefreshPending ? "Refreshing" : "Refresh"}
-                  </button>
-                  <button
-                    className="danger-action"
-                    disabled={purgingHistory || historyRefreshPending || historySessions.length === 0}
-                    onClick={purgeHistory}
-                    type="button"
-                  >
-                    {purgingHistory ? "Purging" : "Purge All"}
-                  </button>
-                </div>
-              </div>
-              {historyPurgeOutcome ? (
-                <p className="history-export-note">
-                  Purged {historyPurgeOutcome.sessions_deleted} sessions,{" "}
-                  {historyPurgeOutcome.audio_files_removed} audio files, and{" "}
-                  {historyPurgeOutcome.export_files_removed} exports.
-                </p>
-              ) : null}
-              {historyExportOutcome ? (
-                <p className="history-export-note">
-                  {historyExportOutcome.exported
-                    ? `Exported to ${historyExportOutcome.text_path ?? historyExportOutcome.json_path}`
-                    : "No matching local session to export."}
-                </p>
-              ) : null}
-              {historyPlaybackIssue ? (
-                <p className="history-export-note">{historyPlaybackIssue}</p>
-              ) : null}
-              {historySessions.length > 0 ? (
-                <div className="history-list">
-                  {historySessions.map((session) => (
-                    <div className="history-row" key={session.id}>
-                      <div className="history-row-main">
-                        <strong>{session.target_app?.name ?? "Local session"}</strong>
-                        <span>{historySummary(session)}</span>
-                        {activeHistoryAudio?.sessionId === session.id ? (
-                          <div className="history-audio-player">
-                            <audio
-                              aria-label={`Audio for ${session.target_app?.name ?? "local history session"}`}
-                              controls
-                              preload="metadata"
-                            >
-                              <source
-                                src={activeHistoryAudio.src}
-                                type={activeHistoryAudio.mimeType}
-                              />
-                            </audio>
-                            <small>
-                              {Math.max(1, Math.ceil(activeHistoryAudio.byteLength / 1024))} KB
-                            </small>
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="history-row-actions">
-                        <em>{historyStatus(session)}</em>
-                        <button
-                          aria-label={`Play ${session.target_app?.name ?? "local history session"} audio`}
-                          className="mini-action"
-                          disabled={
-                            !session.audio_path ||
-                            loadingHistoryAudioId !== null ||
-                            deletingHistoryId !== null ||
-                            purgingHistory
-                          }
-                          onClick={() => playHistoryAudio(session.id)}
-                          type="button"
-                        >
-                          {loadingHistoryAudioId === session.id ? "Loading" : "Play"}
-                        </button>
-                        <button
-                          aria-label={`Export ${session.target_app?.name ?? "local history session"}`}
-                          className="mini-action"
-                          disabled={
-                            exportingHistoryId !== null ||
-                            deletingHistoryId !== null ||
-                            purgingHistory
-                          }
-                          onClick={() => exportHistorySession(session.id)}
-                          type="button"
-                        >
-                          {exportingHistoryId === session.id ? "Exporting" : "Export"}
-                        </button>
-                        <button
-                          aria-label={`Delete ${session.target_app?.name ?? "local history session"}`}
-                          className="danger-action"
-                          disabled={
-                            deletingHistoryId !== null ||
-                            exportingHistoryId !== null ||
-                            purgingHistory
-                          }
-                          onClick={() => deleteHistorySession(session.id)}
-                          type="button"
-                        >
-                          {deletingHistoryId === session.id ? "Deleting" : "Delete"}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="empty-history">No local sessions recorded yet.</p>
-              )}
-            </div>
-          </article>
-          ) : null}
-
           {activeView === "Cleanup" ? (
           <>
           <article className="panel">

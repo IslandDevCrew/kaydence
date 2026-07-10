@@ -1,0 +1,202 @@
+import type { ReactNode } from "react";
+
+export type AppView = "Dictate" | "Cleanup" | "Privacy" | "Setup";
+export type CleanupDial = "raw" | "light" | "full";
+export type OsLane = "mac" | "windows" | "linux";
+export type CockpitIcon =
+  | "waveform"
+  | "history"
+  | "cleanup"
+  | "privacy"
+  | "settings"
+  | "cpu"
+  | "target"
+  | "keyboard"
+  | "database"
+  | "square"
+  | "check";
+
+export interface NavRailItem {
+  label: string;
+  phase: string;
+  view?: AppView;
+}
+
+const glyphContents: Record<CockpitIcon, JSX.Element> = {
+  waveform: <><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></>,
+  history: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></>,
+  cleanup: <><path d="m15 4 5 5L7 22H2v-5Z"/><path d="m14 6 4 4"/><path d="M6 3v4"/><path d="M4 5h4"/><path d="M19 16v4"/><path d="M17 18h4"/></>,
+  privacy: <><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3Z"/><path d="m9 12 2 2 4-4"/></>,
+  settings: <><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M2 14h4"/><path d="M10 8h4"/><path d="M18 16h4"/></>,
+  cpu: <><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></>,
+  target: <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>,
+  keyboard: <><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></>,
+  database: <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></>,
+  square: <rect width="14" height="14" x="5" y="5" rx="2" fill="currentColor" stroke="none" />,
+  check: <path d="m5 12 4 4L19 6" />,
+};
+
+export function CockpitGlyph({ name }: { name: CockpitIcon }): JSX.Element {
+  return (
+    <svg
+      aria-hidden="true"
+      className="cockpit-glyph"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={name === "check" ? 2.5 : 2}
+      viewBox="0 0 24 24"
+    >
+      {glyphContents[name]}
+    </svg>
+  );
+}
+
+export function NavRail({
+  activeView,
+  appName,
+  items,
+  markUrl,
+  onSelect,
+  privacySummary,
+}: {
+  activeView: AppView;
+  appName: string;
+  items: NavRailItem[];
+  markUrl: string;
+  onSelect: (view: AppView) => void;
+  privacySummary: string;
+}): JSX.Element {
+  return (
+    <aside className="sidebar" aria-label={`${appName} navigation`}>
+      <div className="brand-lockup">
+        <img className="brand-mark" src={markUrl} alt="" />
+        <div><strong>{appName}</strong><span>Local voice platform</span></div>
+      </div>
+      <nav className="nav-list">
+        {items.map((item) => (
+          <button
+            aria-current={item.view === activeView ? "page" : undefined}
+            className={item.view === activeView ? "nav-item active" : "nav-item"}
+            disabled={!item.view}
+            key={item.label}
+            onClick={() => item.view && onSelect(item.view)}
+            type="button"
+          >
+            <span>{item.label}</span><small>{item.phase}</small>
+          </button>
+        ))}
+      </nav>
+      <div className="sidebar-card">
+        <span className="status-dot" aria-hidden="true" />
+        <div><strong>Local only</strong><p>{privacySummary}</p></div>
+      </div>
+    </aside>
+  );
+}
+
+export function StatusCard({
+  detail,
+  icon,
+  label,
+  state = "ready",
+  value,
+}: {
+  detail: string;
+  icon: CockpitIcon;
+  label: string;
+  state?: "ready" | "pending" | "issue";
+  value: string;
+}): JSX.Element {
+  return (
+    <article className={`cockpit-status-card state-${state}`}>
+      <span className="cockpit-status-icon"><CockpitGlyph name={icon} /></span>
+      <div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div>
+      <i aria-label={state}>{state === "ready" ? "" : state}</i>
+    </article>
+  );
+}
+
+export function SegmentedDial({
+  disabled,
+  onChange,
+  value,
+}: {
+  disabled: boolean;
+  onChange: (dial: CleanupDial) => void;
+  value: CleanupDial;
+}): JSX.Element {
+  return (
+    <div className="cockpit-dial" role="group" aria-label="Cleanup level">
+      {(["raw", "light", "full"] as const).map((dial) => (
+        <button
+          aria-pressed={value === dial}
+          disabled={disabled}
+          key={dial}
+          onClick={() => onChange(dial)}
+          type="button"
+        >{dial}</button>
+      ))}
+    </div>
+  );
+}
+
+export function BottomNav({
+  activeView,
+  onSelect,
+}: {
+  activeView: AppView;
+  onSelect: (view: AppView) => void;
+}): JSX.Element {
+  const items: Array<{ icon: CockpitIcon; label: string; view?: AppView }> = [
+    { icon: "waveform", label: "Dictate", view: "Dictate" },
+    { icon: "history", label: "History" },
+    { icon: "cleanup", label: "Cleanup", view: "Cleanup" },
+    { icon: "privacy", label: "Privacy", view: "Privacy" },
+    { icon: "settings", label: "Setup", view: "Setup" },
+  ];
+  return (
+    <nav className="cockpit-bottom-nav" aria-label="Cockpit views">
+      {items.map((item) => (
+        <button
+          aria-label={item.label}
+          aria-current={item.view === activeView ? "page" : undefined}
+          disabled={!item.view}
+          key={item.label}
+          onClick={() => item.view && onSelect(item.view)}
+          type="button"
+        ><CockpitGlyph name={item.icon} /></button>
+      ))}
+    </nav>
+  );
+}
+
+export function StatusFooter({
+  appName,
+  microphone,
+  operational,
+  version,
+}: {
+  appName: string;
+  microphone: string;
+  operational: boolean;
+  version: string;
+}): JSX.Element {
+  return (
+    <footer className="cockpit-footer">
+      <div><strong>{appName} Free</strong><span>{version}</span></div>
+      <div><span>{microphone}</span><span className="mic-meter" aria-hidden="true">
+        {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
+      </span>
+        <strong className={operational ? "operational" : "attention"}>
+          {operational ? "All systems operational" : "Setup action required"}
+        </strong>
+      </div>
+    </footer>
+  );
+}
+
+export function PanelHeading({ children }: { children: ReactNode }): JSX.Element {
+  return <h2 className="cockpit-panel-heading">{children}</h2>;
+}

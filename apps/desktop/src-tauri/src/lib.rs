@@ -3330,13 +3330,10 @@ mod tests {
         assert!(preflight.available);
         assert_eq!(preflight.size_mb, Some(1));
         assert_eq!(preflight.source_count, 1);
-        let expected_destination = app_data
-            .join("models/fixture-asr.onnx")
-            .to_string_lossy()
-            .into_owned();
+        let expected_destination = app_data.join("models").join("fixture-asr.onnx");
         assert_eq!(
-            preflight.destination_path.as_deref(),
-            Some(expected_destination.as_str())
+            preflight.destination_path.as_deref().map(PathBuf::from),
+            Some(expected_destination.clone())
         );
         let expected_hash = sha256_for(b"asr");
         assert_eq!(
@@ -3354,7 +3351,7 @@ mod tests {
         assert!(preflight
             .proof_requirement
             .contains("post-fetch verification"));
-        assert!(!app_data.join("models/fixture-asr.onnx").exists());
+        assert!(!expected_destination.exists());
         let _ = std::fs::remove_dir_all(app_data);
     }
 
