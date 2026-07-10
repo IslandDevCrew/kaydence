@@ -1,544 +1,1395 @@
 {
-  "version": 1,
-  "designDirection": {
-    "status": "locked",
-    "title": "Kaydence Visual System v1 — the build-agent reference set",
-    "lockedOn": "2026-07-08",
-    "summary": "Five logo directions plus ten screen-family boards, each rendered for macOS, Windows, and Linux (30 OS-specific views) sharing one interface system. Generated with Codex from Plan of Attack v3, the Whisper-Ahead v2 interaction, and the monorepo PRD/ARCHITECTURE/ROADMAP, then adopted as the canonical UI/UX/visual source of truth for every screen built from P1 onward. Screen layout is fixed by the boards; the only free-tier per-OS variation is the selection accent (macOS aqua / Windows cobalt / Linux emerald).",
-    "report": "/Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html",
-    "assets": "assets/brand/ (logos/ + screens/, 15 PNGs) — vendored in-repo by P1-D1 on 2026-07-08, shasum-verified against the upstream pack in /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/. Index: docs/design/README.md",
-    "openDecision": "RESOLVED 2026-07-08 (ADR-0012 Accepted): dual-asset identity — Option 1 K Waveform is the sole product mark (app icon, favicon, tray monochrome variant, installers, all isolated use); Option 4 Wordmark Forward is the Kaydence wordmark/site header with its serif as brand display type only. Binding rules: strict role separation (never substitute or compose the two as twin logos); Option 4's icon variant retired; serif never inside the app UI. Options 2/5 remain secondary art (privacy seal; Relay fleet illustration); Option 3 rejected (embeds third-party OS marks). The Option 1 mark fills the reserved slot on every screen.",
-    "osLanes": [
-      { "lane": "macOS", "accent": "Aqua selection accent", "varies": "Selections, active tab, focus ring, small status strokes.", "doNotVary": "Information architecture, product states, prediction blue, merge gold." },
-      { "lane": "Windows", "accent": "Cobalt selection accent", "varies": "Selections, active controls, Windows permission/injection copy.", "doNotVary": "Layout, spacing, control density, feature hierarchy." },
-      { "lane": "Linux", "accent": "Emerald selection accent", "varies": "Selections, active controls, X11/Wayland and portal status cues.", "doNotVary": "Shared module model, table structure, screen-family order." }
-    ],
-    "invariants": [
-      "One consistent left navigation across every screen: Dictate, Whisper-Ahead, Cleanup, Relay, Voiceprint, Conductor, Privacy, Dictionary, Analytics, Setup.",
-      "Card radius stays 8px; components are compact cards, tables, segmented controls, toggles, icon buttons, status badges, small charts, and native OS permission panels.",
-      "Prediction suggestions render blue in every theme; an accepted prediction pulses amber-gold for roughly 0.5s then settles to normal text.",
-      "Destructive Conductor actions always require an explicit confirm gate.",
-      "Never imply cloud sync for core features; Harbor is an optional hosted service only, and every Harbor service has a self-hostable path.",
-      "All controls keyboard-reachable, readable at high OS scaling, with no text overlap at narrow desktop widths.",
-      "Default, light, and dark modes exist for every OS; only the single free-tier accent differs by OS lane; premium theme expansion may add colors later without changing layout.",
-      "Identity (ADR-0012): Option 1 K Waveform is the only mark; Option 4 is the only wordmark (site/marketing serif only). Never substitute or pair them as twin logos; no serif inside the app UI; no second icon. Violations fail the phase fidelity gates."
-    ],
-    "logoOptions": [
-      { "id": 1, "name": "K Waveform", "note": "SELECTED (ADR-0012): the sole product mark — app icon, favicon, tray monochrome variant, installers, all isolated use. Voice->caret->text story; merge-gold echo." },
-      { "id": 2, "name": "Protected Path", "note": "Secondary art: the privacy seal (site privacy page, 'local-only' badge). Not the primary mark." },
-      { "id": 3, "name": "Relay Monogram", "note": "REJECTED for shipping assets — embeds Windows flag + Tux (third-party marks). Interlock concept may inform Relay feature art only." },
-      { "id": 4, "name": "Wordmark Forward", "note": "SELECTED (ADR-0012): the Kaydence wordmark/site header; serif = brand display type for site/marketing only. Its standalone icon variant is retired." },
-      { "id": 5, "name": "Voice Constellation", "note": "Secondary art: Relay fleet illustration (board 04, marketing). Not the primary mark." }
-    ],
-    "screenFamilies": [
-      { "id": "01", "name": "Main Dictation Cockpit", "phase": "P1", "note": "Active recording, waveform, elapsed time, engine, target app, cleanup dial, local-only status, WAL recovery, recent transcript." },
-      { "id": "02", "name": "Whisper-Ahead HUD", "phase": "P3", "note": "Mic-tracked prediction lane, 5s/10s/20s timing, blue suggestion state, amber-gold counted merge pulse, Tab/Shift-Tab accept." },
-      { "id": "03", "name": "Cleanup & Injection", "phase": "P1 (inject) → P2 (dial)", "note": "Raw/Light/Full cleanup rules and OS injection paths: AX API, UI Automation + SendInput, X11, Wayland portals." },
-      { "id": "04", "name": "Relay", "phase": "P4", "note": "Device pairing, mDNS discovery, six-digit code, E2E status, CRDT sync, revocation, optional Harbor rendezvous." },
-      { "id": "05", "name": "Voiceprint", "phase": "P4", "note": "Correction learning, acoustic biasing, local training schedule, export/delete/reset, acceptance-rate lift." },
-      { "id": "06", "name": "Conductor", "phase": "P4", "note": "Voice routing for agents, MCP status, command grammar, fleet target, explicit confirm gates for destructive actions." },
-      { "id": "07", "name": "Privacy & Context", "phase": "P1 (posture) → P3 (context)", "note": "No transmission/persistence, secure-field blocks, Tier 1 accessibility read, Tier 2 local OCR, network-audit status." },
-      { "id": "08", "name": "Dictionary & Profiles", "phase": "P2 (dictionary) → P3 (profiles)", "note": "Terms, snippets, import, correction history, per-app profiles, output rules, engine preference, Relay conflict sync." },
-      { "id": "09", "name": "Analytics & Performance", "phase": "P3", "note": "Zero-edit rate, prediction acceptance, words saved, latency p50/p95, RAM, model, cleanup impact, exportable local report." },
-      { "id": "10", "name": "First Run & License", "phase": "P1", "note": "ASR engine, permissions, hotkey, cleanup default, Whisper-Ahead, privacy confirmation, Free/Pro/Captain/Harbor choices; 60-second setup." }
-    ],
-    "promptPack": "prompts/VISUAL-BUILD-PROMPT-PACK.md — fable-safe, scoped prompts for resuming the visual-driven build against these boards. Build prompt for the P1 input layer: prompts/P1-CAPTURE-INJECTION-PROMPT.md (hotkey capture + universal injection, all 3 OS)."
-  },
-  "mission": {
-    "name": "Kaydence — Plan of Attack v3",
-    "tagline": "Speak anywhere. Ship clean text. Never leak, never lose, never lag.",
-    "repo": "https://github.com/IslandDevCrew/kaydence (origin; 3-OS Actions CI live since 2026-07-08)",
-    "repoPath": "/Users/IDC2.5/Kaydence/kaydence",
-    "defaultBranch": "main",
-    "planDoc": "/Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html",
-    "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
-    "status": "active",
-    "started": "2026-07-07",
-    "updated": "2026-07-10T03:32Z",
-    "sessionCount": 6
-  },
-  "policies": {
-    "merge": "auto",
-    "branchPrefix": "mission/",
-    "maxPrLines": 400,
-    "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence with 3-OS Actions CI is LIVE; active gh auth is IslandDevCrew and the PRIVATE repo resolves. CI is the Win/Linux trust anchor, but current hosted runners are billing/spending-limit blocked before checkout. Latest verified green 3-OS baseline: Actions run 29031546518 at ca60244, completed 2026-07-09T16:09:29Z after first-run proof export. Latest checked run 29033270673 at f61ab49 failed before any job steps because GitHub reported failed account payments or a spending-limit increase requirement. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test (3-OS via CI when runners are available), pnpm check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
-  },
-  "phases": [
+ "version": 1,
+ "designDirection": {
+  "status": "locked",
+  "title": "Kaydence Visual System v1 — the build-agent reference set",
+  "lockedOn": "2026-07-08",
+  "summary": "Five logo directions plus ten screen-family boards, each rendered for macOS, Windows, and Linux (30 OS-specific views) sharing one interface system. Generated with Codex from Plan of Attack v3, the Whisper-Ahead v2 interaction, and the monorepo PRD/ARCHITECTURE/ROADMAP, then adopted as the canonical UI/UX/visual source of truth for every screen built from P1 onward. Screen layout is fixed by the boards; the only free-tier per-OS variation is the selection accent (macOS aqua / Windows cobalt / Linux emerald).",
+  "report": "/Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html",
+  "assets": "assets/brand/ (logos/ + screens/, 15 PNGs) — vendored in-repo by P1-D1 on 2026-07-08, shasum-verified against the upstream pack in /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/. Index: docs/design/README.md",
+  "openDecision": "RESOLVED 2026-07-08 (ADR-0012 Accepted): dual-asset identity — Option 1 K Waveform is the sole product mark (app icon, favicon, tray monochrome variant, installers, all isolated use); Option 4 Wordmark Forward is the Kaydence wordmark/site header with its serif as brand display type only. Binding rules: strict role separation (never substitute or compose the two as twin logos); Option 4's icon variant retired; serif never inside the app UI. Options 2/5 remain secondary art (privacy seal; Relay fleet illustration); Option 3 rejected (embeds third-party OS marks). The Option 1 mark fills the reserved slot on every screen.",
+  "osLanes": [
+   {
+    "lane": "macOS",
+    "accent": "Aqua selection accent",
+    "varies": "Selections, active tab, focus ring, small status strokes.",
+    "doNotVary": "Information architecture, product states, prediction blue, merge gold."
+   },
+   {
+    "lane": "Windows",
+    "accent": "Cobalt selection accent",
+    "varies": "Selections, active controls, Windows permission/injection copy.",
+    "doNotVary": "Layout, spacing, control density, feature hierarchy."
+   },
+   {
+    "lane": "Linux",
+    "accent": "Emerald selection accent",
+    "varies": "Selections, active controls, X11/Wayland and portal status cues.",
+    "doNotVary": "Shared module model, table structure, screen-family order."
+   }
+  ],
+  "invariants": [
+   "One consistent left navigation across every screen: Dictate, Whisper-Ahead, Cleanup, Relay, Voiceprint, Conductor, Privacy, Dictionary, Analytics, Setup.",
+   "Card radius stays 8px; components are compact cards, tables, segmented controls, toggles, icon buttons, status badges, small charts, and native OS permission panels.",
+   "Prediction suggestions render blue in every theme; an accepted prediction pulses amber-gold for roughly 0.5s then settles to normal text.",
+   "Destructive Conductor actions always require an explicit confirm gate.",
+   "Never imply cloud sync for core features; Harbor is an optional hosted service only, and every Harbor service has a self-hostable path.",
+   "All controls keyboard-reachable, readable at high OS scaling, with no text overlap at narrow desktop widths.",
+   "Default, light, and dark modes exist for every OS; only the single free-tier accent differs by OS lane; premium theme expansion may add colors later without changing layout.",
+   "Identity (ADR-0012): Option 1 K Waveform is the only mark; Option 4 is the only wordmark (site/marketing serif only). Never substitute or pair them as twin logos; no serif inside the app UI; no second icon. Violations fail the phase fidelity gates."
+  ],
+  "logoOptions": [
+   {
+    "id": 1,
+    "name": "K Waveform",
+    "note": "SELECTED (ADR-0012): the sole product mark — app icon, favicon, tray monochrome variant, installers, all isolated use. Voice->caret->text story; merge-gold echo."
+   },
+   {
+    "id": 2,
+    "name": "Protected Path",
+    "note": "Secondary art: the privacy seal (site privacy page, 'local-only' badge). Not the primary mark."
+   },
+   {
+    "id": 3,
+    "name": "Relay Monogram",
+    "note": "REJECTED for shipping assets — embeds Windows flag + Tux (third-party marks). Interlock concept may inform Relay feature art only."
+   },
+   {
+    "id": 4,
+    "name": "Wordmark Forward",
+    "note": "SELECTED (ADR-0012): the Kaydence wordmark/site header; serif = brand display type for site/marketing only. Its standalone icon variant is retired."
+   },
+   {
+    "id": 5,
+    "name": "Voice Constellation",
+    "note": "Secondary art: Relay fleet illustration (board 04, marketing). Not the primary mark."
+   }
+  ],
+  "screenFamilies": [
+   {
+    "id": "01",
+    "name": "Main Dictation Cockpit",
+    "phase": "P1",
+    "note": "Active recording, waveform, elapsed time, engine, target app, cleanup dial, local-only status, WAL recovery, recent transcript."
+   },
+   {
+    "id": "02",
+    "name": "Whisper-Ahead HUD",
+    "phase": "P3",
+    "note": "Mic-tracked prediction lane, 5s/10s/20s timing, blue suggestion state, amber-gold counted merge pulse, Tab/Shift-Tab accept."
+   },
+   {
+    "id": "03",
+    "name": "Cleanup & Injection",
+    "phase": "P1 (inject) → P2 (dial)",
+    "note": "Raw/Light/Full cleanup rules and OS injection paths: AX API, UI Automation + SendInput, X11, Wayland portals."
+   },
+   {
+    "id": "04",
+    "name": "Relay",
+    "phase": "P4",
+    "note": "Device pairing, mDNS discovery, six-digit code, E2E status, CRDT sync, revocation, optional Harbor rendezvous."
+   },
+   {
+    "id": "05",
+    "name": "Voiceprint",
+    "phase": "P4",
+    "note": "Correction learning, acoustic biasing, local training schedule, export/delete/reset, acceptance-rate lift."
+   },
+   {
+    "id": "06",
+    "name": "Conductor",
+    "phase": "P4",
+    "note": "Voice routing for agents, MCP status, command grammar, fleet target, explicit confirm gates for destructive actions."
+   },
+   {
+    "id": "07",
+    "name": "Privacy & Context",
+    "phase": "P1 (posture) → P3 (context)",
+    "note": "No transmission/persistence, secure-field blocks, Tier 1 accessibility read, Tier 2 local OCR, network-audit status."
+   },
+   {
+    "id": "08",
+    "name": "Dictionary & Profiles",
+    "phase": "P2 (dictionary) → P3 (profiles)",
+    "note": "Terms, snippets, import, correction history, per-app profiles, output rules, engine preference, Relay conflict sync."
+   },
+   {
+    "id": "09",
+    "name": "Analytics & Performance",
+    "phase": "P3",
+    "note": "Zero-edit rate, prediction acceptance, words saved, latency p50/p95, RAM, model, cleanup impact, exportable local report."
+   },
+   {
+    "id": "10",
+    "name": "First Run & License",
+    "phase": "P1",
+    "note": "ASR engine, permissions, hotkey, cleanup default, Whisper-Ahead, privacy confirmation, Free/Pro/Captain/Harbor choices; 60-second setup."
+   }
+  ],
+  "promptPack": "prompts/VISUAL-BUILD-PROMPT-PACK.md — fable-safe, scoped prompts for resuming the visual-driven build against these boards. Build prompt for the P1 input layer: prompts/P1-CAPTURE-INJECTION-PROMPT.md (hotkey capture + universal injection, all 3 OS)."
+ },
+ "mission": {
+  "name": "Kaydence — Plan of Attack v3",
+  "tagline": "Speak anywhere. Ship clean text. Never leak, never lose, never lag.",
+  "repo": "https://github.com/IslandDevCrew/kaydence (origin; 3-OS Actions CI live since 2026-07-08)",
+  "repoPath": "/Users/IDC2.5/Kaydence/kaydence",
+  "defaultBranch": "main",
+  "planDoc": "/Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html",
+  "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
+  "status": "active",
+  "started": "2026-07-07",
+  "updated": "2026-07-10T18:10Z",
+  "sessionCount": 7
+ },
+ "policies": {
+  "merge": "auto",
+  "branchPrefix": "mission/",
+  "maxPrLines": 400,
+  "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence with 3-OS Actions CI is LIVE; active gh auth is IslandDevCrew and the PRIVATE repo resolves. CI is the Win/Linux trust anchor, but current hosted runners are billing/spending-limit blocked before checkout. Latest verified green 3-OS baseline: Actions run 29031546518 at ca60244, completed 2026-07-09T16:09:29Z after first-run proof export. Latest checked run 29033270673 at f61ab49 failed before any job steps because GitHub reported failed account payments or a spending-limit increase requirement. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test (3-OS via CI when runners are available), pnpm check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
+ },
+ "phases": [
+  {
+   "id": "P0",
+   "title": "Toolchain & law",
+   "goal": "Bootstrap Tauri on all three OSes, stand up the 3-OS CI matrix (macOS + Windows + Linux), complete the Handy study pass (ADR-0004), reconcile the repo docs from v2 to v3, and get ADRs 1-10 accepted. Exit: `cargo tauri dev` opens on all three OSes; CI green.",
+   "status": "done",
+   "blockedReason": "DONE. 7/7 tasks and 7/7 gates passed. P0-G5 closed 2026-07-09 after the Windows Fable box rendered the `cargo tauri dev` window; macOS and Linux had already been operator-observed. P0-G6 remains backed by 3-OS Actions CI. Latest verified green baseline is run 29031546518 at ca60244; current hosted runner attempts at f61ab49 fail before checkout because GitHub reports billing/spending-limit state, not test failure.",
+   "sessionsEstimate": "1-2 weeks",
+   "gates": [
     {
-      "id": "P0",
-      "title": "Toolchain & law",
-      "goal": "Bootstrap Tauri on all three OSes, stand up the 3-OS CI matrix (macOS + Windows + Linux), complete the Handy study pass (ADR-0004), reconcile the repo docs from v2 to v3, and get ADRs 1-10 accepted. Exit: `cargo tauri dev` opens on all three OSes; CI green.",
-      "status": "done",
-      "blockedReason": "DONE. 7/7 tasks and 7/7 gates passed. P0-G5 closed 2026-07-09 after the Windows Fable box rendered the `cargo tauri dev` window; macOS and Linux had already been operator-observed. P0-G6 remains backed by 3-OS Actions CI. Latest verified green baseline is run 29031546518 at ca60244; current hosted runner attempts at f61ab49 fail before checkout because GitHub reports billing/spending-limit state, not test failure.",
-      "sessionsEstimate": "1-2 weeks",
-      "gates": [
-        {
-          "id": "P0-G1",
-          "title": "cargo fmt clean (backend)",
-          "command": "cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/P0-T2-backend-gates-2026-07-07.txt",
-          "lastRun": "2026-07-07T03:40:00Z",
-          "notes": "PASS on macOS leg. Windows+Linux legs require CI (waived-pending-infra)."
-        },
-        {
-          "id": "P0-G2",
-          "title": "cargo clippy -D warnings (backend)",
-          "command": "cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/P0-T2-backend-gates-2026-07-07.txt",
-          "lastRun": "2026-07-07T03:40:00Z",
-          "notes": "PASS on macOS leg (fixed derivable_impls). Win+Linux via CI."
-        },
-        {
-          "id": "P0-G3",
-          "title": "cargo test --all (backend)",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/2026-07-09-permission-proof-boundaries.txt",
-          "lastRun": "2026-07-09T16:09:29Z",
-          "notes": "PASS on all three OS legs via Actions run 29031546518 at ca60244, completed 2026-07-09T16:09:29Z. Later runs at c63bc47 and f61ab49 failed before checkout because GitHub reports billing/spending-limit state; rerun after billing is fixed before claiming remote parity for newer commits."
-        },
-        {
-          "id": "P0-G4",
-          "title": "frontend typecheck + lint (tsc --noEmit + eslint)",
-          "command": "bash scripts/check-frontend.sh",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/P0-G4-frontend.log",
-          "lastRun": "2026-07-07T03:50:00Z",
-          "notes": "PASS. Gate is check-frontend.sh (runs local tsc+eslint binaries) — robust vs pnpm-11 build-approval friction. pnpm run check also green after esbuild allowlisted in root package.json."
-        },
-        {
-          "id": "P0-G5",
-          "title": "cargo tauri dev opens a window on macOS + Windows + Linux",
-          "command": "cargo tauri dev",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/2026-07-09-windows-tauri-dev-window.png (Windows leg; macOS observed on host 2026-07-08, Linux observed on the Debian VM 2026-07-08)",
-          "lastRun": "2026-07-09",
-          "notes": "WINDOWS LEG CLOSED 2026-07-09 (operator-observed on the Fable box): `tauri dev` compiled the Rust app, launched target/debug/kaydence.exe, and rendered the Dictation-cockpit window (title 'Kaydence', PID confirmed via MainWindowTitle). Evidence: ops/mission/evidence/2026-07-09-windows-tauri-dev-window.png. (Ran via a prebuilt `@tauri-apps/cli` used only to drive the check, then reverted so it doesn't touch the injection PR; `cargo-tauri` is also now installed globally on this box for future runs.) BLOCKER FIXED 2026-07-08: beforeDevCommand ran `pnpm dev` at the workspace root (no `dev` script) — the real reason dev never opened. Fixed to `pnpm --filter kaydence-desktop dev`; verified on the Debian VM (vite ready on :1420). macOS leg observed on host. Linux leg operator-observed on the Debian VM. All three legs now confirmed."
-        },
-        {
-          "id": "P0-G6",
-          "title": "3-OS CI matrix green (macOS + Windows + Linux) on the current HEAD",
-          "command": "gh run list --branch main --limit 1",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/2026-07-09-permission-proof-boundaries.txt",
-          "lastRun": "2026-07-09T16:09:29Z",
-          "notes": "PASS historically/current baseline - 3-OS Actions run 29031546518 GREEN on macOS, Ubuntu, and Windows at ca60244, completed 2026-07-09T16:09:29Z. Latest run 29033270673 at f61ab49 failed before checkout on all three jobs because GitHub reported failed account payments or a spending-limit increase requirement; rerun CI after billing is fixed."
-        },
-        {
-          "id": "P0-G7",
-          "title": "ADRs accepted (0001-0008, 0010-0012); 0009 Proposed by design",
-          "command": "bash scripts/check-adr-status.sh",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/P0-G7-adr-status-2026-07-08.txt",
-          "lastRun": "2026-07-08T01:30:00Z",
-          "notes": "check-adr-status.sh returns 0: 11 of 12 ADRs Accepted incl. ADR-0012 (visual identity, operator-selected 2026-07-08); ADR-0009 (Relay crypto) is again the single declared by-design exception (operator crypto review gates P4-1)."
-        }
-      ],
-      "tasks": [
-        {
-          "id": "P0-T1",
-          "title": "Reconcile repo docs v2 -> v3 (add Linux as first-class to AGENTS.md non-negotiable #5; add P4 flagship-trio epics P4-1..P4-9 to PRD; update ROADMAP to v3 phase structure)",
-          "status": "done",
-          "dependsOn": [],
-          "pr": { "number": null, "url": "local:ba7550d", "mergedAt": "2026-07-07" },
-          "notes": "DONE (operator-ratified critical path). AGENTS #5 -> 3-OS; PRD platform refs + §6 pricing (ADR-0010) + §12 flagship epics P4-1..P4-9; ROADMAP rewritten to v3; ARCHITECTURE §5 Linux X11/Wayland + §9 trio; ci.yml matrix +ubuntu-latest; 9 secondary docs de-2-OS'd. Merge ba7550d."
-        },
-        {
-          "id": "P0-T2",
-          "title": "Scaffold Tauri 2.x app (React+TS) into apps/desktop, preserving src-tauri/src/<module>/ dirs and every AGENTS.md; wire pnpm-workspace.yaml + Cargo workspace (apps/desktop/src-tauri + crates/*)",
-          "status": "done",
-          "dependsOn": ["P0-T1"],
-          "pr": { "number": null, "url": "local:efdf6f7", "mergedAt": "2026-07-07" },
-          "notes": "DONE (macOS leg verified). tauri 2.11.5 workspace + React/TS/Vite + pnpm lockfile. cargo check --all-targets PASS (425 pkgs), fmt/clippy/test green, pnpm run check green. Base deps (serde/thiserror/ulid) only so far; heavy ASR/audio deps (cpal/ort/whisper.cpp/vad-rs) land per-target in P1 per the ADR-0004 Cargo matrix. Win/Linux legs waived-pending-infra."
-        },
-        {
-          "id": "P0-T3",
-          "title": "Create mod.rs stubs per backend module exposing the typed SessionEvent contract (docs/ARCHITECTURE.md §4) with todo!() bodies, so the event contract compiles before feature work",
-          "status": "done",
-          "dependsOn": ["P0-T2"],
-          "pr": { "number": null, "url": "local:efdf6f7", "mergedAt": "2026-07-07" },
-          "notes": "DONE. events.rs = typed SessionEvent (§4 + §6b prediction events) + 4 unit tests (serde round-trip, secure-field hold, dial default, id routing) — verified in isolation AND in-crate. 11 module mod.rs stubs expose the contract with todo!() bodies. Divergence: at_ms:u64 instead of Instant (serializable) — documented."
-        },
-        {
-          "id": "P0-T4",
-          "title": "Handy source study pass — record adopt/redesign notes in ADR-0004 (Tauri config, cpal capture, whisper.cpp+Parakeet ONNX wiring, VAD, tray/hotkey plumbing)",
-          "status": "done",
-          "dependsOn": [],
-          "pr": { "number": null, "url": "local:p0-t4", "mergedAt": "2026-07-07" },
-          "notes": "DONE. Read cjpais/Handy@v0.9.0. ADOPT: TranscriptionCoordinator (single-thread+30ms debounce, answers Pitfall P1), specta/tauri-specta type-gen, per-platform ASR Cargo target matrix, gtk-layer-shell (Linux overlay). REDESIGN: native-first injection (vs enigo/paste, Pitfall P2), cleanup dial, avoid git-fork deps. Captured pyke-ONNX AVX2 pre-Haswell startup-crash lesson for the Win CPU-first Parakeet lane. Handy already ships Linux -> validates ADR-0011."
-        },
-        {
-          "id": "P0-T5",
-          "title": "Extend CI matrix to 3-OS (add ubuntu-latest / Linux leg incl. Wayland+X11 injection test hooks) and wire fmt/clippy/test/npm-check on all three",
-          "status": "done",
-          "dependsOn": ["P0-T2"],
-          "pr": { "number": null, "url": "local:p0-t5", "mergedAt": "2026-07-07" },
-          "notes": "DONE (unverifiable on macOS host). Matrix = [macos, windows, ubuntu]; pnpm via corepack; ubuntu apt step (webkit2gtk-4.1, gtk-3, appindicator, rsvg2, gtk-layer-shell, patchelf) before the Rust build; all gates wired shell:bash. Injection test hooks come with P1 inject work."
-        },
-        {
-          "id": "P0-T6",
-          "title": "Add scripts/bench.sh, scripts/audit-network.sh, scripts/check-adr-status.sh (standing gates) with --check modes",
-          "status": "done",
-          "dependsOn": [],
-          "pr": { "number": null, "url": "local:0258de3", "mergedAt": "2026-07-07" },
-          "notes": "DONE. audit-network.sh is a WORKING gate (fixed-string scan vs network-allowlist.json; verified FAIL on a planted std::net call, PASS on empty/allowlisted). bench.sh --check skeleton (exit 3 = not-measurable pre-build). check-adr-status.sh (P0-G7, comment-safe). All bash-3.2 portable. CI wires all three (shell: bash). Note: dependsOn P0-T2 was dropped — these are pure scripts, buildable now."
-        },
-        {
-          "id": "P0-T7",
-          "title": "Author ADR-0009 (Kaydence Relay pairing/crypto design), ADR-0010 (pricing: one-time + Harbor), ADR-0011 (Linux/3-OS)",
-          "status": "done",
-          "dependsOn": [],
-          "pr": { "number": null, "url": "local:4848306", "mergedAt": "2026-07-07" },
-          "notes": "DONE. ADR-0010 (pricing) + ADR-0011 (Linux 3-OS) ratified by operator -> Accepted. ADR-0009 (Relay crypto: mDNS+SAS pairing, Noise_XX E2E, blind self-hostable rendezvous, rotation/revocation) authored as PROPOSED — still HALTS for operator design review before the P4-1 build. Merge 4848306."
-        }
-      ]
+     "id": "P0-G1",
+     "title": "cargo fmt clean (backend)",
+     "command": "cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/P0-T2-backend-gates-2026-07-07.txt",
+     "lastRun": "2026-07-07T03:40:00Z",
+     "notes": "PASS on macOS leg. Windows+Linux legs require CI (waived-pending-infra)."
     },
     {
-      "id": "P1",
-      "title": "MVP dictation",
-      "goal": "Hotkey -> capture -> WAL -> VAD -> local ASR (Parakeet CPU + Whisper GPU) -> native injection on Mac/Win/Linux (Wayland spike early — highest platform risk) -> history. Raw mode daily-drivable; crash-recovery and short-utterance suites green.",
-      "status": "in_progress",
-      "sessionsEstimate": "~3 weeks",
-      "gates": [
-        {
-          "id": "P1-G1",
-          "title": "crash_recovery suite green (100% audio recovery on kill -9 mid-dictation)",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/2026-07-09-short-utterance-gates.txt",
-          "lastRun": "2026-07-09T10:56Z",
-          "notes": "PASS locally after repairing the test names so the documented `crash_recovery` filter executes 2 integration tests instead of 0. The gate-hardening commit 55e25b7 is also green on all three OSes in Actions run 29013513964."
-        },
-        {
-          "id": "P1-G2",
-          "title": "short_utterance suite green (0.3-1.5 s clips, 100%)",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml short_utterance",
-          "status": "pending",
-          "evidence": "ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt",
-          "lastRun": "2026-07-10T03:32Z",
-          "notes": "CAPTURE/WAL portion PASS again on 2026-07-10: the documented `short_utterance` filter ran 6 tests (1 WAL unit + 5 integration tests) covering 0.3s PTT, 1.5s toggle, <250ms discard, and 0.3s/1.5s WAL recovery without truncation. Gate remains pending until real Parakeet/Whisper adapters can prove golden ASR clips have zero empty/truncated finals."
-        },
-        {
-          "id": "P1-G3",
-          "title": "Latency + footprint budgets met in Raw mode (release->inject <=700ms GPU / <=1200ms CPU; idle RAM <=250MB)",
-          "command": "bash scripts/bench.sh --check",
-          "status": "pending",
-          "evidence": "ops/mission/evidence/2026-07-09-first-run-setup-timing.txt",
-          "lastRun": "2026-07-09T14:53Z",
-          "notes": "PARTIAL working gate green locally and in 3-OS CI run 29022084029 at 699ff3b: kaydence --bench emits machine-readable JSON for the implemented Raw orchestration path, and scripts/bench.sh --check enforces every measured AGENTS section 5 budget instead of skipping. Local follow-up PASS measured hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, light_cleanup_added=1ms. Gate remains pending until real Parakeet/Whisper ASR, GPU release->inject, idle RAM/CPU, and reference-machine p95 are measured."
-        },
-        {
-          "id": "P1-G4",
-          "title": "Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup & Injection (injection paths + Raw), 07 Privacy & Context (no-transmission / secure-field posture), 10 First Run & License match their boards",
-          "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{01,03,07,10}.png + keyboard/a11y checklist",
-          "status": "pending",
-          "evidence": "ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt",
-          "lastRun": "2026-07-10T03:32Z",
-          "notes": "P1 navigation architecture advanced 2026-07-10: Dictate/Family 01, Cleanup/Family 03, Privacy/Family 07, and Setup/Family 10 are distinct views behind the locked left-nav order; future-phase items fail honestly as disabled. The default 900x600 window keeps a 256px rail, browser smoke found no horizontal/text overflow or console errors, and the signed native macOS bundle proved Dictate -> Privacy navigation. OS accent lanes, 8px cards, backend-owned state, and identity invariants remain intact. The full human board-level fidelity match for families 01/03/07/10 remains open, so this gate stays pending."
-        },
-        {
-          "id": "P1-G5",
-          "title": "event_sequences suite green (typed order for happy path, focus-change hold, secure-field hold, engine fallback, cleanup fallback)",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml event_sequences",
-          "status": "passed",
-          "evidence": "ops/mission/evidence/2026-07-09-event-sequences-gate.txt",
-          "lastRun": "2026-07-09T12:57:31Z",
-          "notes": "PASS locally and remotely: 5 integration tests prove Started -> AudioPersisted -> ASR -> cleanup -> exactly one delivery outcome for the happy path, FocusChanged hold, SecureField hold, BYOK/GPU/local-CPU fallback, and the current Full cleanup rule-floor fallback. The gate remained green in later 3-OS Actions run 29022084029 at 699ff3b."
-        }
-      ],
-      "tasks": [
-        { "id": "P1-P0-1", "title": "PRD P0-1 Global hotkey (push-to-talk + toggle; min-capture 250ms; tail buffer 300ms)", "status": "in_progress", "dependsOn": ["P0-T3"], "pr": null, "notes": "CORE + RUNTIME WIRING + MODE TOGGLE + REBIND UI/REGISTRATION DONE 2026-07-09: CaptureCoordinator remains the Pitfall-P1 answer (PTT+Toggle, debounce, 250ms min-capture, 300ms tail, no overlap), and Tauri setup registers the selected global shortcut into the WAL -> pipeline -> injection runtime. AppSnapshot now reflects hotkey_registered or hotkey_registration_error, and registration failure degrades into first-run UI state instead of crashing the app. set_hotkey_mode persists push-to-talk vs toggle in app-data settings.json, updates AppSnapshot, and switches the active runtime coordinator only while idle. set_hotkey_binding persists an allowlisted primary binding (RightAlt, F13, F14, Control+Space, Shift+F13), registers the new shortcut before unregistering the old one, refuses during active capture, and retains the runtime after initial default registration failure so first-run one-tap rebind can recover without restart. SHORT_UTTERANCE CAPTURE/WAL SUITE ADDED 2026-07-09: the documented `short_utterance` filter now runs 6 tests covering 0.3s PTT, 1.5s toggle, <250ms discard, and short WAL recovery without truncation. RUNTIME PERMISSION PROOF REFRESH ADDED 2026-07-09: real active global-shortcut events mark input proof, non-empty finalized capture audio marks microphone proof, and pending tail-tick/first-dictation proof can be drained by the setup Refresh command. SECONDARY CLEANUP OVERRIDE ADDED 2026-07-09: Tauri setup now optionally registers Shift+RightAlt/Option as a Raw-only per-invocation override alongside the selected primary shortcut. Runtime shortcut-role tracking prevents a primary release from ending an override capture, applies CleanupDial::Raw only for that capture, and returns the next primary capture to the detected profile's cleanup dial. Evidence: ops/mission/evidence/2026-07-09-secondary-cleanup-override.txt. CLEANUP DEFAULT DIAL PERSISTENCE ADDED 2026-07-09: the visible Cleanup dial now calls Rust set_cleanup_dial, persists cleanup_default_dial in app-data settings.json, hydrates AppSnapshot on startup, applies the selected default to non-user-edited profile targets, preserves user-edited per-app profile overrides, and refuses runtime changes during active capture. Evidence: ops/mission/evidence/2026-07-09-cleanup-default-dial-persistence.txt. REMAINING: live OS permission/conflict proof on macOS/Windows/Linux, ASR golden final proof after real adapters land, and latency gates." },
-        { "id": "P1-P0-2", "title": "PRD P0-2 Local ASR dual path (Parakeet V3 CPU + Whisper large-v3-turbo GPU; model picker; hw auto-recommend)", "status": "in_progress", "dependsOn": ["P0-T3"], "pr": null, "notes": "MODEL READINESS + PICKER + SELECTION PERSISTENCE + DOWNLOAD PLANNING/METADATA UI + MISMATCH QUARANTINE + MANUAL RECHECK + LOCAL ARTIFACT INSTALL + PENDING RUNTIME ADAPTER WIRED 2026-07-08: app startup loads the source-tree model registry and verifies required first-run ASR/VAD artifacts in the app-data models directory. AppSnapshot exposes model_ready, model_readiness_error, required_models, ASR candidates, recommended_asr_model_id, selected_asr_model_id, and download_available/download_size_mb/download_source_count for model rows. The first-run UI renders the backend-owned local ASR picker and required-model list with validated download size/source metadata, invokes select_asr_model, exposes Recheck Models, and can open a native file picker for install_model_artifact on required model rows. Rust validates the selected candidate, persists selected_asr_model_id to app-data/settings.json, reapplies it on startup, and returns the updated AppSnapshot. The refresh_model_readiness Tauri command rescans app-data models without restart and reapplies persisted ASR selection. install_model_artifact copies a selected local artifact into app-data models/ only after it matches the registry sha256; bad existing artifacts still quarantine before replacement. Placeholder hashes fail closed, missing valid artifacts render as download-required only when ModelDownloadPlan can prove a safe destination, expected sha256, and normalized HTTPS source list; TODO/invalid sources block readiness as Download unavailable. Checksum mismatches move the suspect artifact into models/quarantine/ before blocking readiness, and the recommendation rule prefers OS-specific registry defaults then CPU-safe Parakeet-style fallback. The default hotkey runtime first gained a PendingLocalAsrEngine, so captures persisted audio and recorded a selected-model-specific Recognize failure instead of a generic empty-stack error until real Parakeet/Whisper adapters load. MODEL DOWNLOAD PREFLIGHT ADDED 2026-07-09: first_run_model_download_preflight returns a Rust-owned read-only preflight with current model state/detail, destination path, expected sha256, size, HTTPS sources, license, blocked reason, operator action, and proof requirement. Screen Family 10 required-model rows expose Review and render the returned preflight card. The command reuses ModelDownloadPlan, does not fetch bytes, does not create model files, and blocks placeholder metadata. ARTIFACT-AWARE ASR RUNTIME STATE ADDED 2026-07-09: HotkeyRuntime startup now resolves the selected ASR model into Pending/Blocked/VerifiedArtifact state from first-run selection, the model registry, and app-data model artifacts. select_asr_model, refresh_model_readiness, and install_model_artifact require the runtime to be idle before hot-swapping that ASR adapter state into the active processor. Missing or invalid artifacts produce selected-model-specific Blocked Recognize failures; verified artifacts report model id, lane, runtime, path, and byte size while honestly stating that the real runtime adapter is not implemented yet. No Parakeet/Whisper inference, download, or network surface is faked. Evidence: ops/mission/evidence/2026-07-09-asr-runtime-adapter-lifecycle.txt. ASR RUNTIME SNAPSHOT/PROOF/UI ADDED 2026-07-09: AppSnapshot now carries FirstRunStatus.asr_runtime; FirstRunProofPlan exports the same boundary; the cockpit meta strip and Screen Family 10 render selected model, lane, runtime, artifact path/size, adapter readiness, detail, and proof requirement. Evidence: ops/mission/evidence/2026-07-09-asr-runtime-status-snapshot.txt. REMAINING: replace TODO registry hashes/sources with real published artifacts, implement the approved network fetch/progress UI after ADR/operator review, Parakeet/Whisper engine adapters, and WER/latency evidence." },
-        { "id": "P1-P0-3", "title": "PRD P0-3 Universal injection Mac+Win+Linux (AX / UIA+SendInput / X11+Wayland; clipboard fallback snapshot-restore <=200ms; secure-field refusal)", "status": "in_progress", "dependsOn": ["P0-T3"], "pr": { "number": 2, "url": "https://github.com/IslandDevCrew/kaydence/pull/2", "mergedAt": "2026-07-09" }, "notes": "WINDOWS BACKEND BUILT + VALIDATED LIVE ON THE FABLE BOX (2026-07-09), branch mission/p1-p0-3-windows-injection: inject/windows.rs (758 lines, <800) fills the shared TextInjector trait, native-primary (the inverse of Linux). UIA `IsPassword` = the secure-field gate (non-negotiable #8; unreadable bit fails CLOSED); UIA `ValuePattern.SetValue` (caret-aware via TextPattern) = PRIMARY native insert; `SendInput` KEYEVENTF_UNICODE = keystroke fallback (full Unicode); clipboard fallback via the shared clipboard_paste() with CF_UNICODETEXT snapshot->set->paste->RESTORE-always. platform_injector() + profiles::WindowsFrontmostAppDetector (GetForegroundWindow + process image) wired. Dep: `windows` 0.61 (cfg windows, minimal features) — already in Cargo.lock via tauri, NOT a network surface (audit-network PASS). 11 new unit tests (UIA-facts->FieldKind mapping) + full suite green (172 lib + 2 crash), clippy -D warnings clean, fmt clean. LIVE (operator-observed, ground-truthed): Notepad native insert = Injected{Native} (clean 95-char); WinForms password field = Held{SecureField}, nothing entered (x2); classic Win32 Edit keystroke = exact incl. repeats+spaces; clipboard rung injected AND restored a pre-seeded user clipboard (Pitfall P2). Documented quirk (not a defect): the new WinUI/RichEdit Notepad coalesces rapid synthetic keys so the keystroke FALLBACK drops repeats there — native handles Notepad anyway; logged in inject/AGENTS.md matrix + ADR-0013 amendment 2026-07-09. Evidence: ops/mission/evidence/2026-07-09-windows-injection.txt (+3 screenshots). MERGED to main 2026-07-09 (operator go; PR #2 squash bdbe8d6; 3-OS CI green twice: runs 29007885003 + 29007908105). REMAINING on P0-3 after Windows: macOS AX is done; Linux uinput/AT-SPI done; residual = the operator-in-the-loop Linux human-focus check + unicode-beyond-ASCII on Linux uinput + optional portal/libei. --- LINUX uinput KEYSTROKE BACKEND BUILT + VALIDATED (2026-07-08): inject/uinput.rs — pure US-QWERTY keymap (5 tests, CI) + UinputKeyboard (evdev 0.13) creating a /dev/uinput virtual keyboard. Live PASS on the VM: device at /dev/input/event5, emitted 19+26-char strings. atspi-selftest focus-track = the REAL integrated path (AT-SPI secure-field GATE + uinput TYPING). Operator demo: scripts/linux-inject-demo.sh. REMAINING for the Linux leg: the human-focus end-to-end check (focus a field -> types; focus a password -> refuses) is operator-in-the-loop (Wayland won't let a script move keyboard focus). THEN: unicode-beyond-ASCII typing (compose/keymap-swap, follow-up), the portal+libei alternative to uinput (no device perm), macOS AX, Windows UIA, hotkey OS registration. Earlier context below. LINUX INJECTION — LIVE FINDINGS ON THE GNOME VM (2026-07-08) reshaped the strategy: (1) AT-SPI connect/traverse/READ + role/state detection WORK on GNOME (validated: found gnome-text-editor role=Text editable field). (2) AT-SPI EditableText.InsertText is UNRELIABLE on modern GNOME — returns true but no-ops on gnome-text-editor (GTK4) AND gedit 44. So AT-SPI = the DETECTION / secure-field signal (non-negotiable #8, the part that works), NOT the primary insertion path. (3) uinput keystroke synth (ydotool, daemonless on /dev/uinput) is the working inject path. REVISED LADDER (docs/spikes §7b + ADR-0013 amendment): detect via AT-SPI, INSERT via keystroke (uinput or portal+libei). NEXT: implement the uinput/portal keystroke backend behind KeystrokeChannel::LinuxUinput/WaylandPortalRemoteDesktop, wire AT-SPI secure-field detection as the gate; the end-to-end 'types into focused app' check is operator-in-the-loop (Wayland won't let a script move keyboard focus). Then macOS AX + Windows UIA. Evidence: P1-P0-3-atspi-live-findings-2026-07-08.txt. Earlier context below. LINUX AT-SPI FOUNDATION VALIDATED ON THE VM (2026-07-08): ADR-0013 Accepted; atspi 0.30 + zbus 5 added (cfg linux, pure D-Bus, audit-network PASS); inject/linux.rs role->FieldKind mapping (PasswordText=>Secure, tested); bin/atspi-selftest connects to real GNOME and round-trips a call (desktop root role=DesktopFrame, PASS — evidence P1-P0-3-atspi-validated-2026-07-08.txt). NEXT ITERATION: focus tracking (object:state-changed:focused) -> read focused role/state for secure detection -> EditableText.insert_text native insert, then operator-observed live validation (type into GNOME Text Editor; refuse a password entry). Then macOS AX + Windows UIA backends. Earlier context below. SPIKE DONE (Wayland-first, 2026-07-08): docs/spikes/P1-P0-3-wayland-injection.md maps the compositor matrix + strategy (capability ladder: AT-SPI native -> portal/libei on GNOME/KDE, virtual-keyboard on wlroots, uinput opt-in, clipboard-restore). Platform-agnostic CORE implemented + unit-tested on host (inject/mod.rs: decide_secure, select_plan, clipboard_paste, outcome_event, TextInjector trait — 13 tests, all 3 CI legs green). Honest finding: Wayland has no global secure-field signal for opaque (non-AT-SPI) clients — policy makes it explicit (Lenient flags unverified / Strict refuses). ADR-0013 PROPOSED — HALTS for operator go on the dependency set (atspi/ashpd+libei/wayland-client/x11rb) before platform syscalls are written + validated on the Debian-12 GNOME VM. Non-negotiable #8 secure-field refusal is the load-bearing tested gate." },
-        {"id":"P1-P0-4","title":"PRD P0-4 Write-ahead audio persistence + SQLite history (audio on disk before ASR; survives crash)","status":"done","dependsOn":["P0-T3"],"pr":{"number":1,"url":"https://github.com/IslandDevCrew/kaydence/pull/1","mergedAt":"2026-07-08"},"notes":"DONE (built by the WAL session as commit 4f1b27c + PR #1; landed on main 2026-07-08 riding the design-branch merges). crash_recovery gate hardened 2026-07-09: test names now include `crash_recovery`, so the documented filter runs the real 2-test kill/recover integration suite instead of 0 tests; local PASS evidence in ops/mission/evidence/2026-07-09-short-utterance-gates.txt. Earlier WAL PR evidence: CI-GREEN-2026-07-08.txt. RECENT HISTORY + SINGLE-SESSION DELETE + ORPHAN SURFACING + EXPORT + PURGE/RETENTION + PLAYBACK ADDED 2026-07-08: recent_history returns bounded app-data SQLite rows, applies the Rust settings retention window before listing, and scans app-data sessions/ for recoverable WAL files; the cockpit renders sessions/failures with manual refresh; delete_history_session removes the DB row, safe app-data session audio, and session export files while refusing unsafe/external audio paths; export_history_session writes app-data exports/{session}.json and .txt from backend-owned session/event truth; purge_history clears all rows plus app-data sessions/ audio files and exports/; play_history_audio validates a safe app-data WAV and exposes it through Tauri's app-data sessions/ asset scope for a cockpit audio control. Recovered orphan audio appears as a failed Capture session with the preserved audio path until real ASR adapters can re-transcribe it. REMAINING under history/recovery polish: recovered-audio re-transcription once real ASR adapters land. P1-G1 and P1-G5 are covered by 3-OS CI run 29022084029 at 699ff3b; the current setup-timing slice still needs fresh CI after push. Non-negotiable #2."},
-        {"id":"P1-P0-6","title":"PRD P0-6 Latency budgets met + enforced by scripts/bench.sh in CI","status":"in_progress","dependsOn":["P0-T6"],"pr":null,"notes":"PARTIAL GATE BUILT + REMOTELY GREEN 2026-07-09: `kaydence --bench` now runs before Tauri startup and emits JSON for the implemented Raw orchestration path; scripts/bench.sh --check uses a packaged bench binary when available or cargo run -- --bench in CI, compares every measured metric against AGENTS section 5, and no longer exits as skipped. 3-OS Actions run 29022084029 at 699ff3b completed green on macOS/Ubuntu/Windows with the bench step enforced. Local follow-up measured PASS: hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, light_cleanup_added=1ms. Honest boundary: P1-G3 remains pending until real Parakeet/Whisper adapters, GPU path, idle RAM/CPU, and reference-machine p95 are measured."},
-        { "id": "P1-P0-7", "title": "PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page)", "status": "done", "dependsOn": ["P0-T6"], "pr": { "number": null, "url": "local:p1-p0-7-privacy-posture", "mergedAt": "2026-07-09" }, "notes": "DONE 2026-07-09. README privacy page now states no telemetry, no account, no cloud screen capture, no default network egress, local-only history, and memory-only context. Added scripts/check-privacy-posture.sh and wired it into CI after audit-network; it asserts the README promises, runs audit-network, and scans app/crates source for banned screen-capture implementation primitives. React cockpit now includes Screen Family 07 Privacy & Context from backend AppSnapshot truth (telemetry none, 0 unreviewed network, screen capture banned, context off by default, local retention, secure-field refusal). Evidence: ops/mission/evidence/2026-07-09-privacy-posture.txt plus desktop/narrow screenshots. Honest boundary: future BYOK/model-download/Harbor endpoints still require ADR + toggle + allowlist before implementation." },
-        {
-          "id": "P1-P0-8",
-          "title": "PRD P0-8 60-second first run (install -> model download -> first dictation <=60s, one settings screen)",
-          "status": "in_progress",
-          "dependsOn": ["P1-P0-1", "P1-P0-2", "P1-P0-3", "P1-P0-4"],
-          "pr": null,
-          "notes": "FIRST-DICTATION COMPLETION + PERMISSION READINESS/ACTION CONTRACT + SETUP TIMING PROOF WIRED 2026-07-09: first_dictation_completed is backend-owned and durable in app-data settings.json, hydrated into AppSnapshot on startup, and set only after the hotkey runtime records an actual SessionEvent::Injected outcome. Held delivery paths, including focus-change before delivery, do not mark setup complete. FirstRunStatus exposes backend-owned permission_requirements with platform-specific macOS/Windows/Linux requirement rows; the first-run UI renders each requirement with state/detail/action copy and the injection panel summarizes the runtime permission contract. Permission rows carry backend-owned action_label metadata, and the first_run_permission_action Tauri command now returns structured manual_step, proof_requirement, optional proof_command, expected_evidence, and ready_boundary fields for Screen Family 10. Setup timing is now backend-owned too: settings.json stores first_run_started_at_ms and first_dictation_completed_at_ms; FirstRunStatus/AppSnapshot exposes FirstRunSetupTiming with elapsed_ms, target_ms=60000, and within_target; refresh_models starts the timer once; mark_first_dictation_completed completes timing only after a real Injected event; Screen Family 10 renders a 60-second setup proof strip. Browser smoke verified the setup strip at 1280x720 and 390x844 with no horizontal overflow after a focused responsive CSS fix. That checkpoint made no real OS permission detection or <=60s reference-machine claim; later notes below add macOS Accessibility/Input Monitoring preflights while default permission states still stay needs_hardware or needs_review until live platform proof exists. Evidence: ops/mission/evidence/2026-07-09-first-dictation-completion.txt, ops/mission/evidence/2026-07-09-first-run-permission-readiness.txt, ops/mission/evidence/2026-07-09-first-run-permission-actions.txt, ops/mission/evidence/2026-07-09-first-run-setup-timing.txt, and ops/mission/evidence/2026-07-09-permission-proof-boundaries.txt. NEXT-STEP ORCHESTRATION ADDED 2026-07-09: FirstRunStatus now carries a backend-owned next_step that sequences setup truth as model metadata review -> reviewed model install -> OS permission proof -> hotkey recovery -> real first dictation -> complete. The setup panel renders the selected title/detail/action/proof requirement, and the primary action follows backend-selected intent while Vite preview mode only shows proof guidance instead of calling Tauri IPC. LOCAL PROOF EXPORT ADDED 2026-07-09: export_first_run_proof_plan writes a Rust-owned app-data exports/first-run-proof-plan.json containing schema_version, generated_at_ms, os_lane, ready_to_dictate, first_dictation_completed, next_step, setup_timing, model/ASR state, permission requirements, hotkey state, and proof_items for build-agent handoff. Screen Family 10 exposes Export Proof and reports the returned path/item count. Linux AT-SPI proof text now matches the actual selftest command. MODEL DOWNLOAD PREFLIGHT REVIEW ADDED 2026-07-09: first-run required-model rows can ask Rust for a read-only download preflight and render availability, destination, expected sha256, sources, license, block reason, operator action, and proof requirement without fetching bytes or creating files. PERMISSION PROOF BOUNDARIES ADDED 2026-07-09: permission action outcomes now display the proof command, expected evidence, and do-not-mark-ready boundary; Vite preview mode refuses native IPC and shows the desktop-runtime boundary. ASR RUNTIME STATUS ADDED 2026-07-09: FirstRunStatus and FirstRunProofPlan now carry asr_runtime, and Screen Family 10 renders Pending/Blocked/VerifiedArtifact plus selected model, lane, runtime, artifact path/size, adapter readiness, detail, and proof requirement. Evidence: ops/mission/evidence/2026-07-09-asr-runtime-status-snapshot.txt. RUNTIME PERMISSION PROOF REFRESH ADDED 2026-07-09: actual hotkey events mark input proof, non-empty finalized WAL audio marks microphone proof, first-dictation completion syncs both runtime-proven rows, and Screen Family 10 Refresh drains pending tail/first-dictation proof through refresh_first_run_runtime_proofs. Zero-sample WAL-only captures do not mark microphone ready; UIA/SendInput/AT-SPI/uinput/native secure-field proofs remain manual/review-gated. Evidence: ops/mission/evidence/2026-07-09-runtime-permission-proof-refresh.txt. READY-TO-DICTATE PERMISSION CONTRACT TIGHTENED 2026-07-09: ready_to_dictate now requires every permission_requirements row to be Ready, not only the coarse microphone/input booleans, so FirstRunProofPlan and future consumers cannot claim readiness while OS-specific proof rows remain review-gated. Evidence: ops/mission/evidence/2026-07-09-first-run-ready-permission-contract.txt. UI PERMISSION CHECKLIST ALIGNED 2026-07-09: React's Grant OS permissions checklist row and setup action readiness now use the visible permission rows too, so the UI summary cannot look ready while detailed rows still need hardware/review proof. Evidence: ops/mission/evidence/2026-07-09-first-run-ui-permission-contract.txt. FIRST-RUN ACTION LABEL ALIGNED 2026-07-09: both Screen Family 10 action surfaces now render backend next_step.action_label, so the current model-metadata state shows Review models instead of generic Resolve Setup. Evidence: ops/mission/evidence/2026-07-09-first-run-action-label.txt. PERMISSION SETTINGS OPENER ADDED 2026-07-09: first-run permission action outcomes now carry stable OS settings targets when available, Screen Family 10 renders a separate Open Settings action, and the desktop command returns an honest opened/manual-only outcome without marking any permission ready. Evidence: ops/mission/evidence/2026-07-09-permission-settings-opener.txt. MACOS ACCESSIBILITY PROOF REFRESH ADDED 2026-07-09: refresh_first_run_runtime_proofs now applies passive platform permission proofs after draining active runtime proofs. On macOS, AXIsProcessTrusted runs inside the macOS injector boundary; when the current Kaydence process is trusted for Accessibility, the Accessibility requirement row becomes Ready with runtime proof detail. Microphone still requires non-empty persisted capture audio, and native insertion/secure-field refusal proof remains separate. Evidence: ops/mission/evidence/2026-07-09-macos-accessibility-proof-refresh.txt. MACOS INPUT MONITORING PROOF REFRESH ADDED 2026-07-09: IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) now runs inside the macOS injector boundary without prompting; when macOS reports listen-event access as granted, the Input Monitoring row becomes Ready and input_permission_ready is satisfied while hotkey registration, microphone proof, model readiness, and first dictation remain separate gates. Evidence: ops/mission/evidence/2026-07-09-macos-input-monitoring-proof-refresh.txt. REMAINING: remaining live OS permission proof, approved network download/progress UI, first-dictation user journey, and the <=60s proof on reference machines."
-        },
-        { "id": "P1-D1", "title": "Vendor Visual System v1 into the monorepo: copy logos/ + the 10 screen-family boards from /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/ into assets/brand/ + docs/design/, and add a design-reference index mapping each screen family -> its board -> the phase that builds it (P1-G4/P2-G3/P3-G4/P4-G-SCREENS)", "status": "done", "dependsOn": ["P0-T2"], "pr": { "number": null, "url": "local:p1-d1", "mergedAt": "2026-07-08" }, "notes": "DONE. 15 PNGs (5 logos + 10 boards, 18MB) copied byte-identical — all shasums verified vs upstream. Index at docs/design/README.md maps family -> board -> phase -> fidelity gate. All gate commands + prompt pack + designDirection.assets repointed to assets/brand/. Evidence: ops/mission/evidence/P1-D1-vendor-2026-07-08.txt." },
-        { "id": "P1-D2", "title": "Operator selects the winning logo -> lock the visual identity across macOS/Windows/Linux; author ADR-0012 (visual identity + OS accent lanes)", "status": "done", "dependsOn": [], "pr": { "number": null, "url": "local:p1-d2", "mergedAt": "2026-07-08" }, "notes": "DONE — OPERATOR SELECTED the dual-asset hybrid (2026-07-08): Option 1 K Waveform = sole product mark (app icon, favicon, tray monochrome variant, installers, isolated use); Option 4 Wordmark Forward = the Kaydence wordmark/site header, serif as brand display type only. Three binding unification rules in ADR-0012 (Accepted): strict role separation; Option 4's icon variant retired; serif never inside the app UI. Options 2/5 preserved as secondary art; Option 3 rejected (embeds third-party OS marks). 0012 removed from check-adr-status exceptions; P0-G7 re-run PASS (11 of 12 Accepted, only 0009 waived). Multi-resolution asset production (icns/ico/hicolor + tray template) lands with P3 installer work." }
-      ]
+     "id": "P0-G2",
+     "title": "cargo clippy -D warnings (backend)",
+     "command": "cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/P0-T2-backend-gates-2026-07-07.txt",
+     "lastRun": "2026-07-07T03:40:00Z",
+     "notes": "PASS on macOS leg (fixed derivable_impls). Win+Linux via CI."
     },
     {
-      "id": "P2",
-      "title": "The cleanup differentiator",
-      "goal": "Raw/Light/Full dial (rule engine + constrained local LLM), streaming partials, dictionary + Wispr/Glaido import, BYOK lanes with local fallback. Exit: >=95% zero-edit at Light on the golden corpus; Wispr uninstalled from the operator's machines.",
-      "status": "pending",
-      "sessionsEstimate": "~3 weeks",
-      "gates": [
-        {
-          "id": "P2-G1",
-          "title": ">=95% zero-edit rate at Light cleanup on the golden corpus",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml golden_corpus_light",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "PRD P0-5. Ladder target. Requires a committed golden corpus fixture."
-        },
-        {
-          "id": "P2-G2",
-          "title": "Light cleanup adds <=800ms; streaming partials <=300ms behind speech",
-          "command": "bash scripts/bench.sh --check",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "Root AGENTS §5. PRD P1-1."
-        },
-        {
-          "id": "P2-G3",
-          "title": "Screen-family fidelity: 03 Cleanup & Injection (Raw/Light/Full dial complete) and 08 Dictionary & Profiles (dictionary + import) match their boards",
-          "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{03,08}.png + keyboard/a11y checklist",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "Manual design-review gate. The cleanup dial and dictionary/import surfaces must match board 03/08 (segmented Raw/Light/Full control, import affordances). Per-app profiles on board 08 land in P3 (P3-G4)."
-        }
-      ],
-      "tasks": [
-        { "id": "P2-P0-5", "title": "PRD P0-5 Cleanup dial Raw/Light/Full (rule engine -> Light w/ small local model -> Full LLM opt-in; per-invocation override)", "status": "pending", "dependsOn": ["P1-P0-2"], "pr": null, "notes": "Non-negotiable #3. Prompt contract — critical path." },
-        { "id": "P2-P1-1", "title": "PRD P1-1 Streaming partial text (partials in HUD <=300ms behind speech; final replaces atomically)", "status": "pending", "dependsOn": ["P1-P0-2"], "pr": null, "notes": "Prereq for Whisper-Ahead (P3.5)." },
-        { "id": "P2-P1-2", "title": "PRD P1-2 Custom dictionary + import (Wispr Flow & Glaido exports; terms boost ASR + cleanup)", "status": "pending", "dependsOn": ["P1-P0-2"], "pr": null, "notes": "" },
-        { "id": "P2-P1-5", "title": "PRD P1-5 BYOK cloud lanes (Groq/Deepgram ASR, OpenAI-compatible/Ollama cleanup; per-lane kill switch; local fallback chain)", "status": "pending", "dependsOn": ["P2-P0-5"], "pr": null, "notes": "CRITICAL PATH — new network surfaces (egress). Non-negotiable #6 fallback + #1 audit." }
-      ]
+     "id": "P0-G3",
+     "title": "cargo test --all (backend)",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/2026-07-09-permission-proof-boundaries.txt",
+     "lastRun": "2026-07-09T16:09:29Z",
+     "notes": "PASS on all three OS legs via Actions run 29031546518 at ca60244, completed 2026-07-09T16:09:29Z. Later runs at c63bc47 and f61ab49 failed before checkout because GitHub reports billing/spending-limit state; rerun after billing is fixed before claiming remote parity for newer commits."
     },
     {
-      "id": "P3",
-      "title": "Daily-driver polish + Whisper-Ahead",
-      "goal": "Per-app profiles, snippets, correction-learning, signed installers for all three OSes; then the prediction layer (P2-7..P2-13): dual-line HUD, gold merge, timing ladder, inline fallback, local analytics. Prediction defaults locked from bench-prediction.sh on the two reference machines (ADR-0007).",
-      "status": "pending",
-      "sessionsEstimate": "~4 weeks",
-      "gates": [
-        {
-          "id": "P3-G1",
-          "title": "Prediction guess rendered <=400ms (HUD, streaming); yields to dictation",
-          "command": "bash scripts/bench-prediction.sh --check",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "PRD P2-7. Ladder P3.5 target. Defaults locked from bench-prediction on M-series Mac + mid Windows laptop (ADR-0007)."
-        },
-        {
-          "id": "P3-G2",
-          "title": "Signed installers build (notarized .dmg, signed .msi, AppImage/.deb) for all three OSes",
-          "command": "bash scripts/release.sh --check",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "PRD P1 polish + ROADMAP P3. Needs signing identities; scripts/release.sh to be authored."
-        },
-        {
-          "id": "P3-G3",
-          "title": "Prediction privacy tests green (no persistence/transmission of context)",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml context_privacy",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "Non-negotiable #1 / ADR-0006. PRD P2-12."
-        },
-        {
-          "id": "P3-G4",
-          "title": "Screen-family fidelity: 02 Whisper-Ahead HUD (blue lane, 5s/10s/20s ladder, amber-gold merge pulse, Tab/Shift-Tab), 08 per-app profiles, 09 Analytics & Performance, 07 Tier 1/Tier 2 context match their boards",
-          "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{02,07,08,09}.png + keyboard/a11y checklist",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "Manual design-review gate. Board 02 is the locked Whisper-Ahead interaction — prediction blue and the ~0.5s amber-gold merge pulse are invariants, not per-OS. Analytics board 09 is local-only/exportable with p50/p95 latency; no cloud."
-        }
-      ],
-      "tasks": [
-        { "id": "P3-P1-3", "title": "PRD P1-3 Auto-learning corrections (edit within 30s -> offer to learn into dictionary; explicit confirm, never silent)", "status": "pending", "dependsOn": ["P2-P1-2"], "pr": null, "notes": "" },
-        { "id": "P3-P1-4", "title": "PRD P1-4 Per-app profiles (frontmost app detection -> tone/format/cleanup-level/custom prompt)", "status": "pending", "dependsOn": ["P2-P0-5"], "pr": null, "notes": "CRITICAL PATH — app detection is platform code + prompt contract." },
-        { "id": "P3-P1-6", "title": "PRD P1-6 Snippets (spoken trigger expands to saved text)", "status": "pending", "dependsOn": ["P2-P1-2"], "pr": null, "notes": "" },
-        { "id": "P3-BENCH", "title": "Run bench-prediction.sh on both reference machines; lock per-platform default models into models/registry.json + ADR-0007 (before P3.5 ships)", "status": "pending", "dependsOn": [], "pr": null, "notes": "OPERATOR GATE — requires the two physical reference machines. Gemma 3 1B license review before any paid build bundles it (ADR-0007/0010)." },
-        { "id": "P3-P2-7", "title": "PRD P2-7 Local prediction engine (llama.cpp/GGUF; per-platform default; <=400ms; yields to dictation)", "status": "pending", "dependsOn": ["P2-P1-1", "P3-BENCH"], "pr": null, "notes": "Model registry — critical path." },
-        { "id": "P3-P2-8", "title": "PRD P2-8 Surface A HUD dual-line (blue lane; Streaming + Paused-Merge 5s; only committed text injects)", "status": "pending", "dependsOn": ["P3-P2-7"], "pr": null, "notes": "ADR-0005. Pitfall P11." },
-        { "id": "P3-P2-9", "title": "PRD P2-9 Surface B inline fallback (non-overlay apps; streaming off; inline ghost after 10s pause; Tab accepts)", "status": "pending", "dependsOn": ["P3-P2-8"], "pr": null, "notes": "ADR-0005. Pitfall P12." },
-        { "id": "P3-P2-10", "title": "PRD P2-10 Merge + accept (say-or-select; Tab=word, Shift-Tab=phrase; ~0.5s gold pulse)", "status": "pending", "dependsOn": ["P3-P2-8"], "pr": null, "notes": "ADR-0005." },
-        { "id": "P3-P2-11", "title": "PRD P2-11 Local prediction analytics (prediction_events; words merged, acceptance rate, by app; local-only, exportable, deletable)", "status": "pending", "dependsOn": ["P3-P2-10"], "pr": null, "notes": "" },
-        { "id": "P3-P2-12", "title": "PRD P2-12 Opt-in local context (Tier 1 accessibility read + Tier 2 on-device OCR; in-memory only; secure fields blocked)", "status": "pending", "dependsOn": ["P3-P2-7"], "pr": null, "notes": "CRITICAL PATH — ADR-0006. Non-negotiable #1. Privacy tests mandatory." },
-        { "id": "P3-P2-13", "title": "PRD P2-13 Timing ladder (5s HUD / 10s inline / 20s auto-stop; all configurable)", "status": "pending", "dependsOn": ["P3-P2-8"], "pr": null, "notes": "ADR-0005." }
-      ]
+     "id": "P0-G4",
+     "title": "frontend typecheck + lint (tsc --noEmit + eslint)",
+     "command": "bash scripts/check-frontend.sh",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/P0-G4-frontend.log",
+     "lastRun": "2026-07-07T03:50:00Z",
+     "notes": "PASS. Gate is check-frontend.sh (runs local tsc+eslint binaries) — robust vs pnpm-11 build-approval friction. pnpm run check also green after esbuild allowlisted in root package.json."
     },
     {
-      "id": "P4",
-      "title": "The Flagship Trio",
-      "goal": "Voiceprint first (extends learning already flowing), Relay second (crypto design review gates the build), Conductor third (MCP substrate -> targets -> confirm gates -> fleet mode). Exit: all three daily-usable across the fleet; ladder targets hit; Harbor optional and unbuilt without blocking anything.",
-      "status": "pending",
-      "sessionsEstimate": "post-beta",
-      "gates": [
-        {
-          "id": "P4-G-VOICEPRINT",
-          "title": "Voiceprint: measured acceptance-rate lift vs pre-Voiceprint baseline (or it does not advertise)",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml voiceprint_lift",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "P4-5 gate. Training opt-in only; budget capped; kill switch + one-tap reset."
-        },
-        {
-          "id": "P4-G-RELAY",
-          "title": "Relay: <=500ms added latency on LAN, end-to-end encrypted, zero cloud",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml relay_suite",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "P4-2 gate. Pairing/crypto design (ADR-0009) is a critical decision path — operator review BEFORE build."
-        },
-        {
-          "id": "P4-G-CONDUCTOR",
-          "title": "Conductor: confirm-gate suite passes 100% — zero auto-executed destructive commands",
-          "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml conductor_confirm_gate",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "P4-8 gate. A single auto-executed destructive (delete/send/pay/deploy) command is a release blocker."
-        },
-        {
-          "id": "P4-G-SCREENS",
-          "title": "Screen-family fidelity: 04 Relay, 05 Voiceprint, 06 Conductor match their boards (Conductor's explicit confirm gate is visible on every destructive action)",
-          "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{04,05,06}.png + keyboard/a11y checklist",
-          "status": "pending",
-          "evidence": null,
-          "lastRun": null,
-          "notes": "Manual design-review gate for the flagship trio. Relay board 04 never implies cloud sync (Harbor is optional/self-hostable); Voiceprint board 05 shows export/delete/reset; Conductor board 06 shows the confirm gate — these mirror the P4 safety invariants, not just visuals."
-        }
-      ],
-      "tasks": [
-        { "id": "P4-VOICEPRINT", "title": "P4 Voiceprint — on-device personalization (dictionary auto-learn w/ confirm; local LoRA fine-tune on idle/charging w/ kill switch + reset; acoustic biasing for proper nouns; exportable/deletable; carries via Relay)", "status": "pending", "dependsOn": ["P3-P2-11"], "pr": null, "notes": "PRD P4-1..P4-5 (to be authored in P0-T1). CRITICAL PATH — local training + model registry." },
-        { "id": "P4-RELAY", "title": "P4 Relay — cross-device continuity (mDNS discovery + pairing code; E2E-encrypted LAN; CRDT sync of dictionary/profiles/Voiceprint/analytics; optional self-hostable rendezvous relay off-network)", "status": "pending", "dependsOn": ["P4-VOICEPRINT", "P0-T7"], "pr": null, "notes": "PRD P4-6/P4-7 (to be authored). CRITICAL PATH — new network surface + crypto. ADR-0009 review + operator go HALT before build." },
-        { "id": "P4-CONDUCTOR", "title": "P4 Conductor — voice control plane (built-in MCP server; agent targets Claude Code/Cursor/terminals/custom; per-agent profiles + command grammars; spoken command palette; fleet mode via Relay; absolute confirm-gate on destructive actions)", "status": "pending", "dependsOn": ["P4-RELAY"], "pr": null, "notes": "PRD P4-8/P4-9 (to be authored). CRITICAL PATH — new surfaces + safety invariant." }
-      ]
+     "id": "P0-G5",
+     "title": "cargo tauri dev opens a window on macOS + Windows + Linux",
+     "command": "cargo tauri dev",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/2026-07-09-windows-tauri-dev-window.png (Windows leg; macOS observed on host 2026-07-08, Linux observed on the Debian VM 2026-07-08)",
+     "lastRun": "2026-07-09",
+     "notes": "WINDOWS LEG CLOSED 2026-07-09 (operator-observed on the Fable box): `tauri dev` compiled the Rust app, launched target/debug/kaydence.exe, and rendered the Dictation-cockpit window (title 'Kaydence', PID confirmed via MainWindowTitle). Evidence: ops/mission/evidence/2026-07-09-windows-tauri-dev-window.png. (Ran via a prebuilt `@tauri-apps/cli` used only to drive the check, then reverted so it doesn't touch the injection PR; `cargo-tauri` is also now installed globally on this box for future runs.) BLOCKER FIXED 2026-07-08: beforeDevCommand ran `pnpm dev` at the workspace root (no `dev` script) — the real reason dev never opened. Fixed to `pnpm --filter kaydence-desktop dev`; verified on the Debian VM (vite ready on :1420). macOS leg observed on host. Linux leg operator-observed on the Debian VM. All three legs now confirmed."
+    },
+    {
+     "id": "P0-G6",
+     "title": "3-OS CI matrix green (macOS + Windows + Linux) on the current HEAD",
+     "command": "gh run list --branch main --limit 1",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/2026-07-09-permission-proof-boundaries.txt",
+     "lastRun": "2026-07-09T16:09:29Z",
+     "notes": "PASS historically/current baseline - 3-OS Actions run 29031546518 GREEN on macOS, Ubuntu, and Windows at ca60244, completed 2026-07-09T16:09:29Z. Latest run 29033270673 at f61ab49 failed before checkout on all three jobs because GitHub reported failed account payments or a spending-limit increase requirement; rerun CI after billing is fixed."
+    },
+    {
+     "id": "P0-G7",
+     "title": "ADRs accepted (0001-0008, 0010-0012); 0009 Proposed by design",
+     "command": "bash scripts/check-adr-status.sh",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/P0-G7-adr-status-2026-07-08.txt",
+     "lastRun": "2026-07-08T01:30:00Z",
+     "notes": "check-adr-status.sh returns 0: 11 of 12 ADRs Accepted incl. ADR-0012 (visual identity, operator-selected 2026-07-08); ADR-0009 (Relay crypto) is again the single declared by-design exception (operator crypto review gates P4-1)."
     }
-  ],
-  "metrics": [
-    { "label": "Product code (Rust+TS lines)", "baseline": "0", "current": "~500 (scaffold compiles)", "target": "buildable app", "direction": "up" },
-    { "label": "Idle footprint (RAM, ASR resident)", "baseline": "~800 MB (Wispr Electron)", "current": "n/a", "target": "<=250 MB", "direction": "down" },
-    { "label": "Release -> injected, local (Raw)", "baseline": "2-5 s (Handy)", "current": "partial Raw-path gate: CPU 10-11ms synthetic; real ASR/GPU pending", "target": "<=700ms GPU / <=1200ms CPU", "direction": "down" },
-    { "label": "Zero-edit rate at Light cleanup", "baseline": "raw output", "current": "n/a", "target": ">=95% golden corpus", "direction": "up" },
-    { "label": "Prediction: pause -> guess", "baseline": "Mac-only (Cotypist MLX)", "current": "n/a", "target": "<=400ms, 3-OS (llama.cpp)", "direction": "down" },
-    { "label": "Cross-device continuity (Relay)", "baseline": "cloud-only or none", "current": "n/a", "target": "<=500ms added on LAN, E2E, zero cloud", "direction": "down" },
-    { "label": "Agent-command safety (Conductor)", "baseline": "no comparable product", "current": "n/a", "target": "confirm-gate 100%; 0 auto-exec destructive", "direction": "up" },
-    { "label": "Platform parity (CI legs green)", "baseline": "0 / 3 (Mac-first field; Linux unserved)", "current": "3 / 3 baseline green (run 29031546518 at ca60244); current f61ab49 runner attempts blocked before checkout by billing/spending limit", "target": "3 / 3 incl. Wayland", "direction": "up" },
-    { "label": "ADRs accepted (0009 Proposed by design)", "baseline": "8", "current": "12 of 13", "target": "13 (0009 after crypto review)", "direction": "up" },
-    { "label": "P0 tasks done (of 7)", "baseline": "0", "current": "7", "target": "7", "direction": "up" },
-    { "label": "Standing-gate scripts present", "baseline": "1 (bench-prediction)", "current": "4 (+bench enforced, audit-network, privacy posture, check-adr)", "target": "5 (+release)", "direction": "up" },
-    { "label": "Visual system (logos + screen families)", "baseline": "none", "current": "identity locked; 4 P1 family views now navigable; full board fidelity open", "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS", "direction": "up" }
-  ],
-  "risks": [
-    { "title": "GitHub Actions billing/spending-limit block", "severity": "high", "note": "Remote origin=IslandDevCrew/kaydence is private and accessible, active gh auth is IslandDevCrew, and local main matches origin/main at f61ab49. Latest verified green baseline is Actions run 29031546518 at ca60244. Latest checked run 29033270673 at f61ab49 failed before checkout on macOS, Windows, and Ubuntu because GitHub reports failed account payments or a spending-limit increase requirement. Fix billing/spending limit and rerun before claiming remote parity for f61ab49 or any local follow-up commit." },
-    { "title": "v2 -> v3 documentation drift", "severity": "low", "note": "Initial v2 -> v3 drift was resolved in P0: AGENTS/PRD/ROADMAP/ADRs were reconciled and P0-G7 passes. Keep this as a watch item only: future public docs and generated SOTU copy must continue to track the accepted v3 plan and ADRs." },
-    { "title": "Gemma 3 1B license (Gemma Terms, not Apache)", "severity": "medium", "note": "models/registry.json flags license_review_required. Legal review before any paid build bundles it (ADR-0007/0010). Download-on-demand only; never bundle unreviewed." },
-    { "title": "Relay pairing/crypto design", "severity": "medium", "note": "ADR-0009 keys/rotation/device-revocation design must pass operator review before the P4-1 build starts. Far off, but the gate is load-bearing for the flagship separation." },
-    { "title": "Windows native injection (UIA per-app quirks) + Wayland injection", "severity": "medium", "note": "PRD risk + Pitfall P8. Windows UIA+SendInput is now built, live-validated on the Fable box, and merged in PR #2. Wayland SPIKED 2026-07-08 (docs/spikes/P1-P0-3-wayland-injection.md): strategy fixed + core tested; residual risk is the Linux human-focus AT-SPI/uinput check, unicode-beyond-ASCII keymap work, optional portal/libei plumbing, and the opaque-client secure-field gap (disclosed, not hidden)." },
-    { "title": "Wayland secure-field detection gap on opaque clients", "severity": "medium", "note": "Non-AT-SPI Wayland apps expose no password-field signal — Kaydence cannot always confirm a field is non-secure (ADR-0013 §secure-field). Mitigated: default Lenient flags the result unverified (UI warns per app, board 07); opt-in Strict refuses opaque focus. A real platform limitation, surfaced to the user rather than papered over." }
-  ],
-  "prLog": [
-    { "number": null, "title": "P1 macOS run harness - signed self-contained Kaydence.app, exact launch verification, custom-protocol build, and macOS CI regression", "url": "local:p1-macos-run-harness", "phase": "P1", "mergedAt": "2026-07-10" },
-    { "number": null, "title": "P1 screen-family navigation - distinct Dictate/Cleanup/Privacy/Setup views with persistent 900px left rail and browser/native proof", "url": "local:p1-screen-family-navigation", "phase": "P1", "mergedAt": "2026-07-10" },
-    { "number": null, "title": "P1-P0-8 first-run proof export — Rust-owned proof plan JSON under app-data exports and Screen Family 10 Export Proof action", "url": "local:p1-p0-8-first-run-proof-export", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 first-run next-step orchestration — backend-owned setup sequence and Screen Family 10 guidance", "url": "local:p1-p0-8-first-run-next-step", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "Bootstrap mission-control state (v3)", "url": "local:80a8028", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "v3 ADRs 0009 (Relay, Proposed) / 0010 (pricing) / 0011 (Linux 3-OS)", "url": "local:4848306", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "v2->v3 doc reconciliation (3-OS constitution/PRD/ROADMAP/architecture/CI)", "url": "local:3a0572e", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "P0-T6 standing-gate scripts (audit-network working, bench, check-adr-status)", "url": "local:0258de3", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "P0-T4 Handy study -> ADR-0004 adopt/redesign notes", "url": "local:p0-t4", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "P0-T2/T3 Tauri scaffold + SessionEvent contract (macOS gates green)", "url": "local:efdf6f7", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "P0-T5 Linux CI system deps (3-OS matrix wired)", "url": "local:p0-t5", "phase": "P0", "mergedAt": "2026-07-07" },
-    { "number": null, "title": "Visual System v1 locked — 5 logo directions + 10 screen-family boards (30 OS views) generated (Codex) and adopted as the build reference set; screen-fidelity gates wired into P1–P4", "url": "local:design-direction-lock", "phase": "design", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-D1 Visual pack vendored in-repo (assets/brand/, 15 PNGs shasum-verified) + design-reference index (docs/design/README.md); fidelity-gate paths repointed", "url": "local:p1-d1", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-D2 prep — ADR-0012 (visual identity) drafted Proposed with full 5-logo review; recommendation Option 1 K Waveform, runner-up Option 4; check-adr-status gate carries 0012 exception (P0-G7 re-run PASS)", "url": "local:p1-d2-prep", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-D2 DONE — operator locked the dual-asset identity (Option 1 mark + Option 4 wordmark, three unification rules); ADR-0012 Accepted; gate exception removed (P0-G7 PASS, 11/12)", "url": "local:p1-d2", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": 1, "title": "P1-P0-4 WAL + crash recovery (WAL session, PR #1) — landed on main via the design-branch merge train", "url": "https://github.com/IslandDevCrew/kaydence/pull/1", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "Merge train to main (operator go): design-direction-lock, p1-d1-vendor, p1-d2-adr0012, ci-green-pnpm-icon — four --no-ff merges; identity + boards + CI fixes all on main", "url": "local:merge-train-2026-07-08", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-3 Wayland injection SPIKE — compositor matrix + capability-ladder strategy (docs/spikes), tested injection core (inject/mod.rs, 13 tests), ADR-0013 dependency gate later Accepted", "url": "local:p1-p0-3-spike", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-1 hotkey capture CORE — CaptureCoordinator state machine (debounce/min-capture/tail, Pitfall P1), 6 tests; merged to main, 3-OS CI", "url": "local:p1-p0-1-core", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-1 hotkey runtime readiness — AppSnapshot reflects global-shortcut registration success/failure; registration failure degrades to first-run UI instead of crashing", "url": "local:p1-p0-1-runtime-readiness", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-1 hotkey mode toggle — set_hotkey_mode persists push-to-talk/toggle and switches active coordinator when idle", "url": "local:p1-p0-1-hotkey-mode-toggle", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-1 hotkey rebind — set_hotkey_binding persists allowlisted primary binding and re-registers the active global shortcut", "url": "local:p1-p0-1-hotkey-rebind", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-1 short_utterance gate hardening — named capture/WAL suite for 0.3s/1.5s utterances, sub-250ms discard, and short WAL recovery", "url": "local:p1-short-utterance-gates", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-4 crash_recovery gate hardening — renamed integration tests so the documented crash_recovery filter executes the 2-test kill/recover suite", "url": "local:p1-crash-recovery-filter", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-2 model readiness — AppSnapshot verifies required ASR/VAD artifacts from registry and renders ready/missing/blocked first-run states", "url": "local:p1-p0-2-model-readiness", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 model picker recommendation — backend-owned ASR candidates + selected/recommended model in AppSnapshot; first-run UI renders local ASR choices", "url": "local:p1-p0-2-model-picker", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 ASR selection persistence — select_asr_model validates registry candidates and persists selected ASR in app-data settings.json", "url": "local:p1-p0-2-asr-selection-persistence", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 model quarantine — checksum mismatches move suspect artifacts to models/quarantine before first-run readiness blocks load", "url": "local:p1-p0-2-model-quarantine", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 model download planning — missing models require a safe destination, expected sha256, and normalized HTTPS sources before first-run shows Download required", "url": "local:p1-p0-2-model-download-plan", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 model download metadata UI — AppSnapshot and first-run UI render validated download size/source metadata without adding network calls", "url": "local:p1-p0-2-model-download-metadata-ui", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 model readiness recheck — refresh_model_readiness rescans app-data models and the first-run UI can recheck without restart", "url": "local:p1-p0-2-model-readiness-recheck", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 local model artifact install — install_model_artifact copies selected reviewed files into app-data models after sha256 verification; first-run uses native file picker", "url": "local:p1-p0-2-model-artifact-install", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 ASR pending runtime adapter — default hotkey runtime records selected-model-specific Recognize failure instead of generic empty ASR stack", "url": "local:p1-p0-2-asr-pending-runtime-adapter", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-2 model download preflight — Rust-owned read-only preflight contract and Screen Family 10 Review surface", "url": "local:p1-p0-2-model-download-preflight", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-4 recent history surface — recent_history exposes app-data SQLite sessions and cockpit renders persisted sessions/failures read-only", "url": "local:p1-p0-4-recent-history-surface", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-4 local history delete — delete_history_session removes a session row plus safe app-data audio and refuses external paths", "url": "local:p1-p0-4-history-session-delete", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-4 orphan WAL recovery surface — recent_history recovers untracked app-data WAVs and shows preserved audio as Capture failures", "url": "local:p1-p0-4-history-orphan-recovery-surface", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-4 local history export — export_history_session writes JSON/text files under app-data exports and cockpit exposes per-row Export", "url": "local:p1-p0-4-history-export-session", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-4 local history purge/retention — purge_history clears rows/audio/exports and recent_history applies retention before listing", "url": "local:p1-p0-4-history-purge-retention", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-4 local history audio playback — play_history_audio validates app-data WAVs and cockpit uses Tauri scoped asset media", "url": "local:p1-p0-4-history-audio-playback", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "Linux reference VM online (Debian 12 GNOME/Wayland ARM64) — 26 tests pass on ARM64; ADR-0013 Accepted; dev-command bug fixed (P0-G5 unblocked); Kaydence window runs on the VM", "url": "local:linux-vm-online", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "P1-P0-3 Linux AT-SPI backend foundation — atspi 0.30 validated live on the GNOME VM (connect+proxy+call PASS); role->FieldKind secure mapping tested; selftest harness", "url": "local:p1-p0-3-atspi", "phase": "P1", "mergedAt": "2026-07-08" },
-    { "number": null, "title": "GitHub remote access restored — gh active account switched to IslandDevCrew; private repo resolves with ADMIN permission; git fetch PASS", "url": "local:remote-restored-2026-07-09", "phase": "infra", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-7 privacy posture — README privacy page, CI privacy gate, and Screen Family 07 cockpit panel", "url": "local:p1-p0-7-privacy-posture", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1 event_sequences gate — cross-module order for happy path, focus-change hold, secure-field hold, engine fallback, and cleanup fallback", "url": "local:p1-event-sequences-gate", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-6 latency bench gate — kaydence --bench JSON + scripts/bench.sh enforced measured Raw-path budgets in CI", "url": "local:p1-p0-6-latency-bench-gate", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 first-dictation completion truth — durable settings flag set only by real Injected outcome", "url": "local:p1-p0-8-first-dictation-completion", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 first-run permission readiness - backend-owned macOS/Windows/Linux permission requirements rendered in setup UI", "url": "local:p1-p0-8-first-run-permission-readiness", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 first-run permission actions - Rust command returns manual step plus proof boundary for setup UI", "url": "local:p1-p0-8-first-run-permission-actions", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 permission proof boundaries - proof command/evidence/ready boundary rendered in Screen Family 10", "url": "local:p1-p0-8-permission-proof-boundaries", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-2 artifact-aware ASR runtime adapter lifecycle — selected model resolves to Pending/Blocked/VerifiedArtifact and hot-swaps while idle", "url": "local:p1-p0-2-asr-runtime-adapter-lifecycle", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-2 ASR runtime status snapshot — FirstRunStatus/proof JSON/UI expose Pending/Blocked/VerifiedArtifact boundary", "url": "local:p1-p0-2-asr-runtime-status-snapshot", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 runtime permission proof refresh - actual hotkey/audio proof syncs first-run readiness and Screen Family 10 Refresh drains pending proof", "url": "local:p1-p0-8-runtime-permission-proof-refresh", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 first-run ready permission contract - ready_to_dictate requires every visible permission row to be Ready", "url": "local:p1-p0-8-ready-permission-contract", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 first-run UI permission contract - checklist/action readiness require every visible permission row to be Ready", "url": "local:p1-p0-8-ui-permission-contract", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 first-run action label - primary setup action renders backend-selected next-step label", "url": "local:p1-p0-8-first-run-action-label", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 permission settings opener - backend-owned OS settings targets and explicit manual-only boundary", "url": "local:p1-p0-8-permission-settings-opener", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "Continuation handoff refresh - current Codex super-goal prompt plus Windows Codex handoff", "url": "local:continuation-handoff-refresh-2026-07-09", "phase": "ops", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-1 secondary cleanup override hotkey - Shift+RightAlt/Option registers optional Raw per-invocation capture path", "url": "local:p1-p0-1-secondary-cleanup-override", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-1 cleanup default dial persistence - visible Raw/Light/Full control saves app default and updates idle runtime", "url": "local:p1-p0-1-cleanup-default-dial", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 macOS Accessibility proof refresh - AXIsProcessTrusted updates the first-run Accessibility row", "url": "local:p1-p0-8-macos-accessibility-proof-refresh", "phase": "P1", "mergedAt": "2026-07-09" },
-    { "number": null, "title": "P1-P0-8 macOS Input Monitoring proof refresh - IOHIDCheckAccess updates the first-run Input Monitoring row", "url": "local:p1-p0-8-macos-input-monitoring-proof-refresh", "phase": "P1", "mergedAt": "2026-07-09" }
-  ],
-  "resume": {
-    "activePhase": "P1",
-    "nextActions": [
-      "LOCAL MACOS RUN + P1 FIDELITY CHECKPOINT (2026-07-10): script/build_and_run.sh now builds Tauri with custom-protocol, stages and ad-hoc signs target/release/Kaydence.app, launches through LaunchServices, and verifies the exact process; tests/build_and_run.sh is wired into the macOS CI leg. The native release app rendered backend truth, recovered the unsupported RightAlt binding by persisting F13, and stayed below the 250 MB P1 gate ceiling in the observed no-model run (85,376 KB RSS after 2m13s; the stricter <80 MB no-model product target still needs dedicated measurement/optimization). Dictate/Cleanup/Privacy/Setup now route to distinct P1 family views; the 900x600 browser check kept a 256px rail with no overflow/clipped text/errors, and native Dictate -> Privacy navigation passed. Evidence: ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt. P1-G4 remains pending for full board-level fidelity; P1-G2 remains pending for real-adapter golden ASR finals.",
-      "REMOTE/CI: active gh auth is IslandDevCrew, IslandDevCrew/kaydence resolves as PRIVATE, and origin is https://github.com/IslandDevCrew/kaydence.git. origin/main remains f61ab49; local main has unpublished P1 follow-up commits for permission-proof boundaries, ASR runtime adapter lifecycle, ASR runtime status snapshot/UI, runtime permission proof refresh, first-run ready permission contract tightening, first-run UI permission contract alignment, first-run action label alignment, permission settings opener, current continuation handoff docs, the secondary cleanup override hotkey, cleanup default dial persistence, macOS Accessibility proof refresh, and macOS Input Monitoring proof refresh. Latest verified green main baseline: Actions run 29031546518 on macOS/Ubuntu/Windows at ca60244, completed 2026-07-09T16:09:29Z. Latest checked run 29033270673 at f61ab49 failed before checkout on all three jobs because GitHub reported failed account payments or a spending-limit increase requirement. After billing is fixed, push/rerun CI before claiming remote parity for these local follow-up commits.",
-      "P1-P0-8 first run: first-dictation completion is Rust-owned and persisted after a real Injected event; FirstRunStatus carries backend-owned permission_requirements rendered in Screen Family 10; permission rows can ask Rust for manual_step/proof_requirement/proof_command/expected_evidence/ready_boundary guidance plus stable OS settings targets where available; FirstRunSetupTiming records start/completion timestamps, elapsed_ms, target_ms=60000, and within_target; and FirstRunStatus.next_step now sequences setup as model metadata review -> reviewed model install -> OS permission proof -> hotkey recovery -> real first dictation -> complete. The setup card renders backend-owned next-step title/detail/action/proof, both action surfaces now render backend next_step.action_label so model metadata state shows Review models rather than generic Resolve Setup, Screen Family 10 has Export Proof wired to Rust's export_first_run_proof_plan command, required-model rows expose the read-only model-download preflight, permission rows show proof commands/evidence/do-not-mark-ready boundaries, permission proof cards can open backend-owned OS settings targets without marking readiness, and selected_asr_runtime displays Pending/Blocked/VerifiedArtifact with artifact/proof detail. Runtime proof refresh is now wired: actual hotkey events mark input proof, non-empty finalized WAL audio marks microphone proof, first-dictation completion syncs both runtime-proven rows, and the setup Refresh action drains pending proof through refresh_first_run_runtime_proofs; zero-sample WAL-only captures do not mark microphone ready; ready_to_dictate and React's visible Grant OS permissions checklist/action readiness now require every visible permission row to be Ready, preventing coarse flags from bypassing UIA/SendInput/AT-SPI/uinput/native secure-field proof rows. In-app Browser smoke passes for the UI permission/action label/settings-opener contracts with zero console errors, and prior desktop/narrow smoke passed for the setup/proof panel. macOS Accessibility and Input Monitoring preflights now run during refresh_first_run_runtime_proofs: AXIsProcessTrusted can mark the Accessibility row Ready, and IOHIDCheckAccess listen-event access can mark the Input Monitoring row Ready plus input_permission_ready. Microphone still requires non-empty persisted capture audio. Next work is remaining live OS permission proof, approved network download/progress UI, the live first-dictation journey, and reference-machine <=60s timing proof.",
-      "P1-P0-1 hotkey: CORE + RUNTIME WIRING + MODE TOGGLE + REBIND UI/REGISTRATION + SECONDARY RAW OVERRIDE DONE locally — CaptureCoordinator is tested, the Tauri global-shortcut plugin registers the selected binding into the WAL -> pipeline -> injection runtime, AppSnapshot exposes hotkey_registered or hotkey_registration_error for first-run UI, set_hotkey_mode persists push-to-talk/toggle while switching the active coordinator only when idle, and set_hotkey_binding persists/re-registers an allowlisted primary binding with one-tap first-run recovery choices. The short_utterance capture/WAL suite now runs under the documented filter. Runtime permission proof refresh now records real active global-shortcut events as input proof and non-empty finalized capture audio as microphone proof for first-run readiness. Shift+RightAlt/Option can now register as an optional per-invocation Raw cleanup override; role tracking keeps an override capture isolated and the next primary capture returns to the profile cleanup dial. Cleanup default dial persistence is wired too: the visible Raw/Light/Full control calls Rust, saves cleanup_default_dial, hydrates AppSnapshot on startup, applies the selected default to non-user-edited profile targets, and preserves user-edited per-app profile overrides. LIVE MACOS REBIND PROOF 2026-07-10: the signed release app surfaced RightAlt as an unsupported scancode, the native F13 fallback registered successfully, first-run changed Set global hotkey from Issue to Ready, and app-data persisted hotkey_primary_binding=F13. Remaining is live OS permission/conflict proof on Windows/Linux, broader macOS conflict coverage, and ASR golden-clip proof after real adapters land.",
-      "P1-P0-2 model readiness/picker: STARTED — AppSnapshot now loads the registry, exposes required ASR/VAD model states, ASR candidates, selected/recommended model ids, and validated download metadata (available/size/source count), and the first-run UI renders the local ASR picker + required-model list from that backend truth. select_asr_model validates candidates, persists selected_asr_model_id in app-data/settings.json, and reapplies it on startup. refresh_model_readiness rescans app-data models and reapplies persisted ASR selection so first-run can recheck newly installed artifacts without restart. install_model_artifact now lets first-run open a native file picker and asks Rust to copy a selected local artifact into app-data models/ only after it matches the registry sha256; bad existing artifacts quarantine before replacement. Current registry TODO checksums correctly block readiness; missing models only show Download required when ModelDownloadPlan has a safe destination, expected sha256, and HTTPS sources; checksum mismatches quarantine the suspect artifact before blocking load. first_run_model_download_preflight now exposes the same reviewed metadata as a read-only build-agent/user handoff: current model state/detail, destination path, expected sha256, size, sources, license, blocked reason, operator action, and proof requirement, with no fetch and no file creation. The default hotkey runtime now resolves selected ASR into Pending/Blocked/VerifiedArtifact state from registry + app-data artifacts: missing/invalid artifacts record explicit Recognize failure reasons, while verified artifacts report path/size/runtime and still state that real inference is not implemented. ASR selection, readiness refresh, and artifact install all require an idle runtime before hot-swapping the selected ASR adapter state into the active processor. AppSnapshot, FirstRunProofPlan, the cockpit meta strip, and Screen Family 10 now all expose that same ASR runtime boundary so users/build agents can see selected model, lane, runtime, artifact path/size, adapter readiness, detail, and proof requirement. Next real work is replacing TODO hashes/sources with reviewed artifacts, implementing approved network fetch/progress UI, building Parakeet/Whisper engine adapters, and adding WER/latency evidence.",
-      "P1-P0-4 history/recovery: DONE core and P1-G1 locally passed with a repaired real crash_recovery filter. WAL + SQLite are real; recent_history exposes app-data SQLite sessions/failures, applies retention, and surfaces recoverable orphan WAVs; delete/export/purge/playback are backend-owned and safe-path checked. The event_sequences gate proves Started -> AudioPersisted -> ASR -> cleanup -> one delivery outcome for happy path, focus-change hold, secure-field hold, engine fallback, and cleanup fallback, and it is green through 3-OS CI run 29022084029 at 699ff3b. Remaining polish is recovered-audio re-transcription after real ASR adapters and fresh 3-OS CI after each new push.",
-      "P1-P0-6 latency: PARTIAL WORKING GATE - kaydence --bench emits machine-readable Raw-path budget JSON and scripts/bench.sh --check enforces measured metrics in CI instead of skipping. It is green locally and in 3-OS CI run 29022084029; local follow-up PASS: hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, light_cleanup_added=1ms. P1-G3 remains pending for real ASR/GPU/idle-footprint/reference-machine evidence.",
-      "P1-P0-7 privacy posture: DONE 2026-07-09 — README privacy page now states no telemetry/accounts/cloud screen capture/default egress, local-only history, and memory-only context; scripts/check-privacy-posture.sh runs audit-network, asserts README promises, and blocks banned screen-capture primitives; CI runs it after audit-network; the cockpit has a Screen Family 07 Privacy & Context panel with browser-smoke screenshots. Future BYOK/model-download/Harbor network surfaces still require ADR + toggle + allowlist review.",
-      "P1-P0-3 injection: platform spine is moving — strategy fixed in ADR-0013, Linux AT-SPI/uinput has local/live evidence, macOS AX/CGEvent/NSPasteboard paths have local evidence, and Windows UIA+SendInput is merged with live Fable-box proof. Validate the Linux human-focus path on the Debian-12 GNOME VM and keep secure-field/focus-binding evidence explicit.",
-      "CONTINUATION/HANDOFF: docs/CODEX_SUPER_GOAL_PROMPT.md is current as of 2026-07-09T17:42Z and should be used for new goal-mode Codex sessions. docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md supersedes the July 8 handoff and reflects that Windows injection is already merged/proven; the Windows session should focus on rerunning proof after local follow-up commits, Windows first-run permission proof, Screen Family 10, hotkey/first-dictation proof, and reference-machine timing. The July 8 markdown SOTU is historical only; use ops/mission/state.json and ops/mission/state-of-the-union.html for current truth.",
-      "CI: DONE historically on the last verified green baseline - 3-OS run 29031546518 GREEN 2026-07-09 at ca60244; P0-G6 + P0-G3 remain closed with evidence. Current GitHub-hosted runner attempts at f61ab49 fail before checkout because of billing/spending-limit state, so fix billing and rerun before using CI as the Win/Linux trust anchor for newer commits.",
-      "DESIGN LOCKED (2026-07-08): Visual System v1 is the build reference — 5 logo directions + 10 screen-family boards × 3 OS = 30 views (see designDirection in state.json and the report at /Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html). P1-D1 + P1-D2 DONE 2026-07-08: pack vendored to assets/brand/ with index at docs/design/README.md, and the identity is LOCKED (ADR-0012 Accepted) — Option 1 K Waveform is the sole product mark, Option 4 the wordmark/site header, three binding unification rules. Build each screen to its family board with the Option 1 mark in the reserved slot; OS accent stays the only free-tier variation. Every phase has a screen-family fidelity gate (P1-G4, P2-G3, P3-G4, P4-G-SCREENS). Multi-resolution icon production (icns/ico/hicolor + tray template from the Option 1 mark) lands with P3 installer work.",
-      "P0 is DONE: Tauri scaffold, ADR/doc reconciliation, standing gates, Linux CI deps, 3-OS CI, and windowed `cargo tauri dev` on macOS/Linux/Windows are all closed with evidence.",
-      "When adding real ASR/audio deps in P1 (cpal, ort, whisper.cpp, vad-rs), each is a critical-path dependency add -> audit-network allowlist + ADR per the ADR-0004 study."
-    ],
-    "blockers": [
-      "GitHub Actions hosted runners are currently blocked by repository/account billing or spending-limit state: run 29033270673 for f61ab49 failed before checkout on macOS, Windows, and Ubuntu with no steps/logs. Fix billing/spending limit and rerun before claiming remote parity for f61ab49 or the local permission-boundary follow-up.",
-      "Linux human-focus injection proof still needs operator-in-the-loop validation on the Debian GNOME/Wayland VM: focus a normal field -> uinput types, focus a password field -> AT-SPI/UI gate refuses. Headless CI cannot move focus on Wayland.",
-      "P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.",
-      "Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).",
-      "ADR-0009 (Relay crypto) remains the one by-design Proposed ADR; operator review is required before P4 Relay crypto work."
-    ],
-    "conventions": [
-      "One work unit = one branch (mission/<phaseId>-<slug>) = one merge; <=400 changed lines.",
-      "Run the internal loop per prompts/BUILD-LOOP.md (ORIENT->PLAN->BUILD->JUDGE->AUDIT->GATE) inside each task; mission-control governs phases/state/reporting above it.",
-      "No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.",
-      "A green Judge with a red Audit does not merge.",
-      "Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.",
-      "Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.",
-      "Visual System v1 (designDirection) is the LOCKED UI/UX source of truth: build each screen to its screen-family board (assets/brand/screens/kaydence-screen-family-NN.png). The only per-OS variation is the free-tier selection accent (macOS aqua / Windows cobalt / Linux emerald). The shared invariants — nav order, 8px card radius, prediction-blue, amber-gold merge pulse, destructive confirm gate, no cloud-sync copy on core screens — never vary; treat a change to them as a critical decision path that HALTS for operator go + ADR.",
-      "Every phase from P1 carries a screen-family fidelity gate: the phase's screens are design-reviewed against their boards (plus the keyboard/a11y checklist) before the phase closes. Identity is LOCKED (ADR-0012 Accepted 2026-07-08): Option 1 mark everywhere the logo stands alone; Option 4 wordmark for site/marketing headers only; the three unification rules are brand invariants checked at the fidelity gates.",
-      "Never weaken a non-negotiable to pass a gate — that is itself a blocking defect."
-    ]
+   ],
+   "tasks": [
+    {
+     "id": "P0-T1",
+     "title": "Reconcile repo docs v2 -> v3 (add Linux as first-class to AGENTS.md non-negotiable #5; add P4 flagship-trio epics P4-1..P4-9 to PRD; update ROADMAP to v3 phase structure)",
+     "status": "done",
+     "dependsOn": [],
+     "pr": {
+      "number": null,
+      "url": "local:ba7550d",
+      "mergedAt": "2026-07-07"
+     },
+     "notes": "DONE (operator-ratified critical path). AGENTS #5 -> 3-OS; PRD platform refs + §6 pricing (ADR-0010) + §12 flagship epics P4-1..P4-9; ROADMAP rewritten to v3; ARCHITECTURE §5 Linux X11/Wayland + §9 trio; ci.yml matrix +ubuntu-latest; 9 secondary docs de-2-OS'd. Merge ba7550d."
+    },
+    {
+     "id": "P0-T2",
+     "title": "Scaffold Tauri 2.x app (React+TS) into apps/desktop, preserving src-tauri/src/<module>/ dirs and every AGENTS.md; wire pnpm-workspace.yaml + Cargo workspace (apps/desktop/src-tauri + crates/*)",
+     "status": "done",
+     "dependsOn": [
+      "P0-T1"
+     ],
+     "pr": {
+      "number": null,
+      "url": "local:efdf6f7",
+      "mergedAt": "2026-07-07"
+     },
+     "notes": "DONE (macOS leg verified). tauri 2.11.5 workspace + React/TS/Vite + pnpm lockfile. cargo check --all-targets PASS (425 pkgs), fmt/clippy/test green, pnpm run check green. Base deps (serde/thiserror/ulid) only so far; heavy ASR/audio deps (cpal/ort/whisper.cpp/vad-rs) land per-target in P1 per the ADR-0004 Cargo matrix. Win/Linux legs waived-pending-infra."
+    },
+    {
+     "id": "P0-T3",
+     "title": "Create mod.rs stubs per backend module exposing the typed SessionEvent contract (docs/ARCHITECTURE.md §4) with todo!() bodies, so the event contract compiles before feature work",
+     "status": "done",
+     "dependsOn": [
+      "P0-T2"
+     ],
+     "pr": {
+      "number": null,
+      "url": "local:efdf6f7",
+      "mergedAt": "2026-07-07"
+     },
+     "notes": "DONE. events.rs = typed SessionEvent (§4 + §6b prediction events) + 4 unit tests (serde round-trip, secure-field hold, dial default, id routing) — verified in isolation AND in-crate. 11 module mod.rs stubs expose the contract with todo!() bodies. Divergence: at_ms:u64 instead of Instant (serializable) — documented."
+    },
+    {
+     "id": "P0-T4",
+     "title": "Handy source study pass — record adopt/redesign notes in ADR-0004 (Tauri config, cpal capture, whisper.cpp+Parakeet ONNX wiring, VAD, tray/hotkey plumbing)",
+     "status": "done",
+     "dependsOn": [],
+     "pr": {
+      "number": null,
+      "url": "local:p0-t4",
+      "mergedAt": "2026-07-07"
+     },
+     "notes": "DONE. Read cjpais/Handy@v0.9.0. ADOPT: TranscriptionCoordinator (single-thread+30ms debounce, answers Pitfall P1), specta/tauri-specta type-gen, per-platform ASR Cargo target matrix, gtk-layer-shell (Linux overlay). REDESIGN: native-first injection (vs enigo/paste, Pitfall P2), cleanup dial, avoid git-fork deps. Captured pyke-ONNX AVX2 pre-Haswell startup-crash lesson for the Win CPU-first Parakeet lane. Handy already ships Linux -> validates ADR-0011."
+    },
+    {
+     "id": "P0-T5",
+     "title": "Extend CI matrix to 3-OS (add ubuntu-latest / Linux leg incl. Wayland+X11 injection test hooks) and wire fmt/clippy/test/npm-check on all three",
+     "status": "done",
+     "dependsOn": [
+      "P0-T2"
+     ],
+     "pr": {
+      "number": null,
+      "url": "local:p0-t5",
+      "mergedAt": "2026-07-07"
+     },
+     "notes": "DONE (unverifiable on macOS host). Matrix = [macos, windows, ubuntu]; pnpm via corepack; ubuntu apt step (webkit2gtk-4.1, gtk-3, appindicator, rsvg2, gtk-layer-shell, patchelf) before the Rust build; all gates wired shell:bash. Injection test hooks come with P1 inject work."
+    },
+    {
+     "id": "P0-T6",
+     "title": "Add scripts/bench.sh, scripts/audit-network.sh, scripts/check-adr-status.sh (standing gates) with --check modes",
+     "status": "done",
+     "dependsOn": [],
+     "pr": {
+      "number": null,
+      "url": "local:0258de3",
+      "mergedAt": "2026-07-07"
+     },
+     "notes": "DONE. audit-network.sh is a WORKING gate (fixed-string scan vs network-allowlist.json; verified FAIL on a planted std::net call, PASS on empty/allowlisted). bench.sh --check skeleton (exit 3 = not-measurable pre-build). check-adr-status.sh (P0-G7, comment-safe). All bash-3.2 portable. CI wires all three (shell: bash). Note: dependsOn P0-T2 was dropped — these are pure scripts, buildable now."
+    },
+    {
+     "id": "P0-T7",
+     "title": "Author ADR-0009 (Kaydence Relay pairing/crypto design), ADR-0010 (pricing: one-time + Harbor), ADR-0011 (Linux/3-OS)",
+     "status": "done",
+     "dependsOn": [],
+     "pr": {
+      "number": null,
+      "url": "local:4848306",
+      "mergedAt": "2026-07-07"
+     },
+     "notes": "DONE. ADR-0010 (pricing) + ADR-0011 (Linux 3-OS) ratified by operator -> Accepted. ADR-0009 (Relay crypto: mDNS+SAS pairing, Noise_XX E2E, blind self-hostable rendezvous, rotation/revocation) authored as PROPOSED — still HALTS for operator design review before the P4-1 build. Merge 4848306."
+    }
+   ]
+  },
+  {
+   "id": "P1",
+   "title": "MVP dictation",
+   "goal": "Hotkey -> capture -> WAL -> VAD -> local ASR (Parakeet CPU + Whisper GPU) -> native injection on Mac/Win/Linux (Wayland spike early — highest platform risk) -> history. Raw mode daily-drivable; crash-recovery and short-utterance suites green.",
+   "status": "in_progress",
+   "sessionsEstimate": "~3 weeks",
+   "gates": [
+    {
+     "id": "P1-G1",
+     "title": "crash_recovery suite green (100% audio recovery on kill -9 mid-dictation)",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/2026-07-09-short-utterance-gates.txt",
+     "lastRun": "2026-07-09T10:56Z",
+     "notes": "PASS locally after repairing the test names so the documented `crash_recovery` filter executes 2 integration tests instead of 0. The gate-hardening commit 55e25b7 is also green on all three OSes in Actions run 29013513964."
+    },
+    {
+     "id": "P1-G2",
+     "title": "short_utterance suite green (0.3-1.5 s clips, 100%)",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml short_utterance",
+     "status": "pending",
+     "evidence": "ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt",
+     "lastRun": "2026-07-10T03:32Z",
+     "notes": "CAPTURE/WAL portion PASS again on 2026-07-10: the documented `short_utterance` filter ran 6 tests (1 WAL unit + 5 integration tests) covering 0.3s PTT, 1.5s toggle, <250ms discard, and 0.3s/1.5s WAL recovery without truncation. Gate remains pending until real Parakeet/Whisper adapters can prove golden ASR clips have zero empty/truncated finals."
+    },
+    {
+     "id": "P1-G3",
+     "title": "Latency + footprint budgets met in Raw mode (release->inject <=700ms GPU / <=1200ms CPU; idle RAM <=250MB)",
+     "command": "bash scripts/bench.sh --check",
+     "status": "pending",
+     "evidence": "ops/mission/evidence/2026-07-09-first-run-setup-timing.txt",
+     "lastRun": "2026-07-09T14:53Z",
+     "notes": "PARTIAL working gate green locally and in 3-OS CI run 29022084029 at 699ff3b: kaydence --bench emits machine-readable JSON for the implemented Raw orchestration path, and scripts/bench.sh --check enforces every measured AGENTS section 5 budget instead of skipping. Local follow-up PASS measured hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, light_cleanup_added=1ms. Gate remains pending until real Parakeet/Whisper ASR, GPU release->inject, idle RAM/CPU, and reference-machine p95 are measured."
+    },
+    {
+     "id": "P1-G4",
+     "title": "Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup & Injection (injection paths + Raw), 07 Privacy & Context (no-transmission / secure-field posture), 10 First Run & License match their boards",
+     "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{01,03,07,10}.png + keyboard/a11y checklist",
+     "status": "pending",
+     "evidence": "ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt",
+     "lastRun": "2026-07-10T03:32Z",
+     "notes": "P1 navigation architecture advanced 2026-07-10: Dictate/Family 01, Cleanup/Family 03, Privacy/Family 07, and Setup/Family 10 are distinct views behind the locked left-nav order; future-phase items fail honestly as disabled. The default 900x600 window keeps a 256px rail, browser smoke found no horizontal/text overflow or console errors, and the signed native macOS bundle proved Dictate -> Privacy navigation. OS accent lanes, 8px cards, backend-owned state, and identity invariants remain intact. The full human board-level fidelity match for families 01/03/07/10 remains open, so this gate stays pending."
+    },
+    {
+     "id": "P1-G5",
+     "title": "event_sequences suite green (typed order for happy path, focus-change hold, secure-field hold, engine fallback, cleanup fallback)",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml event_sequences",
+     "status": "passed",
+     "evidence": "ops/mission/evidence/2026-07-09-event-sequences-gate.txt",
+     "lastRun": "2026-07-09T12:57:31Z",
+     "notes": "PASS locally and remotely: 5 integration tests prove Started -> AudioPersisted -> ASR -> cleanup -> exactly one delivery outcome for the happy path, FocusChanged hold, SecureField hold, BYOK/GPU/local-CPU fallback, and the current Full cleanup rule-floor fallback. The gate remained green in later 3-OS Actions run 29022084029 at 699ff3b."
+    }
+   ],
+   "tasks": [
+    {
+     "id": "P1-P0-1",
+     "title": "PRD P0-1 Global hotkey (push-to-talk + toggle; min-capture 250ms; tail buffer 300ms)",
+     "status": "in_progress",
+     "dependsOn": [
+      "P0-T3"
+     ],
+     "pr": null,
+     "notes": "CORE + RUNTIME WIRING + MODE TOGGLE + REBIND UI/REGISTRATION DONE 2026-07-09: CaptureCoordinator remains the Pitfall-P1 answer (PTT+Toggle, debounce, 250ms min-capture, 300ms tail, no overlap), and Tauri setup registers the selected global shortcut into the WAL -> pipeline -> injection runtime. AppSnapshot now reflects hotkey_registered or hotkey_registration_error, and registration failure degrades into first-run UI state instead of crashing the app. set_hotkey_mode persists push-to-talk vs toggle in app-data settings.json, updates AppSnapshot, and switches the active runtime coordinator only while idle. set_hotkey_binding persists an allowlisted primary binding (RightAlt, F13, F14, Control+Space, Shift+F13), registers the new shortcut before unregistering the old one, refuses during active capture, and retains the runtime after initial default registration failure so first-run one-tap rebind can recover without restart. SHORT_UTTERANCE CAPTURE/WAL SUITE ADDED 2026-07-09: the documented `short_utterance` filter now runs 6 tests covering 0.3s PTT, 1.5s toggle, <250ms discard, and short WAL recovery without truncation. RUNTIME PERMISSION PROOF REFRESH ADDED 2026-07-09: real active global-shortcut events mark input proof, non-empty finalized capture audio marks microphone proof, and pending tail-tick/first-dictation proof can be drained by the setup Refresh command. SECONDARY CLEANUP OVERRIDE ADDED 2026-07-09: Tauri setup now optionally registers Shift+RightAlt/Option as a Raw-only per-invocation override alongside the selected primary shortcut. Runtime shortcut-role tracking prevents a primary release from ending an override capture, applies CleanupDial::Raw only for that capture, and returns the next primary capture to the detected profile's cleanup dial. Evidence: ops/mission/evidence/2026-07-09-secondary-cleanup-override.txt. CLEANUP DEFAULT DIAL PERSISTENCE ADDED 2026-07-09: the visible Cleanup dial now calls Rust set_cleanup_dial, persists cleanup_default_dial in app-data settings.json, hydrates AppSnapshot on startup, applies the selected default to non-user-edited profile targets, preserves user-edited per-app profile overrides, and refuses runtime changes during active capture. Evidence: ops/mission/evidence/2026-07-09-cleanup-default-dial-persistence.txt. REMAINING: live OS permission/conflict proof on macOS/Windows/Linux, ASR golden final proof after real adapters land, and latency gates."
+    },
+    {
+     "id": "P1-P0-2",
+     "title": "PRD P0-2 Local ASR dual path (Parakeet V3 CPU + Whisper large-v3-turbo GPU; model picker; hw auto-recommend)",
+     "status": "in_progress",
+     "dependsOn": [
+      "P0-T3"
+     ],
+     "pr": null,
+     "notes": "MODEL READINESS + PICKER + SELECTION PERSISTENCE + DOWNLOAD PLANNING/METADATA UI + MISMATCH QUARANTINE + MANUAL RECHECK + LOCAL ARTIFACT INSTALL + PENDING RUNTIME ADAPTER WIRED 2026-07-08: app startup loads the source-tree model registry and verifies required first-run ASR/VAD artifacts in the app-data models directory. AppSnapshot exposes model_ready, model_readiness_error, required_models, ASR candidates, recommended_asr_model_id, selected_asr_model_id, and download_available/download_size_mb/download_source_count for model rows. The first-run UI renders the backend-owned local ASR picker and required-model list with validated download size/source metadata, invokes select_asr_model, exposes Recheck Models, and can open a native file picker for install_model_artifact on required model rows. Rust validates the selected candidate, persists selected_asr_model_id to app-data/settings.json, reapplies it on startup, and returns the updated AppSnapshot. The refresh_model_readiness Tauri command rescans app-data models without restart and reapplies persisted ASR selection. install_model_artifact copies a selected local artifact into app-data models/ only after it matches the registry sha256; bad existing artifacts still quarantine before replacement. Placeholder hashes fail closed, missing valid artifacts render as download-required only when ModelDownloadPlan can prove a safe destination, expected sha256, and normalized HTTPS source list; TODO/invalid sources block readiness as Download unavailable. Checksum mismatches move the suspect artifact into models/quarantine/ before blocking readiness, and the recommendation rule prefers OS-specific registry defaults then CPU-safe Parakeet-style fallback. The default hotkey runtime first gained a PendingLocalAsrEngine, so captures persisted audio and recorded a selected-model-specific Recognize failure instead of a generic empty-stack error until real Parakeet/Whisper adapters load. MODEL DOWNLOAD PREFLIGHT ADDED 2026-07-09: first_run_model_download_preflight returns a Rust-owned read-only preflight with current model state/detail, destination path, expected sha256, size, HTTPS sources, license, blocked reason, operator action, and proof requirement. Screen Family 10 required-model rows expose Review and render the returned preflight card. The command reuses ModelDownloadPlan, does not fetch bytes, does not create model files, and blocks placeholder metadata. ARTIFACT-AWARE ASR RUNTIME STATE ADDED 2026-07-09: HotkeyRuntime startup now resolves the selected ASR model into Pending/Blocked/VerifiedArtifact state from first-run selection, the model registry, and app-data model artifacts. select_asr_model, refresh_model_readiness, and install_model_artifact require the runtime to be idle before hot-swapping that ASR adapter state into the active processor. Missing or invalid artifacts produce selected-model-specific Blocked Recognize failures; verified artifacts report model id, lane, runtime, path, and byte size while honestly stating that the real runtime adapter is not implemented yet. No Parakeet/Whisper inference, download, or network surface is faked. Evidence: ops/mission/evidence/2026-07-09-asr-runtime-adapter-lifecycle.txt. ASR RUNTIME SNAPSHOT/PROOF/UI ADDED 2026-07-09: AppSnapshot now carries FirstRunStatus.asr_runtime; FirstRunProofPlan exports the same boundary; the cockpit meta strip and Screen Family 10 render selected model, lane, runtime, artifact path/size, adapter readiness, detail, and proof requirement. Evidence: ops/mission/evidence/2026-07-09-asr-runtime-status-snapshot.txt. REMAINING: replace TODO registry hashes/sources with real published artifacts, implement the approved network fetch/progress UI after ADR/operator review, Parakeet/Whisper engine adapters, and WER/latency evidence."
+    },
+    {
+     "id": "P1-P0-3",
+     "title": "PRD P0-3 Universal injection Mac+Win+Linux (AX / UIA+SendInput / X11+Wayland; clipboard fallback snapshot-restore <=200ms; secure-field refusal)",
+     "status": "in_progress",
+     "dependsOn": [
+      "P0-T3"
+     ],
+     "pr": {
+      "number": 2,
+      "url": "https://github.com/IslandDevCrew/kaydence/pull/2",
+      "mergedAt": "2026-07-09"
+     },
+     "notes": "WINDOWS BACKEND BUILT + VALIDATED LIVE ON THE FABLE BOX (2026-07-09), branch mission/p1-p0-3-windows-injection: inject/windows.rs (758 lines, <800) fills the shared TextInjector trait, native-primary (the inverse of Linux). UIA `IsPassword` = the secure-field gate (non-negotiable #8; unreadable bit fails CLOSED); UIA `ValuePattern.SetValue` (caret-aware via TextPattern) = PRIMARY native insert; `SendInput` KEYEVENTF_UNICODE = keystroke fallback (full Unicode); clipboard fallback via the shared clipboard_paste() with CF_UNICODETEXT snapshot->set->paste->RESTORE-always. platform_injector() + profiles::WindowsFrontmostAppDetector (GetForegroundWindow + process image) wired. Dep: `windows` 0.61 (cfg windows, minimal features) — already in Cargo.lock via tauri, NOT a network surface (audit-network PASS). 11 new unit tests (UIA-facts->FieldKind mapping) + full suite green (172 lib + 2 crash), clippy -D warnings clean, fmt clean. LIVE (operator-observed, ground-truthed): Notepad native insert = Injected{Native} (clean 95-char); WinForms password field = Held{SecureField}, nothing entered (x2); classic Win32 Edit keystroke = exact incl. repeats+spaces; clipboard rung injected AND restored a pre-seeded user clipboard (Pitfall P2). Documented quirk (not a defect): the new WinUI/RichEdit Notepad coalesces rapid synthetic keys so the keystroke FALLBACK drops repeats there — native handles Notepad anyway; logged in inject/AGENTS.md matrix + ADR-0013 amendment 2026-07-09. Evidence: ops/mission/evidence/2026-07-09-windows-injection.txt (+3 screenshots). MERGED to main 2026-07-09 (operator go; PR #2 squash bdbe8d6; 3-OS CI green twice: runs 29007885003 + 29007908105). REMAINING on P0-3 after Windows: macOS AX is done; Linux uinput/AT-SPI done; residual = the operator-in-the-loop Linux human-focus check + unicode-beyond-ASCII on Linux uinput + optional portal/libei. --- LINUX uinput KEYSTROKE BACKEND BUILT + VALIDATED (2026-07-08): inject/uinput.rs — pure US-QWERTY keymap (5 tests, CI) + UinputKeyboard (evdev 0.13) creating a /dev/uinput virtual keyboard. Live PASS on the VM: device at /dev/input/event5, emitted 19+26-char strings. atspi-selftest focus-track = the REAL integrated path (AT-SPI secure-field GATE + uinput TYPING). Operator demo: scripts/linux-inject-demo.sh. REMAINING for the Linux leg: the human-focus end-to-end check (focus a field -> types; focus a password -> refuses) is operator-in-the-loop (Wayland won't let a script move keyboard focus). THEN: unicode-beyond-ASCII typing (compose/keymap-swap, follow-up), the portal+libei alternative to uinput (no device perm), macOS AX, Windows UIA, hotkey OS registration. Earlier context below. LINUX INJECTION — LIVE FINDINGS ON THE GNOME VM (2026-07-08) reshaped the strategy: (1) AT-SPI connect/traverse/READ + role/state detection WORK on GNOME (validated: found gnome-text-editor role=Text editable field). (2) AT-SPI EditableText.InsertText is UNRELIABLE on modern GNOME — returns true but no-ops on gnome-text-editor (GTK4) AND gedit 44. So AT-SPI = the DETECTION / secure-field signal (non-negotiable #8, the part that works), NOT the primary insertion path. (3) uinput keystroke synth (ydotool, daemonless on /dev/uinput) is the working inject path. REVISED LADDER (docs/spikes §7b + ADR-0013 amendment): detect via AT-SPI, INSERT via keystroke (uinput or portal+libei). NEXT: implement the uinput/portal keystroke backend behind KeystrokeChannel::LinuxUinput/WaylandPortalRemoteDesktop, wire AT-SPI secure-field detection as the gate; the end-to-end 'types into focused app' check is operator-in-the-loop (Wayland won't let a script move keyboard focus). Then macOS AX + Windows UIA. Evidence: P1-P0-3-atspi-live-findings-2026-07-08.txt. Earlier context below. LINUX AT-SPI FOUNDATION VALIDATED ON THE VM (2026-07-08): ADR-0013 Accepted; atspi 0.30 + zbus 5 added (cfg linux, pure D-Bus, audit-network PASS); inject/linux.rs role->FieldKind mapping (PasswordText=>Secure, tested); bin/atspi-selftest connects to real GNOME and round-trips a call (desktop root role=DesktopFrame, PASS — evidence P1-P0-3-atspi-validated-2026-07-08.txt). NEXT ITERATION: focus tracking (object:state-changed:focused) -> read focused role/state for secure detection -> EditableText.insert_text native insert, then operator-observed live validation (type into GNOME Text Editor; refuse a password entry). Then macOS AX + Windows UIA backends. Earlier context below. SPIKE DONE (Wayland-first, 2026-07-08): docs/spikes/P1-P0-3-wayland-injection.md maps the compositor matrix + strategy (capability ladder: AT-SPI native -> portal/libei on GNOME/KDE, virtual-keyboard on wlroots, uinput opt-in, clipboard-restore). Platform-agnostic CORE implemented + unit-tested on host (inject/mod.rs: decide_secure, select_plan, clipboard_paste, outcome_event, TextInjector trait — 13 tests, all 3 CI legs green). Honest finding: Wayland has no global secure-field signal for opaque (non-AT-SPI) clients — policy makes it explicit (Lenient flags unverified / Strict refuses). ADR-0013 PROPOSED — HALTS for operator go on the dependency set (atspi/ashpd+libei/wayland-client/x11rb) before platform syscalls are written + validated on the Debian-12 GNOME VM. Non-negotiable #8 secure-field refusal is the load-bearing tested gate."
+    },
+    {
+     "id": "P1-P0-4",
+     "title": "PRD P0-4 Write-ahead audio persistence + SQLite history (audio on disk before ASR; survives crash)",
+     "status": "done",
+     "dependsOn": [
+      "P0-T3"
+     ],
+     "pr": {
+      "number": 1,
+      "url": "https://github.com/IslandDevCrew/kaydence/pull/1",
+      "mergedAt": "2026-07-08"
+     },
+     "notes": "DONE (built by the WAL session as commit 4f1b27c + PR #1; landed on main 2026-07-08 riding the design-branch merges). crash_recovery gate hardened 2026-07-09: test names now include `crash_recovery`, so the documented filter runs the real 2-test kill/recover integration suite instead of 0 tests; local PASS evidence in ops/mission/evidence/2026-07-09-short-utterance-gates.txt. Earlier WAL PR evidence: CI-GREEN-2026-07-08.txt. RECENT HISTORY + SINGLE-SESSION DELETE + ORPHAN SURFACING + EXPORT + PURGE/RETENTION + PLAYBACK ADDED 2026-07-08: recent_history returns bounded app-data SQLite rows, applies the Rust settings retention window before listing, and scans app-data sessions/ for recoverable WAL files; the cockpit renders sessions/failures with manual refresh; delete_history_session removes the DB row, safe app-data session audio, and session export files while refusing unsafe/external audio paths; export_history_session writes app-data exports/{session}.json and .txt from backend-owned session/event truth; purge_history clears all rows plus app-data sessions/ audio files and exports/; play_history_audio validates a safe app-data WAV and exposes it through Tauri's app-data sessions/ asset scope for a cockpit audio control. Recovered orphan audio appears as a failed Capture session with the preserved audio path until real ASR adapters can re-transcribe it. REMAINING under history/recovery polish: recovered-audio re-transcription once real ASR adapters land. P1-G1 and P1-G5 are covered by 3-OS CI run 29022084029 at 699ff3b; the current setup-timing slice still needs fresh CI after push. Non-negotiable #2."
+    },
+    {
+     "id": "P1-P0-6",
+     "title": "PRD P0-6 Latency budgets met + enforced by scripts/bench.sh in CI",
+     "status": "in_progress",
+     "dependsOn": [
+      "P0-T6"
+     ],
+     "pr": null,
+     "notes": "PARTIAL GATE BUILT + REMOTELY GREEN 2026-07-09: `kaydence --bench` now runs before Tauri startup and emits JSON for the implemented Raw orchestration path; scripts/bench.sh --check uses a packaged bench binary when available or cargo run -- --bench in CI, compares every measured metric against AGENTS section 5, and no longer exits as skipped. 3-OS Actions run 29022084029 at 699ff3b completed green on macOS/Ubuntu/Windows with the bench step enforced. Local follow-up measured PASS: hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, light_cleanup_added=1ms. Honest boundary: P1-G3 remains pending until real Parakeet/Whisper adapters, GPU path, idle RAM/CPU, and reference-machine p95 are measured."
+    },
+    {
+     "id": "P1-P0-7",
+     "title": "PRD P0-7 Zero-trust privacy posture (no telemetry/accounts/screen capture; audit-network passes; plain-language privacy page)",
+     "status": "done",
+     "dependsOn": [
+      "P0-T6"
+     ],
+     "pr": {
+      "number": null,
+      "url": "local:p1-p0-7-privacy-posture",
+      "mergedAt": "2026-07-09"
+     },
+     "notes": "DONE 2026-07-09. README privacy page now states no telemetry, no account, no cloud screen capture, no default network egress, local-only history, and memory-only context. Added scripts/check-privacy-posture.sh and wired it into CI after audit-network; it asserts the README promises, runs audit-network, and scans app/crates source for banned screen-capture implementation primitives. React cockpit now includes Screen Family 07 Privacy & Context from backend AppSnapshot truth (telemetry none, 0 unreviewed network, screen capture banned, context off by default, local retention, secure-field refusal). Evidence: ops/mission/evidence/2026-07-09-privacy-posture.txt plus desktop/narrow screenshots. Honest boundary: future BYOK/model-download/Harbor endpoints still require ADR + toggle + allowlist before implementation."
+    },
+    {
+     "id": "P1-P0-8",
+     "title": "PRD P0-8 60-second first run (install -> model download -> first dictation <=60s, one settings screen)",
+     "status": "in_progress",
+     "dependsOn": [
+      "P1-P0-1",
+      "P1-P0-2",
+      "P1-P0-3",
+      "P1-P0-4"
+     ],
+     "pr": null,
+     "notes": "FIRST-DICTATION COMPLETION + PERMISSION READINESS/ACTION CONTRACT + SETUP TIMING PROOF WIRED 2026-07-09: first_dictation_completed is backend-owned and durable in app-data settings.json, hydrated into AppSnapshot on startup, and set only after the hotkey runtime records an actual SessionEvent::Injected outcome. Held delivery paths, including focus-change before delivery, do not mark setup complete. FirstRunStatus exposes backend-owned permission_requirements with platform-specific macOS/Windows/Linux requirement rows; the first-run UI renders each requirement with state/detail/action copy and the injection panel summarizes the runtime permission contract. Permission rows carry backend-owned action_label metadata, and the first_run_permission_action Tauri command now returns structured manual_step, proof_requirement, optional proof_command, expected_evidence, and ready_boundary fields for Screen Family 10. Setup timing is now backend-owned too: settings.json stores first_run_started_at_ms and first_dictation_completed_at_ms; FirstRunStatus/AppSnapshot exposes FirstRunSetupTiming with elapsed_ms, target_ms=60000, and within_target; refresh_models starts the timer once; mark_first_dictation_completed completes timing only after a real Injected event; Screen Family 10 renders a 60-second setup proof strip. Browser smoke verified the setup strip at 1280x720 and 390x844 with no horizontal overflow after a focused responsive CSS fix. That checkpoint made no real OS permission detection or <=60s reference-machine claim; later notes below add macOS Accessibility/Input Monitoring preflights while default permission states still stay needs_hardware or needs_review until live platform proof exists. Evidence: ops/mission/evidence/2026-07-09-first-dictation-completion.txt, ops/mission/evidence/2026-07-09-first-run-permission-readiness.txt, ops/mission/evidence/2026-07-09-first-run-permission-actions.txt, ops/mission/evidence/2026-07-09-first-run-setup-timing.txt, and ops/mission/evidence/2026-07-09-permission-proof-boundaries.txt. NEXT-STEP ORCHESTRATION ADDED 2026-07-09: FirstRunStatus now carries a backend-owned next_step that sequences setup truth as model metadata review -> reviewed model install -> OS permission proof -> hotkey recovery -> real first dictation -> complete. The setup panel renders the selected title/detail/action/proof requirement, and the primary action follows backend-selected intent while Vite preview mode only shows proof guidance instead of calling Tauri IPC. LOCAL PROOF EXPORT ADDED 2026-07-09: export_first_run_proof_plan writes a Rust-owned app-data exports/first-run-proof-plan.json containing schema_version, generated_at_ms, os_lane, ready_to_dictate, first_dictation_completed, next_step, setup_timing, model/ASR state, permission requirements, hotkey state, and proof_items for build-agent handoff. Screen Family 10 exposes Export Proof and reports the returned path/item count. Linux AT-SPI proof text now matches the actual selftest command. MODEL DOWNLOAD PREFLIGHT REVIEW ADDED 2026-07-09: first-run required-model rows can ask Rust for a read-only download preflight and render availability, destination, expected sha256, sources, license, block reason, operator action, and proof requirement without fetching bytes or creating files. PERMISSION PROOF BOUNDARIES ADDED 2026-07-09: permission action outcomes now display the proof command, expected evidence, and do-not-mark-ready boundary; Vite preview mode refuses native IPC and shows the desktop-runtime boundary. ASR RUNTIME STATUS ADDED 2026-07-09: FirstRunStatus and FirstRunProofPlan now carry asr_runtime, and Screen Family 10 renders Pending/Blocked/VerifiedArtifact plus selected model, lane, runtime, artifact path/size, adapter readiness, detail, and proof requirement. Evidence: ops/mission/evidence/2026-07-09-asr-runtime-status-snapshot.txt. RUNTIME PERMISSION PROOF REFRESH ADDED 2026-07-09: actual hotkey events mark input proof, non-empty finalized WAL audio marks microphone proof, first-dictation completion syncs both runtime-proven rows, and Screen Family 10 Refresh drains pending tail/first-dictation proof through refresh_first_run_runtime_proofs. Zero-sample WAL-only captures do not mark microphone ready; UIA/SendInput/AT-SPI/uinput/native secure-field proofs remain manual/review-gated. Evidence: ops/mission/evidence/2026-07-09-runtime-permission-proof-refresh.txt. READY-TO-DICTATE PERMISSION CONTRACT TIGHTENED 2026-07-09: ready_to_dictate now requires every permission_requirements row to be Ready, not only the coarse microphone/input booleans, so FirstRunProofPlan and future consumers cannot claim readiness while OS-specific proof rows remain review-gated. Evidence: ops/mission/evidence/2026-07-09-first-run-ready-permission-contract.txt. UI PERMISSION CHECKLIST ALIGNED 2026-07-09: React's Grant OS permissions checklist row and setup action readiness now use the visible permission rows too, so the UI summary cannot look ready while detailed rows still need hardware/review proof. Evidence: ops/mission/evidence/2026-07-09-first-run-ui-permission-contract.txt. FIRST-RUN ACTION LABEL ALIGNED 2026-07-09: both Screen Family 10 action surfaces now render backend next_step.action_label, so the current model-metadata state shows Review models instead of generic Resolve Setup. Evidence: ops/mission/evidence/2026-07-09-first-run-action-label.txt. PERMISSION SETTINGS OPENER ADDED 2026-07-09: first-run permission action outcomes now carry stable OS settings targets when available, Screen Family 10 renders a separate Open Settings action, and the desktop command returns an honest opened/manual-only outcome without marking any permission ready. Evidence: ops/mission/evidence/2026-07-09-permission-settings-opener.txt. MACOS ACCESSIBILITY PROOF REFRESH ADDED 2026-07-09: refresh_first_run_runtime_proofs now applies passive platform permission proofs after draining active runtime proofs. On macOS, AXIsProcessTrusted runs inside the macOS injector boundary; when the current Kaydence process is trusted for Accessibility, the Accessibility requirement row becomes Ready with runtime proof detail. Microphone still requires non-empty persisted capture audio, and native insertion/secure-field refusal proof remains separate. Evidence: ops/mission/evidence/2026-07-09-macos-accessibility-proof-refresh.txt. MACOS INPUT MONITORING PROOF REFRESH ADDED 2026-07-09: IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) now runs inside the macOS injector boundary without prompting; when macOS reports listen-event access as granted, the Input Monitoring row becomes Ready and input_permission_ready is satisfied while hotkey registration, microphone proof, model readiness, and first dictation remain separate gates. Evidence: ops/mission/evidence/2026-07-09-macos-input-monitoring-proof-refresh.txt. REMAINING: remaining live OS permission proof, approved network download/progress UI, first-dictation user journey, and the <=60s proof on reference machines."
+    },
+    {
+     "id": "P1-D1",
+     "title": "Vendor Visual System v1 into the monorepo: copy logos/ + the 10 screen-family boards from /Users/IDC2.5/Documents/Kaydence/assets/generated/kaydence-visual-pack/ into assets/brand/ + docs/design/, and add a design-reference index mapping each screen family -> its board -> the phase that builds it (P1-G4/P2-G3/P3-G4/P4-G-SCREENS)",
+     "status": "done",
+     "dependsOn": [
+      "P0-T2"
+     ],
+     "pr": {
+      "number": null,
+      "url": "local:p1-d1",
+      "mergedAt": "2026-07-08"
+     },
+     "notes": "DONE. 15 PNGs (5 logos + 10 boards, 18MB) copied byte-identical — all shasums verified vs upstream. Index at docs/design/README.md maps family -> board -> phase -> fidelity gate. All gate commands + prompt pack + designDirection.assets repointed to assets/brand/. Evidence: ops/mission/evidence/P1-D1-vendor-2026-07-08.txt."
+    },
+    {
+     "id": "P1-D2",
+     "title": "Operator selects the winning logo -> lock the visual identity across macOS/Windows/Linux; author ADR-0012 (visual identity + OS accent lanes)",
+     "status": "done",
+     "dependsOn": [],
+     "pr": {
+      "number": null,
+      "url": "local:p1-d2",
+      "mergedAt": "2026-07-08"
+     },
+     "notes": "DONE — OPERATOR SELECTED the dual-asset hybrid (2026-07-08): Option 1 K Waveform = sole product mark (app icon, favicon, tray monochrome variant, installers, isolated use); Option 4 Wordmark Forward = the Kaydence wordmark/site header, serif as brand display type only. Three binding unification rules in ADR-0012 (Accepted): strict role separation; Option 4's icon variant retired; serif never inside the app UI. Options 2/5 preserved as secondary art; Option 3 rejected (embeds third-party OS marks). 0012 removed from check-adr-status exceptions; P0-G7 re-run PASS (11 of 12 Accepted, only 0009 waived). Multi-resolution asset production (icns/ico/hicolor + tray template) lands with P3 installer work."
+    }
+   ]
+  },
+  {
+   "id": "P2",
+   "title": "The cleanup differentiator",
+   "goal": "Raw/Light/Full dial (rule engine + constrained local LLM), streaming partials, dictionary + Wispr/Glaido import, BYOK lanes with local fallback. Exit: >=95% zero-edit at Light on the golden corpus; Wispr uninstalled from the operator's machines.",
+   "status": "pending",
+   "sessionsEstimate": "~3 weeks",
+   "gates": [
+    {
+     "id": "P2-G1",
+     "title": ">=95% zero-edit rate at Light cleanup on the golden corpus",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml golden_corpus_light",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "PRD P0-5. Ladder target. Requires a committed golden corpus fixture."
+    },
+    {
+     "id": "P2-G2",
+     "title": "Light cleanup adds <=800ms; streaming partials <=300ms behind speech",
+     "command": "bash scripts/bench.sh --check",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "Root AGENTS §5. PRD P1-1."
+    },
+    {
+     "id": "P2-G3",
+     "title": "Screen-family fidelity: 03 Cleanup & Injection (Raw/Light/Full dial complete) and 08 Dictionary & Profiles (dictionary + import) match their boards",
+     "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{03,08}.png + keyboard/a11y checklist",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "Manual design-review gate. The cleanup dial and dictionary/import surfaces must match board 03/08 (segmented Raw/Light/Full control, import affordances). Per-app profiles on board 08 land in P3 (P3-G4)."
+    }
+   ],
+   "tasks": [
+    {
+     "id": "P2-P0-5",
+     "title": "PRD P0-5 Cleanup dial Raw/Light/Full (rule engine -> Light w/ small local model -> Full LLM opt-in; per-invocation override)",
+     "status": "pending",
+     "dependsOn": [
+      "P1-P0-2"
+     ],
+     "pr": null,
+     "notes": "Non-negotiable #3. Prompt contract — critical path."
+    },
+    {
+     "id": "P2-P1-1",
+     "title": "PRD P1-1 Streaming partial text (partials in HUD <=300ms behind speech; final replaces atomically)",
+     "status": "pending",
+     "dependsOn": [
+      "P1-P0-2"
+     ],
+     "pr": null,
+     "notes": "Prereq for Whisper-Ahead (P3.5)."
+    },
+    {
+     "id": "P2-P1-2",
+     "title": "PRD P1-2 Custom dictionary + import (Wispr Flow & Glaido exports; terms boost ASR + cleanup)",
+     "status": "pending",
+     "dependsOn": [
+      "P1-P0-2"
+     ],
+     "pr": null,
+     "notes": ""
+    },
+    {
+     "id": "P2-P1-5",
+     "title": "PRD P1-5 BYOK cloud lanes (Groq/Deepgram ASR, OpenAI-compatible/Ollama cleanup; per-lane kill switch; local fallback chain)",
+     "status": "pending",
+     "dependsOn": [
+      "P2-P0-5"
+     ],
+     "pr": null,
+     "notes": "CRITICAL PATH — new network surfaces (egress). Non-negotiable #6 fallback + #1 audit."
+    }
+   ]
+  },
+  {
+   "id": "P3",
+   "title": "Daily-driver polish + Whisper-Ahead",
+   "goal": "Per-app profiles, snippets, correction-learning, signed installers for all three OSes; then the prediction layer (P2-7..P2-13): dual-line HUD, gold merge, timing ladder, inline fallback, local analytics. Prediction defaults locked from bench-prediction.sh on the two reference machines (ADR-0007).",
+   "status": "pending",
+   "sessionsEstimate": "~4 weeks",
+   "gates": [
+    {
+     "id": "P3-G1",
+     "title": "Prediction guess rendered <=400ms (HUD, streaming); yields to dictation",
+     "command": "bash scripts/bench-prediction.sh --check",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "PRD P2-7. Ladder P3.5 target. Defaults locked from bench-prediction on M-series Mac + mid Windows laptop (ADR-0007)."
+    },
+    {
+     "id": "P3-G2",
+     "title": "Signed installers build (notarized .dmg, signed .msi, AppImage/.deb) for all three OSes",
+     "command": "bash scripts/release.sh --check",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "PRD P1 polish + ROADMAP P3. Needs signing identities; scripts/release.sh to be authored."
+    },
+    {
+     "id": "P3-G3",
+     "title": "Prediction privacy tests green (no persistence/transmission of context)",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml context_privacy",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "Non-negotiable #1 / ADR-0006. PRD P2-12."
+    },
+    {
+     "id": "P3-G4",
+     "title": "Screen-family fidelity: 02 Whisper-Ahead HUD (blue lane, 5s/10s/20s ladder, amber-gold merge pulse, Tab/Shift-Tab), 08 per-app profiles, 09 Analytics & Performance, 07 Tier 1/Tier 2 context match their boards",
+     "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{02,07,08,09}.png + keyboard/a11y checklist",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "Manual design-review gate. Board 02 is the locked Whisper-Ahead interaction — prediction blue and the ~0.5s amber-gold merge pulse are invariants, not per-OS. Analytics board 09 is local-only/exportable with p50/p95 latency; no cloud."
+    }
+   ],
+   "tasks": [
+    {
+     "id": "P3-P1-3",
+     "title": "PRD P1-3 Auto-learning corrections (edit within 30s -> offer to learn into dictionary; explicit confirm, never silent)",
+     "status": "pending",
+     "dependsOn": [
+      "P2-P1-2"
+     ],
+     "pr": null,
+     "notes": ""
+    },
+    {
+     "id": "P3-P1-4",
+     "title": "PRD P1-4 Per-app profiles (frontmost app detection -> tone/format/cleanup-level/custom prompt)",
+     "status": "pending",
+     "dependsOn": [
+      "P2-P0-5"
+     ],
+     "pr": null,
+     "notes": "CRITICAL PATH — app detection is platform code + prompt contract."
+    },
+    {
+     "id": "P3-P1-6",
+     "title": "PRD P1-6 Snippets (spoken trigger expands to saved text)",
+     "status": "pending",
+     "dependsOn": [
+      "P2-P1-2"
+     ],
+     "pr": null,
+     "notes": ""
+    },
+    {
+     "id": "P3-BENCH",
+     "title": "Run bench-prediction.sh on both reference machines; lock per-platform default models into models/registry.json + ADR-0007 (before P3.5 ships)",
+     "status": "pending",
+     "dependsOn": [],
+     "pr": null,
+     "notes": "OPERATOR GATE — requires the two physical reference machines. Gemma 3 1B license review before any paid build bundles it (ADR-0007/0010)."
+    },
+    {
+     "id": "P3-P2-7",
+     "title": "PRD P2-7 Local prediction engine (llama.cpp/GGUF; per-platform default; <=400ms; yields to dictation)",
+     "status": "pending",
+     "dependsOn": [
+      "P2-P1-1",
+      "P3-BENCH"
+     ],
+     "pr": null,
+     "notes": "Model registry — critical path."
+    },
+    {
+     "id": "P3-P2-8",
+     "title": "PRD P2-8 Surface A HUD dual-line (blue lane; Streaming + Paused-Merge 5s; only committed text injects)",
+     "status": "pending",
+     "dependsOn": [
+      "P3-P2-7"
+     ],
+     "pr": null,
+     "notes": "ADR-0005. Pitfall P11."
+    },
+    {
+     "id": "P3-P2-9",
+     "title": "PRD P2-9 Surface B inline fallback (non-overlay apps; streaming off; inline ghost after 10s pause; Tab accepts)",
+     "status": "pending",
+     "dependsOn": [
+      "P3-P2-8"
+     ],
+     "pr": null,
+     "notes": "ADR-0005. Pitfall P12."
+    },
+    {
+     "id": "P3-P2-10",
+     "title": "PRD P2-10 Merge + accept (say-or-select; Tab=word, Shift-Tab=phrase; ~0.5s gold pulse)",
+     "status": "pending",
+     "dependsOn": [
+      "P3-P2-8"
+     ],
+     "pr": null,
+     "notes": "ADR-0005."
+    },
+    {
+     "id": "P3-P2-11",
+     "title": "PRD P2-11 Local prediction analytics (prediction_events; words merged, acceptance rate, by app; local-only, exportable, deletable)",
+     "status": "pending",
+     "dependsOn": [
+      "P3-P2-10"
+     ],
+     "pr": null,
+     "notes": ""
+    },
+    {
+     "id": "P3-P2-12",
+     "title": "PRD P2-12 Opt-in local context (Tier 1 accessibility read + Tier 2 on-device OCR; in-memory only; secure fields blocked)",
+     "status": "pending",
+     "dependsOn": [
+      "P3-P2-7"
+     ],
+     "pr": null,
+     "notes": "CRITICAL PATH — ADR-0006. Non-negotiable #1. Privacy tests mandatory."
+    },
+    {
+     "id": "P3-P2-13",
+     "title": "PRD P2-13 Timing ladder (5s HUD / 10s inline / 20s auto-stop; all configurable)",
+     "status": "pending",
+     "dependsOn": [
+      "P3-P2-8"
+     ],
+     "pr": null,
+     "notes": "ADR-0005."
+    }
+   ]
+  },
+  {
+   "id": "P4",
+   "title": "The Flagship Trio",
+   "goal": "Voiceprint first (extends learning already flowing), Relay second (crypto design review gates the build), Conductor third (MCP substrate -> targets -> confirm gates -> fleet mode). Exit: all three daily-usable across the fleet; ladder targets hit; Harbor optional and unbuilt without blocking anything.",
+   "status": "pending",
+   "sessionsEstimate": "post-beta",
+   "gates": [
+    {
+     "id": "P4-G-VOICEPRINT",
+     "title": "Voiceprint: measured acceptance-rate lift vs pre-Voiceprint baseline (or it does not advertise)",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml voiceprint_lift",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "P4-5 gate. Training opt-in only; budget capped; kill switch + one-tap reset."
+    },
+    {
+     "id": "P4-G-RELAY",
+     "title": "Relay: <=500ms added latency on LAN, end-to-end encrypted, zero cloud",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml relay_suite",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "P4-2 gate. Pairing/crypto design (ADR-0009) is a critical decision path — operator review BEFORE build."
+    },
+    {
+     "id": "P4-G-CONDUCTOR",
+     "title": "Conductor: confirm-gate suite passes 100% — zero auto-executed destructive commands",
+     "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml conductor_confirm_gate",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "P4-8 gate. A single auto-executed destructive (delete/send/pay/deploy) command is a release blocker."
+    },
+    {
+     "id": "P4-G-SCREENS",
+     "title": "Screen-family fidelity: 04 Relay, 05 Voiceprint, 06 Conductor match their boards (Conductor's explicit confirm gate is visible on every destructive action)",
+     "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{04,05,06}.png + keyboard/a11y checklist",
+     "status": "pending",
+     "evidence": null,
+     "lastRun": null,
+     "notes": "Manual design-review gate for the flagship trio. Relay board 04 never implies cloud sync (Harbor is optional/self-hostable); Voiceprint board 05 shows export/delete/reset; Conductor board 06 shows the confirm gate — these mirror the P4 safety invariants, not just visuals."
+    }
+   ],
+   "tasks": [
+    {
+     "id": "P4-VOICEPRINT",
+     "title": "P4 Voiceprint — on-device personalization (dictionary auto-learn w/ confirm; local LoRA fine-tune on idle/charging w/ kill switch + reset; acoustic biasing for proper nouns; exportable/deletable; carries via Relay)",
+     "status": "pending",
+     "dependsOn": [
+      "P3-P2-11"
+     ],
+     "pr": null,
+     "notes": "PRD P4-1..P4-5 (to be authored in P0-T1). CRITICAL PATH — local training + model registry."
+    },
+    {
+     "id": "P4-RELAY",
+     "title": "P4 Relay — cross-device continuity (mDNS discovery + pairing code; E2E-encrypted LAN; CRDT sync of dictionary/profiles/Voiceprint/analytics; optional self-hostable rendezvous relay off-network)",
+     "status": "pending",
+     "dependsOn": [
+      "P4-VOICEPRINT",
+      "P0-T7"
+     ],
+     "pr": null,
+     "notes": "PRD P4-6/P4-7 (to be authored). CRITICAL PATH — new network surface + crypto. ADR-0009 review + operator go HALT before build."
+    },
+    {
+     "id": "P4-CONDUCTOR",
+     "title": "P4 Conductor — voice control plane (built-in MCP server; agent targets Claude Code/Cursor/terminals/custom; per-agent profiles + command grammars; spoken command palette; fleet mode via Relay; absolute confirm-gate on destructive actions)",
+     "status": "pending",
+     "dependsOn": [
+      "P4-RELAY"
+     ],
+     "pr": null,
+     "notes": "PRD P4-8/P4-9 (to be authored). CRITICAL PATH — new surfaces + safety invariant."
+    }
+   ]
   }
+ ],
+ "metrics": [
+  {
+   "label": "Product code (Rust+TS lines)",
+   "baseline": "0",
+   "current": "~500 (scaffold compiles)",
+   "target": "buildable app",
+   "direction": "up"
+  },
+  {
+   "label": "Idle footprint (RAM, ASR resident)",
+   "baseline": "~800 MB (Wispr Electron)",
+   "current": "n/a",
+   "target": "<=250 MB",
+   "direction": "down"
+  },
+  {
+   "label": "Release -> injected, local (Raw)",
+   "baseline": "2-5 s (Handy)",
+   "current": "partial Raw-path gate: CPU 10-11ms synthetic; real ASR/GPU pending",
+   "target": "<=700ms GPU / <=1200ms CPU",
+   "direction": "down"
+  },
+  {
+   "label": "Zero-edit rate at Light cleanup",
+   "baseline": "raw output",
+   "current": "n/a",
+   "target": ">=95% golden corpus",
+   "direction": "up"
+  },
+  {
+   "label": "Prediction: pause -> guess",
+   "baseline": "Mac-only (Cotypist MLX)",
+   "current": "n/a",
+   "target": "<=400ms, 3-OS (llama.cpp)",
+   "direction": "down"
+  },
+  {
+   "label": "Cross-device continuity (Relay)",
+   "baseline": "cloud-only or none",
+   "current": "n/a",
+   "target": "<=500ms added on LAN, E2E, zero cloud",
+   "direction": "down"
+  },
+  {
+   "label": "Agent-command safety (Conductor)",
+   "baseline": "no comparable product",
+   "current": "n/a",
+   "target": "confirm-gate 100%; 0 auto-exec destructive",
+   "direction": "up"
+  },
+  {
+   "label": "Platform parity (CI legs green)",
+   "baseline": "0 / 3 (Mac-first field; Linux unserved)",
+   "current": "3 / 3 baseline green (run 29031546518 at ca60244); current f61ab49 runner attempts blocked before checkout by billing/spending limit",
+   "target": "3 / 3 incl. Wayland",
+   "direction": "up"
+  },
+  {
+   "label": "ADRs accepted (0009 Proposed by design)",
+   "baseline": "8",
+   "current": "12 of 13",
+   "target": "13 (0009 after crypto review)",
+   "direction": "up"
+  },
+  {
+   "label": "P0 tasks done (of 7)",
+   "baseline": "0",
+   "current": "7",
+   "target": "7",
+   "direction": "up"
+  },
+  {
+   "label": "Standing-gate scripts present",
+   "baseline": "1 (bench-prediction)",
+   "current": "4 (+bench enforced, audit-network, privacy posture, check-adr)",
+   "target": "5 (+release)",
+   "direction": "up"
+  },
+  {
+   "label": "Visual system (logos + screen families)",
+   "baseline": "none",
+   "current": "identity locked; 4 P1 family views now navigable; full board fidelity open",
+   "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS",
+   "direction": "up"
+  }
+ ],
+ "risks": [
+  {
+   "title": "GitHub Actions billing/spending-limit block",
+   "severity": "high",
+   "note": "Remote origin=IslandDevCrew/kaydence is private and accessible, active gh auth is IslandDevCrew, and local main matches origin/main at f61ab49. Latest verified green baseline is Actions run 29031546518 at ca60244. Latest checked run 29033270673 at f61ab49 failed before checkout on macOS, Windows, and Ubuntu because GitHub reports failed account payments or a spending-limit increase requirement. Fix billing/spending limit and rerun before claiming remote parity for f61ab49 or any local follow-up commit."
+  },
+  {
+   "title": "v2 -> v3 documentation drift",
+   "severity": "low",
+   "note": "Initial v2 -> v3 drift was resolved in P0: AGENTS/PRD/ROADMAP/ADRs were reconciled and P0-G7 passes. Keep this as a watch item only: future public docs and generated SOTU copy must continue to track the accepted v3 plan and ADRs."
+  },
+  {
+   "title": "Gemma 3 1B license (Gemma Terms, not Apache)",
+   "severity": "medium",
+   "note": "models/registry.json flags license_review_required. Legal review before any paid build bundles it (ADR-0007/0010). Download-on-demand only; never bundle unreviewed."
+  },
+  {
+   "title": "Relay pairing/crypto design",
+   "severity": "medium",
+   "note": "ADR-0009 keys/rotation/device-revocation design must pass operator review before the P4-1 build starts. Far off, but the gate is load-bearing for the flagship separation."
+  },
+  {
+   "title": "Windows native injection (UIA per-app quirks) + Wayland injection",
+   "severity": "medium",
+   "note": "PRD risk + Pitfall P8. Windows UIA+SendInput is now built, live-validated on the Fable box, and merged in PR #2. Wayland SPIKED 2026-07-08 (docs/spikes/P1-P0-3-wayland-injection.md): strategy fixed + core tested; residual risk is the Linux human-focus AT-SPI/uinput check, unicode-beyond-ASCII keymap work, optional portal/libei plumbing, and the opaque-client secure-field gap (disclosed, not hidden)."
+  },
+  {
+   "title": "Wayland secure-field detection gap on opaque clients",
+   "severity": "medium",
+   "note": "Non-AT-SPI Wayland apps expose no password-field signal — Kaydence cannot always confirm a field is non-secure (ADR-0013 §secure-field). Mitigated: default Lenient flags the result unverified (UI warns per app, board 07); opt-in Strict refuses opaque focus. A real platform limitation, surfaced to the user rather than papered over."
+  }
+ ],
+ "prLog": [
+  {
+   "number": null,
+   "title": "P1 macOS run harness - signed self-contained Kaydence.app, exact launch verification, custom-protocol build, and macOS CI regression",
+   "url": "local:p1-macos-run-harness",
+   "phase": "P1",
+   "mergedAt": "2026-07-10"
+  },
+  {
+   "number": null,
+   "title": "P1 screen-family navigation - distinct Dictate/Cleanup/Privacy/Setup views with persistent 900px left rail and browser/native proof",
+   "url": "local:p1-screen-family-navigation",
+   "phase": "P1",
+   "mergedAt": "2026-07-10"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 first-run proof export — Rust-owned proof plan JSON under app-data exports and Screen Family 10 Export Proof action",
+   "url": "local:p1-p0-8-first-run-proof-export",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 first-run next-step orchestration — backend-owned setup sequence and Screen Family 10 guidance",
+   "url": "local:p1-p0-8-first-run-next-step",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "Bootstrap mission-control state (v3)",
+   "url": "local:80a8028",
+   "phase": "P0",
+   "mergedAt": "2026-07-07"
+  },
+  {
+   "number": null,
+   "title": "v3 ADRs 0009 (Relay, Proposed) / 0010 (pricing) / 0011 (Linux 3-OS)",
+   "url": "local:4848306",
+   "phase": "P0",
+   "mergedAt": "2026-07-07"
+  },
+  {
+   "number": null,
+   "title": "v2->v3 doc reconciliation (3-OS constitution/PRD/ROADMAP/architecture/CI)",
+   "url": "local:3a0572e",
+   "phase": "P0",
+   "mergedAt": "2026-07-07"
+  },
+  {
+   "number": null,
+   "title": "P0-T6 standing-gate scripts (audit-network working, bench, check-adr-status)",
+   "url": "local:0258de3",
+   "phase": "P0",
+   "mergedAt": "2026-07-07"
+  },
+  {
+   "number": null,
+   "title": "P0-T4 Handy study -> ADR-0004 adopt/redesign notes",
+   "url": "local:p0-t4",
+   "phase": "P0",
+   "mergedAt": "2026-07-07"
+  },
+  {
+   "number": null,
+   "title": "P0-T2/T3 Tauri scaffold + SessionEvent contract (macOS gates green)",
+   "url": "local:efdf6f7",
+   "phase": "P0",
+   "mergedAt": "2026-07-07"
+  },
+  {
+   "number": null,
+   "title": "P0-T5 Linux CI system deps (3-OS matrix wired)",
+   "url": "local:p0-t5",
+   "phase": "P0",
+   "mergedAt": "2026-07-07"
+  },
+  {
+   "number": null,
+   "title": "Visual System v1 locked — 5 logo directions + 10 screen-family boards (30 OS views) generated (Codex) and adopted as the build reference set; screen-fidelity gates wired into P1–P4",
+   "url": "local:design-direction-lock",
+   "phase": "design",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-D1 Visual pack vendored in-repo (assets/brand/, 15 PNGs shasum-verified) + design-reference index (docs/design/README.md); fidelity-gate paths repointed",
+   "url": "local:p1-d1",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-D2 prep — ADR-0012 (visual identity) drafted Proposed with full 5-logo review; recommendation Option 1 K Waveform, runner-up Option 4; check-adr-status gate carries 0012 exception (P0-G7 re-run PASS)",
+   "url": "local:p1-d2-prep",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-D2 DONE — operator locked the dual-asset identity (Option 1 mark + Option 4 wordmark, three unification rules); ADR-0012 Accepted; gate exception removed (P0-G7 PASS, 11/12)",
+   "url": "local:p1-d2",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": 1,
+   "title": "P1-P0-4 WAL + crash recovery (WAL session, PR #1) — landed on main via the design-branch merge train",
+   "url": "https://github.com/IslandDevCrew/kaydence/pull/1",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "Merge train to main (operator go): design-direction-lock, p1-d1-vendor, p1-d2-adr0012, ci-green-pnpm-icon — four --no-ff merges; identity + boards + CI fixes all on main",
+   "url": "local:merge-train-2026-07-08",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-3 Wayland injection SPIKE — compositor matrix + capability-ladder strategy (docs/spikes), tested injection core (inject/mod.rs, 13 tests), ADR-0013 dependency gate later Accepted",
+   "url": "local:p1-p0-3-spike",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-1 hotkey capture CORE — CaptureCoordinator state machine (debounce/min-capture/tail, Pitfall P1), 6 tests; merged to main, 3-OS CI",
+   "url": "local:p1-p0-1-core",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-1 hotkey runtime readiness — AppSnapshot reflects global-shortcut registration success/failure; registration failure degrades to first-run UI instead of crashing",
+   "url": "local:p1-p0-1-runtime-readiness",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-1 hotkey mode toggle — set_hotkey_mode persists push-to-talk/toggle and switches active coordinator when idle",
+   "url": "local:p1-p0-1-hotkey-mode-toggle",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-1 hotkey rebind — set_hotkey_binding persists allowlisted primary binding and re-registers the active global shortcut",
+   "url": "local:p1-p0-1-hotkey-rebind",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-1 short_utterance gate hardening — named capture/WAL suite for 0.3s/1.5s utterances, sub-250ms discard, and short WAL recovery",
+   "url": "local:p1-short-utterance-gates",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-4 crash_recovery gate hardening — renamed integration tests so the documented crash_recovery filter executes the 2-test kill/recover suite",
+   "url": "local:p1-crash-recovery-filter",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 model readiness — AppSnapshot verifies required ASR/VAD artifacts from registry and renders ready/missing/blocked first-run states",
+   "url": "local:p1-p0-2-model-readiness",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 model picker recommendation — backend-owned ASR candidates + selected/recommended model in AppSnapshot; first-run UI renders local ASR choices",
+   "url": "local:p1-p0-2-model-picker",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 ASR selection persistence — select_asr_model validates registry candidates and persists selected ASR in app-data settings.json",
+   "url": "local:p1-p0-2-asr-selection-persistence",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 model quarantine — checksum mismatches move suspect artifacts to models/quarantine before first-run readiness blocks load",
+   "url": "local:p1-p0-2-model-quarantine",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 model download planning — missing models require a safe destination, expected sha256, and normalized HTTPS sources before first-run shows Download required",
+   "url": "local:p1-p0-2-model-download-plan",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 model download metadata UI — AppSnapshot and first-run UI render validated download size/source metadata without adding network calls",
+   "url": "local:p1-p0-2-model-download-metadata-ui",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 model readiness recheck — refresh_model_readiness rescans app-data models and the first-run UI can recheck without restart",
+   "url": "local:p1-p0-2-model-readiness-recheck",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 local model artifact install — install_model_artifact copies selected reviewed files into app-data models after sha256 verification; first-run uses native file picker",
+   "url": "local:p1-p0-2-model-artifact-install",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 ASR pending runtime adapter — default hotkey runtime records selected-model-specific Recognize failure instead of generic empty ASR stack",
+   "url": "local:p1-p0-2-asr-pending-runtime-adapter",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 model download preflight — Rust-owned read-only preflight contract and Screen Family 10 Review surface",
+   "url": "local:p1-p0-2-model-download-preflight",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-4 recent history surface — recent_history exposes app-data SQLite sessions and cockpit renders persisted sessions/failures read-only",
+   "url": "local:p1-p0-4-recent-history-surface",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-4 local history delete — delete_history_session removes a session row plus safe app-data audio and refuses external paths",
+   "url": "local:p1-p0-4-history-session-delete",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-4 orphan WAL recovery surface — recent_history recovers untracked app-data WAVs and shows preserved audio as Capture failures",
+   "url": "local:p1-p0-4-history-orphan-recovery-surface",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-4 local history export — export_history_session writes JSON/text files under app-data exports and cockpit exposes per-row Export",
+   "url": "local:p1-p0-4-history-export-session",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-4 local history purge/retention — purge_history clears rows/audio/exports and recent_history applies retention before listing",
+   "url": "local:p1-p0-4-history-purge-retention",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-4 local history audio playback — play_history_audio validates app-data WAVs and cockpit uses Tauri scoped asset media",
+   "url": "local:p1-p0-4-history-audio-playback",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "Linux reference VM online (Debian 12 GNOME/Wayland ARM64) — 26 tests pass on ARM64; ADR-0013 Accepted; dev-command bug fixed (P0-G5 unblocked); Kaydence window runs on the VM",
+   "url": "local:linux-vm-online",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-3 Linux AT-SPI backend foundation — atspi 0.30 validated live on the GNOME VM (connect+proxy+call PASS); role->FieldKind secure mapping tested; selftest harness",
+   "url": "local:p1-p0-3-atspi",
+   "phase": "P1",
+   "mergedAt": "2026-07-08"
+  },
+  {
+   "number": null,
+   "title": "GitHub remote access restored — gh active account switched to IslandDevCrew; private repo resolves with ADMIN permission; git fetch PASS",
+   "url": "local:remote-restored-2026-07-09",
+   "phase": "infra",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-7 privacy posture — README privacy page, CI privacy gate, and Screen Family 07 cockpit panel",
+   "url": "local:p1-p0-7-privacy-posture",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1 event_sequences gate — cross-module order for happy path, focus-change hold, secure-field hold, engine fallback, and cleanup fallback",
+   "url": "local:p1-event-sequences-gate",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-6 latency bench gate — kaydence --bench JSON + scripts/bench.sh enforced measured Raw-path budgets in CI",
+   "url": "local:p1-p0-6-latency-bench-gate",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 first-dictation completion truth — durable settings flag set only by real Injected outcome",
+   "url": "local:p1-p0-8-first-dictation-completion",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 first-run permission readiness - backend-owned macOS/Windows/Linux permission requirements rendered in setup UI",
+   "url": "local:p1-p0-8-first-run-permission-readiness",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 first-run permission actions - Rust command returns manual step plus proof boundary for setup UI",
+   "url": "local:p1-p0-8-first-run-permission-actions",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 permission proof boundaries - proof command/evidence/ready boundary rendered in Screen Family 10",
+   "url": "local:p1-p0-8-permission-proof-boundaries",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 artifact-aware ASR runtime adapter lifecycle — selected model resolves to Pending/Blocked/VerifiedArtifact and hot-swaps while idle",
+   "url": "local:p1-p0-2-asr-runtime-adapter-lifecycle",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-2 ASR runtime status snapshot — FirstRunStatus/proof JSON/UI expose Pending/Blocked/VerifiedArtifact boundary",
+   "url": "local:p1-p0-2-asr-runtime-status-snapshot",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 runtime permission proof refresh - actual hotkey/audio proof syncs first-run readiness and Screen Family 10 Refresh drains pending proof",
+   "url": "local:p1-p0-8-runtime-permission-proof-refresh",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 first-run ready permission contract - ready_to_dictate requires every visible permission row to be Ready",
+   "url": "local:p1-p0-8-ready-permission-contract",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 first-run UI permission contract - checklist/action readiness require every visible permission row to be Ready",
+   "url": "local:p1-p0-8-ui-permission-contract",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 first-run action label - primary setup action renders backend-selected next-step label",
+   "url": "local:p1-p0-8-first-run-action-label",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 permission settings opener - backend-owned OS settings targets and explicit manual-only boundary",
+   "url": "local:p1-p0-8-permission-settings-opener",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "Continuation handoff refresh - current Codex super-goal prompt plus Windows Codex handoff",
+   "url": "local:continuation-handoff-refresh-2026-07-09",
+   "phase": "ops",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-1 secondary cleanup override hotkey - Shift+RightAlt/Option registers optional Raw per-invocation capture path",
+   "url": "local:p1-p0-1-secondary-cleanup-override",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-1 cleanup default dial persistence - visible Raw/Light/Full control saves app default and updates idle runtime",
+   "url": "local:p1-p0-1-cleanup-default-dial",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 macOS Accessibility proof refresh - AXIsProcessTrusted updates the first-run Accessibility row",
+   "url": "local:p1-p0-8-macos-accessibility-proof-refresh",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1-P0-8 macOS Input Monitoring proof refresh - IOHIDCheckAccess updates the first-run Input Monitoring row",
+   "url": "local:p1-p0-8-macos-input-monitoring-proof-refresh",
+   "phase": "P1",
+   "mergedAt": "2026-07-09"
+  },
+  {
+   "number": null,
+   "title": "P1 macOS Run/Verify harness + screen-family navigation — merged to main (local-green; CI billing-blocked)",
+   "url": "local:codex/p1-macos-run-harness",
+   "phase": "P1",
+   "mergedAt": "2026-07-10"
+  }
+ ],
+ "resume": {
+  "activePhase": "P1",
+  "nextActions": [
+   "LOCAL MACOS RUN + P1 FIDELITY CHECKPOINT (2026-07-10): script/build_and_run.sh now builds Tauri with custom-protocol, stages and ad-hoc signs target/release/Kaydence.app, launches through LaunchServices, and verifies the exact process; tests/build_and_run.sh is wired into the macOS CI leg. The native release app rendered backend truth, recovered the unsupported RightAlt binding by persisting F13, and stayed below the 250 MB P1 gate ceiling in the observed no-model run (85,376 KB RSS after 2m13s; the stricter <80 MB no-model product target still needs dedicated measurement/optimization). Dictate/Cleanup/Privacy/Setup now route to distinct P1 family views; the 900x600 browser check kept a 256px rail with no overflow/clipped text/errors, and native Dictate -> Privacy navigation passed. Evidence: ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt. P1-G4 remains pending for full board-level fidelity; P1-G2 remains pending for real-adapter golden ASR finals.",
+   "REMOTE/CI (2026-07-10, session 4 / Claude primary): merged codex/p1-macos-run-harness into local main (ab5b3b9) — macOS run-harness + screen-family nav, all local gates GREEN (fmt, clippy -D, frontend, audit-network, crash_recovery 2/2, short_utterance 6/6). GitHub Actions STILL billing/spending-limit blocked: runs 29093278550 and 29033270673 fail in ~3s before checkout on all three legs. This is operator-only (github.com billing). Push preserves commits and re-tests billing but cannot restore the 3-OS trust anchor until billing is cleared. Last verified-green remote baseline remains 29031546518 at ca60244.",
+   "P1-P0-8 first run: first-dictation completion is Rust-owned and persisted after a real Injected event; FirstRunStatus carries backend-owned permission_requirements rendered in Screen Family 10; permission rows can ask Rust for manual_step/proof_requirement/proof_command/expected_evidence/ready_boundary guidance plus stable OS settings targets where available; FirstRunSetupTiming records start/completion timestamps, elapsed_ms, target_ms=60000, and within_target; and FirstRunStatus.next_step now sequences setup as model metadata review -> reviewed model install -> OS permission proof -> hotkey recovery -> real first dictation -> complete. The setup card renders backend-owned next-step title/detail/action/proof, both action surfaces now render backend next_step.action_label so model metadata state shows Review models rather than generic Resolve Setup, Screen Family 10 has Export Proof wired to Rust's export_first_run_proof_plan command, required-model rows expose the read-only model-download preflight, permission rows show proof commands/evidence/do-not-mark-ready boundaries, permission proof cards can open backend-owned OS settings targets without marking readiness, and selected_asr_runtime displays Pending/Blocked/VerifiedArtifact with artifact/proof detail. Runtime proof refresh is now wired: actual hotkey events mark input proof, non-empty finalized WAL audio marks microphone proof, first-dictation completion syncs both runtime-proven rows, and the setup Refresh action drains pending proof through refresh_first_run_runtime_proofs; zero-sample WAL-only captures do not mark microphone ready; ready_to_dictate and React's visible Grant OS permissions checklist/action readiness now require every visible permission row to be Ready, preventing coarse flags from bypassing UIA/SendInput/AT-SPI/uinput/native secure-field proof rows. In-app Browser smoke passes for the UI permission/action label/settings-opener contracts with zero console errors, and prior desktop/narrow smoke passed for the setup/proof panel. macOS Accessibility and Input Monitoring preflights now run during refresh_first_run_runtime_proofs: AXIsProcessTrusted can mark the Accessibility row Ready, and IOHIDCheckAccess listen-event access can mark the Input Monitoring row Ready plus input_permission_ready. Microphone still requires non-empty persisted capture audio. Next work is remaining live OS permission proof, approved network download/progress UI, the live first-dictation journey, and reference-machine <=60s timing proof.",
+   "P1-P0-1 hotkey: CORE + RUNTIME WIRING + MODE TOGGLE + REBIND UI/REGISTRATION + SECONDARY RAW OVERRIDE DONE locally — CaptureCoordinator is tested, the Tauri global-shortcut plugin registers the selected binding into the WAL -> pipeline -> injection runtime, AppSnapshot exposes hotkey_registered or hotkey_registration_error for first-run UI, set_hotkey_mode persists push-to-talk/toggle while switching the active coordinator only when idle, and set_hotkey_binding persists/re-registers an allowlisted primary binding with one-tap first-run recovery choices. The short_utterance capture/WAL suite now runs under the documented filter. Runtime permission proof refresh now records real active global-shortcut events as input proof and non-empty finalized capture audio as microphone proof for first-run readiness. Shift+RightAlt/Option can now register as an optional per-invocation Raw cleanup override; role tracking keeps an override capture isolated and the next primary capture returns to the profile cleanup dial. Cleanup default dial persistence is wired too: the visible Raw/Light/Full control calls Rust, saves cleanup_default_dial, hydrates AppSnapshot on startup, applies the selected default to non-user-edited profile targets, and preserves user-edited per-app profile overrides. LIVE MACOS REBIND PROOF 2026-07-10: the signed release app surfaced RightAlt as an unsupported scancode, the native F13 fallback registered successfully, first-run changed Set global hotkey from Issue to Ready, and app-data persisted hotkey_primary_binding=F13. Remaining is live OS permission/conflict proof on Windows/Linux, broader macOS conflict coverage, and ASR golden-clip proof after real adapters land.",
+   "P1-P0-2 model readiness/picker: STARTED — AppSnapshot now loads the registry, exposes required ASR/VAD model states, ASR candidates, selected/recommended model ids, and validated download metadata (available/size/source count), and the first-run UI renders the local ASR picker + required-model list from that backend truth. select_asr_model validates candidates, persists selected_asr_model_id in app-data/settings.json, and reapplies it on startup. refresh_model_readiness rescans app-data models and reapplies persisted ASR selection so first-run can recheck newly installed artifacts without restart. install_model_artifact now lets first-run open a native file picker and asks Rust to copy a selected local artifact into app-data models/ only after it matches the registry sha256; bad existing artifacts quarantine before replacement. Current registry TODO checksums correctly block readiness; missing models only show Download required when ModelDownloadPlan has a safe destination, expected sha256, and HTTPS sources; checksum mismatches quarantine the suspect artifact before blocking load. first_run_model_download_preflight now exposes the same reviewed metadata as a read-only build-agent/user handoff: current model state/detail, destination path, expected sha256, size, sources, license, blocked reason, operator action, and proof requirement, with no fetch and no file creation. The default hotkey runtime now resolves selected ASR into Pending/Blocked/VerifiedArtifact state from registry + app-data artifacts: missing/invalid artifacts record explicit Recognize failure reasons, while verified artifacts report path/size/runtime and still state that real inference is not implemented. ASR selection, readiness refresh, and artifact install all require an idle runtime before hot-swapping the selected ASR adapter state into the active processor. AppSnapshot, FirstRunProofPlan, the cockpit meta strip, and Screen Family 10 now all expose that same ASR runtime boundary so users/build agents can see selected model, lane, runtime, artifact path/size, adapter readiness, detail, and proof requirement. Next real work is replacing TODO hashes/sources with reviewed artifacts, implementing approved network fetch/progress UI, building Parakeet/Whisper engine adapters, and adding WER/latency evidence.",
+   "P1-P0-4 history/recovery: DONE core and P1-G1 locally passed with a repaired real crash_recovery filter. WAL + SQLite are real; recent_history exposes app-data SQLite sessions/failures, applies retention, and surfaces recoverable orphan WAVs; delete/export/purge/playback are backend-owned and safe-path checked. The event_sequences gate proves Started -> AudioPersisted -> ASR -> cleanup -> one delivery outcome for happy path, focus-change hold, secure-field hold, engine fallback, and cleanup fallback, and it is green through 3-OS CI run 29022084029 at 699ff3b. Remaining polish is recovered-audio re-transcription after real ASR adapters and fresh 3-OS CI after each new push.",
+   "P1-P0-6 latency: PARTIAL WORKING GATE - kaydence --bench emits machine-readable Raw-path budget JSON and scripts/bench.sh --check enforces measured metrics in CI instead of skipping. It is green locally and in 3-OS CI run 29022084029; local follow-up PASS: hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, light_cleanup_added=1ms. P1-G3 remains pending for real ASR/GPU/idle-footprint/reference-machine evidence.",
+   "P1-P0-7 privacy posture: DONE 2026-07-09 — README privacy page now states no telemetry/accounts/cloud screen capture/default egress, local-only history, and memory-only context; scripts/check-privacy-posture.sh runs audit-network, asserts README promises, and blocks banned screen-capture primitives; CI runs it after audit-network; the cockpit has a Screen Family 07 Privacy & Context panel with browser-smoke screenshots. Future BYOK/model-download/Harbor network surfaces still require ADR + toggle + allowlist review.",
+   "P1-P0-3 injection: platform spine is moving — strategy fixed in ADR-0013, Linux AT-SPI/uinput has local/live evidence, macOS AX/CGEvent/NSPasteboard paths have local evidence, and Windows UIA+SendInput is merged with live Fable-box proof. Validate the Linux human-focus path on the Debian-12 GNOME VM and keep secure-field/focus-binding evidence explicit.",
+   "CONTINUATION/HANDOFF: docs/CODEX_SUPER_GOAL_PROMPT.md is current as of 2026-07-09T17:42Z and should be used for new goal-mode Codex sessions. docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md supersedes the July 8 handoff and reflects that Windows injection is already merged/proven; the Windows session should focus on rerunning proof after local follow-up commits, Windows first-run permission proof, Screen Family 10, hotkey/first-dictation proof, and reference-machine timing. The July 8 markdown SOTU is historical only; use ops/mission/state.json and ops/mission/state-of-the-union.html for current truth.",
+   "CI: DONE historically on the last verified green baseline - 3-OS run 29031546518 GREEN 2026-07-09 at ca60244; P0-G6 + P0-G3 remain closed with evidence. Current GitHub-hosted runner attempts at f61ab49 fail before checkout because of billing/spending-limit state, so fix billing and rerun before using CI as the Win/Linux trust anchor for newer commits.",
+   "DESIGN LOCKED (2026-07-08): Visual System v1 is the build reference — 5 logo directions + 10 screen-family boards × 3 OS = 30 views (see designDirection in state.json and the report at /Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html). P1-D1 + P1-D2 DONE 2026-07-08: pack vendored to assets/brand/ with index at docs/design/README.md, and the identity is LOCKED (ADR-0012 Accepted) — Option 1 K Waveform is the sole product mark, Option 4 the wordmark/site header, three binding unification rules. Build each screen to its family board with the Option 1 mark in the reserved slot; OS accent stays the only free-tier variation. Every phase has a screen-family fidelity gate (P1-G4, P2-G3, P3-G4, P4-G-SCREENS). Multi-resolution icon production (icns/ico/hicolor + tray template from the Option 1 mark) lands with P3 installer work.",
+   "P0 is DONE: Tauri scaffold, ADR/doc reconciliation, standing gates, Linux CI deps, 3-OS CI, and windowed `cargo tauri dev` on macOS/Linux/Windows are all closed with evidence.",
+   "When adding real ASR/audio deps in P1 (cpal, ort, whisper.cpp, vad-rs), each is a critical-path dependency add -> audit-network allowlist + ADR per the ADR-0004 study."
+  ],
+  "blockers": [
+   "GitHub Actions hosted runners are currently blocked by repository/account billing or spending-limit state: run 29033270673 for f61ab49 failed before checkout on macOS, Windows, and Ubuntu with no steps/logs. Fix billing/spending limit and rerun before claiming remote parity for f61ab49 or the local permission-boundary follow-up.",
+   "Linux human-focus injection proof still needs operator-in-the-loop validation on the Debian GNOME/Wayland VM: focus a normal field -> uinput types, focus a password field -> AT-SPI/UI gate refuses. Headless CI cannot move focus on Wayland.",
+   "P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.",
+   "Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).",
+   "ADR-0009 (Relay crypto) remains the one by-design Proposed ADR; operator review is required before P4 Relay crypto work."
+  ],
+  "conventions": [
+   "One work unit = one branch (mission/<phaseId>-<slug>) = one merge; <=400 changed lines.",
+   "Run the internal loop per prompts/BUILD-LOOP.md (ORIENT->PLAN->BUILD->JUDGE->AUDIT->GATE) inside each task; mission-control governs phases/state/reporting above it.",
+   "No authority without evidence: every 'done' has an artifact saved under ops/mission/evidence/.",
+   "A green Judge with a red Audit does not merge.",
+   "Critical decision paths (JUDGE-AUDITOR.md) HALT for operator go + ADR — never merge one silently.",
+   "Heartbeat after every merge: update state.json, run node ops/mission/render-sotu.mjs, append journal.md, commit state+journal+HTML.",
+   "Visual System v1 (designDirection) is the LOCKED UI/UX source of truth: build each screen to its screen-family board (assets/brand/screens/kaydence-screen-family-NN.png). The only per-OS variation is the free-tier selection accent (macOS aqua / Windows cobalt / Linux emerald). The shared invariants — nav order, 8px card radius, prediction-blue, amber-gold merge pulse, destructive confirm gate, no cloud-sync copy on core screens — never vary; treat a change to them as a critical decision path that HALTS for operator go + ADR.",
+   "Every phase from P1 carries a screen-family fidelity gate: the phase's screens are design-reviewed against their boards (plus the keyboard/a11y checklist) before the phase closes. Identity is LOCKED (ADR-0012 Accepted 2026-07-08): Option 1 mark everywhere the logo stands alone; Option 4 wordmark for site/marketing headers only; the three unification rules are brand invariants checked at the fidelity gates.",
+   "Never weaken a non-negotiable to pass a gate — that is itself a blocking defect."
+  ]
+ }
 }
