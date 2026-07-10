@@ -130,23 +130,23 @@
   "promptPack": "prompts/VISUAL-BUILD-PROMPT-PACK.md — fable-safe, scoped prompts for resuming the visual-driven build against these boards. Build prompt for the P1 input layer: prompts/P1-CAPTURE-INJECTION-PROMPT.md (hotkey capture + universal injection, all 3 OS)."
  },
  "mission": {
-  "name": "Kaydence — Plan of Attack v3",
+  "name": "Kaydence — Plan of Attack v4 (v3 reconciled)",
   "tagline": "Speak anywhere. Ship clean text. Never leak, never lose, never lag.",
   "repo": "https://github.com/IslandDevCrew/kaydence (origin; 3-OS Actions CI live since 2026-07-08)",
   "repoPath": "/Users/IDC2.5/Kaydence/kaydence",
   "defaultBranch": "main",
-  "planDoc": "/Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html",
+  "planDoc": "docs/generated/Kaydence-SOTU-Plan-v4-Codex-Handoff-2026-07-10.html (v4 execution handoff; v3 remains the product baseline)",
   "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
   "status": "active",
   "started": "2026-07-07",
-  "updated": "2026-07-10T19:52Z",
-  "sessionCount": 8
+  "updated": "2026-07-10T23:08Z",
+  "sessionCount": 9
  },
  "policies": {
   "merge": "auto",
   "branchPrefix": "mission/",
   "maxPrLines": 400,
-  "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence with 3-OS Actions CI is LIVE; active gh auth is IslandDevCrew and the PRIVATE repo resolves. CI is the Win/Linux trust anchor, but current hosted runners are billing/spending-limit blocked before checkout. Latest verified green 3-OS baseline: Actions run 29031546518 at ca60244, completed 2026-07-09T16:09:29Z after first-run proof export. Latest checked run 29033270673 at f61ab49 failed before any job steps because GitHub reported failed account payments or a spending-limit increase requirement. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test (3-OS via CI when runners are available), pnpm check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
+  "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence with 3-OS Actions CI is LIVE; active gh auth is IslandDevCrew and the PRIVATE repo resolves. Billing is fixed with a cost-aware workflow: pushes run Linux-only, while PRs into main and manual dispatch run the full macOS/Windows/Linux matrix. Latest verified push run at this checkpoint: 29120511458 GREEN at 3238b7b; the historical full 3-OS baseline remains 29031546518 at ca60244 until this branch receives a PR/manual matrix. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test, frontend check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
  },
  "phases": [
   {
@@ -209,16 +209,16 @@
      "status": "passed",
      "evidence": "ops/mission/evidence/2026-07-09-permission-proof-boundaries.txt",
      "lastRun": "2026-07-09T16:09:29Z",
-     "notes": "PASS historically/current baseline - 3-OS Actions run 29031546518 GREEN on macOS, Ubuntu, and Windows at ca60244, completed 2026-07-09T16:09:29Z. Latest run 29033270673 at f61ab49 failed before checkout on all three jobs because GitHub reported failed account payments or a spending-limit increase requirement; rerun CI after billing is fixed."
+     "notes": "PASS baseline - 3-OS Actions run 29031546518 GREEN on macOS, Ubuntu, and Windows at ca60244, completed 2026-07-09T16:09:29Z. Billing is fixed; the cost-aware workflow now runs Linux on push and the full 3-OS matrix on PR/manual dispatch. Latest push run 29120511458 is GREEN at 3238b7b. Run the full PR/manual matrix for every delivery branch before merge."
     },
     {
      "id": "P0-G7",
-     "title": "ADRs accepted (0001-0008, 0010-0012); 0009 Proposed by design",
+     "title": "ADRs accepted (0001-0008, 0010-0014); 0009 Proposed by design",
      "command": "bash scripts/check-adr-status.sh",
      "status": "passed",
      "evidence": "ops/mission/evidence/P0-G7-adr-status-2026-07-08.txt",
-     "lastRun": "2026-07-08T01:30:00Z",
-     "notes": "check-adr-status.sh returns 0: 11 of 12 ADRs Accepted incl. ADR-0012 (visual identity, operator-selected 2026-07-08); ADR-0009 (Relay crypto) is again the single declared by-design exception (operator crypto review gates P4-1)."
+     "lastRun": "2026-07-10T23:08Z",
+     "notes": "check-adr-status.sh returns 0: 13 of 14 ADRs Accepted through ADR-0014 (real whisper.cpp ASR); ADR-0009 (Relay crypto) remains the single declared by-design exception and requires operator crypto review before P4 Relay work."
     }
    ],
    "tasks": [
@@ -344,18 +344,18 @@
      "title": "Latency + footprint budgets met in Raw mode (release->inject <=700ms GPU / <=1200ms CPU; idle RAM <=250MB)",
      "command": "bash scripts/bench.sh --check",
      "status": "pending",
-     "evidence": "ops/mission/evidence/2026-07-09-first-run-setup-timing.txt",
-     "lastRun": "2026-07-09T14:53Z",
-     "notes": "PARTIAL working gate green locally and in 3-OS CI run 29022084029 at 699ff3b: kaydence --bench emits machine-readable JSON for the implemented Raw orchestration path, and scripts/bench.sh --check enforces every measured AGENTS section 5 budget instead of skipping. Local follow-up PASS measured hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, light_cleanup_added=1ms. Gate remains pending until real Parakeet/Whisper ASR, GPU release->inject, idle RAM/CPU, and reference-machine p95 are measured."
+     "evidence": "ops/mission/evidence/2026-07-10-p1-g4-board01.txt",
+     "lastRun": "2026-07-10T23:08Z",
+     "notes": "PARTIAL working gate remains green: 2026-07-10 follow-up measured hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=5ms, and light_cleanup_added=1ms. Gate remains pending until real ASR GPU release->inject, idle RAM/CPU, and reference-machine p95 are measured; this UI unit does not close it."
     },
     {
      "id": "P1-G4",
      "title": "Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup & Injection (injection paths + Raw), 07 Privacy & Context (no-transmission / secure-field posture), 10 First Run & License match their boards",
      "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{01,03,07,10}.png + keyboard/a11y checklist",
      "status": "pending",
-     "evidence": "ops/mission/evidence/2026-07-10-p1-g4-fidelity-gap.txt",
-     "lastRun": "2026-07-10T19:52Z",
-     "notes": "PENDING with a concrete gap analysis (2026-07-10): invariants HOLD (nav order, 4 P1 views->boards 01/03/07/10, backend-driven truth, local-only privacy copy). Board-level composition NOT yet matched: 01 lacks the waveform record header + left status cards + in-view cleanup column + bottom nav + footer; 03 needs the injection/latency/test-gate panels; 07 needs the Privacy Constitution cards + Context Reader + Audit Log + per-OS permissions; 10 needs the 9-step stepper + pricing cards. Also: frontend is one 1914-line App.tsx (split per-view in the build pass). Gate closes after a board-by-board build + run/screenshot sign-off. Evidence: ops/mission/evidence/2026-07-10-p1-g4-fidelity-gap.txt"
+     "evidence": "ops/mission/evidence/2026-07-10-p1-g4-board01.txt",
+     "lastRun": "2026-07-10T23:08Z",
+     "notes": "PENDING at 1 of 4 P1 boards. Board 01 Dictation Cockpit now has a scoped design-QA pass with Browser proofs at 540x800 and 900x600, a signed native macOS screenshot, working OS accents/navigation/cleanup controls, backend-owned pending states, and extracted view/primitives. Boards 03, 07, and 10 remain open exactly as listed in the fidelity-gap evidence, and Windows/Linux still need real OS WebView proof. Do not close P1-G4 before all four boards and final human sign-off."
     },
     {
      "id": "P1-G5",
@@ -847,15 +847,15 @@
   {
    "label": "Platform parity (CI legs green)",
    "baseline": "0 / 3 (Mac-first field; Linux unserved)",
-   "current": "3 / 3 baseline green (run 29031546518 at ca60244); current f61ab49 runner attempts blocked before checkout by billing/spending limit",
+   "current": "3 / 3 historical baseline green (run 29031546518); billing fixed; latest Linux push run 29120511458 green; full branch matrix required",
    "target": "3 / 3 incl. Wayland",
    "direction": "up"
   },
   {
    "label": "ADRs accepted (0009 Proposed by design)",
    "baseline": "8",
-   "current": "12 of 13",
-   "target": "13 (0009 after crypto review)",
+   "current": "13 of 14",
+   "target": "14 (0009 after crypto review)",
    "direction": "up"
   },
   {
@@ -875,7 +875,7 @@
   {
    "label": "Visual system (logos + screen families)",
    "baseline": "none",
-   "current": "identity locked; 4 P1 family views now navigable; full board fidelity open",
+   "current": "identity locked; Board 01 QA passed; Boards 03/07/10 and real Windows/Linux captures open",
    "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS",
    "direction": "up"
   }
@@ -918,6 +918,13 @@
   }
  ],
  "prLog": [
+  {
+   "number": null,
+   "title": "P1-G4 Board 01 Dictation Cockpit - locked composition, reusable primitives, Browser/native design QA, and honest runtime states",
+   "url": "local:mission/p1-g4-cockpit",
+   "phase": "P1",
+   "mergedAt": "2026-07-10"
+  },
   {
    "number": null,
    "title": "P1 macOS run harness - signed self-contained Kaydence.app, exact launch verification, custom-protocol build, and macOS CI regression",
@@ -1384,17 +1391,17 @@
  "resume": {
   "activePhase": "P1",
   "nextActions": [
-   "LOCAL MACOS RUN + P1 FIDELITY CHECKPOINT (2026-07-10): script/build_and_run.sh now builds Tauri with custom-protocol, stages and ad-hoc signs target/release/Kaydence.app, launches through LaunchServices, and verifies the exact process; tests/build_and_run.sh is wired into the macOS CI leg. The native release app rendered backend truth, recovered the unsupported RightAlt binding by persisting F13, and stayed below the 250 MB P1 gate ceiling in the observed no-model run (85,376 KB RSS after 2m13s; the stricter <80 MB no-model product target still needs dedicated measurement/optimization). Dictate/Cleanup/Privacy/Setup now route to distinct P1 family views; the 900x600 browser check kept a 256px rail with no overflow/clipped text/errors, and native Dictate -> Privacy navigation passed. Evidence: ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt. P1-G4 remains pending for full board-level fidelity; P1-G2 remains pending for real-adapter golden ASR finals.",
-   "REMOTE/CI (2026-07-10, session 4 / Claude primary): merged codex/p1-macos-run-harness into local main (ab5b3b9) — macOS run-harness + screen-family nav, all local gates GREEN (fmt, clippy -D, frontend, audit-network, crash_recovery 2/2, short_utterance 6/6). GitHub Actions STILL billing/spending-limit blocked: runs 29093278550 and 29033270673 fail in ~3s before checkout on all three legs. This is operator-only (github.com billing). Push preserves commits and re-tests billing but cannot restore the 3-OS trust anchor until billing is cleared. Last verified-green remote baseline remains 29031546518 at ca60244.",
+   "P1-G4 BOARD 01 CHECKPOINT (2026-07-10): mission/p1-g4-cockpit now matches the locked Dictation Cockpit composition with Browser proofs at 540x800 and 900x600, a combined source comparison, signed native macOS proof, working lane/dial/navigation controls, and backend-owned blocked/pending states. Design QA passes for Board 01 only. Shared primitives and the Dictate view/CSS are extracted into files under 800 lines. Evidence: ops/mission/evidence/2026-07-10-p1-g4-board01.txt and design-qa.md. NEXT: Board 03 Cleanup & Injection using the same primitives; P1-G4 remains pending for Boards 03/07/10 plus Windows/Linux WebView proof and final human sign-off.",
+   "REMOTE/CI (2026-07-10): billing is fixed and the cost-aware workflow is live. Latest push run 29120511458 is GREEN at origin/main 3238b7b (Linux-only by policy); historical full 3-OS baseline remains 29031546518. Push this delivery branch, open a PR into main, and require its macOS/Windows/Linux matrix before merge. Active gh account is IslandDevCrew.",
    "P1-P0-8 first run: first-dictation completion is Rust-owned and persisted after a real Injected event; FirstRunStatus carries backend-owned permission_requirements rendered in Screen Family 10; permission rows can ask Rust for manual_step/proof_requirement/proof_command/expected_evidence/ready_boundary guidance plus stable OS settings targets where available; FirstRunSetupTiming records start/completion timestamps, elapsed_ms, target_ms=60000, and within_target; and FirstRunStatus.next_step now sequences setup as model metadata review -> reviewed model install -> OS permission proof -> hotkey recovery -> real first dictation -> complete. The setup card renders backend-owned next-step title/detail/action/proof, both action surfaces now render backend next_step.action_label so model metadata state shows Review models rather than generic Resolve Setup, Screen Family 10 has Export Proof wired to Rust's export_first_run_proof_plan command, required-model rows expose the read-only model-download preflight, permission rows show proof commands/evidence/do-not-mark-ready boundaries, permission proof cards can open backend-owned OS settings targets without marking readiness, and selected_asr_runtime displays Pending/Blocked/VerifiedArtifact with artifact/proof detail. Runtime proof refresh is now wired: actual hotkey events mark input proof, non-empty finalized WAL audio marks microphone proof, first-dictation completion syncs both runtime-proven rows, and the setup Refresh action drains pending proof through refresh_first_run_runtime_proofs; zero-sample WAL-only captures do not mark microphone ready; ready_to_dictate and React's visible Grant OS permissions checklist/action readiness now require every visible permission row to be Ready, preventing coarse flags from bypassing UIA/SendInput/AT-SPI/uinput/native secure-field proof rows. In-app Browser smoke passes for the UI permission/action label/settings-opener contracts with zero console errors, and prior desktop/narrow smoke passed for the setup/proof panel. macOS Accessibility and Input Monitoring preflights now run during refresh_first_run_runtime_proofs: AXIsProcessTrusted can mark the Accessibility row Ready, and IOHIDCheckAccess listen-event access can mark the Input Monitoring row Ready plus input_permission_ready. Microphone still requires non-empty persisted capture audio. Next work is remaining live OS permission proof, approved network download/progress UI, the live first-dictation journey, and reference-machine <=60s timing proof.",
    "P1-P0-1 hotkey: CORE + RUNTIME WIRING + MODE TOGGLE + REBIND UI/REGISTRATION + SECONDARY RAW OVERRIDE DONE locally — CaptureCoordinator is tested, the Tauri global-shortcut plugin registers the selected binding into the WAL -> pipeline -> injection runtime, AppSnapshot exposes hotkey_registered or hotkey_registration_error for first-run UI, set_hotkey_mode persists push-to-talk/toggle while switching the active coordinator only when idle, and set_hotkey_binding persists/re-registers an allowlisted primary binding with one-tap first-run recovery choices. The short_utterance capture/WAL suite now runs under the documented filter. Runtime permission proof refresh now records real active global-shortcut events as input proof and non-empty finalized capture audio as microphone proof for first-run readiness. Shift+RightAlt/Option can now register as an optional per-invocation Raw cleanup override; role tracking keeps an override capture isolated and the next primary capture returns to the profile cleanup dial. Cleanup default dial persistence is wired too: the visible Raw/Light/Full control calls Rust, saves cleanup_default_dial, hydrates AppSnapshot on startup, applies the selected default to non-user-edited profile targets, and preserves user-edited per-app profile overrides. LIVE MACOS REBIND PROOF 2026-07-10: the signed release app surfaced RightAlt as an unsupported scancode, the native F13 fallback registered successfully, first-run changed Set global hotkey from Issue to Ready, and app-data persisted hotkey_primary_binding=F13. Remaining is live OS permission/conflict proof on Windows/Linux, broader macOS conflict coverage, and ASR golden-clip proof after real adapters land.",
-   "P1-P0-2 model readiness/picker: STARTED — AppSnapshot now loads the registry, exposes required ASR/VAD model states, ASR candidates, selected/recommended model ids, and validated download metadata (available/size/source count), and the first-run UI renders the local ASR picker + required-model list from that backend truth. select_asr_model validates candidates, persists selected_asr_model_id in app-data/settings.json, and reapplies it on startup. refresh_model_readiness rescans app-data models and reapplies persisted ASR selection so first-run can recheck newly installed artifacts without restart. install_model_artifact now lets first-run open a native file picker and asks Rust to copy a selected local artifact into app-data models/ only after it matches the registry sha256; bad existing artifacts quarantine before replacement. Current registry TODO checksums correctly block readiness; missing models only show Download required when ModelDownloadPlan has a safe destination, expected sha256, and HTTPS sources; checksum mismatches quarantine the suspect artifact before blocking load. first_run_model_download_preflight now exposes the same reviewed metadata as a read-only build-agent/user handoff: current model state/detail, destination path, expected sha256, size, sources, license, blocked reason, operator action, and proof requirement, with no fetch and no file creation. The default hotkey runtime now resolves selected ASR into Pending/Blocked/VerifiedArtifact state from registry + app-data artifacts: missing/invalid artifacts record explicit Recognize failure reasons, while verified artifacts report path/size/runtime and still state that real inference is not implemented. ASR selection, readiness refresh, and artifact install all require an idle runtime before hot-swapping the selected ASR adapter state into the active processor. AppSnapshot, FirstRunProofPlan, the cockpit meta strip, and Screen Family 10 now all expose that same ASR runtime boundary so users/build agents can see selected model, lane, runtime, artifact path/size, adapter readiness, detail, and proof requirement. Next real work is replacing TODO hashes/sources with reviewed artifacts, implementing approved network fetch/progress UI, building Parakeet/Whisper engine adapters, and adding WER/latency evidence.",
+   "P1-P0-2 local ASR: real whisper.cpp transcription is implemented behind asr-whisper, with P1-G2 passed on the synthetic golden corpus and genuine GPU-to-CPU fallback evidence. Model selection, verified local artifact install, quarantine, and runtime status are backend-owned. Remaining: reviewed registry hashes/sources, the separately operator-gated HTTPS download/progress surface, Parakeet/ort as the independent second runtime, and human-voice WER/reference latency. Hugging Face currently identifies ggerganov/whisper.cpp as MIT and publishes artifact SHA values; this checkpoint does not mutate the registry.",
    "P1-P0-4 history/recovery: DONE core and P1-G1 locally passed with a repaired real crash_recovery filter. WAL + SQLite are real; recent_history exposes app-data SQLite sessions/failures, applies retention, and surfaces recoverable orphan WAVs; delete/export/purge/playback are backend-owned and safe-path checked. The event_sequences gate proves Started -> AudioPersisted -> ASR -> cleanup -> one delivery outcome for happy path, focus-change hold, secure-field hold, engine fallback, and cleanup fallback, and it is green through 3-OS CI run 29022084029 at 699ff3b. Remaining polish is recovered-audio re-transcription after real ASR adapters and fresh 3-OS CI after each new push.",
    "P1-P0-6 latency: PARTIAL WORKING GATE - kaydence --bench emits machine-readable Raw-path budget JSON and scripts/bench.sh --check enforces measured metrics in CI instead of skipping. It is green locally and in 3-OS CI run 29022084029; local follow-up PASS: hotkey_to_capture=7ms, partial_lag=120ms, release_to_inject_cpu=6ms, light_cleanup_added=1ms. P1-G3 remains pending for real ASR/GPU/idle-footprint/reference-machine evidence.",
    "P1-P0-7 privacy posture: DONE 2026-07-09 — README privacy page now states no telemetry/accounts/cloud screen capture/default egress, local-only history, and memory-only context; scripts/check-privacy-posture.sh runs audit-network, asserts README promises, and blocks banned screen-capture primitives; CI runs it after audit-network; the cockpit has a Screen Family 07 Privacy & Context panel with browser-smoke screenshots. Future BYOK/model-download/Harbor network surfaces still require ADR + toggle + allowlist review.",
    "P1-P0-3 injection: platform spine is moving — strategy fixed in ADR-0013, Linux AT-SPI/uinput has local/live evidence, macOS AX/CGEvent/NSPasteboard paths have local evidence, and Windows UIA+SendInput is merged with live Fable-box proof. Validate the Linux human-focus path on the Debian-12 GNOME VM and keep secure-field/focus-binding evidence explicit.",
    "CONTINUATION/HANDOFF: docs/CODEX_SUPER_GOAL_PROMPT.md is current as of 2026-07-09T17:42Z and should be used for new goal-mode Codex sessions. docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md supersedes the July 8 handoff and reflects that Windows injection is already merged/proven; the Windows session should focus on rerunning proof after local follow-up commits, Windows first-run permission proof, Screen Family 10, hotkey/first-dictation proof, and reference-machine timing. The July 8 markdown SOTU is historical only; use ops/mission/state.json and ops/mission/state-of-the-union.html for current truth.",
-   "CI: DONE historically on the last verified green baseline - 3-OS run 29031546518 GREEN 2026-07-09 at ca60244; P0-G6 + P0-G3 remain closed with evidence. Current GitHub-hosted runner attempts at f61ab49 fail before checkout because of billing/spending-limit state, so fix billing and rerun before using CI as the Win/Linux trust anchor for newer commits.",
+   "CI: billing fixed. Pushes run Linux-only for cost control; PRs into main and manual dispatch run the full macOS/Windows/Linux matrix. Latest push run 29120511458 is GREEN at 3238b7b; historical full 3-OS baseline is 29031546518. Require a fresh full matrix for every delivery branch before merge.",
    "DESIGN LOCKED (2026-07-08): Visual System v1 is the build reference — 5 logo directions + 10 screen-family boards × 3 OS = 30 views (see designDirection in state.json and the report at /Users/IDC2.5/Documents/Kaydence/docs/generated/Kaydence-Visual-Generation-Report-v1-2026-07-08.html). P1-D1 + P1-D2 DONE 2026-07-08: pack vendored to assets/brand/ with index at docs/design/README.md, and the identity is LOCKED (ADR-0012 Accepted) — Option 1 K Waveform is the sole product mark, Option 4 the wordmark/site header, three binding unification rules. Build each screen to its family board with the Option 1 mark in the reserved slot; OS accent stays the only free-tier variation. Every phase has a screen-family fidelity gate (P1-G4, P2-G3, P3-G4, P4-G-SCREENS). Multi-resolution icon production (icns/ico/hicolor + tray template from the Option 1 mark) lands with P3 installer work.",
    "P0 is DONE: Tauri scaffold, ADR/doc reconciliation, standing gates, Linux CI deps, 3-OS CI, and windowed `cargo tauri dev` on macOS/Linux/Windows are all closed with evidence.",
    "When adding real ASR/audio deps in P1 (cpal, ort, whisper.cpp, vad-rs), each is a critical-path dependency add -> audit-network allowlist + ADR per the ADR-0004 study."
