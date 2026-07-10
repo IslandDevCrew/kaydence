@@ -90,9 +90,9 @@ impl AsrEngine for WhisperCppEngine {
             params.set_initial_prompt(&prompt);
         }
 
-        state
-            .full(params, &request.samples)
-            .map_err(|e| AsrError::Inference(format!("whisper inference failed on {model_id}: {e}")))?;
+        state.full(params, &request.samples).map_err(|e| {
+            AsrError::Inference(format!("whisper inference failed on {model_id}: {e}"))
+        })?;
 
         let num_segments = state.full_n_segments();
 
@@ -102,9 +102,9 @@ impl AsrEngine for WhisperCppEngine {
             let segment = state
                 .get_segment(i)
                 .ok_or_else(|| AsrError::Inference(format!("whisper segment {i} missing")))?;
-            let seg = segment
-                .to_str()
-                .map_err(|e| AsrError::Inference(format!("whisper segment {i} text failed: {e}")))?;
+            let seg = segment.to_str().map_err(|e| {
+                AsrError::Inference(format!("whisper segment {i} text failed: {e}"))
+            })?;
             let trimmed = seg.trim();
             if trimmed.is_empty() {
                 continue;
