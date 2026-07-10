@@ -99,9 +99,14 @@ fn whisper_transcribes_a_local_golden_clip() {
     };
     assert!(!samples.is_empty(), "golden clip decoded to zero samples");
 
+    // Default GPU; KAYDENCE_WHISPER_LANE=cpu forces the CPU fallback lane.
+    let lane = match std::env::var("KAYDENCE_WHISPER_LANE").as_deref() {
+        Ok("cpu") => EngineLane::LocalCpu,
+        _ => EngineLane::LocalGpu,
+    };
     let spec = LocalAsrAdapterSpec {
         model_id: "whisper-local-golden".to_string(),
-        lane: EngineLane::LocalGpu,
+        lane,
         runtime: "whisper.cpp".to_string(),
         artifact_path: model_path,
         artifact_size_bytes: std::fs::metadata(&model).map(|m| m.len()).unwrap_or(0),

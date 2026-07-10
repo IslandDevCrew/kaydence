@@ -27,3 +27,15 @@ HONEST CAVEATS (hardening, tracked):
   need the same proof (CI billing-blocked for the 3-OS run).
 - Reproduce: KAYDENCE_WHISPER_MODEL=<ggml.bin> KAYDENCE_WHISPER_CLIP=<16k mono wav> \
     KAYDENCE_WHISPER_EXPECT=<substr> cargo test --features asr-whisper --test asr_golden -- --nocapture
+
+--- CPU LANE PROOF (2026-07-10T18:37Z) ---
+Whisper adapter is now lane-aware: EngineLane::LocalCpu forces use_gpu(false).
+Same corpus forced through the CPU lane (KAYDENCE_WHISPER_LANE=cpu):
+  [PASS] lane=LocalCpu "hello there"        -> "Hello there"          245ms rtf=0.360
+  [PASS] lane=LocalCpu "send the report"    -> "Send the report."     245ms rtf=0.254
+  [PASS] lane=LocalCpu pangram              -> exact                  250ms rtf=0.100
+  [PASS] lane=LocalCpu "open the pull ..."  -> "Open the pull request and merge it." 250ms rtf=0.139
+Gives a real local GPU->CPU fallback, both lanes on genuine whisper.cpp inference.
+NOTE: this is the whisper.cpp runtime on CPU — it is NOT the independent Parakeet/ort
+runtime. ADR-0002's ≥2-independent-runtimes supply-chain/licensing hedge is still
+OWED (Parakeet/ort adapter = mel features + RNNT decode, a larger separate unit).

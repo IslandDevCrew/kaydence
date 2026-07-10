@@ -34,13 +34,18 @@ impl WhisperCppEngine {
     fn ensure_loaded(&mut self) -> Result<&WhisperContext, AsrError> {
         if self.ctx.is_none() {
             let path = self.spec.artifact_path.to_string_lossy().to_string();
-            let ctx = WhisperContext::new_with_params(&path, WhisperContextParameters::default())
-                .map_err(|e| {
-                    AsrError::Unavailable(format!(
-                        "failed to load whisper model '{}' at {}: {e}",
-                        self.spec.model_id, path
-                    ))
-                })?;
+            // Lane-aware acceleration: the LocalCpu lane forces GPU off so the
+            // same model serves as the real CPU fallback when the GPU lane is
+            // unavailable (engine/AGENTS.md fallback chain). LocalGpu/BYOK use
+            // GPU where the build supports it.
+            let mut params = WhisperContextParameters::default();
+            params.use_gpu(!matches!(self.spec.lane, EngineLane::LocalCpu));
+            let ctx = WhisperContext::new_with_params(&path, params).map_err(|e| {
+                AsrError::Unavailable(format!(
+                    "failed to load whisper model '{}' at {}: {e}",
+                    self.spec.model_id, path
+                ))
+            })?;
             self.ctx = Some(ctx);
         }
         // Just populated above if it was None.
