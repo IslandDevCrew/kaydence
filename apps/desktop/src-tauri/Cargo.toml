@@ -27,6 +27,13 @@ ringbuf = "0.5"
 rubato = "1"
 audioadapter-buffers = "2"
 
+# Real ASR engine (P1-P0-2, ADR-0014). whisper.cpp bindings, MIT. OFF by default:
+# the `asr-whisper` feature opts the native C++ compile in so the default build
+# and CI stay fast and dependency-light until per-OS acceleration is matrix-proven.
+# Loads a checksum-verified LOCAL ggml model — adds NO network surface (model
+# download is a separate still-gated decision, ADR-0014 §4). audit-network stays green.
+whisper-rs = { version = "0.16", optional = true }
+
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-dialog = "2"
@@ -73,3 +80,6 @@ custom-protocol = ["tauri/custom-protocol"]
 # Feature-gated network surfaces stay OFF by default (non-negotiable #1).
 byok = []
 relay = []
+# Real whisper.cpp ASR adapter (ADR-0014). OFF by default — opts the native
+# whisper.cpp compile in. Not a network surface (loads a local verified model).
+asr-whisper = ["dep:whisper-rs"]

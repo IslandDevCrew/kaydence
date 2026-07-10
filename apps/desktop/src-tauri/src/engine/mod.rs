@@ -8,6 +8,9 @@
 use crate::events::{SessionEvent, SessionId};
 use std::path::PathBuf;
 
+#[cfg(feature = "asr-whisper")]
+mod whisper;
+
 pub const DEFAULT_NO_SPEECH_REJECT_THRESHOLD: f32 = 0.80;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -253,6 +256,17 @@ impl LocalAsrAdapterState {
 }
 
 pub fn local_asr_stack(state: LocalAsrAdapterState) -> EngineStack {
+    // With the `asr-whisper` feature, a verified whisper.cpp artifact routes to
+    // the real adapter (ADR-0014); every other case keeps the honest
+    // pending/blocked engine. Default builds are unchanged.
+    #[cfg(feature = "asr-whisper")]
+    {
+        if let LocalAsrAdapterState::VerifiedArtifact { spec } = &state {
+            if spec.runtime == "whisper.cpp" {
+                return EngineStack::new(vec![whisper::WhisperCppEngine::boxed(spec.clone())]);
+            }
+        }
+    }
     EngineStack::new(vec![LocalAsrAdapterEngine::boxed(state)])
 }
 

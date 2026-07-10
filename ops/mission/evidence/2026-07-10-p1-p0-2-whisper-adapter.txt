@@ -1,0 +1,35 @@
+P1-P0-2 REAL ASR ENGINE — whisper.cpp adapter (ADR-0014)
+Captured: 2026-07-10T18:22Z  ·  branch: mission/p1-p0-2-whisper-adapter  ·  host: macOS (Apple Silicon)
+
+WHAT LANDED
+- engine/whisper.rs: WhisperCppEngine implements AsrEngine via whisper-rs 0.16
+  (whisper.cpp, MIT). Lazy-loads a LOCAL verified ggml model, transcribes the
+  16kHz mono f32 WAL boundary, maps dictionary_hints -> initial prompt, emits
+  per-segment partials + RawFinal, rejects sample-rate mismatch + empty finals.
+- engine/mod.rs: local_asr_stack() routes a VerifiedArtifact with runtime
+  "whisper.cpp" to the real engine ONLY under feature asr-whisper; default
+  build unchanged (still the honest pending/blocked engine).
+- Cargo.toml: whisper-rs optional dep + off-by-default feature asr-whisper.
+  Model DOWNLOAD stays a separate gated surface (ADR-0014 §4) — no app egress added.
+- tests/asr_golden.rs: real end-to-end golden-clip test through local_asr_stack;
+  #![cfg(feature="asr-whisper")]; SKIPS loudly unless KAYDENCE_WHISPER_MODEL is set.
+
+GATE EVIDENCE (this host)
+- cargo fmt --check ............................. PASS
+- cargo clippy -D warnings (default) ............ PASS
+- cargo clippy -D warnings (--features asr-whisper, all-targets) . PASS
+- cargo build (default, feature OFF) ............ PASS (whisper.cpp NOT compiled)
+- cargo build --features asr-whisper ........... PASS (whisper.cpp compiled from source)
+- cargo test (default) ......................... 225 lib + crash_recovery 2 + short_utterance 6 + event_sequences 5 ... all green
+- cargo test --features asr-whisper --test asr_golden ... compiles + SKIPS cleanly (no local model) — P1-G2 NOT claimed
+- scripts/audit-network.sh ..................... PASS (0 network call sites)
+- scripts/check-adr-status.sh .................. PASS (ADR-0014 Accepted)
+- scripts/check-frontend.sh .................... PASS
+
+HONESTY / STILL OWED (per ADR-0014)
+- P1-G2 is NOT passed: needs a real model + golden clip run with measured WER/latency.
+  Runnable now via: KAYDENCE_WHISPER_MODEL=<ggml.bin> KAYDENCE_WHISPER_CLIP=<16k.wav> \
+    cargo test --features asr-whisper --test asr_golden -- --nocapture
+- Parakeet/ort CPU adapter (ADR-0002 second engine) — deferred.
+- Gated model-download network surface — separate ADR-accept, still Proposed.
+- CI 3-OS proof blocked by GitHub Actions billing (operator-only).
