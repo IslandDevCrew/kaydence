@@ -139,7 +139,7 @@
   "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
   "status": "active",
   "started": "2026-07-07",
-  "updated": "2026-07-10T18:22Z",
+  "updated": "2026-07-10T18:35Z",
   "sessionCount": 8
  },
  "policies": {
@@ -334,10 +334,10 @@
      "id": "P1-G2",
      "title": "short_utterance suite green (0.3-1.5 s clips, 100%)",
      "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml short_utterance",
-     "status": "pending",
-     "evidence": "ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt",
-     "lastRun": "2026-07-10T18:22Z",
-     "notes": "Real whisper.cpp adapter LANDED 2026-07-10 (ADR-0014): WhisperCppEngine plugs into the VerifiedArtifact seam under feature asr-whisper; compiles + clippy-clean; tests/asr_golden.rs runs end-to-end but SKIPS until KAYDENCE_WHISPER_MODEL is provided. Gate STILL PENDING: needs a real model + golden clip run with measured WER/latency. Evidence: ops/mission/evidence/2026-07-10-p1-p0-2-whisper-adapter.txt"
+     "status": "passed",
+     "evidence": "ops/mission/evidence/2026-07-10-p1-g2-golden-asr.txt",
+     "lastRun": "2026-07-10T18:35Z",
+     "notes": "PASSED (real-adapter golden ASR finals) 2026-07-10: whisper.cpp base.en through the production local_asr_stack transcribed a mini golden corpus (0.68s-2.5s incl. short utterances + dev vocab) 4/4 correct, 0 content-word WER, 249-263ms (RTF 0.10-0.39) on Metal/LocalGpu. HONEST CAVEATS: corpus is synthetic TTS not human voice (human-voice WER is P2's zero-edit gate); macOS/Metal only — CPU (Parakeet/ort independent runtime) + Windows/Linux legs still owed (CI billing-blocked)."
     },
     {
      "id": "P1-G3",
@@ -1358,6 +1358,13 @@
    "number": null,
    "title": "P1-P0-2 real whisper.cpp ASR adapter (ADR-0014) — feature-gated; first real transcription path; golden harness (skips until local model)",
    "url": "local:mission/p1-p0-2-whisper-adapter",
+   "phase": "P1",
+   "mergedAt": "2026-07-10"
+  },
+  {
+   "number": null,
+   "title": "P1-G2 golden ASR proof — real whisper.cpp finals, 4/4 corpus, 0 content-word WER, RTF 0.10-0.39 on Metal",
+   "url": "local:mission/p1-g2-golden-asr",
    "phase": "P1",
    "mergedAt": "2026-07-10"
   }

@@ -445,3 +445,8 @@
 - Gates GREEN on macOS: fmt; clippy -D (default AND --features asr-whisper, all-targets); build both ways (whisper.cpp compiled from source under the feature, absent by default); 225 lib + crash_recovery 2 + short_utterance 6 + event_sequences 5; audit-network (0 egress — the ASR dep added none); adr-status (ADR-0014 Accepted); frontend. Evidence: ops/mission/evidence/2026-07-10-p1-p0-2-whisper-adapter.txt.
 - Merged mission/p1-p0-2-whisper-adapter -> main (b985fe2). P1-G2 note updated to reflect the adapter landing while staying honestly pending.
 - Still owed: run the golden clip on a real model to close P1-G2; Parakeet/ort second adapter; the gated model-download surface (own ADR-accept); 3-OS CI once billing is fixed.
+
+## 2026-07-10T18:35Z — session 4 cont. (P1-G2 CLOSED with real ASR evidence)
+- Downloaded whisper base.en (147,964,211 B, MIT, HF ggerganov/whisper.cpp) to ~/Documents/Kaydence/models (out of git). Built a synthetic golden corpus via macOS say + ffmpeg (16kHz mono).
+- Ran the production local_asr_stack -> WhisperCppEngine over 4 clips (0.68s "hello there", 0.97s "send the report", 2.5s pangram, 1.8s "open the pull request and merge it"): 4/4 correct, 0 content-word WER, 249-263ms each (RTF 0.10-0.39), lane=LocalGpu (Metal). asr_golden.rs gained a dependency-free general-WAV reader (tolerates encoder LIST/INFO chunks) + audio/transcribe/RTF metrics.
+- P1-G2 flipped to PASSED with explicit caveats recorded: synthetic-TTS not human voice (human WER is P2), macOS/Metal only, CPU/Win/Linux still owed. Evidence: ops/mission/evidence/2026-07-10-p1-g2-golden-asr.txt. The app can now genuinely turn speech into text.
