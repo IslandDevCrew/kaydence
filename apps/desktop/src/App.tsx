@@ -10,6 +10,7 @@ const markUrl = new URL(
 type OsLane = "mac" | "windows" | "linux";
 type HotkeyMode = "push_to_talk" | "toggle";
 type CleanupDial = "raw" | "light" | "full";
+type AppView = "Dictate" | "Cleanup" | "Privacy" | "Setup";
 
 interface LaneSpec {
   id: OsLane;
@@ -21,6 +22,7 @@ interface LaneSpec {
 interface NavItem {
   label: string;
   phase: string;
+  view?: AppView;
 }
 
 interface Metric {
@@ -439,16 +441,16 @@ const lanes: LaneSpec[] = [
 ];
 
 const navItems: NavItem[] = [
-  { label: "Dictate", phase: "P1" },
+  { label: "Dictate", phase: "P1", view: "Dictate" },
   { label: "Whisper-Ahead", phase: "P3" },
-  { label: "Cleanup", phase: "P2" },
+  { label: "Cleanup", phase: "P2", view: "Cleanup" },
   { label: "Relay", phase: "P4" },
   { label: "Voiceprint", phase: "P4" },
   { label: "Conductor", phase: "P4" },
-  { label: "Privacy", phase: "P1" },
+  { label: "Privacy", phase: "P1", view: "Privacy" },
   { label: "Dictionary", phase: "P2" },
   { label: "Analytics", phase: "P3" },
-  { label: "Setup", phase: "P1" },
+  { label: "Setup", phase: "P1", view: "Setup" },
 ];
 
 const metrics: Metric[] = [
@@ -656,6 +658,7 @@ function historySummary(session: HistorySession): string {
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
   const [activeLane, setActiveLane] = useState<OsLane>("mac");
+  const [activeView, setActiveView] = useState<AppView>("Dictate");
   const [snapshot, setSnapshot] = useState<AppSnapshot>(previewSnapshot);
   const [snapshotSource, setSnapshotSource] = useState<"backend" | "preview">("preview");
   const [historySessions, setHistorySessions] = useState<HistorySession[]>(previewHistory);
@@ -743,6 +746,18 @@ export function App(): JSX.Element {
   const firstRunProofExportLabel = firstRunProofExport?.exported
     ? `${firstRunProofExport.item_count} proof items`
     : "Build-agent handoff";
+  const viewHeading: Record<AppView, string> = {
+    Dictate: "Dictation cockpit",
+    Cleanup: "Cleanup & injection",
+    Privacy: "Privacy & context",
+    Setup: "First run setup",
+  };
+  const viewFamily: Record<AppView, string> = {
+    Dictate: "Screen family 01",
+    Cleanup: "Screen family 03",
+    Privacy: "Screen family 07",
+    Setup: "Screen family 10",
+  };
   const requiredModels = snapshot.settings.first_run.required_models;
   const showModelRecheck =
     !snapshot.settings.first_run.model_ready &&
@@ -1194,8 +1209,11 @@ export function App(): JSX.Element {
         <nav className="nav-list">
           {navItems.map((item) => (
             <button
-              className={item.label === "Dictate" ? "nav-item active" : "nav-item"}
+              aria-current={item.view === activeView ? "page" : undefined}
+              className={item.view === activeView ? "nav-item active" : "nav-item"}
+              disabled={!item.view}
               key={item.label}
+              onClick={() => item.view && setActiveView(item.view)}
               type="button"
             >
               <span>{item.label}</span>
@@ -1219,8 +1237,8 @@ export function App(): JSX.Element {
       <section className="workspace" aria-label={`${snapshot.app_name} cockpit`}>
         <header className="topbar">
           <div>
-            <p className="eyebrow">P1 recovery build</p>
-            <h1>Dictation cockpit</h1>
+            <p className="eyebrow">{viewFamily[activeView]}</p>
+            <h1>{viewHeading[activeView]}</h1>
             <span className="snapshot-source">{snapshotSource} config</span>
           </div>
           <div className="lane-switcher" aria-label="Operating system lane">
@@ -1238,17 +1256,20 @@ export function App(): JSX.Element {
           </div>
         </header>
 
-        <section className="metric-grid" aria-label="Current build evidence">
-          {metrics.map((metric) => (
-            <article className="metric-card" key={metric.label}>
-              <span>{metric.label}</span>
-              <strong>{metric.value}</strong>
-              <p>{metric.detail}</p>
-            </article>
-          ))}
-        </section>
+        {activeView === "Dictate" ? (
+          <section className="metric-grid" aria-label="Current build evidence">
+            {metrics.map((metric) => (
+              <article className="metric-card" key={metric.label}>
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+                <p>{metric.detail}</p>
+              </article>
+            ))}
+          </section>
+        ) : null}
 
-        <section className="content-grid">
+        <section className={`content-grid view-${activeView.toLowerCase()}`}>
+          {activeView === "Dictate" ? (
           <article className="panel recording-panel">
             <div className="panel-header">
               <div>
@@ -1409,7 +1430,10 @@ export function App(): JSX.Element {
               )}
             </div>
           </article>
+          ) : null}
 
+          {activeView === "Cleanup" ? (
+          <>
           <article className="panel">
             <div className="panel-header">
               <div>
@@ -1524,7 +1548,10 @@ export function App(): JSX.Element {
               </div>
             </div>
           </article>
+          </>
+          ) : null}
 
+          {activeView === "Privacy" ? (
           <article className="panel privacy-panel">
             <div className="panel-header">
               <div>
@@ -1543,7 +1570,9 @@ export function App(): JSX.Element {
               ))}
             </div>
           </article>
+          ) : null}
 
+          {activeView === "Setup" ? (
           <article className="panel setup-panel">
             <div className="panel-header">
               <div>
@@ -1877,6 +1906,7 @@ export function App(): JSX.Element {
               {nextStep.action_label}
             </button>
           </article>
+          ) : null}
         </section>
       </section>
     </main>

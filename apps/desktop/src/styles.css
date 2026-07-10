@@ -110,6 +110,16 @@ button {
   color: #ffffff;
 }
 
+.nav-item:disabled {
+  cursor: default;
+  opacity: .48;
+}
+
+.nav-item:disabled:hover {
+  background: transparent;
+  color: #c7d7dc;
+}
+
 .sidebar-card {
   display: grid;
   grid-template-columns: 10px minmax(0, 1fr);
@@ -336,6 +346,12 @@ button {
   grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
   gap: 14px;
   min-width: 0;
+}
+
+.content-grid.view-dictate,
+.content-grid.view-privacy,
+.content-grid.view-setup {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .panel {
@@ -1248,21 +1264,12 @@ button {
 }
 
 @media (max-width: 980px) {
-  .app-shell {
+  .content-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .sidebar {
-    min-height: auto;
-  }
-
-  .nav-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .content-grid,
   .metric-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .topbar {
@@ -1305,6 +1312,20 @@ button {
 
   .proof-export-action {
     max-width: 220px;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    min-height: auto;
+  }
+
+  .nav-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

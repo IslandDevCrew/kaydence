@@ -1,0 +1,132 @@
+KAYDENCE P1 MACOS RUN HARNESS + SCREEN-FAMILY NAVIGATION EVIDENCE
+Timestamp: 2026-07-10T03:32Z
+Branch: codex/p1-macos-run-harness
+Base HEAD before this slice: c59c4fe
+
+SCOPE
+- Repair the canonical Codex Run/Verify path so it launches a real, visible,
+  self-contained macOS Tauri app without requiring a globally installed
+  cargo-tauri command.
+- Move the four P1 screen families from one stacked recovery page into
+  navigable Dictate, Cleanup, Privacy, and Setup views.
+- Preserve backend-owned truth. No model download, network surface, ASR claim,
+  OS permission toggle, or remote push was added.
+
+FORMER REPORT COMPARISON
+- Former downloaded SOTU: 10/34 tasks, 6/22 gates, 29%, updated 2026-07-08.
+- Current pre-slice mission truth: 11/34 tasks, 9/23 gates, 32%, updated
+  2026-07-09T18:15Z.
+- This slice materially improves runnable/native and visual architecture but
+  does not falsely close a P1 task or gate.
+
+RUN-HARNESS RED/GREEN PROOF
+1. RED: ./script/build_and_run.sh --verify returned 0 after `cargo tauri dev`
+   failed (`no such command: tauri`). Its broad pgrep matched an unrelated
+   process containing the Kaydence workspace path.
+2. RED: the exact launched child died when the launching terminal closed.
+3. RED: no Kaydence.app bundle was staged.
+4. RED: the copied bundle failed strict signature verification because its
+   resources were not sealed.
+5. RED: a release build still attempted the Vite dev URL because the crate and
+   build command did not enable Tauri's custom-protocol feature.
+6. GREEN: bash tests/build_and_run.sh
+   PASS: build-and-run verification tracks the launched child process
+
+IMPLEMENTED RUN CONTRACT
+- Normal Run/Verify builds the frontend and release backend with
+  `--features custom-protocol`.
+- The harness stages target/release/Kaydence.app with Info.plist, icon.icns,
+  bundle id io.kaydence.app, and a microphone usage description.
+- It ad-hoc signs the completed local-development bundle, launches through
+  LaunchServices, and verifies the exact `kaydence` process name.
+- Debug mode remains explicit and builds the debug profile with the embedded
+  custom protocol.
+- CI now runs tests/build_and_run.sh on the macOS leg.
+
+FRESH BUILD / SIGNING / PROCESS EVIDENCE
+- ./script/build_and_run.sh --verify: PASS
+  - release profile finished
+  - target/release/Kaydence.app signature replaced
+  - Kaydence launched as pid 21183
+- codesign --verify --deep --strict --verbose=2 target/release/Kaydence.app:
+  PASS (valid on disk; satisfies Designated Requirement)
+- Signing class: ad-hoc local-development signature, identifier
+  io.kaydence.app, sealed resources present. This is not a distribution or
+  notarization claim; spctl distribution trust remains outside this slice.
+- Persistent process check after launcher exit:
+  pid=21183, ppid=1, state=S, RSS=85,376 KB, CPU=0.0% at 02:13 elapsed.
+- Native WebView accessibility URL: tauri://localhost.
+
+NATIVE COMPUTER-USE PROOF
+- The signed release bundle rendered the full Kaydence cockpit rather than a
+  blank WebView.
+- The default RightAlt binding reported `Unknown scancode for AltRight` on this
+  Mac. Selecting the built-in F13 fallback changed the first-run hotkey row from
+  Issue to Ready and persisted hotkey_primary_binding=F13 in app-data
+  settings.json.
+- No macOS privacy/security setting was changed.
+- Dictate native view: only Screen Family 01 content is exposed.
+- Privacy native click: only Screen Family 07 content is exposed.
+- Screenshots:
+  - ops/mission/evidence/2026-07-10-p1-navigation-native-dictate.png
+  - ops/mission/evidence/2026-07-10-p1-navigation-native-privacy.png
+
+BROWSER RED/GREEN + RESPONSIVE PROOF
+- RED before implementation: clicking Privacy kept Dictate active and left all
+  five stacked panel headings visible (Main dictation, Output rules, macOS
+  injection, Privacy & context, First run).
+- GREEN after implementation:
+  - Privacy active -> only Privacy & context is visible.
+  - Setup active -> First run setup + First run are visible.
+  - Cleanup active -> Cleanup & injection + Output rules + macOS injection are
+    visible.
+  - Dictate active -> Dictation cockpit + Main dictation are visible.
+  - Unbuilt future views are disabled instead of pretending to navigate.
+- 900x600 viewport: 256px left rail remains; document width 885px;
+  horizontalOverflow=false; clipped text=[]; console warnings/errors=[].
+- 1440x900 prior smoke: horizontalOverflow=false; clipped text=[]; console
+  warnings/errors=[].
+- Screenshot:
+  ops/mission/evidence/2026-07-10-p1-navigation-browser-900.png
+
+FRESH LOCAL GATES
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib:
+  PASS, 225 passed / 0 failed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml short_utterance:
+  PASS, 1 WAL unit + 5 integration tests (0.3s/1.5s capture, discard, recovery).
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml crash_recovery:
+  PASS, 2 passed / 0 failed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml event_sequences:
+  PASS, 5 passed / 0 failed.
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check:
+  PASS.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  -- -D warnings: PASS.
+- pnpm --dir apps/desktop run check: PASS.
+- pnpm --dir apps/desktop run build: PASS.
+- bash scripts/audit-network.sh: PASS, 0 call sites.
+- bash scripts/check-privacy-posture.sh: PASS.
+- bash scripts/check-adr-status.sh: PASS (ADR-0009 remains the declared
+  by-design exception).
+- bash scripts/bench.sh --check: PASS for 4 implemented metrics; PARTIAL for
+  real ASR/GPU/prediction/idle/reference-machine measurements.
+
+HONEST GATE BOUNDARIES
+- P1-G2 remains pending. The documented short_utterance command is green, but
+  real Parakeet/Whisper golden clips must still prove zero empty/truncated ASR
+  finals.
+- P1-G4 remains pending. Navigation architecture, left-rail behavior, OS accent
+  lanes, P1 state coverage, keyboard reachability, and responsive overflow are
+  materially improved and proven, but a full board-level human fidelity match
+  for families 01/03/07/10 is not yet complete.
+- P1-G3 remains pending for real ASR/GPU/idle/reference-machine evidence.
+
+REMOTE TRUTH (FRESH 2026-07-10)
+- gh auth: IslandDevCrew active.
+- IslandDevCrew/kaydence: PRIVATE, ADMIN permission, default branch main.
+- git fetch origin: PASS.
+- origin/main=f61ab49; local base main c59c4fe is 13 commits ahead / 0 behind.
+- Latest run remains failure 29033270673 at f61ab49 before checkout; latest
+  verified green baseline remains run 29031546518 at ca60244.
+- No push was attempted from this slice while the hosted-runner billing boundary
+  remains unresolved.
