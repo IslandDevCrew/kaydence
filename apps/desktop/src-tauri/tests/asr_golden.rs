@@ -27,6 +27,49 @@ const MODEL_ENV: &str = "KAYDENCE_WHISPER_MODEL";
 const CLIP_ENV: &str = "KAYDENCE_WHISPER_CLIP";
 const EXPECT_ENV: &str = "KAYDENCE_WHISPER_EXPECT";
 
+/// Minimal, dependency-free PCM16-mono WAV reader for the golden fixture. Walks
+/// the RIFF chunk list (tolerating LIST/INFO and other chunks encoders insert,
+/// which the internal WAL reader intentionally does not) and returns
+/// (sample_rate, f32 samples). Golden clips are external artifacts, not WAL files.
+fn read_pcm16_mono_wav(path: &std::path::Path) -> Result<(u32, Vec<f32>), String> {
+    let b = std::fs::read(path).map_err(|e| e.to_string())?;
+    if b.len() < 12 || &b[0..4] != b"RIFF" || &b[8..12] != b"WAVE" {
+        return Err("not a RIFF/WAVE file".into());
+    }
+    let u16le = |o: usize| u16::from_le_bytes([b[o], b[o + 1]]);
+    let u32le = |o: usize| u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]);
+    let (mut rate, mut channels, mut bits) = (0u32, 0u16, 0u16);
+    let mut data: Option<&[u8]> = None;
+    let mut pos = 12;
+    while pos + 8 <= b.len() {
+        let id = &b[pos..pos + 4];
+        let size = u32le(pos + 4) as usize;
+        let body = pos + 8;
+        if body + size > b.len() {
+            break;
+        }
+        match id {
+            b"fmt " => {
+                channels = u16le(body + 2);
+                rate = u32le(body + 4);
+                bits = u16le(body + 14);
+            }
+            b"data" => data = Some(&b[body..body + size]),
+            _ => {}
+        }
+        pos = body + size + (size & 1); // chunks are word-aligned
+    }
+    if bits != 16 || channels != 1 {
+        return Err(format!("expected PCM16 mono, got {bits}-bit {channels}ch"));
+    }
+    let data = data.ok_or("no data chunk")?;
+    let samples = data
+        .chunks_exact(2)
+        .map(|c| i16::from_le_bytes([c[0], c[1]]) as f32 / i16::MAX as f32)
+        .collect();
+    Ok((rate, samples))
+}
+
 #[test]
 fn whisper_transcribes_a_local_golden_clip() {
     let Ok(model) = std::env::var(MODEL_ENV) else {
@@ -44,10 +87,10 @@ fn whisper_transcribes_a_local_golden_clip() {
     // same bytes ASR would see in the app.
     let samples = match std::env::var(CLIP_ENV) {
         Ok(clip) => {
-            let read = wal::read_samples(&PathBuf::from(&clip))
+            let (rate, decoded) = read_pcm16_mono_wav(&PathBuf::from(&clip))
                 .unwrap_or_else(|e| panic!("failed to read {CLIP_ENV}={clip}: {e}"));
-            assert_eq!(read.sample_rate, wal::SAMPLE_RATE, "clip must be 16 kHz mono");
-            read.samples
+            assert_eq!(rate, wal::SAMPLE_RATE, "clip must be 16 kHz mono");
+            decoded
         }
         Err(_) => {
             eprintln!("SKIP: {MODEL_ENV} set but {CLIP_ENV} missing — provide a 16 kHz mono wav.");
@@ -72,12 +115,23 @@ fn whisper_transcribes_a_local_golden_clip() {
         samples,
         vec!["Kaydence".to_string()],
     );
+    let n_samples = request.samples.len();
+    let started = std::time::Instant::now();
     let run = stack
         .transcribe(&request)
         .expect("real whisper.cpp transcription should succeed on a valid model+clip");
+    let elapsed_ms = started.elapsed().as_millis();
 
     let text = run.transcript.final_text.trim().to_string();
+    let audio_ms = (n_samples as u128) * 1000 / (wal::SAMPLE_RATE as u128);
     eprintln!("whisper final_text = {text:?}");
+    eprintln!(
+        "P1-G2 metrics: audio_ms={audio_ms} transcribe_ms={elapsed_ms} \
+         rtf={:.3} lane={:?} partials={}",
+        elapsed_ms as f64 / audio_ms.max(1) as f64,
+        run.lane,
+        run.transcript.partials.len(),
+    );
     assert!(!text.is_empty(), "transcription produced empty final text");
 
     if let Ok(expect) = std::env::var(EXPECT_ENV) {

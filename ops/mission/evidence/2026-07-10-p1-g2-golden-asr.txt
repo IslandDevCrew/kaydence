@@ -1,0 +1,29 @@
+P1-G2 — REAL-ADAPTER GOLDEN ASR FINALS (ADR-0014)
+Captured: 2026-07-10T18:34Z  ·  host: macOS Apple Silicon (Metal)  ·  engine: whisper.cpp base.en
+Model: /Users/IDC2.5/Documents/Kaydence/models/ggml-base.en.bin (147,964,211 B)
+Model sha256: a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
+Path under test: production local_asr_stack() -> WhisperCppEngine (feature asr-whisper)
+Clips: macOS `say` (Samantha) -> ffmpeg 16 kHz mono PCM16 (synthetic speech).
+
+RESULTS (all 4 PASS; whisper final vs spoken input):
+  [PASS] 0.68s  "hello there"                                  -> "Hello there"                                 transcribe=263ms rtf=0.386
+  [PASS] 0.97s  "send the report"                              -> "Send the report."                            transcribe=249ms rtf=0.258
+  [PASS] 2.50s  "the quick brown fox jumps over the lazy dog"  -> "The quick brown fox jumps over the lazy dog" transcribe=249ms rtf=0.100
+  [PASS] 1.80s  "open the pull request and merge it"           -> "Open the pull request and merge it."         transcribe=252ms rtf=0.140
+
+WER on content words = 0 across the corpus (case/punctuation are cleanup/'s job, not ASR).
+Latency 249-263 ms end-to-end on Metal, independent of clip length; well under the
+Raw-path budget (root AGENTS §5). Lane resolved = LocalGpu (Metal).
+
+WHAT THIS PROVES: the app now genuinely turns speech into text through the real
+adapter and the real event contract, for short (<1s) and normal utterances,
+including developer vocabulary. The P1-G2 "real-adapter golden ASR finals"
+blocker is resolved.
+
+HONEST CAVEATS (hardening, tracked):
+- Corpus is synthetic TTS, not recorded human voice; real-mic WER is P2's zero-edit
+  gate territory and needs a human-voice corpus.
+- macOS/Metal (LocalGpu) only here; CPU (Parakeet/ort) lane + Windows/Linux legs
+  need the same proof (CI billing-blocked for the 3-OS run).
+- Reproduce: KAYDENCE_WHISPER_MODEL=<ggml.bin> KAYDENCE_WHISPER_CLIP=<16k mono wav> \
+    KAYDENCE_WHISPER_EXPECT=<substr> cargo test --features asr-whisper --test asr_golden -- --nocapture
