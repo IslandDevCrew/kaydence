@@ -1,0 +1,42 @@
+P1-G4 SCREEN-FAMILY FIDELITY — STRUCTURAL GAP ANALYSIS
+Captured: 2026-07-10T19:52Z  ·  method: code (App.tsx 1914 lines + styles.css) vs boards 01/03/07/10  ·  host: macOS
+Verdict: PENDING — invariants hold; board-level composition not yet matched. NOT passed.
+
+INVARIANTS THAT HOLD (verified in code):
+- Left-nav ORDER matches boards: Dictate, Whisper-Ahead, Cleanup, Relay, Voiceprint, Conductor,
+  Privacy, Dictionary, Analytics, Setup — future-phase items disabled/honest (App.tsx:444-453).
+- 4 P1 views map to the 4 gate boards: Dictate->01, Cleanup->03, Privacy->07, Setup->10.
+- Backend-driven truth (no mock-only screens): privacy posture, permissions, ASR runtime,
+  cleanup dial, hotkey binding, real local history (play/export/delete/purge).
+- Privacy line intact: local-only copy, no cloud-sync strings on core screens.
+
+PER-BOARD GAPS (the work list to reach fidelity):
+[01 Dictation Cockpit] Built = condensed panel. MISSING vs board: waveform recording header +
+   circular record/stop control + elapsed; distinct left STATUS CARDS (Engine, Target App,
+   Global Hotkey, Privacy 'Local Only', WAL Recovery 'Healthy'); right-column Cleanup dial +
+   output-rule checklist + Output destination + Auto-paste toggle IN this view; 5-icon bottom
+   nav; footer status bar (mic source + 'All systems operational'). Present: transcript card,
+   real history strip.
+[03 Cleanup & Injection] Present: Raw/Light/Full segmented + output rules. VERIFY/MISSING:
+   Injection Method & Status panel (per-OS AX/UIA/X11+Wayland), Latency Budget (p95 capture/
+   clean/inject), Test Gates list, Before/After examples, Output Destination (per app).
+[07 Privacy & Context] Present: privacy posture grid. MISSING vs board: Privacy Constitution
+   4-card row (No Transmission / No Persistence / Local-Only Models / Password Fields Blocked),
+   Context Reader (Tier1 AX toggle, Tier2 OCR, Secure-Field, In-Memory Buffer preview, Network
+   Audit, Audit Policy), Audit Log (last 7 days), per-OS Permissions panel.
+[10 First Run & License] Present (strong): ASR engine picker, permissions w/ proof, hotkey
+   binding+recovery, cleanup default, ASR runtime, next-step sequencing, setup timing. MISSING
+   vs board: 9-step wizard STEPPER header, Whisper-Ahead enable toggle, Privacy Confirmation
+   row, and the 4 PRICING CARDS (Free $0 MIT / Pro $79 / Captain $189 / Harbor) + Start Dictating.
+
+SHARED POLISH DELTAS: OS accent lanes (aqua/cobalt/emerald) as the only per-OS variation;
+   8px card radius; prediction-blue; ~0.5s amber-gold merge pulse (Whisper-Ahead, P3); Option 1
+   K-waveform mark in the reserved top-left slot on every screen.
+
+ARCHITECTURE NOTE (not a board gap, but flagged): the whole frontend is ONE 1914-line App.tsx +
+   1336-line styles.css; views/ and components/ dirs are empty. Against 'many small files'
+   (<=800). A P1-G4 build pass should also split per-view components (Dictate/Cleanup/Privacy/
+   Setup) + shared primitives (StatusCard, SegmentedDial, NavRail, StatusFooter).
+
+NEXT: a focused P1-G4 build pass, board by board (start 01 cockpit — the primary surface),
+   then run the app and screenshot each view against its board for the human fidelity sign-off.

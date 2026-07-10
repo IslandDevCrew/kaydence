@@ -63,7 +63,7 @@ button.copy:hover{background:rgba(88,215,179,.2)}
 <body>
 <main>
   <header class="hero">
-    <p class="eyebrow">Mission Control &middot; State of the Union &middot; generated 2026-07-10 18:37Z</p>
+    <p class="eyebrow">Mission Control &middot; State of the Union &middot; generated 2026-07-10 19:52Z</p>
     <h1>Kaydence — Plan of Attack v3</h1>
     <p class="tagline">Speak anywhere. Ship clean text. Never leak, never lose, never lag.</p>
     <div style="margin-top:14px">
@@ -73,7 +73,7 @@ button.copy:hover{background:rgba(88,215,179,.2)}
       <span class="chip amber">10/23 gates passed</span>
       <span class="chip ">66 PRs merged</span>
       <span class="chip ">sessions: 8</span>
-      <span class="chip ">updated: 2026-07-10T18:37Z</span>
+      <span class="chip ">updated: 2026-07-10T19:52Z</span>
     </div>
     <div class="bar big" role="img" aria-label="Overall progress 32%"><div class="fill" style="width:32%"></div></div>
     <p class="small muted" style="margin-top:6px">Overall: 32% of tasks complete &middot; repo https://github.com/IslandDevCrew/kaydence (origin; 3-OS Actions CI live since 2026-07-08) &middot; plan: /Users/IDC2.5/Downloads/Kaydence-Plan-of-Attack-v3-2026-06-21.html</p>
@@ -228,10 +228,10 @@ Operating procedure:
       <td>ops/mission/evidence/2026-07-09-first-run-setup-timing.txt</td>
       <td>2026-07-09T14:53Z</td></tr><tr>
       <td><span class="chip ">pending</span></td>
-      <td><b>Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup &amp; Injection (injection paths + Raw), 07 Privacy &amp; Context (no-transmission / secure-field posture), 10 First Run &amp; License match their boards</b><br><span class="small">P1 navigation architecture advanced 2026-07-10: Dictate/Family 01, Cleanup/Family 03, Privacy/Family 07, and Setup/Family 10 are distinct views behind the locked left-nav order; future-phase items fail honestly as disabled. The default 900x600 window keeps a 256px rail, browser smoke found no horizontal/text overflow or console errors, and the signed native macOS bundle proved Dictate -&gt; Privacy navigation. OS accent lanes, 8px cards, backend-owned state, and identity invariants remain intact. The full human board-level fidelity match for families 01/03/07/10 remains open, so this gate stays pending.</span></td>
+      <td><b>Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup &amp; Injection (injection paths + Raw), 07 Privacy &amp; Context (no-transmission / secure-field posture), 10 First Run &amp; License match their boards</b><br><span class="small">PENDING with a concrete gap analysis (2026-07-10): invariants HOLD (nav order, 4 P1 views-&gt;boards 01/03/07/10, backend-driven truth, local-only privacy copy). Board-level composition NOT yet matched: 01 lacks the waveform record header + left status cards + in-view cleanup column + bottom nav + footer; 03 needs the injection/latency/test-gate panels; 07 needs the Privacy Constitution cards + Context Reader + Audit Log + per-OS permissions; 10 needs the 9-step stepper + pricing cards. Also: frontend is one 1914-line App.tsx (split per-view in the build pass). Gate closes after a board-by-board build + run/screenshot sign-off. Evidence: ops/mission/evidence/2026-07-10-p1-g4-fidelity-gap.txt</span></td>
       <td><code>design-review: built screens vs assets/brand/screens/kaydence-screen-family-{01,03,07,10}.png + keyboard/a11y checklist</code></td>
-      <td>ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt</td>
-      <td>2026-07-10T03:32Z</td></tr><tr>
+      <td>ops/mission/evidence/2026-07-10-p1-g4-fidelity-gap.txt</td>
+      <td>2026-07-10T19:52Z</td></tr><tr>
       <td><span class="chip green">passed</span></td>
       <td><b>event_sequences suite green (typed order for happy path, focus-change hold, secure-field hold, engine fallback, cleanup fallback)</b><br><span class="small">PASS locally and remotely: 5 integration tests prove Started -&gt; AudioPersisted -&gt; ASR -&gt; cleanup -&gt; exactly one delivery outcome for the happy path, FocusChanged hold, SecureField hold, BYOK/GPU/local-CPU fallback, and the current Full cleanup rule-floor fallback. The gate remained green in later 3-OS Actions run 29022084029 at 699ff3b.</span></td>
       <td><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml event_sequences</code></td>

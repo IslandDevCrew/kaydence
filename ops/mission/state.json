@@ -139,7 +139,7 @@
   "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
   "status": "active",
   "started": "2026-07-07",
-  "updated": "2026-07-10T18:37Z",
+  "updated": "2026-07-10T19:52Z",
   "sessionCount": 8
  },
  "policies": {
@@ -353,9 +353,9 @@
      "title": "Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup & Injection (injection paths + Raw), 07 Privacy & Context (no-transmission / secure-field posture), 10 First Run & License match their boards",
      "command": "design-review: built screens vs assets/brand/screens/kaydence-screen-family-{01,03,07,10}.png + keyboard/a11y checklist",
      "status": "pending",
-     "evidence": "ops/mission/evidence/2026-07-10-macos-run-harness-and-p1-navigation.txt",
-     "lastRun": "2026-07-10T03:32Z",
-     "notes": "P1 navigation architecture advanced 2026-07-10: Dictate/Family 01, Cleanup/Family 03, Privacy/Family 07, and Setup/Family 10 are distinct views behind the locked left-nav order; future-phase items fail honestly as disabled. The default 900x600 window keeps a 256px rail, browser smoke found no horizontal/text overflow or console errors, and the signed native macOS bundle proved Dictate -> Privacy navigation. OS accent lanes, 8px cards, backend-owned state, and identity invariants remain intact. The full human board-level fidelity match for families 01/03/07/10 remains open, so this gate stays pending."
+     "evidence": "ops/mission/evidence/2026-07-10-p1-g4-fidelity-gap.txt",
+     "lastRun": "2026-07-10T19:52Z",
+     "notes": "PENDING with a concrete gap analysis (2026-07-10): invariants HOLD (nav order, 4 P1 views->boards 01/03/07/10, backend-driven truth, local-only privacy copy). Board-level composition NOT yet matched: 01 lacks the waveform record header + left status cards + in-view cleanup column + bottom nav + footer; 03 needs the injection/latency/test-gate panels; 07 needs the Privacy Constitution cards + Context Reader + Audit Log + per-OS permissions; 10 needs the 9-step stepper + pricing cards. Also: frontend is one 1914-line App.tsx (split per-view in the build pass). Gate closes after a board-by-board build + run/screenshot sign-off. Evidence: ops/mission/evidence/2026-07-10-p1-g4-fidelity-gap.txt"
     },
     {
      "id": "P1-G5",
