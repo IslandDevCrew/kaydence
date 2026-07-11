@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import {
   MINIMUM_IDLE_MS,
   MINIMUM_OBSERVATION_MS,
@@ -9,6 +11,7 @@ import {
   computeIdleMetrics,
   parseMacCpuTime,
   parseProbeOutput,
+  runCommand,
   safeProbe,
   validateProbe,
   validateReady,
@@ -25,6 +28,15 @@ assert.match(source, /process\.platform === "darwin"/);
 assert.match(source, /\/proc\/\$\{pid\}\/stat/);
 assert.match(source, /physical_os_field_injection/);
 assert.match(source, /idle_cpu_pct/);
+assert.doesNotMatch(source, /node:url/);
+
+const help = spawnSync(process.execPath, [runner, "--help"], {
+  encoding: "utf8",
+  killSignal: "SIGKILL",
+  timeout: 2_000,
+});
+assert.equal(help.status, 0, help.stderr);
+assert.equal(help.stdout.trim(), "usage: node scripts/bench-reference.mjs [--check]");
 
 assert.equal(MINIMUM_OBSERVATION_MS, 3_000);
 assert.ok(MINIMUM_IDLE_MS >= 5_000);
@@ -82,6 +94,18 @@ assert.equal(fallbackReport.budgets.release_to_delivery_policy_p95_ms, 1_200);
 assert.deepEqual(fallbackReport.budget_failures, []);
 assert.equal(fallbackReport.status, "pass");
 
+const justOverReport = buildReport({
+  probe: fallbackProbe,
+  requestedLane: "local_gpu",
+  before: { cpuSeconds: 0, rssBytes: 250.0004 * mib, observedAtMs: 30_000 },
+  after: { cpuSeconds: 0.030012, rssBytes: 250.0004 * mib, observedAtMs: 33_000 },
+  childStderrBytes: 0,
+});
+assert.equal(justOverReport.idle_ram_mb, 250);
+assert.equal(justOverReport.idle_cpu_pct, 1);
+assert.deepEqual(justOverReport.budget_failures, ["idle_ram_mb", "idle_cpu_pct"]);
+assert.equal(justOverReport.status, "fail");
+
 assert.throws(() => parseProbeOutput("not JSON"), /probe JSON was malformed/);
 assert.throws(
   () => validateProbe(probe({ events: ["raw_final", "/private/source/path"] }), "linux"),
@@ -104,6 +128,33 @@ await assert.rejects(
   /probe completion timed out/,
 );
 assert.ok(Date.now() - timeoutStarted < 500, "completion timeout must reject promptly");
+
+const fixtureDirectory = mkdtempSync(join(tmpdir(), "kaydence-command-timeout-"));
+const fixturePidFile = join(fixtureDirectory, "pid");
+const commandStarted = Date.now();
+try {
+  await assert.rejects(
+    runCommand(
+      process.execPath,
+      [
+        "-e",
+        'require("node:fs").writeFileSync(process.argv[1], String(process.pid)); setInterval(() => {}, 1_000)',
+        fixturePidFile,
+      ],
+      { timeoutMs: 150 },
+    ),
+    /process sampler command timed out/,
+  );
+  assert.ok(Date.now() - commandStarted < 1_500, "host command timeout must reject promptly");
+  const fixturePid = Number(readFileSync(fixturePidFile, "utf8"));
+  assert.throws(
+    () => process.kill(fixturePid, 0),
+    (error) => error && error.code === "ESRCH",
+    "timed-out host command must be terminated",
+  );
+} finally {
+  rmSync(fixtureDirectory, { recursive: true, force: true });
+}
 
 const failedReport = buildReport({
   probe: probe({ release_to_delivery_policy_p95_ms: 1_201 }),

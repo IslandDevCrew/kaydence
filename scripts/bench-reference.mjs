@@ -9,12 +9,12 @@ import {
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 
 const MINIMUM_SAMPLE_COUNT = 5;
 export const MINIMUM_OBSERVATION_MS = 3_000;
-export const MINIMUM_IDLE_MS = 5_000;
+export const MINIMUM_IDLE_MS = 7_000;
 const SAMPLE_WAIT_MS = 3_100;
+const HOST_COMMAND_TIMEOUT_MS = 1_500;
 const READY_TIMEOUT_MS = 120_000;
 const COMPLETION_MARGIN_MS = 2_000;
 const TERMINATE_GRACE_MS = 1_000;
@@ -73,15 +73,31 @@ function sleep(ms) {
   return new Promise((resolveSleep) => setTimeout(resolveSleep, ms));
 }
 
-function runCommand(command, args) {
+export function runCommand(command, args, { timeoutMs = HOST_COMMAND_TIMEOUT_MS } = {}) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    return Promise.reject(fail("process sampler command timeout was invalid"));
+  }
   return new Promise((resolveCommand, rejectCommand) => {
-    execFile(command, args, { encoding: "utf8" }, (error, stdout, stderr) => {
-      if (error) {
-        rejectCommand(fail("process sampler command failed"));
-        return;
-      }
-      resolveCommand({ stdout, stderr });
-    });
+    execFile(
+      command,
+      args,
+      {
+        encoding: "utf8",
+        killSignal: "SIGKILL",
+        timeout: timeoutMs,
+        windowsHide: true,
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          const code = error.killed || error.signal === "SIGKILL"
+            ? "process sampler command timed out"
+            : "process sampler command failed";
+          rejectCommand(fail(code));
+          return;
+        }
+        resolveCommand({ stdout, stderr });
+      },
+    );
   });
 }
 
@@ -377,26 +393,30 @@ function round(value) {
   return Math.round(value * 1_000) / 1_000;
 }
 
+function exceedsBudget(value, budget) {
+  // Absorb binary arithmetic noise only; this is far below any report precision.
+  const epsilon = Number.EPSILON * 512 * Math.max(1, Math.abs(value), Math.abs(budget));
+  return value - budget > epsilon;
+}
+
 export function buildReport({ probe, requestedLane, before, after, childStderrBytes }) {
   if (!Object.hasOwn(LANE_BUDGET_MS, requestedLane)) {
     throw fail("requested lane was not reviewed");
   }
   const metrics = computeIdleMetrics(before, after);
-  const idleRamMb = round(metrics.idleRamMb);
-  const idleCpuPct = round(metrics.idleCpuPct);
   const latencyBudgetMs = LANE_BUDGET_MS[probe.lane];
   const budgetFailures = [];
   if (probe.release_to_delivery_policy_p95_ms > latencyBudgetMs) {
     budgetFailures.push("release_to_delivery_policy_p95_ms");
   }
-  if (idleRamMb > RAM_BUDGET_MB) budgetFailures.push("idle_ram_mb");
-  if (idleCpuPct > CPU_BUDGET_PCT) budgetFailures.push("idle_cpu_pct");
+  if (exceedsBudget(metrics.idleRamMb, RAM_BUDGET_MB)) budgetFailures.push("idle_ram_mb");
+  if (exceedsBudget(metrics.idleCpuPct, CPU_BUDGET_PCT)) budgetFailures.push("idle_cpu_pct");
   return {
     ...safeProbe(probe),
     runner_schema: 1,
     requested_lane: requestedLane,
-    idle_ram_mb: idleRamMb,
-    idle_cpu_pct: idleCpuPct,
+    idle_ram_mb: round(metrics.idleRamMb),
+    idle_cpu_pct: round(metrics.idleCpuPct),
     idle_sample_interval_ms: round(metrics.observationMs),
     budgets: {
       release_to_delivery_policy_p95_ms: latencyBudgetMs,
@@ -423,11 +443,9 @@ function writeReport(report) {
 async function forceKill(child) {
   if (process.platform === "win32") {
     try {
-      await awaitWithTimeout(
-        runCommand("taskkill", ["/PID", String(child.pid), "/T", "/F"]),
-        FORCE_KILL_GRACE_MS,
-        "forced termination command timed out",
-      );
+      await runCommand("taskkill", ["/PID", String(child.pid), "/T", "/F"], {
+        timeoutMs: FORCE_KILL_GRACE_MS,
+      });
     } catch {
       child.kill();
     }
@@ -561,8 +579,19 @@ async function main() {
   if (report.status !== "pass") process.exitCode = 1;
 }
 
+function pathFromFileUrl(value) {
+  const url = new URL(value);
+  let pathname = decodeURIComponent(url.pathname);
+  if (process.platform === "win32") {
+    if (url.hostname) return `\\\\${url.hostname}${pathname.replaceAll("/", "\\")}`;
+    if (/^\/[A-Za-z]:/.test(pathname)) pathname = pathname.slice(1);
+    return pathname.replaceAll("/", "\\");
+  }
+  return url.hostname ? `//${url.hostname}${pathname}` : pathname;
+}
+
 const isEntryPoint =
-  process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+  process.argv[1] && resolve(process.argv[1]) === resolve(pathFromFileUrl(import.meta.url));
 if (isEntryPoint) {
   main().catch(() => {
     process.exitCode = 1;
