@@ -80,8 +80,8 @@ HONEST STATUS
   and 0% idle CPU; its exact synthetic golden transcript also passes.
 - Windows 11 ARM64 passed the exact synthetic golden transcript and four
   consecutive quiescent ten-sample runs at 1121, 965, 903, and 902 ms p95,
-  about 73-75 MB RSS, and 0% idle CPU. The immediate-post-build 1433 ms miss is
-  retained as a disclosed non-quiescent stress boundary.
-- P1-G3 remains PENDING. Physical
+  about 73-75 MB RSS, and 0% idle CPU. The first recorded 1433 ms miss is
+  retained; its cause was not measured.
+- P1-G3 remains PENDING. Packaged-app measurement, physical
   hotkey-release-to-focused-field timing, the no-model full-process-group gap,
   and fresh hosted three-OS CI remain open.

@@ -71,10 +71,11 @@ EXACT GOLDEN RESULT
 
 DECISION / LIMITS
 - Exact transcript passes, and four consecutive quiescent reference runs pass
-  CPU p95, RAM, and idle CPU. Windows now meets ADR-0015's platform-promotion
-  evidence criterion for the installed-app condition.
-- The immediate-post-build 1433 ms p95 miss remains tracked as a non-quiescent
-  stress boundary; it is not replaced by the later passes.
+  CPU p95, RAM, and idle CPU. Windows now meets ADR-0015's quiescent
+  reference-benchmark promotion criterion.
+- The first 1433 ms p95 miss, recorded after the release build, is not replaced
+  by the later passes. No host-load data establishes its cause, and this probe
+  is not packaged/installed-app evidence.
 - Audio is synthetic and does not replace human-voice WER evidence.
 - Physical focused-field injection remains unmeasured by this probe.
 - This does not close the no-model full-process-group gap or hosted three-OS CI.

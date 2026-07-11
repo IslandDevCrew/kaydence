@@ -20,16 +20,17 @@ The Debian 12 ARM64 CPU lane also passed at 71.859 MB RSS and 600 ms p95, with
 an exact `Hello there.` synthetic golden transcript. Windows 11 ARM64 passed the
 same exact golden transcript at 828 ms and four consecutive quiescent ten-sample
 reference runs at 1121, 965, 903, and 902 ms p95, about 73-75 MB RSS, and 0%
-idle CPU. The immediately preceding run, launched directly after the native
-release build, missed the CPU gate at 1433 ms p95 and remains disclosed as a
-non-quiescent stress boundary.
+idle CPU. The first recorded run, executed after the native release build,
+missed the CPU gate at 1433 ms p95. That temporal ordering is retained, but the
+proof did not measure host load or establish why the run missed.
 
 ## Decision
 Register `whisper-base-en-q5_1` with its exact SHA-256 and source metadata. Make
 it the macOS, Windows, and Linux first-run default because all three platforms
 now have direct quality, lane, latency, RAM, and idle-CPU evidence. The Windows
-promotion is based on the four-run quiescent series that represents an installed
-app; the immediate-post-build stress miss remains evidence, not a passing run.
+promotion is based on four consecutive quiescent reference-benchmark passes.
+This is not packaged/installed-app evidence and does not assign a cause to the
+first failed run; that run remains evidence, not a passing run.
 
 When at least one reviewed candidate exists, automatic recommendation fallback
 ignores candidates whose checksum or download sources are still placeholders.
@@ -63,9 +64,9 @@ and operator gate.
 ## Consequences
 - macOS, Windows, and Linux get a measured, checksum-pinned first-run model that
   meets current P1 quality, latency, RAM, and idle-CPU evidence criteria.
-- Windows retains the immediate-post-build p95 miss alongside four consecutive
-  quiescent passes so later release work can distinguish installed-app behavior
-  from build-host contention.
+- Windows retains the first p95 miss alongside four consecutive quiescent
+  passes. Packaged-app measurement and host-load attribution remain separate
+  future evidence requirements.
 - Default and Metal-feature tests must cover effective candidate, pending, and
   verified-artifact lane labels.
 - The current fallback URL is a second revision path in the same Hugging Face

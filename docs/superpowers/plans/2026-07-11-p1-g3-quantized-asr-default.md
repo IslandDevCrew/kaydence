@@ -154,7 +154,7 @@ Restore immutable ADR-0014, create a superseding Proposed decision with an expli
 
 - [x] **Step 3: Update mission truth without closing P1-G3**
 
-Record the Mac q5 GPU/CPU and Linux CPU passes plus all five Windows outcomes, and remove only the proven q5 resident-RAM/p95 blockers. Preserve the immediate-post-build Windows stress miss, physical injection, full-process-group, hosted CI, and P1-G4 blockers.
+Record the Mac q5 GPU/CPU and Linux CPU passes plus all five Windows outcomes, and remove only the proven q5 resident-RAM/p95 blockers. Preserve the first Windows miss without inferring its cause, plus packaged-app measurement, physical injection, full-process-group, hosted CI, and P1-G4 blockers.
 
 - [x] **Step 4: Commit, push, and open a draft stacked PR**
 
