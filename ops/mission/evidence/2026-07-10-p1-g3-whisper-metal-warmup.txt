@@ -74,12 +74,37 @@ CANONICAL BUILD CONTRACT
 - `script/build_and_run.sh` now always includes a production ASR adapter:
   macOS builds `custom-protocol,asr-whisper-metal`; Windows and Linux build
   `custom-protocol,asr-whisper`.
+- The launcher and PR matrix default `GGML_NATIVE=OFF`, preventing release and
+  proof binaries from inheriting the hosted/build machine's instruction set.
+  Reviewed architecture-specific release jobs can override it explicitly.
 - The hosted Windows native proof compiles the same CPU adapter as the Windows
   release lane.
 - `tests/build_and_run.sh` failed before this mapping was added and now passes,
   proving the release launcher cannot silently return to a UI-only binary.
 - A real optimized macOS build with
   `--features custom-protocol,asr-whisper-metal` completed successfully.
+- After clearing the release-profile Whisper cache, a second optimized build
+  completed with CMake proving `GGML_NATIVE:BOOL=OFF` and `GGML_METAL:BOOL=ON`.
+  A fresh real-model test under the same portable setting named Apple M5 Pro +
+  Metal, returned exact `Hello there`, warmed in 653 ms, and inferred in 59 ms.
+- Because upstream `whisper-rs-sys` does not declare generic GGML/CMake env vars
+  as Cargo rerun inputs, the launcher records the relevant native build config.
+  It cleans only the matching debug/release Whisper profile when that config
+  changes, and reuses the cache when unchanged. The contract covers first build,
+  unchanged reuse, explicit architecture change, and release-profile selection.
+
+LINUX ARM64 RUNTIME PROOF
+- An isolated `eaf82f6` source archive, byte-matched base.en model, and byte-
+  matched 681 ms clip ran on Debian 12 ARM64 in UTM while the Linux app stayed
+  open. A requested GPU lane correctly planned and reported `LocalCpu`.
+- whisper.cpp native ARM detection first produced an invalid GCC FP16 feature
+  combination; turning native tuning off fixed compilation. The generic ARMv8
+  baseline transcribed exactly but took 1500 ms, so it was preserved as a
+  diagnostic failure rather than called green.
+- A capability-matched build used `GGML_NATIVE=OFF` plus the VM-advertised
+  `armv8.2-a+fp16+dotprod` target. It returned exact `Hello there`, warmed in
+  65 ms, transcribed in 999 ms, reported `LocalCpu`, and passed the 1200 ms CPU
+  assertion. Evidence: `2026-07-11-p1-g3-linux-whisper-runtime.txt`.
 
 FIRST-RUN MODEL SCOPE
 - First-run readiness now verifies the selected ASR artifact plus only support
@@ -121,6 +146,7 @@ LOCAL GATES
 - Real Metal golden clip with latency assertion: PASS
 - Real CPU golden clip with latency assertion: PASS
 - Requested GPU without Metal relabeled to CPU: PASS
+- Linux ARM64 real-model LocalCpu runtime and latency assertion: PASS
 
 FOOTPRINT SNAPSHOT (NO MODEL RESIDENT)
 - Main process physical footprint: 30 MB, peak 35 MB.
@@ -133,6 +159,6 @@ ASR-resident total footprint and reference-machine p95 are still unmeasured.
 
 HONEST GATE STATUS
 P1-G3 remains PENDING. macOS warm Metal and CPU inference budgets are now real and
-green, but full release-to-inject timing, ASR-resident RAM/idle CPU, the no-model
-full-process-group overage, Windows/Linux runtime proof, and reference-machine p95
-remain required.
+green, and the Linux ARM64 CPU runtime leg is green. Full release-to-inject
+timing, ASR-resident RAM/idle CPU, the no-model full-process-group overage,
+Windows runtime proof, and reference-machine p95 remain required.

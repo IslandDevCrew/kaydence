@@ -8,6 +8,7 @@ BUNDLE_ID="io.kaydence.app"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_FILE="${TMPDIR:-/tmp}/kaydence-tauri.log"
 CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT_DIR/target}"
+export CARGO_TARGET_DIR
 BUILD_PROFILE="${KAYDENCE_BUILD_PROFILE:-release}"
 case "$MODE" in
   --debug|debug) BUILD_PROFILE="debug" ;;
@@ -22,6 +23,11 @@ BACKEND_FEATURES="custom-protocol,asr-whisper"
 if [ "$PLATFORM" = "Darwin" ]; then
   BACKEND_FEATURES="custom-protocol,asr-whisper-metal"
 fi
+# whisper.cpp defaults to host-native instructions. Shipped binaries must remain
+# portable; an architecture-specific release can still opt back in explicitly.
+export GGML_NATIVE="${GGML_NATIVE:-OFF}"
+WHISPER_BUILD_STAMP="$CARGO_TARGET_DIR/.kaydence-whisper-build-config-$BUILD_PROFILE"
+WHISPER_BUILD_CONFIG=""
 MACOS_APP_BUNDLE="${KAYDENCE_APP_BUNDLE_DIR:-$CARGO_TARGET_DIR/$BUILD_PROFILE/$APP_DISPLAY_NAME.app}"
 MACOS_BUNDLE_BINARY="$MACOS_APP_BUNDLE/Contents/MacOS/$APP_NAME"
 OPEN_BIN="${KAYDENCE_OPEN_BIN:-/usr/bin/open}"
@@ -38,12 +44,39 @@ build_frontend() {
   pnpm --filter kaydence-desktop build
 }
 
+whisper_build_config() {
+  printf 'BACKEND_FEATURES=%s\n' "$BACKEND_FEATURES"
+  env | LC_ALL=C sort | grep -E '^(CC|CXX|GGML_[^=]*|WHISPER_[^=]*|CMAKE_[^=]*)='
+}
+
+prepare_whisper_build() {
+  local previous_config=""
+  WHISPER_BUILD_CONFIG="$(whisper_build_config)"
+  if [ -f "$WHISPER_BUILD_STAMP" ]; then
+    previous_config="$(cat "$WHISPER_BUILD_STAMP")"
+  fi
+  if [ "$previous_config" != "$WHISPER_BUILD_CONFIG" ]; then
+    if [ "$BUILD_PROFILE" = "release" ]; then
+      cargo clean --release --manifest-path apps/desktop/src-tauri/Cargo.toml -p whisper-rs-sys
+    else
+      cargo clean --manifest-path apps/desktop/src-tauri/Cargo.toml -p whisper-rs-sys
+    fi
+  fi
+}
+
+record_whisper_build_config() {
+  mkdir -p "$CARGO_TARGET_DIR"
+  printf '%s\n' "$WHISPER_BUILD_CONFIG" >"$WHISPER_BUILD_STAMP"
+}
+
 build_backend() {
+  prepare_whisper_build
   if [ "$BUILD_PROFILE" = "release" ]; then
     cargo build --release --features "$BACKEND_FEATURES" --manifest-path apps/desktop/src-tauri/Cargo.toml
   else
     cargo build --features "$BACKEND_FEATURES" --manifest-path apps/desktop/src-tauri/Cargo.toml
   fi
+  record_whisper_build_config
 }
 
 stage_macos_bundle() {

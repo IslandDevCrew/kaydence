@@ -40,6 +40,10 @@ jobs:
 
   build-test:
     needs: setup
+    env:
+      # Do not let whisper.cpp bind shipped adapter checks or proof binaries to
+      # whichever instruction set happens to back the hosted runner.
+      GGML_NATIVE: "OFF"
     strategy:
       fail-fast: false
       # non-negotiable #5 (ADR-0011) — 3-OS, permanent — enforced on every PR to

@@ -61,7 +61,13 @@ WAL already produces. Specifically:
    with `custom-protocol,asr-whisper-metal` and Windows/Linux with
    `custom-protocol,asr-whisper`. The Windows hosted WebView proof uses the same
    CPU feature. A shell contract test prevents the launcher from regressing to a
-   UI-only release binary.
+   UI-only release binary. Canonical release and CI builds also default
+   `GGML_NATIVE=OFF`: the binary must not inherit whichever instruction set backs
+   the build host. A reviewed architecture-specific release may override that
+   default and must record the exact target plus runtime proof. The launcher
+   stamps the relevant native build settings and invalidates only the matching
+   Cargo profile's Whisper artifacts when they change, because upstream does not
+   declare generic GGML/CMake environment flags as Cargo rerun inputs.
 
 ## Alternatives considered
 - **Parakeet/ort first:** ort downloads ONNX Runtime binaries at build (build-time
@@ -80,9 +86,10 @@ WAL already produces. Specifically:
 - Harder / to maintain: `whisper-rs` pulls a C++ (whisper.cpp) build — cmake/clang
   required when `asr-whisper` is on; each acceleration feature needs native
   backend-log proof and matrix coverage once CI billing is restored. Metal is now
-  explicit and proven on the Apple Silicon reference host; Windows/Linux
-  acceleration remains owed. The features stay off by default for development,
-  while the canonical production launcher selects the supported adapter per OS.
+  explicit and proven on the Apple Silicon reference host; Linux ARM64 CPU is
+  runtime-proven, while Windows runtime and Windows/Linux acceleration remain
+  owed. The features stay off by default for development, while the canonical
+  production launcher selects the supported adapter per OS.
 - Now owed (tracked, not done here): the Parakeet/ort CPU adapter; the gated
   model-download network surface (its own ADR-accept); real WER/latency evidence on
   the reference machines for P1-G2/P1-G3.
