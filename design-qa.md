@@ -5,8 +5,9 @@
 - Source visual truth: `assets/brand/screens/kaydence-screen-family-01.png`
 - Browser implementation: `ops/mission/evidence/2026-07-10-p1-g4-board01-browser-540x800.png`
 - Native implementation: `ops/mission/evidence/2026-07-10-p1-g4-board01-native-macos.png`
+- Native Linux implementation: `ops/mission/evidence/2026-07-11-p1-g4-board01-native-linux.jpg`
 - Combined comparison: `ops/mission/evidence/2026-07-10-p1-g4-board01-comparison.png`
-- Viewport/state: macOS lane, Light cleanup, ready-state Browser fixture at 540 x 800; backend-owned native state at 900 x 600.
+- Viewport/state: macOS lane, Light cleanup, ready-state Browser fixture at 540 x 800; backend-owned native macOS and GNOME/Wayland Linux states at 900 x 600.
 
 **Findings**
 
@@ -29,6 +30,7 @@
 - [x] Locked Board 01 composition
 - [x] Browser interactions and responsive proof
 - [x] Signed native macOS rendering and interaction proof
+- [x] Real Debian 12 GNOME/Wayland WebView rendering proof
 - [x] Backend-owned native readiness states
 - [x] Shared `StatusCard`, `SegmentedDial`, `NavRail`, `BottomNav`, and `StatusFooter` primitives
 - [x] Dictate view and CSS extracted into files under 800 lines
@@ -37,6 +39,7 @@
 
 - P3: native titlebar tint follows the user's macOS appearance while the board captures a light titlebar.
 - P3: exact source icon glyphs differ slightly from the selected Lucide set, without changing meaning or layout.
+- P1-G4: real Windows WebView capture and final human sign-off remain open.
 
 final result: passed
 
@@ -45,8 +48,9 @@ final result: passed
 - Source visual truth: `assets/brand/screens/kaydence-screen-family-03.png`
 - Browser implementation: `ops/mission/evidence/2026-07-10-p1-g4-board03-browser-540x800.jpg`
 - Native implementation: `ops/mission/evidence/2026-07-10-p1-g4-board03-native-macos.png`
+- Native Linux implementation: `ops/mission/evidence/2026-07-11-p1-g4-board03-native-linux.jpg`
 - Combined comparison: `ops/mission/evidence/2026-07-10-p1-g4-board03-comparison.png`
-- Viewport/state: macOS lane, Light cleanup, ready-state Browser fixture at 540 x 800 and 900 x 600; backend-owned native state at 900 x 600.
+- Viewport/state: macOS lane, Light cleanup, ready-state Browser fixture at 540 x 800 and 900 x 600; backend-owned native macOS and GNOME/Wayland Linux states at 900 x 600.
 
 **Findings**
 
@@ -70,6 +74,7 @@ final result: passed
 - [x] Locked Board 03 composition
 - [x] Browser interactions at 540 x 800 and 900 x 600
 - [x] Signed native macOS rendering and persisted dial proof
+- [x] Real Debian 12 GNOME/Wayland WebView rendering proof
 - [x] Backend-owned native permission, delivery, and latency states
 - [x] macOS, Windows, and Linux capability copy and accents
 - [x] Cleanup view and CSS extracted into files under 800 lines
@@ -77,7 +82,7 @@ final result: passed
 **Follow-up Polish**
 
 - P3: native titlebar tint follows the user's macOS appearance while the board captures a light titlebar.
-- P3: real Windows and Linux WebView captures remain required before the parent P1-G4 gate can close.
+- P1-G4: real Windows WebView capture and final human sign-off remain required before the parent gate can close.
 - P3: board info affordances and profile editing become interactive only with their owning P2 units.
 
 final result: passed (Board 03 scope only)
@@ -87,8 +92,9 @@ final result: passed (Board 03 scope only)
 - Source visual truth: `assets/brand/screens/kaydence-screen-family-07.png`
 - Browser implementation: `ops/mission/evidence/2026-07-11-p1-g4-board07-browser-540x800.png`
 - Native implementation: `ops/mission/evidence/2026-07-11-p1-g4-board07-native-macos.png`
+- Native Linux implementation: `ops/mission/evidence/2026-07-11-p1-g4-board07-native-linux.jpg`
 - Combined comparison: `ops/mission/evidence/2026-07-11-p1-g4-board07-comparison.png`
-- Viewport/state: macOS Aqua lane and local preview fixture at 540 x 800 plus 900 x 600; backend-owned native state at 900 x 600.
+- Viewport/state: macOS Aqua lane and local preview fixture at 540 x 800 plus 900 x 600; backend-owned native macOS and GNOME/Wayland Linux states at 900 x 600.
 
 **Findings**
 
@@ -112,6 +118,7 @@ final result: passed (Board 03 scope only)
 - [x] Locked Board 07 composition
 - [x] Browser interactions at 540 x 800 and 900 x 600
 - [x] Signed native macOS rendering and interaction proof
+- [x] Real Debian 12 GNOME/Wayland WebView rendering proof
 - [x] Backend-owned native settings, permission, audit, and operational states
 - [x] macOS, Windows, and Linux capability copy and accents
 - [x] Privacy view and CSS extracted into files under 800 lines
@@ -119,7 +126,7 @@ final result: passed (Board 03 scope only)
 **Follow-up Polish**
 
 - P3: accessibility context and on-device OCR controls become interactive only when their owning backend capability lands.
-- P3: real Windows and Linux WebView captures remain required before the parent P1-G4 gate can close.
+- P1-G4: real Windows WebView capture and final human sign-off remain required before the parent gate can close.
 - P3: native titlebar tint follows the user's macOS appearance while the board captures a light titlebar.
 
 final result: passed (Board 07 scope only)
@@ -129,8 +136,10 @@ final result: passed (Board 07 scope only)
 - Source visual truth: `assets/brand/screens/kaydence-screen-family-10.png`
 - Browser implementation: `ops/mission/evidence/2026-07-11-p1-g4-board10-browser-540x800.jpg`
 - Native implementation: `ops/mission/evidence/2026-07-11-p1-g4-board10-native-macos.jpg`
+- Native Linux implementation: `ops/mission/evidence/2026-07-11-p1-g4-board10-native-linux.jpg`
+- Native Linux permission dialog: `ops/mission/evidence/2026-07-11-p1-g4-board10-native-linux-permissions.jpg`
 - Combined comparison: `ops/mission/evidence/2026-07-11-p1-g4-board10-comparison.png`
-- Viewport/state: macOS Aqua ready-state Browser fixture at 540 x 800 and 900 x 600; backend-owned native state at 900 x 600.
+- Viewport/state: macOS Aqua ready-state Browser fixture at 540 x 800 and 900 x 600; backend-owned native macOS and GNOME/Wayland Linux states at 900 x 600.
 
 **Findings**
 
@@ -155,13 +164,14 @@ final result: passed (Board 07 scope only)
 - [x] Locked Board 10 composition
 - [x] Browser interactions at 540 x 800 and 900 x 600
 - [x] Signed native macOS rendering and interaction proof
+- [x] Real Debian 12 GNOME/Wayland WebView rendering and permission-dialog proof
 - [x] Backend-owned model, permission, hotkey, timing, and first-dictation states
 - [x] Explicit macOS, Windows, and Linux capability copy and accents
 - [x] First-run view and both CSS files remain under 800 lines
 
 **Follow-up Polish**
 
-- P1-G4: real Windows and Linux WebView captures plus final human sign-off remain required before the parent fidelity gate can close.
+- P1-G4: real Windows WebView captures plus final human sign-off remain required before the parent fidelity gate can close.
 - P1-P0-8: reviewed model metadata/download flow, remaining live permission proof, real first-dictation journey, and <=60-second reference-machine timing remain open.
 - P3: Whisper-Ahead controls become interactive only when their owning capability lands.
 

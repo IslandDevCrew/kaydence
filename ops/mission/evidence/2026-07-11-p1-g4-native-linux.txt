@@ -1,0 +1,58 @@
+# P1-G4 Native Linux WebView Proof
+
+Date: 2026-07-11
+Branch: `codex/p1-g4-linux-webview-proof`
+Source commit: `1505fbbee6ee5277eb787ab15610436a6c91c691` (Board 10 PR #6 merge)
+Gate scope: Linux WebView evidence for P1 screen families 01, 03, 07, and 10. Parent P1-G4 remains pending for real Windows WebView captures and final human sign-off.
+
+## Reference environment
+
+- UTM reference VM at `debian@192.168.64.4`.
+- Debian GNU/Linux 12 (bookworm), `aarch64`.
+- Active graphical session: GNOME/Mutter, `Type=wayland`, `State=active`.
+- Current `main` source was synced into `/home/debian/kaydence` without copying macOS build artifacts.
+- Source parity was checked after sync. Local and VM sha256 values match for:
+  - `apps/desktop/src/App.tsx`: `71c2a91abee199b71f787f5fbc38f53f8c74bc5134f5f29a1015bdd264bb98b0`
+  - `apps/desktop/src/views/FirstRunView.tsx`: `4c6a7276cc747bda369ecd35e0aed86528251625712f0528457855fac31f631a`
+  - `apps/desktop/src/views/FirstRunView.css`: `6c9649cb6cd2d1fb9588951d59c6defd79fe31389cc829fa2772975b3cb63a99`
+  - `apps/desktop/src/views/FirstRunEvidence.css`: `4f86274499b99cd3132e39e5ae322f10625d54db996062bde8942282e9b61e9e`
+
+## Native launch
+
+- `cargo tauri dev` ran inside the active Wayland session.
+- The configured before-dev command started Vite on `http://localhost:1420/`.
+- The Rust desktop process compiled and launched in 6.03 seconds from the warm ARM64 cache.
+- GTK reported that GL initialization was unavailable and disabled hardware acceleration; the WebView rendered normally through the software path.
+- No panic, JavaScript error, or runtime failure appeared in the retained tmux output.
+
+## Computer Use proof
+
+- Navigated the real guest application entirely through keyboard-reachable controls.
+- Screen Family 01 rendered the Linux lane with backend-owned blocked/pending/ready status and `AT-SPI detect + uinput` output copy.
+- Screen Family 03 rendered Linux injection, permissions, fallback ladder, latency budget, and four test gates without clipping.
+- Screen Family 07 rendered the Privacy Constitution, local context posture, metadata-only audit, and backend Linux permission rows.
+- Screen Family 10 rendered the Emerald lane, nine-step setup, accepted license/service copy, Rust-owned next step, and Linux hotkey/permission state.
+- Board 10's native Permissions dialog exposed `Microphone`, `AT-SPI accessibility bus`, and `uinput keyboard path` with their conservative Hardware Proof/Review states.
+
+## Captures
+
+- `2026-07-11-p1-g4-board01-native-linux.jpg`: clean 900 x 600 Board 01 crop.
+- `2026-07-11-p1-g4-board03-native-linux.jpg`: clean 900 x 600 Board 03 crop.
+- `2026-07-11-p1-g4-board07-native-linux.jpg`: clean 900 x 600 Board 07 crop.
+- `2026-07-11-p1-g4-board10-native-linux.jpg`: clean 900 x 600 Board 10 crop.
+- `2026-07-11-p1-g4-board10-native-linux-permissions.jpg`: clean 900 x 600 Board 10 permission-dialog crop.
+- `2026-07-11-p1-g4-native-linux-contact-sheet.png`: all four P1 families in one 900 x 600 review surface.
+- Matching `*-utm.jpg` files retain the uncropped 1152 x 768 UTM/GNOME desktop context for provenance.
+
+## Remote delivery truth
+
+- Board 10 PR #6 full run `29135724151`: PASS on macOS, Windows, and Ubuntu.
+- Board 10 merged at `1505fbbee6ee5277eb787ab15610436a6c91c691`.
+- Post-merge Linux run `29136083090`: PASS at the merge commit.
+
+## Boundaries
+
+- This closes the real Linux WebView capture requirement for the four P1 boards.
+- It does not substitute for real Windows WebView captures or final human design sign-off.
+- The Linux injection human-focus test remains a separate P1-P0-3 runtime proof: normal field delivery and password-field refusal still need the operator-in-the-loop Wayland validation.
+- P1-G3 remains pending for real ASR GPU release-to-inject, ASR-resident idle RAM/CPU, and reference-machine p95 evidence.

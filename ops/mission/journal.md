@@ -491,3 +491,13 @@
 - Fresh local gates are green: fmt, clippy `-D warnings`, 225 lib + 12 integration tests, frontend check/production build, build/run contract, strict signature, network audit (0), privacy posture, ADR status, and four measured bench fields. P1-G3 remains partial for real GPU/prediction/idle/reference evidence.
 - All four P1 boards now have scoped design-QA passes. P1-G4 remains pending for real Windows/Linux WebView captures and final human sign-off; P1-P0-8 remains open for reviewed model metadata/download handling, remaining permission proof, live first dictation, and <=60-second reference timing.
 - Evidence: `ops/mission/evidence/2026-07-11-p1-g4-board10.txt`, Browser/native/comparison images, and the appended Board 10 section in `design-qa.md`.
+
+## 2026-07-11T02:38Z - Codex P1-G4 native Linux WebView proof
+- Closed the Board 10 delivery loop: PR #6 squash-merged at `1505fbb`; full macOS/Windows/Ubuntu PR matrix `29135724151` and post-merge Linux run `29136083090` are green.
+- Reconnected to the existing UTM reference VM at `192.168.64.4`, verified Debian 12 ARM64 with an active GNOME/Mutter Wayland session, and synced current main into the VM. Sha256 parity matched for `App.tsx`, `FirstRunView.tsx`, and both first-run CSS files.
+- Installed the two current frontend packages missing from the VM cache, then launched the real Tauri dev app inside the Wayland session. Vite started on localhost and the Rust app compiled from the warm ARM64 cache in 6.03 seconds. GTK fell back from unavailable GL to software rendering without a runtime failure.
+- Computer Use navigated the native guest window through keyboard-reachable controls and captured all four P1 families. Board 01 showed Linux cockpit/output truth; Board 03 showed the AT-SPI/uinput injection ladder and gates; Board 07 showed the privacy Constitution and backend Linux permissions; Board 10 showed the Emerald setup/license lane and accepted pricing copy.
+- Opened Board 10's native Permissions dialog and proved the backend-owned `Microphone`, `AT-SPI accessibility bus`, and `uinput keyboard path` rows with conservative Hardware Proof/Review states.
+- Saved clean 900x600 crops, uncropped UTM/GNOME provenance frames, and a four-board contact sheet. The Linux WebView requirement is now complete. P1-G4 remains pending only for real Windows WebView captures and final human sign-off.
+- This did not close the separate Linux human-focus injection test; normal-field delivery and password-field refusal remain operator-in-the-loop P1-P0-3 proof.
+- Evidence: `ops/mission/evidence/2026-07-11-p1-g4-native-linux.txt` and `ops/mission/evidence/2026-07-11-p1-g4-native-linux-contact-sheet.png`.
