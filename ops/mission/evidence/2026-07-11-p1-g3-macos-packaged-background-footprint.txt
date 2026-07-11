@@ -1,0 +1,90 @@
+P1-G3 - MACOS PACKAGED BACKGROUND LIFECYCLE AND NO-MODEL FOOTPRINT
+Captured: 2026-07-11 (America/Chicago)
+Host: Apple M5 Pro, macOS
+Branch: codex/p1-g3-macos-packaged-footprint
+Base: a48df92
+
+SCOPE
+- Measure the ad-hoc-signed production bundle with the shipped
+  custom-protocol,asr-whisper-metal feature set and no model installed.
+- Replace the prior single-process RSS snapshot with exact physical-footprint
+  bytes for Kaydence plus the WebKit services created by that launch.
+- Preserve the global-hotkey runtime when the cockpit closes, release the
+  WebContent process, and prove same-process tray/OS reopen plus explicit Quit.
+
+MEASUREMENT CONTRACT
+- Tool: /usr/bin/footprint --noCategories --format bytes.
+- Visible set: kaydence + launch-adjacent WebKit GPU, Networking, and WebContent.
+- Background set: the same PID plus only its surviving launch-adjacent WebKit
+  services. Stale/unrelated WebKit services are excluded by before/after PID.
+- Budget: strict no-model background idle < 80 MiB (83,886,080 bytes) and
+  idle CPU < 1%.
+- App-data models directory contained no model artifact. The selected q5 engine
+  therefore remained Blocked rather than loading a model.
+
+ROOT CAUSE
+- The historical 85,376 KB result was process RSS, not a physical-footprint
+  process-group measurement. The later ~86 MB status combined a 30 MB main
+  physical footprint with an estimated WebKit group and was not reproducible.
+- Fresh exact-byte measurement shows WebContent is the controlling visible-only
+  allocation. A separately built no-ASR control measured 86,527,336 bytes
+  visible, the same range as production, so Whisper linkage is not the cause.
+- Hide-only retains WebContent and does not solve the background budget.
+
+FRESH PRODUCTION RESULTS
+- Visible cockpit after 38 seconds: 86,183,200 bytes; 0.0% main-process CPU.
+  This configuration surface is disclosed above 80 MiB and is not called a
+  passing background-idle sample.
+- User-close: original kaydence PID 15292 remained alive; WebContent exited.
+- Background after 30 seconds: 51,235,408 bytes; 0.0% CPU; PASS.
+- Background after 120 seconds: 37,144,328 bytes; 0.0% CPU; PASS. The WebKit GPU
+  service had idle-exited; only kaydence and Networking remained.
+
+NATIVE LIFECYCLE PROOF
+- Packaged cockpit rendered at tauri://localhost with F13 registered.
+- Menu-bar item count increased from 18 to 19 while Kaydence ran.
+- Clicking the new status item recreated the cockpit in the same PID 15292.
+- A normal macOS reopen also recreated the cockpit in PID 15292.
+- Explicit Command-Q exited the process. Window-close did not.
+- Repeated close/reopen retained backend-owned blocked-model, hotkey, privacy,
+  WAL, and setup truth; no user data or macOS security setting was changed.
+
+IMPLEMENTATION
+- The tray uses the existing checked-in application icon and APP_NAME.
+- Open focuses an existing window or recreates `main` from tauri.conf.json.
+- Window-close is intercepted only long enough to destroy the WebView and mark
+  the resulting last-window exit request as background keep-alive.
+- Programmatic Quit and ordinary Command-Q are not intercepted.
+- No dependency, network call, model byte, telemetry, or persistence surface was
+  added.
+
+HONEST STATUS
+- The packaged macOS no-model background footprint boundary is now directly
+  measured and passes with substantial margin.
+- The visible cockpit remains above 80 MiB and is disclosed separately.
+- This does not prove packaged q5 ASR-resident footprint, physical focused-field
+  timing, Windows/Linux tray lifecycle, or fresh hosted three-OS CI.
+- P1-G3 remains PENDING.
+
+FINAL CANDIDATE GATES
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --check: PASS.
+- cargo clippy --release --all-targets -- -D warnings: PASS.
+- cargo clippy --release --features asr-whisper-metal --all-targets
+  -- -D warnings: PASS.
+- cargo test --release --all-targets: PASS (236 library tests plus integration
+  targets).
+- cargo test --release --features asr-whisper-metal --all-targets: PASS
+  (238 library tests plus every integration target).
+- pnpm --dir apps/desktop check: PASS.
+- pnpm --dir apps/desktop build: PASS; generated dist output excluded from the
+  source change.
+- bash tests/build_and_run.sh: PASS.
+- ./script/build_and_run.sh --verify: PASS; LaunchServices retained PID 32953.
+- codesign --verify --deep --strict target/release/Kaydence.app: PASS.
+- node tests/reference-bench-contract.mjs: PASS.
+- bash scripts/audit-network.sh --check: PASS (0 call sites).
+- bash scripts/check-privacy-posture.sh --check: PASS.
+- bash scripts/check-adr-status.sh: PASS with ADR-0009 and ADR-0015 still the
+  declared Proposed decisions.
+- bash scripts/bench.sh --check: PASS for four synthetic Raw metrics and
+  PARTIAL for its explicitly unmeasured physical/reference fields.

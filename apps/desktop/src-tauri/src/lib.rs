@@ -8,6 +8,8 @@
 #[cfg(desktop)]
 use std::path::{Path, PathBuf};
 #[cfg(desktop)]
+use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(desktop)]
 use std::sync::Arc;
 use std::sync::Mutex;
 #[cfg(desktop)]
@@ -2730,6 +2732,93 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+#[cfg(desktop)]
+const MAIN_WINDOW_LABEL: &str = "main";
+#[cfg(desktop)]
+const TRAY_OPEN_ID: &str = "tray-open";
+#[cfg(desktop)]
+const TRAY_QUIT_ID: &str = "tray-quit";
+
+#[cfg(desktop)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MainWindowOpenAction {
+    FocusExisting,
+    CreateFromConfig,
+}
+
+#[cfg(desktop)]
+fn keep_running_after_exit_request(window_close_requested: bool, code: Option<i32>) -> bool {
+    window_close_requested && code.is_none()
+}
+
+#[cfg(desktop)]
+fn main_window_open_action(window_exists: bool) -> MainWindowOpenAction {
+    if window_exists {
+        MainWindowOpenAction::FocusExisting
+    } else {
+        MainWindowOpenAction::CreateFromConfig
+    }
+}
+
+#[cfg(desktop)]
+fn open_main_window(app: &tauri::AppHandle) -> Result<(), String> {
+    match main_window_open_action(app.get_webview_window(MAIN_WINDOW_LABEL).is_some()) {
+        MainWindowOpenAction::FocusExisting => {
+            let window = app
+                .get_webview_window(MAIN_WINDOW_LABEL)
+                .ok_or_else(|| "Main window disappeared before it could be focused".to_string())?;
+            window.unminimize().map_err(|err| err.to_string())?;
+            window.show().map_err(|err| err.to_string())?;
+            window.set_focus().map_err(|err| err.to_string())
+        }
+        MainWindowOpenAction::CreateFromConfig => {
+            let config = app
+                .config()
+                .app
+                .windows
+                .iter()
+                .find(|window| window.label == MAIN_WINDOW_LABEL)
+                .ok_or_else(|| "Main window configuration is missing".to_string())?;
+            tauri::WebviewWindowBuilder::from_config(app, config)
+                .map_err(|err| err.to_string())?
+                .build()
+                .map(|_| ())
+                .map_err(|err| err.to_string())
+        }
+    }
+}
+
+#[cfg(desktop)]
+fn install_tray(app: &mut tauri::App) -> tauri::Result<()> {
+    use tauri::menu::{Menu, MenuItem};
+    use tauri::tray::TrayIconBuilder;
+
+    let open = MenuItem::with_id(
+        app,
+        TRAY_OPEN_ID,
+        format!("Open {}", settings::APP_NAME),
+        true,
+        None::<&str>,
+    )?;
+    let quit = MenuItem::with_id(
+        app,
+        TRAY_QUIT_ID,
+        format!("Quit {}", settings::APP_NAME),
+        true,
+        None::<&str>,
+    )?;
+    let menu = Menu::with_items(app, &[&open, &quit])?;
+    let mut tray = TrayIconBuilder::with_id("main")
+        .menu(&menu)
+        .show_menu_on_left_click(false)
+        .tooltip(settings::APP_NAME);
+    if let Some(icon) = app.default_window_icon().cloned() {
+        tray = tray.icon(icon);
+    }
+    tray.build(app)?;
+    Ok(())
+}
+
 /// Run the Kaydence desktop app. Called by the thin `main.rs` binary.
 ///
 /// Run the Tauri shell plus the current hotkey/audio/pipeline runtime.
@@ -2738,7 +2827,51 @@ pub fn run() {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let builder = builder.plugin(tauri_plugin_dialog::init());
 
-    builder
+    #[cfg(desktop)]
+    let keep_alive_after_close = Arc::new(AtomicBool::new(false));
+    #[cfg(desktop)]
+    let close_requested = Arc::clone(&keep_alive_after_close);
+    #[cfg(desktop)]
+    let builder = builder
+        .on_window_event(move |window, event| {
+            if window.label() == MAIN_WINDOW_LABEL {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    close_requested.store(true, Ordering::SeqCst);
+                    if let Err(err) = window.destroy() {
+                        close_requested.store(false, Ordering::SeqCst);
+                        eprintln!("{} window close failed: {err}", settings::APP_NAME);
+                    }
+                }
+            }
+        })
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            TRAY_OPEN_ID => {
+                if let Err(err) = open_main_window(app) {
+                    eprintln!("{} window open failed: {err}", settings::APP_NAME);
+                }
+            }
+            TRAY_QUIT_ID => app.exit(0),
+            _ => {}
+        })
+        .on_tray_icon_event(|app, event| {
+            use tauri::tray::{MouseButton, MouseButtonState, TrayIconEvent};
+
+            if matches!(
+                event,
+                TrayIconEvent::Click {
+                    button: MouseButton::Left,
+                    button_state: MouseButtonState::Up,
+                    ..
+                }
+            ) {
+                if let Err(err) = open_main_window(app) {
+                    eprintln!("{} window open failed: {err}", settings::APP_NAME);
+                }
+            }
+        });
+
+    let app = builder
         .manage(RuntimeSnapshot::default())
         .manage(HotkeyRuntimeHandle::default())
         .invoke_handler(tauri::generate_handler![
@@ -2782,11 +2915,39 @@ pub fn run() {
                         .mark_hotkey_registration_failed(err.to_string());
                     eprintln!("Kaydence global hotkey disabled: {err}");
                 }
+
+                install_tray(app)?;
             }
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running Kaydence");
+        .build(tauri::generate_context!())
+        .unwrap_or_else(|err| {
+            eprintln!("{} failed to start: {err}", settings::APP_NAME);
+            std::process::exit(1);
+        });
+
+    #[cfg(desktop)]
+    app.run(move |app, event| match event {
+        tauri::RunEvent::ExitRequested { code, api, .. } => {
+            let was_window_close = keep_alive_after_close.swap(false, Ordering::SeqCst);
+            if keep_running_after_exit_request(was_window_close, code) {
+                api.prevent_exit();
+            }
+        }
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Reopen {
+            has_visible_windows: false,
+            ..
+        } => {
+            if let Err(err) = open_main_window(app) {
+                eprintln!("{} window reopen failed: {err}", settings::APP_NAME);
+            }
+        }
+        _ => {}
+    });
+
+    #[cfg(not(desktop))]
+    app.run(|_, _| {});
 }
 
 #[cfg(all(test, desktop))]
@@ -2796,6 +2957,29 @@ mod tests {
     use sha2::{Digest, Sha256};
     use std::collections::VecDeque;
     use std::sync::{Arc, Mutex};
+
+    #[test]
+    fn user_window_close_keeps_the_background_runtime_alive() {
+        assert!(keep_running_after_exit_request(true, None));
+    }
+
+    #[test]
+    fn explicit_quit_is_not_intercepted() {
+        assert!(!keep_running_after_exit_request(true, Some(0)));
+        assert!(!keep_running_after_exit_request(false, None));
+    }
+
+    #[test]
+    fn open_action_recreates_only_a_missing_cockpit() {
+        assert_eq!(
+            main_window_open_action(true),
+            MainWindowOpenAction::FocusExisting
+        );
+        assert_eq!(
+            main_window_open_action(false),
+            MainWindowOpenAction::CreateFromConfig
+        );
+    }
 
     fn tmp() -> std::path::PathBuf {
         let dir = std::env::temp_dir().join(format!(
