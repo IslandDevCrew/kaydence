@@ -81,3 +81,45 @@ final result: passed
 - P3: board info affordances and profile editing become interactive only with their owning P2 units.
 
 final result: passed (Board 03 scope only)
+
+## Board 07
+
+- Source visual truth: `assets/brand/screens/kaydence-screen-family-07.png`
+- Browser implementation: `ops/mission/evidence/2026-07-11-p1-g4-board07-browser-540x800.png`
+- Native implementation: `ops/mission/evidence/2026-07-11-p1-g4-board07-native-macos.png`
+- Combined comparison: `ops/mission/evidence/2026-07-11-p1-g4-board07-comparison.png`
+- Viewport/state: macOS Aqua lane and local preview fixture at 540 x 800 plus 900 x 600; backend-owned native state at 900 x 600.
+
+**Findings**
+
+- No actionable P0/P1/P2 mismatch remains for Board 07 composition.
+- Typography and layout: the compact rail, Constitution strip, six-row Context Reader, permission rail, local audit, and status footer preserve the locked information hierarchy. Browser page and panel scroll bounds equal their viewports at both verified sizes.
+- Colors and tokens: neutral light surfaces and 8px-or-smaller radii remain constant. macOS Aqua, Windows Cobalt, and Linux Emerald are the only lane color variation.
+- Brand and icons: the selected Option 1-derived mark appears in the reserved positions. Existing cockpit/Lucide paths communicate privacy, persistence, model, and permission state without missing assets.
+- Copy and truth: the implementation intentionally corrects illustrative source claims that are ahead of P1. It discloses 30-day local persistence, keeps context/OCR off, marks screen capture Not requested, renders only audit metadata, and labels non-host lanes as references.
+- Interaction and accessibility: Constitution open/close, Escape close, autofocus, three OS lane switches, Setup handoff, and History navigation pass. Native accessibility exposes the dialog as modal and the controls with button/toggle roles.
+
+**Comparison History**
+
+1. RED baseline: the old route was a generic six-card posture list without the Board 07 regions or dedicated layout.
+2. Initial board build: extracted the Privacy view and added Constitution, reader, permissions, audit, and footer regions.
+3. Truth pass: replaced the board's no-persistence and active-context illustrations with current backend policy, 30-day retention, P3 opt-in boundaries, metadata-only audit copy, and conservative permission states.
+4. Responsive pass: fixed the 540 x 800 compact rail and stable two-column content proportions; exact page and panel bounds now fit without overflow.
+5. Native pass: proved the signed WebKit bundle, backend permission states, modal Constitution, all three lane vocabularies, and the real Screen Family 10 Setup handoff.
+
+**Implementation Checklist**
+
+- [x] Locked Board 07 composition
+- [x] Browser interactions at 540 x 800 and 900 x 600
+- [x] Signed native macOS rendering and interaction proof
+- [x] Backend-owned native settings, permission, audit, and operational states
+- [x] macOS, Windows, and Linux capability copy and accents
+- [x] Privacy view and CSS extracted into files under 800 lines
+
+**Follow-up Polish**
+
+- P3: accessibility context and on-device OCR controls become interactive only when their owning backend capability lands.
+- P3: real Windows and Linux WebView captures remain required before the parent P1-G4 gate can close.
+- P3: native titlebar tint follows the user's macOS appearance while the board captures a light titlebar.
+
+final result: passed (Board 07 scope only)

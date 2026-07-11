@@ -1,0 +1,61 @@
+# P1-G4 Board 07 - Privacy & Context
+
+Date: 2026-07-11
+Branch: `codex/p1-g4-privacy-context`
+Gate scope: Board 07 only. Parent P1-G4 remains pending for Board 10, real Windows/Linux WebView captures, and final human sign-off.
+
+## RED baseline
+
+- The prior Privacy route was a generic six-card posture summary inside the shared App shell.
+- It did not match the locked Board 07 hierarchy: no Constitution strip, Context Reader, permission rail, local audit log, OS lane vocabulary, or dedicated status footer.
+- It also flattened transmission, context, secure-field, retention, and permission truth into one undifferentiated list.
+
+## Implementation
+
+- Extracted `PrivacyView.tsx` and `PrivacyView.css`; both remain below the 800-line view-file ceiling.
+- Rebuilt the route in source order: compact navigation, app titlebar, Screen Family 07 heading, four-part Privacy Constitution, Context Reader, permissions, local event-metadata audit, and footer.
+- Kept the implementation honest where the illustrative board is ahead of P1 reality:
+  - local persistence is disclosed as 30-day device history rather than claimed absent;
+  - accessibility context and OCR remain Off / P3 opt-in;
+  - screen capture is Not requested, with no OS or cloud recording claim;
+  - native permission states come from the Rust snapshot and remain Hardware proof until evidence exists;
+  - non-host Windows/Linux selections are visibly labeled reference lanes;
+  - the audit list renders event count, target, outcome, and timestamp only, never transcript content.
+- Added a keyboard-closeable, auto-focused Constitution dialog and working Setup/History navigation.
+- Preserved the locked free-tier rule: neutral light composition on every lane, with only Aqua, Cobalt, or Emerald selection accents and platform vocabulary changing.
+
+## Browser proof
+
+- `2026-07-11-p1-g4-board07-browser-900x600.png`: exact 900 x 600 document, shell, and board bounds; no page or panel overflow.
+- `2026-07-11-p1-g4-board07-browser-540x800.png`: exact 540 x 800 document/shell bounds; all panels retain stable dimensions and readable hierarchy.
+- macOS, Windows, and Linux lane controls changed accent and permission vocabulary without changing layout.
+- Constitution open/close and Privacy -> Setup -> Privacy navigation passed.
+- Fresh warning/error log: empty.
+
+## Signed native macOS proof
+
+- Canonical `./script/build_and_run.sh --verify` built and launched `target/release/Kaydence.app` at `tauri://localhost`.
+- Strict signature verification passed: valid on disk and satisfies its Designated Requirement.
+- Computer Use proved backend-owned macOS states, all four Constitution clauses, conservative context/OCR states, three OS lane vocabularies, and the Setup handoff.
+- `2026-07-11-p1-g4-board07-native-macos.png` captures the final restored macOS lane in the signed app.
+
+## Local gates
+
+- `cargo fmt --all -- --check`: PASS
+- `cargo clippy --workspace --all-targets -- -D warnings`: PASS
+- `cargo test --workspace --all-targets`: PASS (225 lib + 2 crash recovery + 5 event sequence + 5 short utterance = 237)
+- `bash scripts/check-frontend.sh`: PASS
+- production frontend build via canonical macOS run harness: PASS
+- `bash tests/build_and_run.sh`: PASS
+- `codesign --verify --deep --strict --verbose=2 target/release/Kaydence.app`: PASS
+- `bash scripts/audit-network.sh`: PASS (0 network-capable call sites)
+- `bash scripts/check-privacy-posture.sh`: PASS
+- `bash scripts/check-adr-status.sh`: PASS
+- `bash scripts/bench.sh --check`: PASS for four implemented metrics; P1-G3 remains partial for GPU, prediction, idle, and reference-machine evidence.
+
+## Boundaries
+
+- Board 07 receives a scoped design-QA pass; this does not close parent P1-G4.
+- Real Windows and Linux WebView captures are still required. The macOS lane switch proves shared layout/copy fixtures, not native parity on those operating systems.
+- Context reading and OCR are future P3 capabilities and stay disabled in P1.
+- The branch still requires a fresh PR-triggered macOS/Windows/Linux CI matrix before merge.
