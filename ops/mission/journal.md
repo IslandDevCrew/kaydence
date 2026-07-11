@@ -542,4 +542,5 @@
 - Secure-field proof passed on a real Zenity password entry: AT-SPI classified `role=PasswordText editable=true`, Kaydence mapped it to `Secure`, refused twice across focus events, and the field remained empty. No password was entered or submitted; the dialog was cancelled.
 - Preserved exact logs plus full 1152x768 UTM provenance frames. Removed the Linux human-focus item from active blockers and updated ADR-0013, the Wayland spike, the injection contract, P1-P0-3 state, risk, and resume truth.
 - P1-P0-3 remains in progress only for Linux Unicode beyond ASCII, optional portal/libei where uinput permission is unavailable, and the disclosed opaque-client policy boundary; the operator normal/password focus check itself is complete.
+- Opened stacked draft PR #12 from `codex/p1-p0-3-linux-human-focus`, based on PR #11's branch so its diff stays limited to this proof. Retarget it to `main` after PR #11 lands; the mandatory matrix remains billing-blocked.
 - Evidence: `ops/mission/evidence/2026-07-11-linux-human-focus-injection.txt`, `2026-07-11-linux-human-focus-normal.jpg`, and `2026-07-11-linux-human-focus-secure.jpg`.

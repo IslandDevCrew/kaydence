@@ -139,7 +139,7 @@
   "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
   "status": "active",
   "started": "2026-07-07",
-  "updated": "2026-07-11T06:45Z",
+  "updated": "2026-07-11T06:49Z",
     "sessionCount": 15
  },
  "policies": {
@@ -1440,6 +1440,13 @@
    "number": 11,
    "title": "P1 truthful Whisper warmup and shipped ASR lanes - OPEN DRAFT, Actions billing-blocked",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/11",
+   "phase": "P1",
+   "mergedAt": null
+  },
+  {
+   "number": 12,
+   "title": "P1 close Linux human-focus injection proof - OPEN STACKED DRAFT on PR #11",
+   "url": "https://github.com/IslandDevCrew/kaydence/pull/12",
    "phase": "P1",
    "mergedAt": null
   }
