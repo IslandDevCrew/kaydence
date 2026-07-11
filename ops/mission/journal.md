@@ -606,3 +606,10 @@
 - Retained the first Windows 1433 ms p95 failure. Review correctly rejected the earlier inference that build contention caused it or that a reference probe represented an installed app; no host-load data measured the cause, and packaged-app measurement remains open.
 - Updated ADR-0015, the implementation plan, evidence ledgers, PR body, mission gate/task/metrics/blocker truth, and the generated handoff inputs to state that narrower evidence boundary. P1-G3 remains pending for packaged-app measurement, physical focused-field timing, the ~86 MB no-model full-process-group gap, fresh hosted three-OS CI, and operator approval of ADR-0015.
 - Exact independent re-review of this promotion correction is pending. Counts remain 11/34 tasks and 10/23 gates; draft PR #24 remains unmerged.
+
+## 2026-07-11T22:49Z - Codex P1-G3 exact promotion-correction re-review
+- Russell (agent `019f530d-3bc6-7e22-b4c9-cc00a36167ca`) reviewed the exact `feef1db..cb0a2a2` correction range and reported no Critical, Important, or Minor findings. Both prior Important findings are closed.
+- The review confirmed that ADR-0015 and the Windows ledger assign no cause to the first 1433 ms failure, do not equate the reference probe with packaged-app evidence, and preserve all five canonical reports and hashes.
+- Registry, plan, evidence, mission state, journal, generated State of the Union, and live draft PR #24 consistently describe q5 as the proposed macOS/Windows/Linux default while keeping P1-G3 pending and ADR-0015 Proposed.
+- Fresh local gates passed: 233 default Rust tests and all targets; 235 Metal-feature Rust tests and all targets; strict Clippy in both modes; frontend check/build; benchmark contract; privacy/network audit with 0 call sites; ADR status; synthetic benchmark; JSON/hash validation; SOTU render; and diff checks.
+- Residual evidence remains explicit: Windows ARM64 UTM reference source commit `edb7ee5`, not a packaged app; human-voice WER, physical focused-field timing, packaged-app measurement, no-model process-group closure, fresh hosted three-OS CI, and operator approval. P1-G3 stays pending; counts remain 11/34 tasks and 10/23 gates.
