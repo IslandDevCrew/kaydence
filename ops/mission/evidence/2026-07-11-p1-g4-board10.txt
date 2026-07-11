@@ -1,0 +1,69 @@
+# P1-G4 Board 10 - First Run & License
+
+Date: 2026-07-11
+Branch: `codex/p1-g4-first-run-license`
+Gate scope: Board 10 only. All four P1 screen-family boards now have scoped design-QA passes; parent P1-G4 remains pending for real Windows/Linux WebView captures and final human sign-off.
+
+## RED baseline
+
+- The prior Setup route was a long block inside the shared `App.tsx` monolith.
+- It did not preserve the locked Board 10 hierarchy as a dedicated view: no compact nine-step rail, source-order progress line, four-choice license/service comparison, or stable action footer.
+- Deep model and permission proof existed, but it competed with the first-run journey instead of supporting it.
+
+## Implementation
+
+- Extracted `FirstRunView.tsx`, `FirstRunView.css`, and `FirstRunEvidence.css`; every extracted file remains below the 800-line view-file ceiling.
+- Rebuilt the route in locked source order: app/OS header, nine setup steps, progress, backend next-step strip, six configuration controls, four license/service choices, pricing clarification, and footer action.
+- Kept deep model, permission, timing, and proof detail in a keyboard-closeable, auto-focused Evidence dialog with Models, Permissions, and Proof tabs.
+- Kept the implementation honest where the illustrative board is ahead of P1 reality:
+  - Whisper-Ahead remains visibly disabled and labeled P3;
+  - only Free is selectable; paid choices are informational until their owning flows exist;
+  - desktop capability is one-time, while Harbor is optional hosted service and every service remains self-hostable;
+  - model, permission, hotkey, timing, and first-dictation state come from Rust in the native app;
+  - the primary action renders the backend-owned `next_step.action_label`;
+  - non-host Windows/Linux selections are explicit reference lanes and disable host-only runtime actions.
+- Fixed `dictation` and `complete` next-step handling so the primary action reaches the Dictate view instead of only showing a note.
+
+## Browser proof
+
+- `2026-07-11-p1-g4-board10-browser-900x600.jpg`: exact 900 x 600 document, shell, and board bounds; no page or panel overflow.
+- `2026-07-11-p1-g4-board10-browser-540x800.jpg`: exact 540 x 800 document/shell bounds with stable controls and readable pricing cards.
+- Model, hotkey, cleanup, Hold/Toggle, evidence tabs, Escape/close, three OS accents, and Setup -> Dictate -> Setup navigation passed.
+- Windows rendered `Microphone, UI Automation, Keyboard fallback`; Linux rendered `Microphone, AT-SPI bus, uinput path`; macOS rendered `Microphone, Accessibility, Input Monitoring`.
+- Non-host reference controls were disabled and visibly labeled; final warning/error log was empty.
+
+## Signed native macOS proof
+
+- Canonical `./script/build_and_run.sh --verify` built and launched `target/release/Kaydence.app` at `tauri://localhost`.
+- Strict signature verification passed: valid on disk and satisfies its Designated Requirement.
+- Computer Use proved the backend-owned macOS model/permission/hotkey state, the blocked registry preflight boundary, all three Evidence tabs, local proof export, and the Windows/Linux reference contracts.
+- A native truth review caught an initial defect where the Windows visual lane inherited host macOS permission labels. The final build uses lane-specific reference contracts and disables runtime-only controls off-host.
+- `2026-07-11-p1-g4-board10-native-macos.jpg` captures the final restored macOS lane in the signed app.
+
+## Local gates
+
+- `cargo fmt --all -- --check`: PASS
+- `cargo clippy --workspace --all-targets -- -D warnings`: PASS
+- `cargo test --workspace --all-targets`: PASS (225 lib + 2 crash recovery + 5 event sequence + 5 short utterance = 237)
+- `bash scripts/check-frontend.sh`: PASS
+- production frontend build via canonical macOS run harness: PASS
+- `bash tests/build_and_run.sh`: PASS
+- `codesign --verify --deep --strict --verbose=2 target/release/Kaydence.app`: PASS
+- `bash scripts/audit-network.sh`: PASS (0 network-capable call sites)
+- `bash scripts/check-privacy-posture.sh`: PASS
+- `bash scripts/check-adr-status.sh`: PASS
+- `bash scripts/bench.sh --check`: PASS for four implemented metrics; P1-G3 remains partial for GPU, prediction, idle, and reference-machine evidence.
+
+## Remote baseline
+
+- Board 07 PR #5 merged at `c3412cbd0ab1ae6b43d990e80948e04bc8f0c770`.
+- Full PR run `29134025617` passed on macOS, Windows, and Ubuntu.
+- Post-merge Linux run `29134596004` also passed at the merge commit.
+- This Board 10 branch still requires its own fresh macOS/Windows/Ubuntu PR matrix before merge.
+
+## Boundaries
+
+- Board 10 receives a scoped design-QA pass; four scoped board passes do not by themselves close parent P1-G4.
+- Real Windows and Linux WebView captures plus final human sign-off remain required. macOS lane switching proves shared fixtures and disabled reference boundaries, not native parity on those operating systems.
+- P1-P0-8 still needs reviewed model metadata/download handling, remaining live OS permission proof, a real first-dictation journey, and <=60-second reference-machine evidence.
+- P1-G3 remains pending for real ASR GPU release-to-inject, ASR-resident idle RAM/CPU, and reference-machine p95 measurements.
