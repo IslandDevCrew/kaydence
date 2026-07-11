@@ -591,9 +591,21 @@ mod tests {
         let registry = ModelRegistry::load(&registry_path()).unwrap();
 
         assert!(registry.require("parakeet-v3").is_ok());
+        let footprint_safe = registry.require("whisper-base-en-q5_1").unwrap();
+        assert_eq!(footprint_safe.lane.as_deref(), Some("gpu"));
+        assert_eq!(footprint_safe.runtime, "whisper.cpp");
+        assert_eq!(footprint_safe.file, "ggml-base.en-q5_1.bin");
+        assert_eq!(footprint_safe.size_mb, 57);
+        assert_eq!(
+            footprint_safe.sha256,
+            "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f"
+        );
+        assert!(!footprint_safe.is_checksum_placeholder());
+        assert!(!footprint_safe.has_placeholder_sources());
+        assert!(footprint_safe.sources.len() >= 2);
         assert!(registry.require("whisper-large-v3-turbo").is_ok());
         assert!(registry.require("silero-vad").is_ok());
-        assert!(registry.recommended_for(ModelTask::Asr).len() >= 2);
+        assert!(registry.recommended_for(ModelTask::Asr).len() >= 3);
         assert!(!registry.recommended_for(ModelTask::Vad).is_empty());
     }
 

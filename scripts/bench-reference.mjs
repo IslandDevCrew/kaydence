@@ -579,7 +579,7 @@ async function run() {
   const binary = process.env.KAYDENCE_REFERENCE_BIN || resolve("target", "release", "reference-bench");
   const model =
     process.env.KAYDENCE_WHISPER_MODEL ||
-    join(homedir(), "Documents", "Kaydence", "models", "ggml-base.en.bin");
+    join(homedir(), "Documents", "Kaydence", "models", "ggml-base.en-q5_1.bin");
   const clip =
     process.env.KAYDENCE_WHISPER_CLIP ||
     join(homedir(), "Documents", "Kaydence", "models", "clip16k.wav");

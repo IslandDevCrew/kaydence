@@ -8,6 +8,8 @@
 
 **Tech Stack:** Rust stable, existing `whisper-rs` feature flags, existing Kaydence pipeline traits, Node.js standard library, PowerShell only as the Windows process-query backend.
 
+> **Footprint follow-up (2026-07-11):** The original f16 `ggml-base.en` artifact exposed a truthful Mac GPU RSS failure. The canonical product/reference artifact is now the pinned q5 model described in `2026-07-11-p1-g3-quantized-asr-default.md`; the checklist below remains the reviewed chronology of the benchmark implementation itself.
+
 ## Global Constraints
 
 - Do not add a Rust or JavaScript dependency.

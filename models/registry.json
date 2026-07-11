@@ -1,5 +1,5 @@
 {
-  "_comment": "Model registry. No weights in git. App downloads on demand and verifies sha256 before load. sha256 values are PLACEHOLDERS — fill from the published artifact at integration time. ≥2 viable local ASR models at all times (ADR-0002); prediction models per ADR-0007.",
+  "_comment": "Model registry. No weights in git. The app verifies sha256 before load; TODO checksums and sources remain fail-closed. ≥2 viable local ASR models at all times (ADR-0002); prediction models per ADR-0007.",
   "schema_version": 1,
   "models": [
     {
@@ -14,6 +14,24 @@
       "min_hw": "any",
       "recommended": true,
       "sources": ["TODO_primary", "TODO_mirror"]
+    },
+    {
+      "id": "whisper-base-en-q5_1",
+      "task": "asr",
+      "lane": "gpu",
+      "runtime": "whisper.cpp",
+      "file": "ggml-base.en-q5_1.bin",
+      "sha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f",
+      "size_mb": 57,
+      "license": "MIT",
+      "min_hw": "any",
+      "recommended": true,
+      "default_for": ["macos", "windows", "linux"],
+      "note": "Footprint-safe P1 default. Apple M5 Pro canonical proof: Q5_1 Metal 152.656 MB RSS and 78 ms p95; CPU 138.516 MB and 214 ms p95; 4/4 synthetic golden phrases at zero content-word WER. Large-v3-turbo remains the quality lane until it independently meets the resident-memory budget.",
+      "sources": [
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/c521a4b02f422512d734391fdf08bb08c0862f68/ggml-base.en-q5_1.bin",
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en-q5_1.bin"
+      ]
     },
     {
       "id": "whisper-large-v3-turbo",

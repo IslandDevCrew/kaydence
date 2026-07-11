@@ -3821,6 +3821,20 @@ mod tests {
     }
 
     #[test]
+    fn current_registry_defaults_every_desktop_to_the_footprint_safe_whisper_model() {
+        let registry = models::ModelRegistry::load(&models::source_tree_registry_path()).unwrap();
+
+        for platform in ["macos", "windows", "linux"] {
+            let recommended = first_run_asr_recommendation(&registry, platform).unwrap();
+            assert_eq!(recommended.id, "whisper-base-en-q5_1");
+            assert_eq!(
+                recommendation_reason(recommended, platform),
+                "Recommended for this OS lane"
+            );
+        }
+    }
+
+    #[test]
     fn selecting_asr_model_updates_snapshot_and_persists_settings() {
         let app_data = tmp();
         let registry_path = write_selectable_asr_registry(&app_data);

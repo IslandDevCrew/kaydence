@@ -1,8 +1,9 @@
 # engine/ — ASR
 
 ## Owns
-The `AsrEngine` trait and its implementations: Parakeet V3 (ONNX Runtime, CPU
-default), whisper.cpp large-v3-turbo (GPU/Metal), BYOK cloud (Groq/Deepgram).
+The `AsrEngine` trait and its implementations: Parakeet V3 (ONNX Runtime,
+independent CPU lane), whisper.cpp base.en Q5_1 (footprint-safe P1 default),
+whisper.cpp large-v3-turbo (optional quality lane), BYOK cloud (Groq/Deepgram).
 Streaming partial emission, engine selection/fallback chain, model lifecycle
 (load/warm/unload), language detection handoff.
 
@@ -32,6 +33,10 @@ any text mutation beyond what the model outputs (cleanup/ owns that).
 8. Shipped whisper.cpp binaries default `GGML_NATIVE=OFF`; build-host CPU
    detection is not a portable release target. Architecture-specific variants
    require an explicit target string plus runtime and latency evidence.
+9. The cross-platform first-run default must have direct evidence under the
+   root `<=250 MB` ASR-resident budget. A larger quality model remains optional
+   until the same runner proves it; model popularity or disk quantization alone
+   is not footprint evidence.
 
 ## Benchmarks
 `scripts/bench.sh` drives this module with the golden audio corpus; WER and

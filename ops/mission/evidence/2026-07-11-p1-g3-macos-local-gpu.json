@@ -2,13 +2,13 @@
   "schema": 1,
   "platform": "macos",
   "lane": "local_gpu",
-  "model_id": "ggml-base.en",
-  "model_sha256": "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002",
+  "model_id": "whisper-base-en-q5_1",
+  "model_sha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f",
   "fixture_sha256": "085e4b157e9f3ce0114b072354d07ede5cbcecce95bc59771b808e78abd94247",
-  "warmup_ms": 304,
+  "warmup_ms": 284,
   "sample_count": 10,
-  "release_to_delivery_policy_p50_ms": 54,
-  "release_to_delivery_policy_p95_ms": 77,
+  "release_to_delivery_policy_p50_ms": 55,
+  "release_to_delivery_policy_p95_ms": 78,
   "audio_ms": 2496,
   "transcript_nonempty": true,
   "events": [
@@ -21,16 +21,17 @@
   ],
   "runner_schema": 1,
   "requested_lane": "local_gpu",
-  "idle_ram_mb": 268.188,
+  "idle_ram_mb": 152.656,
   "idle_cpu_pct": 0,
-  "idle_sample_interval_ms": 3104.5,
+  "idle_sample_interval_ms": 3104,
   "budgets": {
     "release_to_delivery_policy_p95_ms": 700,
     "idle_ram_mb": 250,
     "idle_cpu_pct": 1
   },
-  "budget_failures": [
-    "idle_ram_mb"
-  ],
-  "status": "fail"
+  "budget_failures": [],
+  "status": "pass",
+  "diagnostics": {
+    "child_stderr_bytes": 10423
+  }
 }

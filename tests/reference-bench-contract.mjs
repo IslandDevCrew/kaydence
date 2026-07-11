@@ -34,6 +34,8 @@ assert.match(source, /process\.platform === "darwin"/);
 assert.match(source, /\/proc\/\$\{pid\}\/stat/);
 assert.match(source, /physical_os_field_injection/);
 assert.match(source, /idle_cpu_pct/);
+assert.match(source, /ggml-base\.en-q5_1\.bin/);
+assert.doesNotMatch(source, /"ggml-base\.en\.bin"/);
 assert.doesNotMatch(source, /node:url/);
 
 const help = spawnSync(process.execPath, [runner, "--help"], {
