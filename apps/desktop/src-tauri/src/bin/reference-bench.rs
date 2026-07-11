@@ -1,4 +1,6 @@
+#[cfg(any(feature = "asr-whisper", test))]
 const MINIMUM_SAMPLE_COUNT: u64 = 5;
+#[cfg(any(feature = "asr-whisper", test))]
 fn nearest_rank(samples: &[u64], percentile: u8) -> u64 {
     assert!(!samples.is_empty());
     assert!((1..=100).contains(&percentile), "invalid percentile");
@@ -7,6 +9,7 @@ fn nearest_rank(samples: &[u64], percentile: u8) -> u64 {
     let rank = (usize::from(percentile) * sorted.len()).div_ceil(100);
     sorted[rank - 1]
 }
+#[cfg(any(feature = "asr-whisper", test))]
 fn parse_sample_count(value: Option<&str>) -> Result<u64, String> {
     let count = value
         .unwrap_or("10")
