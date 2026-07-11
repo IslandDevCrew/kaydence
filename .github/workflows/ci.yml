@@ -2,7 +2,7 @@ name: ci
 # Cost-aware triggers (metered private-repo Actions; macOS bills ×10, Windows ×2):
 #   - push to main .......... Linux only (×1) — the cheap everyday gate
 #   - pull_request to main .. full 3-OS — the trust anchor before a merge
-#   - workflow_dispatch ..... full 3-OS on demand (manual "Run workflow")
+#   - workflow_dispatch ..... full 3-OS, or Windows-only native visual proof
 # This keeps non-negotiable #5 (ADR-0011, 3-OS) intact where it matters — every
 # merge to main goes through a PR that runs all three — while heartbeat pushes
 # stop burning the ×10 macOS runner. Removing the old `on: [push, pull_request]`
@@ -13,6 +13,12 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      windows_visual_proof:
+        description: Build and capture the native Windows Tauri/WebView screen family
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   # Emits the OS matrix: Linux-only for pushes, all three otherwise.
@@ -24,7 +30,9 @@ jobs:
       - id: pick
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.windows_visual_proof }}" = "true" ]; then
+            echo 'matrix={"os":["windows-latest"]}' >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "push" ]; then
             echo 'matrix={"os":["ubuntu-latest"]}' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"]}' >> "$GITHUB_OUTPUT"
@@ -35,12 +43,27 @@ jobs:
     strategy:
       fail-fast: false
       # non-negotiable #5 (ADR-0011) — 3-OS, permanent — enforced on every PR to
-      # main and on manual dispatch. Linux needs display-server + injection deps;
-      # Wayland/X11 injection tests run headless where possible.
+      # main and on ordinary manual dispatch. The explicit Windows visual-proof
+      # dispatch is evidence-only and follows a green 3-OS merge parent. Linux
+      # needs display-server + injection deps; Wayland/X11 injection tests run
+      # headless where possible.
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Windows WebView proof harness contract
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          $path = (Resolve-Path "scripts/windows-webview-proof.ps1").Path
+          $null = [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors)
+          if ($errors.Count -gt 0) {
+            $errors | Format-List | Out-String | Write-Error
+            exit 1
+          }
+          Write-Host "PowerShell syntax contract passed: $path"
       - uses: dtolnay/rust-toolchain@stable
         with: { components: rustfmt, clippy }
       - uses: actions/setup-node@v4
@@ -98,3 +121,34 @@ jobs:
       - name: latency budget (root §5)
         shell: bash
         run: bash scripts/bench.sh --check
+      - name: build Windows native WebView proof binary
+        if: runner.os == 'Windows' && github.event_name == 'workflow_dispatch' && inputs.windows_visual_proof == true
+        shell: pwsh
+        run: |
+          $output = Join-Path $env:GITHUB_WORKSPACE "ops\mission\evidence\windows-webview-proof"
+          $null = New-Item -ItemType Directory -Force -Path $output
+          pnpm --filter kaydence-desktop build
+          if ($LASTEXITCODE -ne 0) {
+            "Frontend build failed with exit code $LASTEXITCODE." | Set-Content (Join-Path $output "build-failure.txt")
+            exit $LASTEXITCODE
+          }
+          cargo build --release --features custom-protocol --manifest-path apps/desktop/src-tauri/Cargo.toml
+          if ($LASTEXITCODE -ne 0) {
+            "Native release build failed with exit code $LASTEXITCODE." | Set-Content (Join-Path $output "build-failure.txt")
+            exit $LASTEXITCODE
+          }
+      - name: capture Windows native WebView proof
+        if: runner.os == 'Windows' && github.event_name == 'workflow_dispatch' && inputs.windows_visual_proof == true
+        shell: pwsh
+        run: |
+          ./scripts/windows-webview-proof.ps1 `
+            -ExecutablePath "target\release\kaydence.exe" `
+            -OutputDirectory "ops\mission\evidence\windows-webview-proof"
+      - name: upload Windows native WebView proof
+        if: always() && runner.os == 'Windows' && github.event_name == 'workflow_dispatch' && inputs.windows_visual_proof == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaydence-windows-webview-proof-${{ github.sha }}
+          path: ops/mission/evidence/windows-webview-proof/**
+          if-no-files-found: error
+          retention-days: 14
