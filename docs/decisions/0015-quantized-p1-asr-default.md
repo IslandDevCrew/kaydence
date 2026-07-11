@@ -30,10 +30,13 @@ quality, lane, latency, RAM, and idle-CPU evidence. Keep it as a selectable
 candidate on Windows; promote Windows only after repeatable quiescent reference
 runs pass unchanged budgets.
 
-Automatic recommendation fallback ignores candidates whose checksum or download
-sources are still placeholders. Windows therefore selects q5 as the reviewed,
-CPU-safe installable fallback instead of selecting the unfinished Parakeet
-entry. This does not add Windows to q5's `default_for` list or close its p95 gate.
+When at least one reviewed candidate exists, automatic recommendation fallback
+ignores candidates whose checksum or download sources are still placeholders.
+Windows therefore selects q5 as the reviewed, CPU-safe installable fallback
+instead of selecting the unfinished Parakeet entry. If every candidate is still
+unreviewed, Kaydence retains an explicit blocked selection so Setup names the
+metadata failure instead of pretending no model exists. This does not add
+Windows to q5's `default_for` list or close its p95 gate.
 
 Normalize pre-warmup candidate and runtime lane labels to the backend compiled
 into the current build. A GPU-preferred `whisper.cpp` artifact reports CPU before
