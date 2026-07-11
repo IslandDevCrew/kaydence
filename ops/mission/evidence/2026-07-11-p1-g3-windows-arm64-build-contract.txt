@@ -10,8 +10,8 @@ previously open Windows ARM64 release-build automation sub-item. It does not
 close P1-G3, P1-G4, signed installer packaging, or the three-OS merge gate.
 SOURCE IDENTITY
 - Application source archive: a5dc909
-- scripts/windows-arm64-build.ps1 sha256: abb150b250f8a6686671ecff4ab68ef727132d1f5562d330476ff73355023d23
-- tests/windows-arm64-build-contract.ps1 sha256: c04d26faf82c57c65e999dcf0e6c50d422ebd8d24ed28bb551299d4536662b41
+- scripts/windows-arm64-build.ps1 sha256: 17e64996ecf625dca7e38190a54e724f885e8d9f8e614850031c5ad8eb5b58d3
+- tests/windows-arm64-build-contract.ps1 sha256: 56181eac83e9b2255c8566d2b7b64f11f935a77c5436c81542fe1288bf27f269
 - Guest hashes matched the host hashes above.
 REQUIRED VISUAL STUDIO COMPONENTS
 - Microsoft.VisualStudio.Component.VC.Llvm.Clang
@@ -24,35 +24,39 @@ Result: exit 0. Resolved:
 - libclang: C:\BuildTools\VC\Tools\Llvm\ARM64\bin\libclang.dll
 - Ninja: C:\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe
 - link: C:\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostarm64\arm64\link.exe
+- PE machines: clang/libclang/link=AA64; official Ninja host tool=x86
 - GGML_NATIVE: OFF; target-generated bindings: true
-- Native PowerShell process required: false; Rust/compiler target is authoritative
+- Cargo target=aarch64-pc-windows-msvc; locked=true; PowerShell host is not authority
 TDD CONTRACT
 RED 1: exit 1 because scripts/windows-arm64-build.ps1 did not exist.
 RED 2: exit 1 when the contract did not describe the valid x64 PowerShell host
        on ARM64 Windows.
 RED 3: exit 1 before the required machine-independent -Help path existed.
+RED 4: exit 1 before Cargo lock/target and PE-machine truth were contractual.
+RED 5: exit 1 while an unsupported Ninja PE machine was still accepted.
 GREEN:
   PASS: Windows ARM64 build contract is fail-closed
   EXITCODE=0
-The negative fixture removed clang-cl.exe and passed only when the failure
-named both official component IDs above.
+Negative fixtures cover every required path, wrong core-tool/host PE machines,
+and a whitespace-only WHISPER_DONT_GENERATE_BINDINGS override.
 RELEASE BUILD
 Command: powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Profile release
 Environment contract:
 - CMAKE_GENERATOR=Ninja
 - CMAKE_C_COMPILER/CXX_COMPILER/ASM_COMPILER=native ARM64 clang-cl
 - CXXFLAGS=/EHsc; LIBCLANG_PATH=native ARM64 LLVM bin; GGML_NATIVE=OFF
-- WHISPER_DONT_GENERATE_BINDINGS absent; Cargo features: custom-protocol,asr-whisper
+- Binding override absent; Cargo: --locked --target aarch64-pc-windows-msvc
+- Cargo features: custom-protocol,asr-whisper; stale expected output removed first
 Result:
 - Frontend: tsc --noEmit + Vite production build passed (44 modules).
 - whisper-rs-sys: rebuilt after a package-scoped clean; bindgen ran via libclang.
-- Cargo: cold release 3m51s; exact final-script warm rebuild 1m47s.
+- Cargo: review-fixed explicit-target release finished in 2m38s.
 - Exit code: 0.
-- Output: C:\KaydenceProof\a5dc909\target\release\kaydence.exe
+- Output: C:\KaydenceProof\a5dc909\target\aarch64-pc-windows-msvc\release\kaydence.exe
 - Size: 12,018,176 bytes.
-- SHA256: e9d9dee45c8e5c9a39c6c2f2184f676eacc1a1fb2180400d837c62a85067aef4
+- SHA256: ba0e358927bc4e1eebff2c2e25d6d3cf64059c7c5f9c0da5af60e73090da89c5
 - dumpbin: AA64 machine (ARM64), PE32+, Windows GUI executable.
-- Final raw build log sha256: 99feb8ad22da25667a652351c4f3e7ff9bb3bde5373e1d31de54c0734953afa5
+- Final raw build log sha256: 42307b4e3b77e7ff1a794cf881f761771a3bee7f98f091ad35821d22bcbb95a8
 VERSIONS
 - rustc 1.97.0; host aarch64-pc-windows-msvc; LLVM 22.1.6
 - cargo 1.97.0
@@ -63,6 +67,8 @@ VERSIONS
 - Node zip sha256: f274669adb93b1fd0fbf8f21fd078609e9dcc84333d4f2718d2dde3f9a161a01
 - pnpm 11.10.0 (repository-pinned)
 TARGETED REPOSITORY GATES
+- Windows PowerShell 5.1 parser + fail-closed fixture: PASS
+- workflow YAML parse: PASS
 - bash scripts/check-frontend.sh: PASS
 - bash scripts/audit-network.sh: PASS (0 network-capable call sites)
 - bash scripts/check-privacy-posture.sh --check: PASS

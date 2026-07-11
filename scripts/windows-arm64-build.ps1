@@ -67,6 +67,51 @@ function Require-File {
   return (Resolve-Path -LiteralPath $Path).Path
 }
 
+function Get-PeMachine {
+  param([string] $Path)
+
+  $stream = [IO.File]::OpenRead($Path)
+  $reader = New-Object IO.BinaryReader($stream)
+  try {
+    if ($reader.ReadUInt16() -ne 0x5a4d) { throw "'$Path' has no MZ header." }
+    $stream.Position = 0x3c
+    $stream.Position = $reader.ReadInt32()
+    if ($reader.ReadUInt32() -ne 0x00004550) { throw "'$Path' has no PE header." }
+    return $reader.ReadUInt16()
+  } finally {
+    $reader.Dispose()
+    $stream.Dispose()
+  }
+}
+
+function Get-PeMachineName {
+  param([uint16] $Machine)
+
+  switch ($Machine) {
+    0x014c { "x86" }
+    0x8664 { "x64" }
+    0xaa64 { "AA64" }
+    default { "0x{0:X4}" -f $Machine }
+  }
+}
+
+function Require-Arm64Pe {
+  param([string] $Path, [string] $Label)
+
+  $machine = Get-PeMachine $Path
+  $machineName = Get-PeMachineName $machine
+  if ($machine -ne 0xaa64) {
+    Stop-Toolchain "$Label at '$Path' is $machineName; expected AA64 (ARM64)."
+  }
+  return $machineName
+}
+
+function Assert-BindingsGenerationEnabled {
+  if (Test-Path Env:WHISPER_DONT_GENERATE_BINDINGS) {
+    throw "WHISPER_DONT_GENERATE_BINDINGS must be absent so libclang generates target-correct bindings."
+  }
+}
+
 function Get-ToolchainContract {
   param([string] $Root)
 
@@ -77,17 +122,33 @@ function Get-ToolchainContract {
     Stop-Toolchain "The native ARM64 MSVC linker was not found under '$Root'."
   }
 
+  $vsDevCmd = Require-File (Join-Path $Root "Common7\Tools\VsDevCmd.bat") "VsDevCmd.bat"
+  $clang = Require-File (Join-Path $llvmBin "clang-cl.exe") "ARM64 clang-cl"
+  $libclang = Require-File (Join-Path $llvmBin "libclang.dll") "ARM64 libclang"
+  $ninja = Require-File (Join-Path $Root "Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe") "Ninja"
+  $linkPath = $link.FullName
+  $ninjaMachine = Get-PeMachineName (Get-PeMachine $ninja)
+  if ($ninjaMachine -notin @("x86", "x64", "AA64")) {
+    Stop-Toolchain "Ninja at '$ninja' is $ninjaMachine; expected a Windows PE host tool."
+  }
+
   return [ordered]@{
     architecture = "aarch64-pc-windows-msvc"
     build_tools = $Root
-    vsdevcmd = Require-File (Join-Path $Root "Common7\Tools\VsDevCmd.bat") "VsDevCmd.bat"
-    clang = Require-File (Join-Path $llvmBin "clang-cl.exe") "ARM64 clang-cl"
-    libclang = Require-File (Join-Path $llvmBin "libclang.dll") "ARM64 libclang"
-    ninja = Require-File (Join-Path $Root "Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe") "Ninja"
-    link = $link.FullName
+    vsdevcmd = $vsDevCmd
+    clang = $clang
+    libclang = $libclang
+    ninja = $ninja
+    link = $linkPath
+    clang_machine = Require-Arm64Pe $clang "ARM64 clang-cl"
+    libclang_machine = Require-Arm64Pe $libclang "ARM64 libclang"
+    ninja_machine = $ninjaMachine
+    link_machine = Require-Arm64Pe $linkPath "ARM64 linker"
     ggml_native = "OFF"
     generate_bindings = $true
     requires_native_powershell = $false
+    cargo_locked = $true
+    cargo_target = "aarch64-pc-windows-msvc"
     required_components = $requiredComponents
   }
 }
@@ -137,16 +198,14 @@ function Invoke-Checked {
 }
 
 $contract = Get-ToolchainContract (Find-BuildTools $BuildToolsPath)
+Assert-BindingsGenerationEnabled
 if ($Check) {
   $contract | ConvertTo-Json -Depth 3
   return
 }
 
-if (-not [string]::IsNullOrWhiteSpace($env:WHISPER_DONT_GENERATE_BINDINGS)) {
-  throw "WHISPER_DONT_GENERATE_BINDINGS must be unset so libclang generates target-correct bindings."
-}
-
 Import-VsEnvironment $contract.vsdevcmd
+Assert-BindingsGenerationEnabled
 $llvmBin = Split-Path $contract.clang
 $env:Path = "$llvmBin;$(Split-Path $contract.ninja);$(Split-Path $contract.link);$env:Path"
 $env:CMAKE_GENERATOR = "Ninja"
@@ -157,6 +216,13 @@ $env:CXXFLAGS = "/EHsc"
 $env:LIBCLANG_PATH = $llvmBin
 $env:GGML_NATIVE = "OFF"
 
+$clangVersion = (& $contract.clang --version | Out-String)
+$clangTarget = [regex]::Match($clangVersion, "(?m)^Target:\s+(\S+)")
+if ($LASTEXITCODE -ne 0 -or -not $clangTarget.Success -or
+    $clangTarget.Groups[1].Value -ne $contract.architecture) {
+  throw "clang-cl target is not $($contract.architecture). Output: $clangVersion"
+}
+
 $rustHost = (& rustc -vV | Select-String "^host:").Line.Split(":", 2)[1].Trim()
 if ($LASTEXITCODE -ne 0 -or $rustHost -ne $contract.architecture) {
   throw "Rust host '$rustHost' is not $($contract.architecture)."
@@ -164,17 +230,6 @@ if ($LASTEXITCODE -ne 0 -or $rustHost -ne $contract.architecture) {
 
 $manifest = Join-Path $repoRoot "apps\desktop\src-tauri\Cargo.toml"
 $profileArguments = if ($Profile -eq "release") { @("--release") } else { @() }
-Push-Location $repoRoot
-try {
-  Invoke-Checked "pnpm" @("--filter", "kaydence-desktop", "build")
-  Invoke-Checked "cargo" (@("clean") + $profileArguments + @("--manifest-path", $manifest, "-p", "whisper-rs-sys"))
-  Invoke-Checked "cargo" (@("build") + $profileArguments + @(
-    "--features", "custom-protocol,asr-whisper", "--manifest-path", $manifest
-  ))
-} finally {
-  Pop-Location
-}
-
 $targetRoot = if ([string]::IsNullOrWhiteSpace($env:CARGO_TARGET_DIR)) {
   Join-Path $repoRoot "target"
 } elseif ([IO.Path]::IsPathRooted($env:CARGO_TARGET_DIR)) {
@@ -182,8 +237,27 @@ $targetRoot = if ([string]::IsNullOrWhiteSpace($env:CARGO_TARGET_DIR)) {
 } else {
   Join-Path $repoRoot $env:CARGO_TARGET_DIR
 }
-$binary = Join-Path $targetRoot "$Profile\kaydence.exe"
+$binary = Join-Path $targetRoot "$($contract.cargo_target)\$Profile\kaydence.exe"
+Remove-Item -LiteralPath $binary -Force -ErrorAction SilentlyContinue
+Push-Location $repoRoot
+try {
+  Invoke-Checked "pnpm" @("--filter", "kaydence-desktop", "build")
+  Invoke-Checked "cargo" (@("clean") + $profileArguments + @(
+    "--target", $contract.cargo_target, "--manifest-path", $manifest, "-p", "whisper-rs-sys"
+  ))
+  Assert-BindingsGenerationEnabled
+  Invoke-Checked "cargo" (@("build") + $profileArguments + @(
+    "--locked", "--target", $contract.cargo_target,
+    "--features", "custom-protocol,asr-whisper", "--manifest-path", $manifest
+  ))
+} finally {
+  Pop-Location
+}
+
 if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
   throw "Cargo succeeded but Kaydence was not found at '$binary'."
+}
+if ((Get-PeMachine $binary) -ne 0xaa64) {
+  throw "Kaydence output at '$binary' is not an AA64 (ARM64) PE executable."
 }
 Write-Host "Kaydence Windows ARM64 build ready: $binary"

@@ -4,7 +4,7 @@
 
 **Goal:** Turn the proven Windows 11 ARM64 Whisper recipe into a repeatable, fail-closed repository build command.
 
-**Architecture:** Add one PowerShell entry point that discovers or accepts a Visual Studio Build Tools installation, validates every ARM64 LLVM/MSVC file, imports the native developer environment, and builds Kaydence with target-generated Whisper bindings. Exercise its discovery contract with a filesystem fixture on every Windows CI leg; the real ARM64 VM remains the native execution authority.
+**Architecture:** Add one PowerShell entry point that discovers or accepts a Visual Studio Build Tools installation, validates paths and PE machines for the ARM64 LLVM/MSVC toolchain, imports the native developer environment, and builds Kaydence with target-generated Whisper bindings. Exercise its discovery contract with a filesystem fixture under both Windows PowerShell hosts on every Windows CI leg; the real ARM64 VM remains the native execution authority.
 
 **Tech Stack:** Windows PowerShell 5.1+/PowerShell 7, Visual Studio Build Tools 2022, clang-cl, Ninja, libclang, Rust/Cargo, pnpm, GitHub Actions.
 
@@ -12,7 +12,7 @@
 
 - Windows ARM64 requires `Microsoft.VisualStudio.Component.VC.Llvm.Clang` and `Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset`.
 - Build with `GGML_NATIVE=OFF`, `CXXFLAGS=/EHsc`, Ninja, and native ARM64 `clang-cl`/`libclang`.
-- `WHISPER_DONT_GENERATE_BINDINGS` must be absent; incompatible bundled glibc bindings must never enter a Windows ARM64 release.
+- `WHISPER_DONT_GENERATE_BINDINGS` must be absent; Cargo must be locked and explicitly target `aarch64-pc-windows-msvc`.
 - The real build must use Rust host `aarch64-pc-windows-msvc`; Windows PowerShell 5.1 may itself run as x64 under ARM64 Windows and is not a build-target authority.
 - No dependency, network-allowlist, model-registry, UI invariant, or installer-format change belongs in this unit.
 - Keep the unit within the repository's 400-line review limit and save runtime proof under `ops/mission/evidence/`.
@@ -70,7 +70,7 @@ Expected: CI keeps running this on every Windows leg, including ordinary three-O
 
 **Interfaces:**
 - Consumes: optional `-BuildToolsPath`, `-Profile release|debug`, and `-Check`
-- Produces: JSON toolchain contract in `-Check`; otherwise `target/<profile>/kaydence.exe`
+- Produces: JSON toolchain contract in `-Check`; otherwise `target/aarch64-pc-windows-msvc/<profile>/kaydence.exe`
 
 - [ ] **Step 1: Implement fail-closed toolchain discovery**
 
@@ -84,7 +84,7 @@ Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe
 VC\Tools\MSVC\*\bin\Hostarm64\arm64\link.exe
 ```
 
-Any missing file throws one actionable error naming both required Visual Studio component IDs.
+Any missing file throws one actionable error naming both component IDs. PE checks require AA64 clang-cl, libclang, and link; Ninja may be the official x86/x64/AA64 Windows host tool.
 
 - [ ] **Step 2: Implement deterministic check output**
 
@@ -109,13 +109,13 @@ Include absolute resolved paths for Build Tools, `VsDevCmd`, clang, libclang, Ni
 The non-check path must:
 
 1. Reject non-`aarch64-pc-windows-msvc` Rust hosts; do not infer the build target from the PowerShell process architecture.
-2. Reject a non-empty `WHISPER_DONT_GENERATE_BINDINGS`.
+2. Reject any present `WHISPER_DONT_GENERATE_BINDINGS`, including whitespace, after environment import and immediately before Cargo.
 3. Import `VsDevCmd.bat -arch=arm64 -host_arch=arm64` through a temporary command file.
 4. Prepend native LLVM and Ninja paths.
 5. Set `CMAKE_GENERATOR=Ninja`, all three CMake compiler variables to ARM64 `clang-cl`, `CXXFLAGS=/EHsc`, `LIBCLANG_PATH=<LLVM bin>`, and `GGML_NATIVE=OFF`.
 6. Run `pnpm --filter kaydence-desktop build`.
-7. Clean only `whisper-rs-sys` for the selected profile, then run Cargo with `custom-protocol,asr-whisper`.
-8. Fail on every non-zero native command and verify `target/<profile>/kaydence.exe` exists.
+7. Clean only `whisper-rs-sys`, then run locked Cargo for explicit target `aarch64-pc-windows-msvc` with `custom-protocol,asr-whisper`.
+8. Remove stale output first, fail on every non-zero command, and parse the final executable's PE machine as AA64.
 
 - [ ] **Step 4: Run the fixture test and verify GREEN**
 
@@ -162,7 +162,7 @@ Expected: JSON names the native ARM64 clang, Ninja, libclang, and linker paths; 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Profile release
 ```
 
-Expected: exit 0 and `target\release\kaydence.exe` exists. Capture tool versions, source SHA, command output, binary SHA256, and binary architecture in the evidence file. If disk or tool state prevents completion, record the exact failure and leave release automation unverified.
+Expected: exit 0 and `target\aarch64-pc-windows-msvc\release\kaydence.exe` exists. Capture tool versions, source SHA, command output, binary SHA256, and binary architecture in the evidence file. If disk or tool state prevents completion, record the exact failure and leave release automation unverified.
 
 - [ ] **Step 3: Render and validate the mission heartbeat**
 

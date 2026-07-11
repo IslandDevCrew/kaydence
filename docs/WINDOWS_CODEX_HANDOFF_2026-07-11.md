@@ -65,17 +65,20 @@ libclang must generate target-correct bindings.
 This contract is now encoded in `scripts/windows-arm64-build.ps1` and guarded
 by `tests/windows-arm64-build-contract.ps1` on every Windows CI leg. Windows
 PowerShell 5.1 may run as an x64 process on ARM64 Windows, so the script uses
-the Rust host plus resolved compiler/linker targets as architecture authority.
+the Rust host plus parsed PE machine fields as architecture authority. It
+requires AA64 clang/libclang/link, permits the official x86 Ninja host tool,
+rejects any bindings opt-out, and runs locked Cargo with an explicit ARM64 target.
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
   scripts\windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Profile release
 ```
 
-Real VM proof: the cold production build completed in 3m51s and the exact final
-script rebuilt it from the warm cache in 1m47s. `dumpbin` reports `AA64 machine
-(ARM64)` for the 12,018,176-byte executable, whose final sha256 is
-`e9d9dee45c8e5c9a39c6c2f2184f676eacc1a1fb2180400d837c62a85067aef4`.
+Real VM proof: the review-fixed explicit-target production build completed in
+2m38s at `target\aarch64-pc-windows-msvc\release\kaydence.exe`. The script's
+PE check and independent `dumpbin` both report `AA64 machine (ARM64)` for the
+12,018,176-byte executable, whose sha256 is
+`ba0e358927bc4e1eebff2c2e25d6d3cf64059c7c5f9c0da5af60e73090da89c5`.
 Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-arm64-build-contract.txt`.
 
 ## Still Needed On Windows
