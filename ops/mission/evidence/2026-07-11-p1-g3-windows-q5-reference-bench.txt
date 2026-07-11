@@ -1,0 +1,65 @@
+P1-G3 - WINDOWS ARM64 Q5 REFERENCE BENCH
+Captured: 2026-07-11 (America/Chicago)
+Source commit: edb7ee5ef1bcd1f0d5f95dbfa5e6dd8a3beecb92
+Branch: codex/p1-g3-quantized-asr-default
+
+SCOPE
+- Fresh isolated source at C:\KaydenceProof\q5\source.
+- Real optimized reference-bench through the production Whisper adapter, WAL,
+  VAD, Raw commit selection, and delivery policy.
+- Exact synthetic golden-clip test through local_asr_stack.
+- Operator-supplied local model and audio only; no runtime network call.
+
+HOST / TOOLCHAIN
+- UTM Microsoft Windows 11 Pro 10.0.26200, ARM64-based PC.
+- 4 logical CPUs; 17,170,169,856 bytes guest memory.
+- rustc 1.97.0, cargo 1.97.0, Node.js v24.18.0, clang-cl 19.1.5.
+- Native target: aarch64-pc-windows-msvc.
+
+BUILD
+  VsDevCmd.bat -arch=arm64 -host_arch=arm64
+  CARGO_BUILD_JOBS=1
+  CMAKE_GENERATOR=Ninja
+  CMAKE_C_COMPILER/CMAKE_CXX_COMPILER=ARM64 clang-cl.exe
+  CXXFLAGS=/EHsc
+  LIBCLANG_PATH=ARM64 LLVM bin
+  GGML_NATIVE=OFF
+  cargo build --release --features asr-whisper --bin reference-bench
+
+INPUT IDENTITY
+- Model: ggml-base.en-q5_1.bin, 59,721,011 bytes.
+- Model SHA-256: 4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f
+- Reference fixture SHA-256: 085e4b157e9f3ce0114b072354d07ede5cbcecce95bc59771b808e78abd94247
+- Exact golden fixture SHA-256: 2b1aa6d79c35e790927cafdb7f5b10b81543895e5f7e4b7951761612348d3895
+
+REFERENCE RUN 1 - IMMEDIATELY AFTER NATIVE BUILD
+- Actual lane: local_cpu; warmup 73 ms; ten samples.
+- p50 905 ms; p95 1433 ms.
+- Resident RAM 73.027 MB; idle CPU 0% over 3446 ms.
+- Result: FAIL, release_to_delivery_policy_p95_ms exceeded 1200 ms.
+- Captured JSON SHA-256:
+  c5c84634a7a22875545e2773b8906863a1f60d9f8e0dd846a20bd5616311ac8f
+
+REFERENCE RUN 2 - QUIESCENT NO-BUILD REPEAT
+- Actual lane: local_cpu; warmup 171 ms; ten samples.
+- p50 813 ms; p95 1121 ms.
+- Resident RAM 75.348 MB; idle CPU 0% over 3361 ms.
+- Result: PASS with no budget failures.
+- Captured JSON SHA-256:
+  2fb49e6287c3888c5133e27c447e35eeeae300da9ef668657bc31966b6a0b1a2
+
+EXACT GOLDEN RESULT
+- Requested/actual lane: CPU/local_cpu.
+- Final text: "Hello there."
+- Warmup: 68 ms; audio 681 ms; transcription 828 ms; RTF 1.216.
+- Result: 1 passed, 0 failed in release mode.
+- Guest golden log SHA-256:
+  31ed97331f7d5950677a894ba069fb86489e0db6a6f52ac03a2e12f360eb3f17
+
+DECISION / LIMITS
+- Exact transcript, RAM, and idle CPU pass. Windows q5 remains a candidate
+  because p95 did not pass repeatably; the failed run is retained, not replaced
+  by the later pass.
+- Audio is synthetic and does not replace human-voice WER evidence.
+- Physical focused-field injection remains unmeasured by this probe.
+- This does not close the no-model full-process-group gap or hosted three-OS CI.

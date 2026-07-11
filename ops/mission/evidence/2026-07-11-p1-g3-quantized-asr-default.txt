@@ -4,13 +4,16 @@ Host: Apple M5 Pro, macOS
 
 DECISION
 - Keep the constitutional ASR-resident ceiling at <=250 MB.
-- Make registry model `whisper-base-en-q5_1` the P1 first-run default on macOS,
-  Windows, and Linux through the existing `default_for` mechanism.
+- Make registry model `whisper-base-en-q5_1` the macOS and Linux P1 first-run
+  default. Keep it selectable on Windows and promote Windows only after its
+  live quality, latency, RAM, and idle-CPU report passes.
 - Keep Parakeet V3 as the required independent CPU runtime and
   large-v3-turbo as an optional quality lane. Neither is called runtime-ready.
 - Preserve ADR-0014: this unit adds verified registry metadata and read-only
   preflight only. The q5 artifact was supplied manually for proof; Kaydence
   performs no network fetch.
+- ADR-0015 records the model-default decision as Proposed and requires operator
+  approval before merge.
 
 ARTIFACT PROVENANCE
 - File: ggml-base.en-q5_1.bin
@@ -58,13 +61,23 @@ SYNTHETIC GOLDEN CORPUS (TRUE METAL)
 CANONICAL EVIDENCE
 - ops/mission/evidence/2026-07-11-p1-g3-macos-local-gpu.json
 - ops/mission/evidence/2026-07-11-p1-g3-macos-local-cpu.json
-- Both JSON reports identify the model and artifact hashes without paths,
+- ops/mission/evidence/2026-07-11-p1-g3-linux-q5-local-cpu.json
+- ops/mission/evidence/2026-07-11-p1-g3-linux-q5-reference-bench.txt
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run1.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run2.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-reference-bench.txt
+- All JSON reports identify the model and artifact hashes without paths,
   transcripts, audio, content, or stderr.
-- Both retain `physical_os_field_injection` as unmeasured.
+- All retain `physical_os_field_injection` as unmeasured.
 
 HONEST STATUS
 - The Mac q5 GPU and CPU reference lanes pass the measured latency/RAM/CPU
   fields. This removes the Mac GPU resident-RAM blocker for this model.
-- P1-G3 remains PENDING. Live Windows and Linux q5 reference reports, physical
+- The Debian 12 ARM64 q5 CPU reference lane passes at 71.859 MB RSS, 600 ms p95,
+  and 0% idle CPU; its exact synthetic golden transcript also passes.
+- Windows 11 ARM64 passed the exact synthetic golden transcript and one
+  quiescent reference run, but the first ten-sample run missed CPU p95 at
+  1433 ms. Windows is not promoted while that gate is not repeatable.
+- P1-G3 remains PENDING. Stable Windows q5 p95 proof, physical
   hotkey-release-to-focused-field timing, the no-model full-process-group gap,
   and fresh hosted three-OS CI remain open.

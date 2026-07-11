@@ -1,0 +1,49 @@
+P1-G3 - LINUX ARM64 Q5 REFERENCE BENCH
+Captured: 2026-07-11 (America/Chicago)
+Source commit: edb7ee5ef1bcd1f0d5f95dbfa5e6dd8a3beecb92
+Branch: codex/p1-g3-quantized-asr-default
+
+SCOPE
+- Fresh isolated source at /home/debian/kaydence-q5-proof.
+- Real optimized reference-bench through the production Whisper adapter, WAL,
+  VAD, Raw commit selection, and delivery policy.
+- Exact synthetic golden-clip test through local_asr_stack.
+- Operator-supplied local model and audio only; no runtime network call.
+
+HOST
+- UTM Debian GNU/Linux 12 (bookworm), Linux 6.1.0-50-arm64, aarch64.
+- 6 logical CPUs; 4,015,592 kB guest memory.
+- rustc/cargo 1.96.1, Node.js v18.20.4.
+
+BUILD
+  CARGO_BUILD_JOBS=1
+  GGML_NATIVE=OFF
+  GGML_CPU_ARM_ARCH=armv8.2-a+fp16+dotprod
+  cargo build --release --features asr-whisper --bin reference-bench
+
+INPUT IDENTITY
+- Model: ggml-base.en-q5_1.bin, 59,721,011 bytes.
+- Model SHA-256: 4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f
+- Reference fixture SHA-256: 085e4b157e9f3ce0114b072354d07ede5cbcecce95bc59771b808e78abd94247
+- Exact golden fixture SHA-256: 2b1aa6d79c35e790927cafdb7f5b10b81543895e5f7e4b7951761612348d3895
+
+REFERENCE RESULT
+- Actual lane: local_cpu.
+- Warmup: 24 ms.
+- Ten samples: p50 594 ms; p95 600 ms.
+- Resident RAM: 71.859 MB; idle CPU: 0% over 3101.5 ms.
+- Budgets: CPU p95 <=1200 ms; RAM <=250 MB; idle CPU <=1%.
+- Result: PASS with no budget failures.
+- Canonical JSON SHA-256 on capture host:
+  317e3c92c942dbaed4f96cb32a915fe2ac00ecb44e9ebfe6165717dd41438ae3
+
+EXACT GOLDEN RESULT
+- Requested/actual lane: CPU/local_cpu.
+- Final text: "Hello there."
+- Warmup: 37 ms; audio 681 ms; transcription 621 ms; RTF 0.912.
+- Result: 1 passed, 0 failed in release mode.
+
+LIMITS
+- Audio is synthetic and does not replace human-voice WER evidence.
+- Physical focused-field injection remains unmeasured by this probe.
+- This does not close the no-model full-process-group gap or hosted three-OS CI.
