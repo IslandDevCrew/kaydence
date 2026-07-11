@@ -168,6 +168,7 @@ mod probe {
         for _ in 0..settings.count {
             let started = Instant::now();
             let measured = pipeline.process_capture(&fixture.0)?;
+            validate_measurement(&measured).map_err(config)?;
             let committed = pipeline::committed_text(&measured)
                 .ok_or_else(|| config("the ASR pipeline produced no committed text"))?;
             let delivered = inject_committed_text(
@@ -214,6 +215,13 @@ mod probe {
     }
     fn config(message: impl Into<String>) -> Error {
         Error::Config(message.into())
+    }
+    fn validate_measurement(events: &[SessionEvent]) -> Result<(), &'static str> {
+        (!events
+            .iter()
+            .any(|event| matches!(event, SessionEvent::Failed { .. })))
+        .then_some(())
+        .ok_or("reference benchmark sample contains a failed event")
     }
     fn optional_u64(name: &str) -> Result<Option<u64>, Error> {
         match std::env::var(name) {
@@ -389,6 +397,17 @@ mod probe {
             let request = AsrRequest::new(id, wal::SAMPLE_RATE, 0, vec![0.1], Vec::new());
             let error = pinned.transcribe(&request).unwrap_err().to_string();
             assert!(error.contains("expected local_gpu, got local_cpu"));
+        }
+        #[rustfmt::skip]
+        #[test]
+        fn mixed_failed_and_raw_final_measurement_is_rejected_without_content() {
+            let id = SessionId::new(Ulid::new());
+            let events = vec![
+                SessionEvent::Failed { id, stage: kaydence_lib::events::Stage::Recognize, error: "sensitive/model/path".into() },
+                SessionEvent::RawFinal { id, text: "sensitive transcript".into() },
+            ];
+            let error = validate_measurement(&events).unwrap_err();
+            assert_eq!(error, "reference benchmark sample contains a failed event");
         }
         #[test]
         fn ready_file_contains_only_controller_fields() {
