@@ -14,10 +14,13 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
 - `bench-reference.mjs` — **present (P1-G3, working reference-machine gate)**.
   Launches the feature-gated `reference-bench` probe, verifies its ready-file
   PID, samples the resident child twice with host-native macOS/Windows/Linux
-  process tools, and writes a redacted `bench-results/reference-<platform>-<lane>.json`.
-  It fails when the actual reviewed lane misses its p95 budget, resident RAM
-  exceeds 250 MB, idle CPU exceeds 1%, or the probe overclaims physical
-  OS-field injection. `bench-results/` is local evidence, never a source input.
+  process tools across at least three seconds, and writes a redacted
+  `bench-results/reference-<platform>-<lane>.json`. The probe holds its resident
+  state for at least five seconds, and completion plus cleanup are bounded. The
+  runner accepts a reviewed fallback lane, records the requested lane, and uses
+  the actual lane's p95 budget. It fails when p95, 250 MB resident RAM, or 1%
+  idle CPU is exceeded, or when the probe overclaims physical OS-field
+  injection. `bench-results/` is local evidence, never a source input.
 - `audit-network.sh` — **present (P0-T6), a working gate**. Fixed-string scan of
   the Rust/TS source for network-capable call sites, diffed against
   `network-allowlist.json` (model mirrors + user-configured BYOK endpoints + Relay
