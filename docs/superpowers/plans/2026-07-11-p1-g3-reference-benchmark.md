@@ -4,7 +4,7 @@
 
 **Goal:** Build a repeatable, fail-closed reference benchmark that measures warm real-ASR pipeline p50/p95 plus ASR-resident RAM and idle CPU on macOS, Windows, and Linux without claiming that a no-op delivery sink proves physical OS-field injection.
 
-**Architecture:** A feature-gated Rust binary owns the production-path measurement: it loads a checksum-reviewed local Whisper artifact, warms the selected lane once, replays a real 16 kHz PCM clip through WAL, VAD, ASR, Raw commit selection, and injection policy, then idles while resident state remains loaded. A dependency-free Node runner launches that binary, samples the child process with the host's native process tool, merges latency and footprint into schema-versioned JSON, and enforces the relevant constitutional budgets. Physical field injection remains a separately named evidence requirement.
+**Architecture:** A feature-gated Rust binary owns the production-path measurement: it validates a safe model identity and expected SHA-256, hashes the local Whisper artifact before constructing `LocalAsrAdapterState::VerifiedArtifact`, hashes the fixture, warms the selected lane once, replays a real 16 kHz PCM clip through WAL, VAD, ASR, Raw commit selection, and injection policy, then idles while resident state remains loaded. A dependency-free Node runner launches that binary, samples the child process with the host's native process tool, merges latency and footprint into schema-versioned JSON, and enforces the relevant constitutional budgets. Physical field injection remains a separately named evidence requirement.
 
 **Tech Stack:** Rust stable, existing `whisper-rs` feature flags, existing Kaydence pipeline traits, Node.js standard library, PowerShell only as the Windows process-query backend.
 
@@ -16,11 +16,15 @@
 - The Rust probe must compile to an explicit failure message without `asr-whisper`.
 - Warmup is excluded from release-to-policy timing and reported separately.
 - Report p50 and p95 over at least five measured samples; default to ten.
+- `KAYDENCE_REFERENCE_IDLE_MS` is capped by reviewed `MAXIMUM_IDLE_MS=30000` in both probe and runner; the runner raises shorter requests to its sampling minimum.
+- The runner has an absolute controller runtime of `180000` ms, independent of ready/probe values, and clamps every post-ready command and wait to the remaining time.
 - Resident RAM budget is `<=250 MB`; idle CPU budget is `<=1%`.
 - GPU p95 budget is `<=700 ms`; CPU p95 budget is `<=1200 ms`.
 - The report must call the measured endpoint `delivery_policy`, not physical injection.
 - The report must list `physical_os_field_injection` as unmeasured until a focused native target proves it.
 - One platform report proves only that platform and lane.
+- Requested `local_cpu` may report only `local_cpu`; requested `local_gpu` may report `local_gpu` or a truthful `local_cpu` fallback. The actual lane selects the p95 budget.
+- A successful report requires `transcript_nonempty=true`, events containing `audio_persisted` and `raw_final`, no `failed` or `held`, integer nonnegative timings and sample count, `sample_count>=5`, `p50<=p95`, and `audio_ms>0`.
 - No model bytes, audio bytes, transcript text, or user paths are written to evidence JSON.
 
 ---
@@ -32,8 +36,8 @@
 - Test: `apps/desktop/src-tauri/src/bin/reference-bench.rs`
 
 **Interfaces:**
-- Consumes: `KAYDENCE_WHISPER_MODEL`, `KAYDENCE_WHISPER_CLIP`, `KAYDENCE_WHISPER_LANE`, `KAYDENCE_REFERENCE_SAMPLES`, `KAYDENCE_REFERENCE_IDLE_MS`, and `KAYDENCE_REFERENCE_READY_FILE`.
-- Produces: one JSON document on stdout with `schema`, `platform`, `lane`, `warmup_ms`, `sample_count`, `release_to_delivery_policy_p50_ms`, `release_to_delivery_policy_p95_ms`, `audio_ms`, `transcript_nonempty`, `events`, and `unmeasured`.
+- Consumes: `KAYDENCE_WHISPER_MODEL`, `KAYDENCE_WHISPER_MODEL_ID`, `KAYDENCE_WHISPER_SHA256`, `KAYDENCE_WHISPER_CLIP`, `KAYDENCE_WHISPER_LANE`, `KAYDENCE_REFERENCE_SAMPLES`, `KAYDENCE_REFERENCE_IDLE_MS`, and `KAYDENCE_REFERENCE_READY_FILE`.
+- Produces: one JSON document on stdout with `schema`, `platform`, `lane`, `model_id`, `model_sha256`, `fixture_sha256`, `warmup_ms`, `sample_count`, `release_to_delivery_policy_p50_ms`, `release_to_delivery_policy_p95_ms`, `audio_ms`, `transcript_nonempty`, `events`, and `unmeasured`.
 
 - [ ] **Step 1: Write failing unit tests for percentile selection and argument validation**
 
@@ -63,7 +67,7 @@ Expected: FAIL because the binary and helper functions do not exist.
 
 - [ ] **Step 3: Implement the feature-gated probe**
 
-The implementation must:
+The implementation must validate `KAYDENCE_WHISPER_MODEL_ID` as a 1-64 character `[A-Za-z0-9._-]` identifier, validate `KAYDENCE_WHISPER_SHA256` as exactly 64 hex characters, stream-hash the model and reject a mismatch before `VerifiedArtifact` construction, and stream-hash the fixture for the report. It must also enforce `MAXIMUM_IDLE_MS=30000` directly. The measured path remains:
 
 ```rust
 let warmed_lane = stack.warm_up()?;
@@ -83,7 +87,7 @@ for _ in 0..sample_count {
 }
 ```
 
-Write the ready file atomically after measurements and before the idle hold. It contains only `pid`, `phase`, and `idle_ms`. Keep the engine stack and pipeline alive for the entire hold.
+Write the ready file atomically after measurements and before the idle hold. It contains only `pid`, `phase`, and `idle_ms`. Keep the engine stack and pipeline alive for the entire hold. Report only the safe model identifier and artifact hashes, never local source paths or transcript content.
 
 - [ ] **Step 4: Run focused tests and verify GREEN**
 
@@ -100,14 +104,28 @@ Expected: PASS with no model required for helper tests.
 Run:
 
 ```bash
-KAYDENCE_WHISPER_MODEL=/Users/IDC2.5/Documents/Kaydence/models/ggml-base.en.bin \
-KAYDENCE_WHISPER_CLIP=/Users/IDC2.5/Documents/Kaydence/models/clip16k.wav \
+: "${LOCAL_REVIEWED_MODEL:?set LOCAL_REVIEWED_MODEL to the reviewed local model}"
+: "${LOCAL_16KHZ_FIXTURE:?set LOCAL_16KHZ_FIXTURE to the reviewed local fixture}"
+EXPECTED_MODEL_SHA256=a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
+
+KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" \
+KAYDENCE_WHISPER_MODEL_ID=ggml-base.en \
+KAYDENCE_WHISPER_SHA256="$EXPECTED_MODEL_SHA256" \
+KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" \
 KAYDENCE_WHISPER_LANE=gpu KAYDENCE_REFERENCE_SAMPLES=10 \
+cargo run --release --manifest-path apps/desktop/src-tauri/Cargo.toml \
+  --features asr-whisper-metal --bin reference-bench
+
+KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" \
+KAYDENCE_WHISPER_MODEL_ID=ggml-base.en \
+KAYDENCE_WHISPER_SHA256="$EXPECTED_MODEL_SHA256" \
+KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" \
+KAYDENCE_WHISPER_LANE=cpu KAYDENCE_REFERENCE_SAMPLES=10 \
 cargo run --release --manifest-path apps/desktop/src-tauri/Cargo.toml \
   --features asr-whisper-metal --bin reference-bench
 ```
 
-Expected: valid JSON, `lane=local_gpu`, ten samples, non-empty transcript, p95 `<=700` ms, and `physical_os_field_injection` listed as unmeasured.
+Expected: valid JSON with `model_id=ggml-base.en`, the expected `model_sha256`, a 64-hex `fixture_sha256`, ten samples, required success events, and `physical_os_field_injection` listed as unmeasured. The GPU request reports `local_gpu` with p95 `<=700` ms on this Metal reference host; the CPU request must report `local_cpu` with p95 `<=1200` ms.
 
 - [ ] **Step 6: Commit**
 
@@ -125,7 +143,7 @@ git commit -m "feat(p1): add real ASR reference benchmark probe"
 
 **Interfaces:**
 - Consumes: `KAYDENCE_REFERENCE_BIN` or a locally built `reference-bench` binary plus the probe environment from Task 1.
-- Produces: `bench-results/reference-<platform>-<lane>.json` and a non-zero exit when any measured budget fails.
+- Produces: ignored raw `bench-results/reference-<platform>-<lane>.json` and a non-zero exit when any measured budget fails. Reviewed runs are promoted separately to tracked canonical sanitized evidence JSON.
 
 - [ ] **Step 1: Write a failing source-contract test**
 
@@ -164,7 +182,7 @@ idle_cpu_pct = ((cpuSecondsAfter - cpuSecondsBefore) / idleSeconds) * 100;
 idle_ram_mb = Math.max(rssBeforeBytes, rssAfterBytes) / (1024 * 1024);
 ```
 
-Reject a ready-file PID mismatch, early child exit, malformed probe JSON, fewer than five samples, a non-reviewed lane, or a missing unmeasured marker. Redact source paths from output.
+Reject a ready-file PID mismatch, early child exit, malformed probe JSON, model ID/hash mismatch, invalid fixture hash, false transcript success, missing required events, forbidden `failed`/`held` events, invalid integer measurements, fewer than five samples, `p50>p95`, zero audio duration, an invalid requested/actual lane relationship, idle above `30000` ms, or a missing unmeasured marker. A GPU request may truthfully fall back to `local_cpu`; a CPU request may not report `local_gpu`. Redact source paths from output and enforce the absolute `180000` ms controller deadline across post-ready work.
 
 - [ ] **Step 4: Run tests and the live Mac runner**
 
@@ -172,10 +190,29 @@ Run:
 
 ```bash
 node tests/reference-bench-contract.mjs
+
+: "${LOCAL_REVIEWED_MODEL:?set LOCAL_REVIEWED_MODEL to the reviewed local model}"
+: "${LOCAL_16KHZ_FIXTURE:?set LOCAL_16KHZ_FIXTURE to the reviewed local fixture}"
+EXPECTED_MODEL_SHA256=a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
+
+KAYDENCE_REFERENCE_BIN=target/release/reference-bench \
+KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" \
+KAYDENCE_WHISPER_MODEL_ID=ggml-base.en \
+KAYDENCE_WHISPER_SHA256="$EXPECTED_MODEL_SHA256" \
+KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" \
+KAYDENCE_WHISPER_LANE=gpu KAYDENCE_REFERENCE_SAMPLES=10 \
+node scripts/bench-reference.mjs --check
+
+KAYDENCE_REFERENCE_BIN=target/release/reference-bench \
+KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" \
+KAYDENCE_WHISPER_MODEL_ID=ggml-base.en \
+KAYDENCE_WHISPER_SHA256="$EXPECTED_MODEL_SHA256" \
+KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" \
+KAYDENCE_WHISPER_LANE=cpu KAYDENCE_REFERENCE_SAMPLES=10 \
 node scripts/bench-reference.mjs --check
 ```
 
-Expected: contract PASS; live report PASS for latency, RAM, and idle CPU or an honest non-zero budget failure with captured measurements.
+Expected: contract PASS; each live report passes or returns an honest non-zero budget failure with captured measurements. Requested GPU may use the actual GPU lane or truthful CPU fallback and is judged against the actual lane budget; requested CPU must remain CPU.
 
 - [ ] **Step 5: Commit**
 
@@ -188,13 +225,15 @@ git commit -m "build(p1): measure reference ASR footprint cross-platform"
 
 **Files:**
 - Create: `ops/mission/evidence/2026-07-11-p1-g3-macos-reference-bench.txt`
+- Create: `ops/mission/evidence/2026-07-11-p1-g3-macos-local-gpu.json`
+- Create: `ops/mission/evidence/2026-07-11-p1-g3-macos-local-cpu.json`
 - Modify: `ops/mission/state.json`
 - Modify: `ops/mission/journal.md`
 - Modify: `ops/mission/state-of-the-union.html` (generated)
 
 **Interfaces:**
 - Consumes: the live JSON report and local standing-gate output.
-- Produces: a skeptic-checkable Mac evidence artifact and truthful remaining-gate list.
+- Produces: a skeptic-checkable Mac evidence ledger, complete tracked canonical sanitized GPU/CPU JSON reports, and a truthful remaining-gate list. Canonical JSON includes safe combined probe/runner fields and artifact hashes but no paths, transcript content, or stderr.
 
 - [ ] **Step 1: Run the standing local gates**
 
@@ -213,7 +252,7 @@ Expected: every command exits zero.
 
 - [ ] **Step 2: Save evidence with hashes and explicit limits**
 
-The evidence must include commit SHA, host manifest, feature/lane, sample count, warmup, p50/p95, RAM, idle CPU, report SHA-256, commands, and raw exit codes. It must say that Windows and Linux reference reports and physical OS-field injection remain pending.
+The evidence must include commit SHA, host manifest, feature/lane, model identity, model/fixture SHA-256, sample count, warmup, p50/p95, RAM, idle CPU, canonical report SHA-256, commands, and raw exit codes. Promote the safe combined GPU and CPU reports from ignored raw output into the two tracked canonical JSON files. It must say that Windows and Linux reference reports and physical OS-field injection remain pending.
 
 - [ ] **Step 3: Run Judge and Auditor review**
 
@@ -233,6 +272,8 @@ Expected: valid JSON, regenerated HTML, no whitespace errors, P1-G3 still pendin
 
 ```bash
 git add ops/mission/evidence/2026-07-11-p1-g3-macos-reference-bench.txt \
+  ops/mission/evidence/2026-07-11-p1-g3-macos-local-gpu.json \
+  ops/mission/evidence/2026-07-11-p1-g3-macos-local-cpu.json \
   ops/mission/state.json ops/mission/journal.md ops/mission/state-of-the-union.html
 git commit -m "docs(ops): record Mac P1-G3 reference evidence"
 git push -u origin HEAD

@@ -579,3 +579,9 @@
 - Reran the optimized Metal binary sequentially. Canonical GPU evidence records p50/p95 54/77 ms, 268.188 MB RAM, and 0% idle CPU: nonzero only for `idle_ram_mb`. Canonical CPU evidence records p50/p95 202/229 ms, 220.859 MB RAM, and 0% idle CPU with zero failures.
 - Added canonical sanitized JSON with artifact hashes and no paths, transcript text, content, or stderr. Draft PRs #18-#22 remain the published stack; `codex/p1-g3-reference-bench-final-review-fixes` is pending final re-review.
 - Fresh local reference tests, strict Clippy modes, frontend, network, privacy, ADR, synthetic benchmark, JSON/render, and diff gates pass. P1-G3 remains pending; 11/34 tasks and 10/23 gates are unchanged.
+
+## 2026-07-11T18:06Z - Codex P1-G3 documentation alignment
+- Aligned the implementation plan with the shipped benchmark contract without removing or rewriting its TDD chronology: safe model identity and expected SHA inputs, artifact hashes in reports, pre-`VerifiedArtifact` hashing, strict success/event/lane rules, 30000 ms idle ceiling, 180000 ms controller deadline, actual-lane fallback policy, redacted GPU/CPU commands, and tracked canonical JSON evidence.
+- Recorded live draft PR #23 (`https://github.com/IslandDevCrew/kaydence/pull/23`) on #22, completing the sequential reference-benchmark stack #18-#23.
+- Final reviewer Lorentz (agent `019f5247-a72c-7a80-9064-b037b47c2098`) found all substantive engineering findings resolved and requested only these plan/mission alignment changes. Exact post-change re-review remains pending; this is not approval.
+- P1-G3 remains pending. Task and gate completion counts remain 11/34 and 10/23; only the mission heartbeat advanced once.
