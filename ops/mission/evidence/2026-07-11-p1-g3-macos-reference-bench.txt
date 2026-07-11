@@ -1,0 +1,116 @@
+KAYDENCE P1-G3 MACOS REFERENCE BENCHMARK EVIDENCE
+Date: 2026-07-11 (UTC)
+Scope: reviewed Mac reference reports and current-branch standing gates
+
+VERDICT
+P1-G3 remains PENDING. The reviewed macOS CPU report passes all recorded
+budgets. The reviewed macOS Metal/GPU report passes latency and idle CPU but
+fails the resident-RAM budget. Windows and Linux live reference reports remain
+pending. Neither Mac report measures physical OS focused-field injection.
+
+COMMIT IDENTITY
+- Plan starts: a296af1f7bfa0925151e8ff173907a7047320e27
+  docs(p1): plan reference benchmark contract
+- Task 1 through: 8c4ff48351f173592f47e03dbaf8654f67bcb9e5
+  fix(p1): reject failed reference samples
+- Runner through: 1c236d9611a5102a3344cadc0d8faecb73313cab
+  fix(p1): bound reference sampler commands
+- No-ASR Clippy fix / current probe branch head before this heartbeat:
+  db38f0775757c6d093c23ac20c4fb2787a4a3fc7
+  fix(p1): keep no-ASR benchmark build warning-free
+
+HOST MANIFEST
+- OS: macOS 26.5 (build 25F71)
+- Kernel: Darwin 25.5.0
+- Architecture: arm64
+- Reference lanes: local_gpu and local_cpu
+- Samples per lane: 10
+- Fixture audio duration: 2496 ms
+- Measurement: release-to-delivery-policy. This is the benchmark's
+  policy-gated native-delivery seam, not physical OS-field injection.
+
+RAW REFERENCE REPORTS
+Source: current ignored JSON reports, read without regeneration.
+
+| lane | runner exit | warmup ms | p50 ms | p95 ms | RAM MB | idle CPU % | interval ms | latency | RAM | CPU | status |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- |
+| local_gpu | 1 | 201 | 55 | 128 | 268.328 | 0 | 3107.5 | PASS (<=700) | FAIL (>250) | PASS (<=1) | fail |
+| local_cpu | 0 | 188 | 205 | 230 | 220.172 | 0 | 3106 | PASS (<=1200) | PASS (<=250) | PASS (<=1) | pass |
+
+Both reports have schema=1, platform=macos, runner_schema=1,
+transcript_nonempty=true, events=[audio_persisted, partial, raw_final], and
+unmeasured=[physical_os_field_injection]. The GPU report's only budget failure
+is idle_ram_mb. The CPU report has no budget failures.
+
+BUDGETS
+- local_gpu: release-to-delivery-policy p95 <=700 ms; idle RAM <=250 MB; idle
+  CPU <=1%.
+- local_cpu: release-to-delivery-policy p95 <=1200 ms; idle RAM <=250 MB; idle
+  CPU <=1%.
+- The GPU report is a truthful gate failure because 268.328 MB exceeds 250 MB.
+- The CPU report is a truthful gate pass: p50 205 ms, p95 230 ms, 220.172 MB,
+  0% idle CPU, and a 3106 ms observation interval.
+
+HASHES
+- bench-results/reference-macos-local_gpu.json
+  bcd8453c677f8b8456fc6c71f13666aa940d7d699fab3ea2406aa9dc753865d3
+- bench-results/reference-macos-local_cpu.json
+  66a3590ba8780e6827c717f13b3021ae0b065113722f0751cdbbdaed839fdcd1
+- scripts/bench-reference.mjs
+  9837cbfddda41bff0042be7fc6a5a6caac7de554082287faf6beb3a8a86c8505
+- tests/reference-bench-contract.mjs
+  c38a38818b219595db3e59a133353f329f34456244058f0c88d307c4e747e52c
+- apps/desktop/src-tauri/src/bin/reference-bench.rs
+  ce8929d59e4dc5b8f0e3dc0ef2e3fc90f3329ea44b4b2c8cedbae6d9a2cb907e
+
+CURRENT-BRANCH LOCAL GATES
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  PASS (exit 0)
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  PASS (exit 0)
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper --all-targets -- -D warnings
+  PASS (exit 0)
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
+  PASS: 232 passed, 0 failed (exit 0)
+- node tests/reference-bench-contract.mjs
+  PASS: reference-bench behavioral contract (exit 0)
+- bash scripts/check-frontend.sh
+  PASS: TypeScript and ESLint (exit 0)
+- bash scripts/audit-network.sh
+  PASS: 0 network-capable call sites, 0 unreviewed (exit 0)
+- bash scripts/check-privacy-posture.sh --check
+  PASS: posture and network audit clean (exit 0)
+- bash scripts/check-adr-status.sh
+  PASS: ADR-0009 is the declared by-design waiver (exit 0)
+- bash scripts/bench.sh --check
+  PASS: four measured synthetic Raw-path metrics within budget; PARTIAL for
+  its disclosed unmeasured real-ASR/reference-machine fields (exit 0)
+
+INDEPENDENT REVIEW OUTCOMES
+- Judge: PASS for this evidence-only heartbeat. It adds no dependency, network
+  surface, runtime behavior, platform code, or contract change; the recorded
+  GPU RAM failure remains visible instead of being normalized away.
+- Auditor: PASS for claim provenance. The raw lane table above reproduces the
+  reviewed JSON values and hashes, preserves the non-measurement marker, and
+  does not assert P1-G3 closure.
+- Prior runner/probe review fixes are included in the identity chain: Task 1
+  lane pinning/CPU support and failed-sample rejection through 8c4ff48; Task 2
+  sampler/math hardening and bounded commands through 1c236d9; no-ASR Clippy
+  warning fix at db38f07.
+
+HOSTED MATRIX
+GitHub Actions rerun 29143051942 completed at 2026-07-11T16:29Z and failed
+setup with zero steps; build-test was skipped. The exact account annotation
+was: "recent account payments failed or the spending limit must be increased."
+This is a hosted-account block, not a code or test result. A fresh full
+macOS/Windows/Linux matrix remains mandatory before merge.
+
+NON-CLAIMS / NEXT REQUIREMENTS
+- This does not close P1-G3 or change its pending gate status.
+- These are release-to-delivery-policy measurements, not physical OS focused-
+  field injection measurements. Physical focused-field timing is unmeasured.
+- Windows and Linux live reference reports remain pending.
+- The Mac GPU resident-RAM overage remains open; the Mac CPU lane pass does not
+  substitute for the GPU-lane budget requirement.
+- No model/clip absolute paths, transcript text, model bytes, audio bytes, or
+  child stderr content are included here.

@@ -564,3 +564,10 @@
 - P1-G3 remains pending for full release-to-inject p50/p95, ASR-resident RAM/idle CPU, the no-model process-group gap, and reference-machine proof. This unit produced no installer and makes no P3-G2 signing/package claim.
 - Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-arm64-build-contract.txt`.
 - Opened draft stack #14 plan -> #15 implementation -> #16 independent-review fixes -> #17 mission heartbeat on top of runtime proof PR #13. Each work unit stays below 400 changed lines; all remain unmerged until retargeted in order and a fresh full 3-OS matrix passes.
+
+## 2026-07-11T17:30Z - Codex P1-G3 macOS reference benchmark evidence
+- Recorded the reviewed current raw macOS reference reports on branch `codex/p1-g3-reference-bench-evidence`. The CPU lane passes: release-to-delivery-policy p50/p95 205/230 ms, 220.172 MB resident RAM, 0% idle CPU, and a 3106 ms sampling interval. The Metal/GPU lane passes latency (55/128 ms) and idle CPU (0% over 3107.5 ms), but truthfully fails the 250 MB resident-RAM budget at 268.328 MB.
+- Both reports measure the release-to-delivery-policy seam rather than physical OS focused-field injection; `physical_os_field_injection` remains explicitly unmeasured. Windows and Linux live reference reports remain pending. P1-G3 therefore remains pending; this heartbeat does not close a task or gate.
+- Fresh current-branch checks passed: fmt; default and `asr-whisper` all-targets Clippy; 232/232 library tests; behavioral reference-bench contract; frontend; network audit (0); privacy; ADR; and the synthetic bench (PASS with disclosed PARTIAL real-ASR fields). The evidence ledger includes report/source hashes, lane table, command exits, review outcomes, and non-claims.
+- GitHub rerun `29143051942` completed at 2026-07-11T16:29Z with zero setup steps and skipped build-test. GitHub again reported that recent account payments failed or the spending limit must be increased; this is an account block, not a code/test verdict. A fresh full macOS/Windows/Linux matrix remains mandatory before merge.
+- Evidence: `ops/mission/evidence/2026-07-11-p1-g3-macos-reference-bench.txt`.
