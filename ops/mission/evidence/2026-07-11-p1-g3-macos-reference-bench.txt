@@ -23,11 +23,33 @@ HOST MANIFEST
 - OS: macOS 26.5 (build 25F71)
 - Kernel: Darwin 25.5.0
 - Architecture: arm64
+- Hardware: MacBook Pro Mac17,8; Apple M5 Pro; 18 cores; 48 GB memory
 - Reference lanes: local_gpu and local_cpu
+- Binary feature set for both reports: asr-whisper-metal, which includes
+  asr-whisper
+- Requested lane: local_gpu used gpu; local_cpu used cpu against the same
+  Metal-capable binary. Production forces GPU off for LocalCpu.
 - Samples per lane: 10
 - Fixture audio duration: 2496 ms
 - Measurement: release-to-delivery-policy. This is the benchmark's
   policy-gated native-delivery seam, not physical OS-field injection.
+
+REPRODUCTION COMMANDS (REDACTED LOCAL INPUTS)
+Build the same Metal-capable reference binary:
+
+  cargo build --release --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper-metal --bin reference-bench
+
+Run the GPU lane:
+
+  KAYDENCE_REFERENCE_BIN=target/release/reference-bench KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" KAYDENCE_WHISPER_LANE=gpu KAYDENCE_REFERENCE_SAMPLES=10 node scripts/bench-reference.mjs --check
+
+Run the CPU lane against the same binary:
+
+  KAYDENCE_REFERENCE_BIN=target/release/reference-bench KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" KAYDENCE_WHISPER_LANE=cpu KAYDENCE_REFERENCE_SAMPLES=10 node scripts/bench-reference.mjs --check
+
+LOCAL_REVIEWED_MODEL must point to a checksum-reviewed local ggml model.
+LOCAL_16KHZ_FIXTURE must point to a local 16 kHz mono fixture. No absolute
+model or fixture path is published in this evidence.
 
 RAW REFERENCE REPORTS
 Source: current ignored JSON reports, read without regeneration.
@@ -62,6 +84,10 @@ HASHES
   c38a38818b219595db3e59a133353f329f34456244058f0c88d307c4e747e52c
 - apps/desktop/src-tauri/src/bin/reference-bench.rs
   ce8929d59e4dc5b8f0e3dc0ef2e3fc90f3329ea44b4b2c8cedbae6d9a2cb907e
+- .superpowers/sdd/review-db38f07..ed7380b.diff
+  04dd9c1c7a349b635540d68c3ee8c7550dff93f55828c191430a0113004a8409
+  This is the full-diff review package for db38f07..ed7380b. The
+  .superpowers directory is local scratch, not published repository evidence.
 
 CURRENT-BRANCH LOCAL GATES
 - cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
@@ -86,17 +112,26 @@ CURRENT-BRANCH LOCAL GATES
   PASS: four measured synthetic Raw-path metrics within budget; PARTIAL for
   its disclosed unmeasured real-ASR/reference-machine fields (exit 0)
 
-INDEPENDENT REVIEW OUTCOMES
-- Judge: PASS for this evidence-only heartbeat. It adds no dependency, network
-  surface, runtime behavior, platform code, or contract change; the recorded
-  GPU RAM failure remains visible instead of being normalized away.
-- Auditor: PASS for claim provenance. The raw lane table above reproduces the
-  reviewed JSON values and hashes, preserves the non-measurement marker, and
-  does not assert P1-G3 closure.
-- Prior runner/probe review fixes are included in the identity chain: Task 1
-  lane pinning/CPU support and failed-sample rejection through 8c4ff48; Task 2
-  sampler/math hardening and bounded commands through 1c236d9; no-ASR Clippy
-  warning fix at db38f07.
+IMPLEMENTER/CONTROLLER SELF-REVIEW
+- Scope check: this heartbeat adds no dependency, network surface, runtime
+  behavior, platform code, or contract change. This is implementer/controller
+  self-review, not independent approval.
+- Evidence check: the raw lane table reproduces the current JSON values and
+  hashes, preserves the non-measurement marker, keeps the GPU RAM failure
+  visible, and does not assert P1-G3 closure. This is also self-review.
+
+IDENTIFIABLE INDEPENDENT REVIEW PROVENANCE
+- Task 1 independent reviewer: Locke agent
+  019f520e-574a-7b41-9ea7-46f2f0d2fefd. Its review fixes include lane
+  pinning/CPU support and failed-sample rejection through 8c4ff48.
+- Task 2 independent reviewer: Boole agent
+  019f5224-8926-79c3-9ce3-5c40337996a9. Its review fixes include sampler/math
+  hardening and bounded commands through 1c236d9.
+- Task 3 independent reviewer: Bohr agent
+  019f523e-1b82-73d1-8dda-91ab4496a85c. Result: NEEDS FIXES for evidence
+  provenance and reproducibility. This commit addresses those findings.
+- Task 3 does not have final independent approval. Bohr re-review remains
+  required after publication of this fix by the controller.
 
 HOSTED MATRIX
 GitHub Actions rerun 29143051942 completed at 2026-07-11T16:29Z and failed
@@ -105,6 +140,15 @@ was: "recent account payments failed or the spending limit must be increased."
 This is a hosted-account block, not a code or test result. A fresh full
 macOS/Windows/Linux matrix remains mandatory before merge.
 
+FINAL TASK 3 VALIDATION (RERUN FOR THIS FIX)
+- jq empty ops/mission/state.json
+  PASS (raw exit 0)
+- node ops/mission/render-sotu.mjs
+  PASS (raw exit 0; its generated-at-only HTML delta was reverted because
+  state/HTML are outside this provenance-fix scope)
+- git diff --check
+  PASS (raw exit 0)
+
 NON-CLAIMS / NEXT REQUIREMENTS
 - This does not close P1-G3 or change its pending gate status.
 - These are release-to-delivery-policy measurements, not physical OS focused-
@@ -112,5 +156,8 @@ NON-CLAIMS / NEXT REQUIREMENTS
 - Windows and Linux live reference reports remain pending.
 - The Mac GPU resident-RAM overage remains open; the Mac CPU lane pass does not
   substitute for the GPU-lane budget requirement.
+- Task 3 independent approval remains pending Bohr re-review.
+- Publication is pending and will be performed by the controller; no PR number
+  is asserted here.
 - No model/clip absolute paths, transcript text, model bytes, audio bytes, or
   child stderr content are included here.
