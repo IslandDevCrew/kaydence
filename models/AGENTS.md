@@ -25,6 +25,9 @@ recommended flag. Download/verify scripts. The hardware-recommendation table
    is accepted; until then artifacts remain operator-supplied and checksum-verified.
 7. `default_for` is evidence-gated per platform. A model becomes an OS default
    only after that OS has direct WER, latency, resident-RAM, and idle-CPU proof.
+8. Automatic first-run fallback skips placeholder checksums or sources. An
+   unfinished registry hedge may stay visible, but it must not block a fresh
+   install when a reviewed local artifact is available.
 
 ## Prediction models (added — ADR-0007)
 Three candidates registered for the Whisper-Ahead layer, runtime **llama.cpp/GGUF**

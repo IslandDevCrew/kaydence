@@ -4,7 +4,7 @@ Source commit: edb7ee5ef1bcd1f0d5f95dbfa5e6dd8a3beecb92
 Branch: codex/p1-g3-quantized-asr-default
 
 SCOPE
-- Fresh isolated source at /home/debian/kaydence-q5-proof.
+- Fresh isolated source archive in a temporary Debian proof workspace.
 - Real optimized reference-bench through the production Whisper adapter, WAL,
   VAD, Raw commit selection, and delivery policy.
 - Exact synthetic golden-clip test through local_asr_stack.

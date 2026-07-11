@@ -1352,7 +1352,7 @@ impl RuntimeSnapshot {
         Ok(settings::FirstRunModelDownloadPreflight {
             model_id: model.id.clone(),
             task: model_task_label(model.task).to_string(),
-            lane: model.lane.clone(),
+            lane: effective_model_lane_label(model),
             runtime: model.runtime.clone(),
             file: model.file.clone(),
             state,
@@ -1736,7 +1736,7 @@ fn first_run_model_status(
     settings::FirstRunModelStatus {
         id: model.id.clone(),
         task: model_task_label(model.task).to_string(),
-        lane: model.lane.clone(),
+        lane: effective_model_lane_label(model),
         runtime: model.runtime.clone(),
         file: model.file.clone(),
         state,
@@ -1808,6 +1808,16 @@ fn first_run_asr_recommendation<'a>(
     platform_tag: &str,
 ) -> Option<&'a models::ModelEntry> {
     let candidates = registry.recommended_for(models::ModelTask::Asr);
+    let reviewed_candidates = candidates
+        .iter()
+        .copied()
+        .filter(|model| model.download_plan(Path::new(".")).is_ok())
+        .collect::<Vec<_>>();
+    let candidates = if reviewed_candidates.is_empty() {
+        candidates
+    } else {
+        reviewed_candidates
+    };
     candidates
         .iter()
         .copied()
@@ -3808,11 +3818,12 @@ mod tests {
                   "lane": "cpu",
                   "runtime": "onnxruntime",
                   "file": "cpu.onnx",
-                  "sha256": "TODO",
+                  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
                   "size_mb": 1,
                   "license": "Apache-2.0",
                   "min_hw": "any",
-                  "recommended": true
+                  "recommended": true,
+                  "sources": ["https:\u002f\u002fmodels.example.test/cpu.onnx"]
                 },
                 {
                   "id": "mac-gpu",
@@ -3820,12 +3831,13 @@ mod tests {
                   "lane": "gpu",
                   "runtime": "whisper.cpp",
                   "file": "gpu.bin",
-                  "sha256": "TODO",
+                  "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
                   "size_mb": 1,
                   "license": "MIT",
                   "min_hw": "metal_or_dgpu",
                   "recommended": true,
-                  "default_for": ["macos"]
+                  "default_for": ["macos"],
+                  "sources": ["https:\u002f\u002fmodels.example.test/gpu.bin"]
                 }
               ]
             }"#,
@@ -3855,7 +3867,8 @@ mod tests {
         }
 
         let windows = first_run_asr_recommendation(&registry, "windows").unwrap();
-        assert_eq!(windows.id, "parakeet-v3");
+        assert_eq!(windows.id, "whisper-base-en-q5_1");
+        assert!(!windows.default_for.iter().any(|tag| tag == "windows"));
         assert_eq!(
             recommendation_reason(windows, "windows"),
             "CPU-safe first-run default"
@@ -3898,6 +3911,10 @@ mod tests {
         assert!(first_run.asr_candidates.iter().any(|candidate| {
             candidate.id == "fixture-gpu" && candidate.lane.as_deref() == Some(expected_lane)
         }));
+        let preflight = state
+            .model_download_preflight(&registry_path, &app_data, "fixture-gpu")
+            .unwrap();
+        assert_eq!(preflight.lane.as_deref(), Some(expected_lane));
         assert!(first_run
             .asr_candidates
             .iter()
@@ -3957,6 +3974,10 @@ mod tests {
             settings::FirstRunAsrRuntimeState::VerifiedArtifact
         );
         assert_eq!(first_run.asr_runtime.lane.as_deref(), Some(expected_lane));
+        assert_eq!(
+            first_run.required_models[0].lane.as_deref(),
+            Some(expected_lane)
+        );
         let _ = std::fs::remove_dir_all(app_data);
     }
 

@@ -4,7 +4,7 @@
 
 **Goal:** Make the already-supported quantized Whisper artifact the measured macOS/Linux P1 first-run default and Windows reference candidate, promoting each platform only after its own live evidence, so Kaydence can meet the constitutional `<=250 MB` ASR-resident budget without relaxing the gate.
 
-**Architecture:** Keep the existing `whisper.cpp` adapter, lane fallback, checksum verification, and operator-supplied artifact boundary. Add one verified registry entry for `whisper-base-en-q5_1`, select it through the existing `default_for` mechanism on macOS and Linux where direct evidence exists, keep it available for the Windows reference run, and point the runner's local default at its artifact filename. Normalize pre-warmup lane labels to the compiled backend. The download surface remains preflight-only: this change records pinned HTTPS metadata but adds no fetch command, dependency, or runtime network call.
+**Architecture:** Keep the existing `whisper.cpp` adapter, lane fallback, checksum verification, and operator-supplied artifact boundary. Add one verified registry entry for `whisper-base-en-q5_1`, select it through the existing `default_for` mechanism on macOS and Linux where direct evidence exists, and use it as Windows' reviewed CPU-safe fallback while its platform-default p95 gate remains open. Automatic fallback excludes placeholder-only candidates. Point the runner's local default at the q5 artifact filename and normalize every first-run lane label to the compiled backend. The download surface remains preflight-only: this change records pinned HTTPS metadata but adds no fetch command, dependency, or runtime network call.
 
 **Tech Stack:** Existing Rust model registry and first-run logic, existing React preview fixture, Node.js standard-library benchmark runner, existing `whisper-rs` Metal/CPU adapter.
 
@@ -48,7 +48,7 @@ Expected before implementation: `ModelNotFound("whisper-base-en-q5_1")`.
 
 - [x] **Step 3: Add a failing current-registry recommendation test**
 
-Assert macOS and Linux return `whisper-base-en-q5_1` with `Recommended for this OS lane`; Windows retains `parakeet-v3` until q5 p95 passes repeatably.
+Assert macOS and Linux return `whisper-base-en-q5_1` with `Recommended for this OS lane`; Windows returns q5 as the reviewed `CPU-safe first-run default` while its `default_for` promotion waits for repeatable p95 proof. Placeholder-only Parakeet must not be auto-selected.
 
 - [x] **Step 4: Verify the recommendation test fails**
 
@@ -58,7 +58,7 @@ Run:
 cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml current_registry_defaults_every_desktop_to_the_footprint_safe_whisper_model -- --nocapture
 ```
 
-Expected before the first implementation: macOS selected ID is `parakeet-v3`. The review-fix red cycle later proved all-platform promotion was too broad by expecting Windows/Linux to remain `parakeet-v3` and observing q5 instead.
+Expected before the first implementation: macOS selected ID is `parakeet-v3`. The first review-fix red cycle proved all-platform promotion was too broad. The second review-fix red cycle then expected Windows to receive reviewed q5 fallback and observed placeholder-only Parakeet; it also expected the visible required-model lane to be CPU in a default build and observed GPU.
 
 - [x] **Step 5: Add the minimal registry entry**
 

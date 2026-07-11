@@ -6,7 +6,7 @@ DECISION
 - Keep the constitutional ASR-resident ceiling at <=250 MB.
 - Make registry model `whisper-base-en-q5_1` the macOS and Linux P1 first-run
   default. Keep it selectable on Windows and promote Windows only after its
-  live quality, latency, RAM, and idle-CPU report passes.
+  live quality, latency, RAM, and idle-CPU report passes repeatably.
 - Keep Parakeet V3 as the required independent CPU runtime and
   large-v3-turbo as an optional quality lane. Neither is called runtime-ready.
 - Preserve ADR-0014: this unit adds verified registry metadata and read-only
@@ -46,7 +46,7 @@ BEFORE / AFTER (same runner, ten samples, release-to-delivery-policy)
   local_cpu  base.en f16    202   229   220.859 MB    0%      PASS
   local_cpu  base.en Q5_1   201   214   138.516 MB    0%      PASS
 
-All q5 values pass the unchanged budgets: GPU p95 <=700 ms, CPU p95 <=1200 ms,
+All four Mac q5 table values pass the unchanged budgets: GPU p95 <=700 ms, CPU p95 <=1200 ms,
 resident RAM <=250 MB, and idle CPU <=1%.
 
 SYNTHETIC GOLDEN CORPUS (TRUE METAL)

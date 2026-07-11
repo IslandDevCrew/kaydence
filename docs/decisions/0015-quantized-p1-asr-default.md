@@ -30,6 +30,11 @@ quality, lane, latency, RAM, and idle-CPU evidence. Keep it as a selectable
 candidate on Windows; promote Windows only after repeatable quiescent reference
 runs pass unchanged budgets.
 
+Automatic recommendation fallback ignores candidates whose checksum or download
+sources are still placeholders. Windows therefore selects q5 as the reviewed,
+CPU-safe installable fallback instead of selecting the unfinished Parakeet
+entry. This does not add Windows to q5's `default_for` list or close its p95 gate.
+
 Normalize pre-warmup candidate and runtime lane labels to the backend compiled
 into the current build. A GPU-preferred `whisper.cpp` artifact reports CPU before
 warmup whenever the Metal feature is absent, matching the adapter plan instead
@@ -55,9 +60,9 @@ and operator gate.
 ## Consequences
 - macOS and Linux get a measured, checksum-pinned first-run model that meets
   current P1 latency, RAM, and idle-CPU budgets.
-- Windows remains truthful: q5 is available and its exact golden transcript
-  passes, but its existing recommendation is unchanged while reference p95 is
-  not repeatably below budget.
+- Windows remains usable and truthful: q5 is the reviewed automatic fallback
+  and its exact golden transcript passes, while its platform-default promotion
+  and P1-G3 p95 status remain open.
 - Default and Metal-feature tests must cover effective candidate, pending, and
   verified-artifact lane labels.
 - The current fallback URL is a second revision path in the same Hugging Face

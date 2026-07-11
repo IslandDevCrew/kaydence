@@ -30,7 +30,8 @@ any text mutation beyond what the model outputs (cleanup/ owns that).
    and never retry a lane whose warmup failed on the transcription hot path.
 7. Lane labels describe the backend that is compiled and selected, not the lane
    a caller requested. A build without an acceleration feature routes a requested
-   GPU model to `LocalCpu` before warmup, transcription, status, or evidence.
+   GPU model to `LocalCpu` before warmup, transcription, candidate,
+   required-model, preflight, runtime status, or evidence.
 8. Shipped whisper.cpp binaries default `GGML_NATIVE=OFF`; build-host CPU
    detection is not a portable release target. Architecture-specific variants
    require an explicit target string plus runtime and latency evidence.
