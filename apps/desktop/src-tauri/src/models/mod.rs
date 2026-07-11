@@ -603,6 +603,7 @@ mod tests {
         assert!(!footprint_safe.is_checksum_placeholder());
         assert!(!footprint_safe.has_placeholder_sources());
         assert!(footprint_safe.sources.len() >= 2);
+        assert_eq!(footprint_safe.default_for, ["macos", "linux"]);
         assert!(registry.require("whisper-large-v3-turbo").is_ok());
         assert!(registry.require("silero-vad").is_ok());
         assert!(registry.recommended_for(ModelTask::Asr).len() >= 3);

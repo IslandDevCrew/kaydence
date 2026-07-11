@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the already-supported quantized Whisper artifact the truthful cross-platform P1 first-run default and canonical reference-benchmark model so Kaydence can meet the constitutional `<=250 MB` ASR-resident budget without relaxing the gate.
+**Goal:** Make the already-supported quantized Whisper artifact the measured macOS/Linux P1 first-run default and Windows reference candidate, promoting each platform only after its own live evidence, so Kaydence can meet the constitutional `<=250 MB` ASR-resident budget without relaxing the gate.
 
-**Architecture:** Keep the existing `whisper.cpp` adapter, lane fallback, checksum verification, and operator-supplied artifact boundary. Add one verified registry entry for `whisper-base-en-q5_1`, select it through the existing `default_for` mechanism on macOS, Windows, and Linux, and point the reference runner's local default at its artifact filename. The download surface remains preflight-only: this change records pinned HTTPS metadata but adds no fetch command, dependency, or runtime network call.
+**Architecture:** Keep the existing `whisper.cpp` adapter, lane fallback, checksum verification, and operator-supplied artifact boundary. Add one verified registry entry for `whisper-base-en-q5_1`, select it through the existing `default_for` mechanism on macOS and Linux where direct evidence exists, keep it available for the Windows reference run, and point the runner's local default at its artifact filename. Normalize pre-warmup lane labels to the compiled backend. The download surface remains preflight-only: this change records pinned HTTPS metadata but adds no fetch command, dependency, or runtime network call.
 
 **Tech Stack:** Existing Rust model registry and first-run logic, existing React preview fixture, Node.js standard-library benchmark runner, existing `whisper-rs` Metal/CPU adapter.
 
@@ -14,9 +14,10 @@
 - Do not add a dependency, runtime network call, model byte, audio byte, transcript, or user path to git.
 - Use registry ID `whisper-base-en-q5_1`, artifact `ggml-base.en-q5_1.bin`, and SHA-256 `4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f` consistently.
 - Keep Parakeet V3 and Whisper large-v3-turbo visible as separate candidate lanes; neither may be called runtime-ready while its checksum/source/runtime proof remains open.
+- Promote q5 through `default_for` one platform at a time only after that platform's live quality, latency, RAM, and idle-CPU evidence passes.
 - A GPU request may fall back truthfully to CPU on builds without acceleration; the actual lane owns the latency budget.
 - Preserve the ADR-0014 operator gate: registry download metadata and read-only preflight are allowed, but downloading requires a separately accepted network decision.
-- Keep P1-G3 pending until live Windows/Linux reference reports, physical focused-field injection timing, the no-model process-group boundary, and fresh three-OS CI are complete.
+- Keep P1-G3 pending until Windows reference p95 passes repeatably, physical focused-field injection timing, the no-model process-group boundary, and fresh three-OS CI are complete.
 
 ---
 
@@ -29,7 +30,7 @@
 
 **Interfaces:**
 - Consumes: `ModelRegistry::load`, `first_run_asr_recommendation`, and existing `default_for` selection.
-- Produces: a checksum-valid `whisper-base-en-q5_1` entry selected on `macos`, `windows`, and `linux`.
+- Produces: a checksum-valid `whisper-base-en-q5_1` entry selected on proven `macos` and `linux` and available, but not promoted, on `windows`.
 
 - [x] **Step 1: Add failing registry assertions**
 
@@ -47,7 +48,7 @@ Expected before implementation: `ModelNotFound("whisper-base-en-q5_1")`.
 
 - [x] **Step 3: Add a failing current-registry recommendation test**
 
-For each of `macos`, `windows`, and `linux`, assert `first_run_asr_recommendation` returns `whisper-base-en-q5_1` with `Recommended for this OS lane`.
+Assert macOS and Linux return `whisper-base-en-q5_1` with `Recommended for this OS lane`; Windows retains `parakeet-v3` until q5 p95 passes repeatably.
 
 - [x] **Step 4: Verify the recommendation test fails**
 
@@ -57,11 +58,11 @@ Run:
 cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml current_registry_defaults_every_desktop_to_the_footprint_safe_whisper_model -- --nocapture
 ```
 
-Expected before implementation: selected ID is `parakeet-v3`, not `whisper-base-en-q5_1`.
+Expected before the first implementation: macOS selected ID is `parakeet-v3`. The review-fix red cycle later proved all-platform promotion was too broad by expecting Windows/Linux to remain `parakeet-v3` and observing q5 instead.
 
 - [x] **Step 5: Add the minimal registry entry**
 
-Record the exact artifact identity, MIT license, cross-platform defaults, two HTTPS source URLs, and measured P1 note. Do not add download execution.
+Record the exact artifact identity, MIT license, macOS/Linux defaults, two HTTPS source URLs, and measured P1 note. Do not add download execution.
 
 - [x] **Step 6: Verify both focused tests pass**
 
@@ -101,7 +102,7 @@ Run `node tests/reference-bench-contract.mjs`.
 
 Expected: `reference-bench behavioral contract: PASS`.
 
-- [x] **Step 5: Align the preview fixture and ownership docs**
+- [x] **Step 5: Align the macOS preview fixture and ownership docs**
 
 Use registry ID `whisper-base-en-q5_1`, filename `ggml-base.en-q5_1.bin`, and byte size `59721011` in the preview fixture. Document q5 as the measured P1 default, large-v3-turbo as an unproven quality option, and the unchanged network gate.
 
@@ -147,9 +148,13 @@ Run Rust default and shipped-feature tests/Clippy, Node benchmark contract, fron
 
 Require no unresolved Critical or Important findings. Fix findings test-first and rerun affected gates.
 
+- [x] **Step 2a: Move the model-default decision into ADR-0015**
+
+Restore immutable ADR-0014, create a superseding Proposed decision with an explicit operator gate, limit initial promotion to proven macOS, and test effective CPU/GPU lane labels in default and Metal-feature builds.
+
 - [ ] **Step 3: Update mission truth without closing P1-G3**
 
-Record the Mac q5 GPU/CPU pass and remove only the Mac GPU RAM blocker. Preserve Windows/Linux live reports, physical injection, full-process-group, hosted CI, and P1-G4 blockers.
+Record the Mac q5 GPU/CPU and Linux CPU passes plus both Windows outcomes, and remove only the proven q5 resident-RAM blockers. Preserve stable Windows p95, physical injection, full-process-group, hosted CI, and P1-G4 blockers.
 
 - [ ] **Step 4: Commit, push, and open a draft stacked PR**
 

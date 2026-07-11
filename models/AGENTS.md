@@ -11,9 +11,10 @@ recommended flag. Download/verify scripts. The hardware-recommendation table
    verifies sha256 before load. A checksum mismatch quarantines the file.
 2. ≥2 viable local ASR models at all times (ADR-0002 supply-chain hedge).
    Current set: Parakeet V3 (independent CPU lane), quantized Whisper base.en
-   Q5_1 (footprint-safe P1 default with GPU-preferred/CPU fallback), Whisper
-   large-v3-turbo (quality lane, not the default until it proves the resident
-   budget), and Silero VAD.
+   Q5_1 (measured macOS/Linux P1 default; Windows candidate pending stable live
+   p95 proof; GPU-preferred with truthful CPU fallback), Whisper large-v3-turbo
+   (quality lane, not the default until it proves the resident budget), and
+   Silero VAD.
 3. Every registry entry records its license; anything non-permissive for
    commercial redistribution needs an ADR before inclusion.
 4. Adding/upgrading a model requires the bench before/after table (WER +
@@ -22,6 +23,8 @@ recommended flag. Download/verify scripts. The hardware-recommendation table
 6. Registry metadata and read-only download plans do not authorize network I/O.
    The app may fetch weights only after the separate ADR-0014 download decision
    is accepted; until then artifacts remain operator-supplied and checksum-verified.
+7. `default_for` is evidence-gated per platform. A model becomes an OS default
+   only after that OS has direct WER, latency, resident-RAM, and idle-CPU proof.
 
 ## Prediction models (added — ADR-0007)
 Three candidates registered for the Whisper-Ahead layer, runtime **llama.cpp/GGUF**

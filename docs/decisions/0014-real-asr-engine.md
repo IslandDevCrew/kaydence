@@ -68,15 +68,6 @@ WAL already produces. Specifically:
    stamps the relevant native build settings and invalidates only the matching
    Cargo profile's Whisper artifacts when they change, because upstream does not
    declare generic GGML/CMake environment flags as Cargo rerun inputs.
-9. **Use a measured quantized P1 default.** `whisper-base-en-q5_1` is the
-   cross-platform first-run default through the existing hardware-recommendation
-   mechanism. Its pinned 59,721,011-byte artifact and SHA-256 are recorded in the
-   registry. On the Apple M5 Pro reference host it passed the four-phrase
-   synthetic corpus and both real reference lanes: Metal at 152.656 MB RSS and
-   78 ms p95, CPU at 138.516 MB and 214 ms p95. Parakeet V3 remains the required
-   independent runtime, and large-v3-turbo remains a selectable quality target;
-   neither replaces this footprint-safe default until it has equivalent runtime,
-   quality, and resident-memory evidence.
 
 ## Alternatives considered
 - **Parakeet/ort first:** ort downloads ONNX Runtime binaries at build (build-time
@@ -102,7 +93,3 @@ WAL already produces. Specifically:
 - Now owed (tracked, not done here): the Parakeet/ort CPU adapter; the gated
   model-download network surface (its own ADR-accept); real WER/latency evidence on
   the reference machines for P1-G2/P1-G3.
-- The verified q5 registry metadata makes manual installation and read-only
-  download preflight concrete, but does not add a fetch command or authorize
-  runtime network access. Windows/Linux live q5 reports and human-voice WER
-  remain required.

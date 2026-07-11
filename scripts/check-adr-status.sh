@@ -3,8 +3,10 @@
 #
 # Every ADR must be Accepted before P0 closes, with declared by-design exceptions:
 # ADR-0009 (Relay pairing/crypto) stays Proposed until the operator's crypto
-# design review, which gates the P4-1 build; ADR-0013 (Linux injection strategy)
-# stays Proposed until the operator approves its dependency set (P1-P0-3 spike).
+# design review, which gates the P4-1 build; ADR-0015 (quantized P1 ASR default)
+# stays Proposed until the operator approves the model-registry decision.
+# ADR-0013 (Linux injection strategy)
+# stayed Proposed until the operator approved its dependency set (P1-P0-3 spike).
 # (ADR-0012 visual identity was a third exception 2026-07-08 while Proposed;
 # removed same day on operator acceptance.) This script passes when every ADR
 # except the declared exceptions is Accepted.
@@ -17,9 +19,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIR="$ROOT/docs/decisions"
 
 # ADR numbers allowed to be non-Accepted (space-separated), + reasons in one place.
-PROPOSED_OK=" 0009 "
+PROPOSED_OK=" 0009 0015 "
 reason_for() { case "$1" in
   0009) echo "Relay crypto — critical decision path; operator review gates P4-1" ;;
+  0015) echo "Quantized P1 ASR default — operator review gates PR #24 merge" ;;
   *)    echo "" ;;
 esac; }
 

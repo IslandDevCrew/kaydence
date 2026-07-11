@@ -1767,7 +1767,7 @@ fn first_run_asr_candidate(
 
     settings::FirstRunAsrCandidate {
         id: model.id.clone(),
-        lane: model.lane.clone(),
+        lane: effective_model_lane_label(model),
         runtime: model.runtime.clone(),
         size_mb: model.size_mb,
         min_hw: model.min_hw.clone(),
@@ -2407,7 +2407,7 @@ fn selected_asr_runtime_state(
             };
         }
     };
-    let lane = local_engine_lane(model.lane.as_deref());
+    let lane = effective_model_engine_lane(model);
     if model.task != models::ModelTask::Asr {
         return engine::LocalAsrAdapterState::Blocked {
             selected_model_id,
@@ -2450,6 +2450,27 @@ fn local_engine_lane(lane: Option<&str>) -> engine::EngineLane {
         Some("byok") | Some("cloud") => engine::EngineLane::ByokCloud,
         _ => engine::EngineLane::LocalCpu,
     }
+}
+
+#[cfg(desktop)]
+fn effective_model_engine_lane(model: &models::ModelEntry) -> engine::EngineLane {
+    let requested = local_engine_lane(model.lane.as_deref());
+    if requested == engine::EngineLane::LocalGpu
+        && model.runtime == "whisper.cpp"
+        && !cfg!(all(target_os = "macos", feature = "asr-whisper-metal"))
+    {
+        engine::EngineLane::LocalCpu
+    } else {
+        requested
+    }
+}
+
+#[cfg(desktop)]
+fn effective_model_lane_label(model: &models::ModelEntry) -> Option<String> {
+    model
+        .lane
+        .as_ref()
+        .map(|_| engine_lane_snapshot_label(effective_model_engine_lane(model)).to_string())
 }
 
 #[cfg(desktop)]
@@ -3821,10 +3842,10 @@ mod tests {
     }
 
     #[test]
-    fn current_registry_defaults_every_desktop_to_the_footprint_safe_whisper_model() {
+    fn current_registry_promotes_the_footprint_safe_model_only_on_proven_platforms() {
         let registry = models::ModelRegistry::load(&models::source_tree_registry_path()).unwrap();
 
-        for platform in ["macos", "windows", "linux"] {
+        for platform in ["macos", "linux"] {
             let recommended = first_run_asr_recommendation(&registry, platform).unwrap();
             assert_eq!(recommended.id, "whisper-base-en-q5_1");
             assert_eq!(
@@ -3832,6 +3853,13 @@ mod tests {
                 "Recommended for this OS lane"
             );
         }
+
+        let windows = first_run_asr_recommendation(&registry, "windows").unwrap();
+        assert_eq!(windows.id, "parakeet-v3");
+        assert_eq!(
+            recommendation_reason(windows, "windows"),
+            "CPU-safe first-run default"
+        );
     }
 
     #[test]
@@ -3861,7 +3889,15 @@ mod tests {
             first_run.asr_runtime.state,
             settings::FirstRunAsrRuntimeState::Pending
         );
-        assert_eq!(first_run.asr_runtime.lane.as_deref(), Some("gpu"));
+        let expected_lane = if cfg!(all(target_os = "macos", feature = "asr-whisper-metal")) {
+            "gpu"
+        } else {
+            "cpu"
+        };
+        assert_eq!(first_run.asr_runtime.lane.as_deref(), Some(expected_lane));
+        assert!(first_run.asr_candidates.iter().any(|candidate| {
+            candidate.id == "fixture-gpu" && candidate.lane.as_deref() == Some(expected_lane)
+        }));
         assert!(first_run
             .asr_candidates
             .iter()
@@ -3911,6 +3947,16 @@ mod tests {
             first_run.required_models[0].state,
             settings::FirstRunModelState::Ready
         );
+        let expected_lane = if cfg!(all(target_os = "macos", feature = "asr-whisper-metal")) {
+            "gpu"
+        } else {
+            "cpu"
+        };
+        assert_eq!(
+            first_run.asr_runtime.state,
+            settings::FirstRunAsrRuntimeState::VerifiedArtifact
+        );
+        assert_eq!(first_run.asr_runtime.lane.as_deref(), Some(expected_lane));
         let _ = std::fs::remove_dir_all(app_data);
     }
 
