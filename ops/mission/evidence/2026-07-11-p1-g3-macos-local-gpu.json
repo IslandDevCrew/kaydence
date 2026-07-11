@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "platform": "macos",
+  "lane": "local_gpu",
+  "model_id": "ggml-base.en",
+  "model_sha256": "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002",
+  "fixture_sha256": "085e4b157e9f3ce0114b072354d07ede5cbcecce95bc59771b808e78abd94247",
+  "warmup_ms": 304,
+  "sample_count": 10,
+  "release_to_delivery_policy_p50_ms": 54,
+  "release_to_delivery_policy_p95_ms": 77,
+  "audio_ms": 2496,
+  "transcript_nonempty": true,
+  "events": [
+    "audio_persisted",
+    "partial",
+    "raw_final"
+  ],
+  "unmeasured": [
+    "physical_os_field_injection"
+  ],
+  "runner_schema": 1,
+  "requested_lane": "local_gpu",
+  "idle_ram_mb": 268.188,
+  "idle_cpu_pct": 0,
+  "idle_sample_interval_ms": 3104.5,
+  "budgets": {
+    "release_to_delivery_policy_p95_ms": 700,
+    "idle_ram_mb": 250,
+    "idle_cpu_pct": 1
+  },
+  "budget_failures": [
+    "idle_ram_mb"
+  ],
+  "status": "fail"
+}

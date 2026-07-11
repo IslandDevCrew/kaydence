@@ -1,163 +1,136 @@
-KAYDENCE P1-G3 MACOS REFERENCE BENCHMARK EVIDENCE
+KAYDENCE P1-G3 MACOS REFERENCE BENCHMARK FINAL-REVIEW FIX EVIDENCE
 Date: 2026-07-11 (UTC)
-Scope: reviewed Mac reference reports and current-branch standing gates
+Branch: codex/p1-g3-reference-bench-final-review-fixes
+Runtime/test commit: 8c98ac1
+Scope: final-review fixes, fresh Mac reports, and canonical sanitized evidence
 
 VERDICT
-P1-G3 remains PENDING. The reviewed macOS CPU report passes all recorded
-budgets. The reviewed macOS Metal/GPU report passes latency and idle CPU but
-fails the resident-RAM budget. Windows and Linux live reference reports remain
-pending. Neither Mac report measures physical OS focused-field injection.
+P1-G3 remains PENDING. The canonical macOS CPU report passes every recorded
+budget. The canonical macOS Metal/GPU report passes latency and idle CPU but
+fails resident RAM. Windows and Linux live reference reports, physical focused-
+field timing, fresh three-OS CI, and final independent re-review remain pending.
+This package does not claim final-review approval.
 
-COMMIT IDENTITY
-- Plan starts: a296af1f7bfa0925151e8ff173907a7047320e27
-  docs(p1): plan reference benchmark contract
-- Task 1 through: 8c4ff48351f173592f47e03dbaf8654f67bcb9e5
-  fix(p1): reject failed reference samples
-- Runner through: 1c236d9611a5102a3344cadc0d8faecb73313cab
-  fix(p1): bound reference sampler commands
-- No-ASR Clippy fix / current probe branch head before this heartbeat:
-  db38f0775757c6d093c23ac20c4fb2787a4a3fc7
-  fix(p1): keep no-ASR benchmark build warning-free
+FINAL-REVIEW FIX CONTRACT
+- KAYDENCE_WHISPER_MODEL_ID is required and restricted to 1-64 characters from
+  [A-Za-z0-9._-]. The reviewed value is ggml-base.en.
+- KAYDENCE_WHISPER_SHA256 is required as exactly 64 hex characters. The probe
+  hashes the model before constructing LocalAsrAdapterState::VerifiedArtifact
+  and fails on mismatch.
+- The probe hashes the fixture and reports model_id, model_sha256, and
+  fixture_sha256. No source path, transcript text, content, or stderr is in the
+  canonical reports.
+- The runner fail-closes transcript/event, integer timing, percentile, audio,
+  sample-count, model identity/hash, platform, and requested/actual lane truth.
+- Idle is bounded to 7000-30000 ms. The controller has an absolute 180000 ms
+  deadline and clamps post-ready commands and waits to remaining time.
+- Pure Windows PowerShell JSON and Linux /proc parsers are exported and covered
+  by valid and malformed fixtures. Live Windows/Linux reports remain pending.
+
+TDD RED
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --bin reference-bench
+  FAILED as intended: parse_sha256, parse_model_id, and parse_idle_ms did not
+  exist (11 E0425 errors).
+- node tests/reference-bench-contract.mjs
+  FAILED as intended: MAXIMUM_CONTROLLER_RUNTIME_MS was not exported.
+
+TDD GREEN
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --bin reference-bench
+  PASS: 5 passed, 0 failed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper --bin reference-bench
+  PASS: 8 passed, 0 failed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper-metal --bin reference-bench
+  PASS: 8 passed, 0 failed.
+- node tests/reference-bench-contract.mjs
+  PASS: reference-bench behavioral contract.
+
+REVIEWED ARTIFACT IDENTITY
+- model_id: ggml-base.en
+- model_sha256:
+  a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
+- fixture_sha256:
+  085e4b157e9f3ce0114b072354d07ede5cbcecce95bc59771b808e78abd94247
+- Local shasum -a 256 matched both expected values before the live runs.
 
 HOST MANIFEST
 - OS: macOS 26.5 (build 25F71)
 - Kernel: Darwin 25.5.0
 - Architecture: arm64
 - Hardware: MacBook Pro Mac17,8; Apple M5 Pro; 18 cores; 48 GB memory
-- Reference lanes: local_gpu and local_cpu
-- Binary feature set for both reports: asr-whisper-metal, which includes
-  asr-whisper
-- Requested lane: local_gpu used gpu; local_cpu used cpu against the same
-  Metal-capable binary. Production forces GPU off for LocalCpu.
+- Binary feature set: asr-whisper-metal (includes asr-whisper)
 - Samples per lane: 10
-- Fixture audio duration: 2496 ms
-- Measurement: release-to-delivery-policy. This is the benchmark's
-  policy-gated native-delivery seam, not physical OS-field injection.
+- Fixture duration: 2496 ms
+- Measurement endpoint: release-to-delivery-policy, not physical OS injection
 
-REPRODUCTION COMMANDS (REDACTED LOCAL INPUTS)
-Build the same Metal-capable reference binary:
+EXACT REPRODUCTION COMMANDS (LOCAL PATHS REDACTED)
+Build:
 
   cargo build --release --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper-metal --bin reference-bench
 
-Run the GPU lane:
+GPU:
 
-  KAYDENCE_REFERENCE_BIN=target/release/reference-bench KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" KAYDENCE_WHISPER_LANE=gpu KAYDENCE_REFERENCE_SAMPLES=10 node scripts/bench-reference.mjs --check
+  KAYDENCE_REFERENCE_BIN=target/release/reference-bench KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" KAYDENCE_WHISPER_MODEL_ID=ggml-base.en KAYDENCE_WHISPER_SHA256=a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002 KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" KAYDENCE_WHISPER_LANE=gpu KAYDENCE_REFERENCE_SAMPLES=10 node scripts/bench-reference.mjs --check
 
-Run the CPU lane against the same binary:
+Expected GPU exit: 1 only because idle_ram_mb exceeds 250 MB.
 
-  KAYDENCE_REFERENCE_BIN=target/release/reference-bench KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" KAYDENCE_WHISPER_LANE=cpu KAYDENCE_REFERENCE_SAMPLES=10 node scripts/bench-reference.mjs --check
+CPU:
 
-LOCAL_REVIEWED_MODEL must point to a checksum-reviewed local ggml model.
-LOCAL_16KHZ_FIXTURE must point to a local 16 kHz mono fixture. No absolute
-model or fixture path is published in this evidence.
+  KAYDENCE_REFERENCE_BIN=target/release/reference-bench KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" KAYDENCE_WHISPER_MODEL_ID=ggml-base.en KAYDENCE_WHISPER_SHA256=a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002 KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" KAYDENCE_WHISPER_LANE=cpu KAYDENCE_REFERENCE_SAMPLES=10 node scripts/bench-reference.mjs --check
 
-RAW REFERENCE REPORTS
-Source: current ignored JSON reports, read without regeneration.
+Expected CPU exit: 0 with no budget failures.
 
-| lane | runner exit | warmup ms | p50 ms | p95 ms | RAM MB | idle CPU % | interval ms | latency | RAM | CPU | status |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- |
-| local_gpu | 1 | 201 | 55 | 128 | 268.328 | 0 | 3107.5 | PASS (<=700) | FAIL (>250) | PASS (<=1) | fail |
-| local_cpu | 0 | 188 | 205 | 230 | 220.172 | 0 | 3106 | PASS (<=1200) | PASS (<=250) | PASS (<=1) | pass |
+CANONICAL SANITIZED REPORTS
+| lane | exit | warmup | p50 | p95 | RAM MB | CPU % | interval ms | failures | status |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| local_gpu | 1 | 304 | 54 | 77 | 268.188 | 0 | 3104.5 | idle_ram_mb | fail |
+| local_cpu | 0 | 173 | 202 | 229 | 220.859 | 0 | 3104.5 | none | pass |
 
-Both reports have schema=1, platform=macos, runner_schema=1,
-transcript_nonempty=true, events=[audio_persisted, partial, raw_final], and
-unmeasured=[physical_os_field_injection]. The GPU report's only budget failure
-is idle_ram_mb. The CPU report has no budget failures.
+- ops/mission/evidence/2026-07-11-p1-g3-macos-local-gpu.json
+  sha256 1ca045aadd16d1a3ab447129d0b42e46853275521f92cf9d5d0a8184150f70d9
+- ops/mission/evidence/2026-07-11-p1-g3-macos-local-cpu.json
+  sha256 00193406ac163e7205c09e4d304973cd22a3830254f992f805f63ec6adeb1a15
 
-BUDGETS
-- local_gpu: release-to-delivery-policy p95 <=700 ms; idle RAM <=250 MB; idle
-  CPU <=1%.
-- local_cpu: release-to-delivery-policy p95 <=1200 ms; idle RAM <=250 MB; idle
-  CPU <=1%.
-- The GPU report is a truthful gate failure because 268.328 MB exceeds 250 MB.
-- The CPU report is a truthful gate pass: p50 205 ms, p95 230 ms, 220.172 MB,
-  0% idle CPU, and a 3106 ms observation interval.
+Both canonical reports contain complete safe probe + runner measurements,
+model/fixture hashes, required audio_persisted and raw_final events, and the
+physical_os_field_injection limitation. They contain no diagnostics object.
+Ignored bench-results files remain the raw local runner output.
 
-HASHES
-- bench-results/reference-macos-local_gpu.json
-  bcd8453c677f8b8456fc6c71f13666aa940d7d699fab3ea2406aa9dc753865d3
-- bench-results/reference-macos-local_cpu.json
-  66a3590ba8780e6827c717f13b3021ae0b065113722f0751cdbbdaed839fdcd1
-- scripts/bench-reference.mjs
-  9837cbfddda41bff0042be7fc6a5a6caac7de554082287faf6beb3a8a86c8505
-- tests/reference-bench-contract.mjs
-  c38a38818b219595db3e59a133353f329f34456244058f0c88d307c4e747e52c
-- apps/desktop/src-tauri/src/bin/reference-bench.rs
-  ce8929d59e4dc5b8f0e3dc0ef2e3fc90f3329ea44b4b2c8cedbae6d9a2cb907e
-- .superpowers/sdd/review-db38f07..ed7380b.diff
-  04dd9c1c7a349b635540d68c3ee8c7550dff93f55828c191430a0113004a8409
-  This is the full-diff review package for db38f07..ed7380b. The
-  .superpowers directory is local scratch, not published repository evidence.
-
-CURRENT-BRANCH LOCAL GATES
+LOCAL GATES
 - cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
-  PASS (exit 0)
+  PASS.
 - cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
-  PASS (exit 0)
+  PASS.
 - cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper --all-targets -- -D warnings
-  PASS (exit 0)
-- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
-  PASS: 232 passed, 0 failed (exit 0)
-- node tests/reference-bench-contract.mjs
-  PASS: reference-bench behavioral contract (exit 0)
+  PASS.
+- node --check scripts/bench-reference.mjs
+  PASS.
 - bash scripts/check-frontend.sh
-  PASS: TypeScript and ESLint (exit 0)
+  PASS: TypeScript and ESLint.
 - bash scripts/audit-network.sh
-  PASS: 0 network-capable call sites, 0 unreviewed (exit 0)
+  PASS: 0 network-capable call sites, 0 unreviewed.
 - bash scripts/check-privacy-posture.sh --check
-  PASS: posture and network audit clean (exit 0)
+  PASS: privacy posture and network audit clean.
 - bash scripts/check-adr-status.sh
-  PASS: ADR-0009 is the declared by-design waiver (exit 0)
+  PASS: ADR-0009 remains the declared by-design waiver.
 - bash scripts/bench.sh --check
-  PASS: four measured synthetic Raw-path metrics within budget; PARTIAL for
-  its disclosed unmeasured real-ASR/reference-machine fields (exit 0)
+  PASS for four measured synthetic fields; disclosed PARTIAL fields remain.
+- jq empty on state and both canonical reports; renderer; git diff --check
+  PASS.
 
-IMPLEMENTER/CONTROLLER SELF-REVIEW
-- Scope check: this heartbeat adds no dependency, network surface, runtime
-  behavior, platform code, or contract change. This is implementer/controller
-  self-review, not independent approval.
-- Evidence check: the raw lane table reproduces the current JSON values and
-  hashes, preserves the non-measurement marker, keeps the GPU RAM failure
-  visible, and does not assert P1-G3 closure. This is also self-review.
+REMOTE STACK TRUTH
+- Draft PR #18: plan, based on the Windows ARM64 heartbeat branch.
+- Draft PR #19: probe, stacked on #18.
+- Draft PR #20: cross-platform runner, stacked on #19.
+- Draft PR #21: gate fixes, stacked on #20.
+- Draft PR #22: Mac evidence, stacked on #21.
+- codex/p1-g3-reference-bench-final-review-fixes contains this final-review fix
+  wave and is pending publication/final re-review.
 
-IDENTIFIABLE INDEPENDENT REVIEW PROVENANCE
-- Task 1 independent reviewer: Locke agent
-  019f520e-574a-7b41-9ea7-46f2f0d2fefd. Its review fixes include lane
-  pinning/CPU support and failed-sample rejection through 8c4ff48.
-- Task 2 independent reviewer: Boole agent
-  019f5224-8926-79c3-9ce3-5c40337996a9. Its review fixes include sampler/math
-  hardening and bounded commands through 1c236d9.
-- Task 3 independent reviewer: Bohr agent
-  019f523e-1b82-73d1-8dda-91ab4496a85c. Result: NEEDS FIXES for evidence
-  provenance and reproducibility. This commit addresses those findings.
-- Task 3 does not have final independent approval. Bohr re-review remains
-  required after publication of this fix by the controller.
-
-HOSTED MATRIX
-GitHub Actions rerun 29143051942 completed at 2026-07-11T16:29Z and failed
-setup with zero steps; build-test was skipped. The exact account annotation
-was: "recent account payments failed or the spending limit must be increased."
-This is a hosted-account block, not a code or test result. A fresh full
-macOS/Windows/Linux matrix remains mandatory before merge.
-
-FINAL TASK 3 VALIDATION (RERUN FOR THIS FIX)
-- jq empty ops/mission/state.json
-  PASS (raw exit 0)
-- node ops/mission/render-sotu.mjs
-  PASS (raw exit 0; its generated-at-only HTML delta was reverted because
-  state/HTML are outside this provenance-fix scope)
-- git diff --check
-  PASS (raw exit 0)
-
-NON-CLAIMS / NEXT REQUIREMENTS
-- This does not close P1-G3 or change its pending gate status.
-- These are release-to-delivery-policy measurements, not physical OS focused-
-  field injection measurements. Physical focused-field timing is unmeasured.
-- Windows and Linux live reference reports remain pending.
-- The Mac GPU resident-RAM overage remains open; the Mac CPU lane pass does not
-  substitute for the GPU-lane budget requirement.
-- Task 3 independent approval remains pending Bohr re-review.
-- Publication is pending and will be performed by the controller; no PR number
-  is asserted here.
-- No model/clip absolute paths, transcript text, model bytes, audio bytes, or
-  child stderr content are included here.
+NON-CLAIMS / OPEN CONCERNS
+- Final independent re-review has not approved this fix wave.
+- P1-G3 stays pending; task and gate completion counts do not increase.
+- GPU resident RAM remains 18.188 MB above the 250 MB budget.
+- Physical OS focused-field injection timing is still unmeasured.
+- Live Windows and Linux reference reports remain pending.
+- Hosted three-OS CI remains required before merge.
+- The no-model full process group remains about 86 MB against the <80 MB target.

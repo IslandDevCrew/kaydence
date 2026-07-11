@@ -571,3 +571,11 @@
 - Fresh current-branch checks passed: fmt; default and `asr-whisper` all-targets Clippy; 232/232 library tests; behavioral reference-bench contract; frontend; network audit (0); privacy; ADR; and the synthetic bench (PASS with disclosed PARTIAL real-ASR fields). The evidence ledger includes report/source hashes, lane table, command exits, review outcomes, and non-claims.
 - GitHub rerun `29143051942` completed at 2026-07-11T16:29Z with zero setup steps and skipped build-test. GitHub again reported that recent account payments failed or the spending limit must be increased; this is an account block, not a code/test verdict. A fresh full macOS/Windows/Linux matrix remains mandatory before merge.
 - Evidence: `ops/mission/evidence/2026-07-11-p1-g3-macos-reference-bench.txt`.
+
+## 2026-07-11T17:56Z - Codex P1-G3 final-review fix wave
+- Added fail-closed model provenance: required safe `ggml-base.en` identity, exact expected model SHA-256, pre-`VerifiedArtifact` file hashing, fixture hashing, and path/content-free report fields.
+- Added behavioral rejection coverage for transcript, required/forbidden events, integer timing/sample contracts, percentile order, positive audio duration, requested/actual lane truth, malformed identity/hashes, idle ceiling, deadline clamping, and native Windows/Linux parser fixtures.
+- Capped the probe and runner idle interval at 30000 ms and the controller at 180000 ms, including remaining-time clamps for post-ready sampling, sleep, completion, and cleanup.
+- Reran the optimized Metal binary sequentially. Canonical GPU evidence records p50/p95 54/77 ms, 268.188 MB RAM, and 0% idle CPU: nonzero only for `idle_ram_mb`. Canonical CPU evidence records p50/p95 202/229 ms, 220.859 MB RAM, and 0% idle CPU with zero failures.
+- Added canonical sanitized JSON with artifact hashes and no paths, transcript text, content, or stderr. Draft PRs #18-#22 remain the published stack; `codex/p1-g3-reference-bench-final-review-fixes` is pending final re-review.
+- Fresh local reference tests, strict Clippy modes, frontend, network, privacy, ADR, synthetic benchmark, JSON/render, and diff gates pass. P1-G3 remains pending; 11/34 tasks and 10/23 gates are unchanged.
