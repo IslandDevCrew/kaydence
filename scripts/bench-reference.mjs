@@ -13,6 +13,8 @@ import { basename, join, resolve } from "node:path";
 const MINIMUM_SAMPLE_COUNT = 5;
 export const MINIMUM_OBSERVATION_MS = 3_000;
 export const MINIMUM_IDLE_MS = 7_000;
+export const MAXIMUM_IDLE_MS = 30_000;
+export const MAXIMUM_CONTROLLER_RUNTIME_MS = 180_000;
 const SAMPLE_WAIT_MS = 3_100;
 const HOST_COMMAND_TIMEOUT_MS = 1_500;
 const READY_TIMEOUT_MS = 120_000;
@@ -43,6 +45,9 @@ const PROBE_FIELDS = [
   "schema",
   "platform",
   "lane",
+  "model_id",
+  "model_sha256",
+  "fixture_sha256",
   "warmup_ms",
   "sample_count",
   "release_to_delivery_policy_p50_ms",
@@ -139,9 +144,11 @@ export function parseMacCpuTime(value) {
   return days * 86_400 + hours * 3_600 + minutes * 60 + seconds;
 }
 
-async function sampleMac(pid) {
+async function sampleMac(pid, timeoutMs) {
   const startedAtMs = Date.now();
-  const { stdout } = await runCommand("ps", ["-o", "rss=,time=", "-p", String(pid)]);
+  const { stdout } = await runCommand("ps", ["-o", "rss=,time=", "-p", String(pid)], {
+    timeoutMs,
+  });
   const finishedAtMs = Date.now();
   const fields = stdout.trim().split(/\s+/);
   if (fields.length !== 2 || !/^\d+$/.test(fields[0])) {
@@ -163,19 +170,12 @@ async function readLinuxClockTicks() {
   return ticksPerSecond;
 }
 
-function sampleLinux(pid, ticksPerSecond) {
-  let stat;
-  let status;
-  const startedAtMs = Date.now();
-  try {
-    stat = readFileSync(`/proc/${pid}/stat`, "utf8");
-    status = readFileSync(`/proc/${pid}/status`, "utf8");
-  } catch {
-    throw fail("Linux process sampler found no child");
+export function parseLinuxSample(stat, status, ticksPerSecond, observedAtMs) {
+  if (!Number.isFinite(ticksPerSecond) || ticksPerSecond <= 0) {
+    throw fail("Linux process clock tick rate was malformed");
   }
-  const finishedAtMs = Date.now();
   const closeParen = stat.lastIndexOf(")");
-  const fields = stat.slice(closeParen + 2).trim().split(/\s+/);
+  const fields = closeParen < 0 ? [] : stat.slice(closeParen + 2).trim().split(/\s+/);
   const rssMatch = status.match(/^VmRSS:\s+(\d+)\s+kB$/m);
   if (closeParen < 0 || fields.length < 13 || !rssMatch) {
     throw fail("Linux process sampler data was malformed");
@@ -188,25 +188,28 @@ function sampleLinux(pid, ticksPerSecond) {
   return {
     rssBytes: Number(rssMatch[1]) * 1024,
     cpuSeconds: (userTicks + systemTicks) / ticksPerSecond,
-    observedAtMs: (startedAtMs + finishedAtMs) / 2,
+    observedAtMs,
   };
 }
 
-async function sampleWindows(pid) {
-  const command =
-    `$process = Get-Process -Id ${pid}; ` +
-    "$sampledAtMs = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds(); " +
-    "[PSCustomObject]@{Id=$process.Id;CPU=$process.CPU;WorkingSet64=$process.WorkingSet64;" +
-    "SampledAtMs=$sampledAtMs} | ConvertTo-Json -Compress";
-  const { stdout } = await runCommand("powershell", [
-    "-NoProfile",
-    "-NonInteractive",
-    "-Command",
-    command,
-  ]);
+function sampleLinux(pid, ticksPerSecond) {
+  let stat;
+  let status;
+  const startedAtMs = Date.now();
+  try {
+    stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+    status = readFileSync(`/proc/${pid}/status`, "utf8");
+  } catch {
+    throw fail("Linux process sampler found no child");
+  }
+  const finishedAtMs = Date.now();
+  return parseLinuxSample(stat, status, ticksPerSecond, (startedAtMs + finishedAtMs) / 2);
+}
+
+export function parseWindowsSample(output, pid) {
   let sample;
   try {
-    sample = JSON.parse(stdout);
+    sample = JSON.parse(output);
   } catch {
     throw fail("Windows process sampler data was malformed");
   }
@@ -214,8 +217,12 @@ async function sampleWindows(pid) {
     !sample ||
     sample.Id !== pid ||
     !Number.isFinite(sample.CPU) ||
+    sample.CPU < 0 ||
     !Number.isFinite(sample.WorkingSet64) ||
-    !Number.isFinite(sample.SampledAtMs)
+    !Number.isInteger(sample.WorkingSet64) ||
+    sample.WorkingSet64 < 0 ||
+    !Number.isInteger(sample.SampledAtMs) ||
+    sample.SampledAtMs < 0
   ) {
     throw fail("Windows process sampler found no child");
   }
@@ -226,11 +233,26 @@ async function sampleWindows(pid) {
   };
 }
 
+async function sampleWindows(pid, timeoutMs) {
+  const command =
+    `$process = Get-Process -Id ${pid}; ` +
+    "$sampledAtMs = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds(); " +
+    "[PSCustomObject]@{Id=$process.Id;CPU=$process.CPU;WorkingSet64=$process.WorkingSet64;" +
+    "SampledAtMs=$sampledAtMs} | ConvertTo-Json -Compress";
+  const { stdout } = await runCommand("powershell", [
+    "-NoProfile",
+    "-NonInteractive",
+    "-Command",
+    command,
+  ], { timeoutMs });
+  return parseWindowsSample(stdout, pid);
+}
+
 async function prepareSampler() {
   const linuxClockTicks = process.platform === "linux" ? await readLinuxClockTicks() : null;
-  return async (pid) => {
-    if (process.platform === "darwin") return sampleMac(pid);
-    if (process.platform === "win32") return sampleWindows(pid);
+  return async (pid, timeoutMs = HOST_COMMAND_TIMEOUT_MS) => {
+    if (process.platform === "darwin") return sampleMac(pid, timeoutMs);
+    if (process.platform === "win32") return sampleWindows(pid, timeoutMs);
     if (process.platform === "linux") return sampleLinux(pid, linuxClockTicks);
     throw fail("unsupported host platform");
   };
@@ -277,7 +299,8 @@ export function validateReady(ready, childPid) {
     ready.pid !== childPid ||
     ready.phase !== "idle" ||
     !Number.isInteger(ready.idle_ms) ||
-    ready.idle_ms < MINIMUM_IDLE_MS
+    ready.idle_ms < MINIMUM_IDLE_MS ||
+    ready.idle_ms > MAXIMUM_IDLE_MS
   ) {
     throw fail("ready file did not describe the spawned idle process");
   }
@@ -294,14 +317,14 @@ function readReadyFile(readyFile, childPid) {
   return validateReady(ready, childPid);
 }
 
-async function waitForReady(readyFile, child, state) {
-  const deadline = Date.now() + READY_TIMEOUT_MS;
+async function waitForReady(readyFile, child, state, controllerDeadlineMs) {
+  const deadline = Math.min(Date.now() + READY_TIMEOUT_MS, controllerDeadlineMs);
   while (Date.now() < deadline) {
     ensureRunning(state, child);
     if (existsSync(readyFile)) {
       return { ready: readReadyFile(readyFile, child.pid), observedAtMs: Date.now() };
     }
-    await sleep(25);
+    await sleep(Math.min(25, Math.max(0, deadline - Date.now())));
   }
   throw fail("reference benchmark did not become ready");
 }
@@ -316,11 +339,19 @@ export function parseProbeOutput(output) {
   }
 }
 
-function requireFiniteNumber(value) {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+function requireNonnegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0;
 }
 
-export function validateProbe(probe, expectedPlatform = platformLabel()) {
+const SHA256_PATTERN = /^[A-Fa-f0-9]{64}$/;
+const MODEL_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
+
+export function validateProbe(probe, {
+  expectedPlatform = platformLabel(),
+  requestedLane,
+  expectedModelId,
+  expectedModelSha256,
+} = {}) {
   if (!probe || typeof probe !== "object" || Array.isArray(probe)) {
     throw fail("probe JSON was not an object");
   }
@@ -334,6 +365,24 @@ export function validateProbe(probe, expectedPlatform = platformLabel()) {
   if (!Object.hasOwn(LANE_BUDGET_MS, probe.lane)) {
     throw fail("probe reported an unreviewed lane");
   }
+  if (requestedLane === "local_cpu" && probe.lane !== "local_cpu") {
+    throw fail("requested CPU lane did not report local_cpu");
+  }
+  if (requestedLane === "local_gpu" && !["local_gpu", "local_cpu"].includes(probe.lane)) {
+    throw fail("requested GPU lane did not report a reviewed lane");
+  }
+  if (!MODEL_ID_PATTERN.test(probe.model_id) || probe.model_id !== expectedModelId) {
+    throw fail("probe model identifier did not match the reviewed model");
+  }
+  if (
+    !SHA256_PATTERN.test(probe.model_sha256) ||
+    probe.model_sha256.toLowerCase() !== expectedModelSha256?.toLowerCase()
+  ) {
+    throw fail("probe model hash did not match the expected hash");
+  }
+  if (!SHA256_PATTERN.test(probe.fixture_sha256)) {
+    throw fail("probe fixture hash was malformed");
+  }
   for (const field of [
     "warmup_ms",
     "sample_count",
@@ -341,15 +390,26 @@ export function validateProbe(probe, expectedPlatform = platformLabel()) {
     "release_to_delivery_policy_p95_ms",
     "audio_ms",
   ]) {
-    if (!requireFiniteNumber(probe[field])) throw fail("probe contained an invalid measurement");
+    if (!requireNonnegativeInteger(probe[field])) {
+      throw fail("probe contained an invalid measurement");
+    }
   }
   if (probe.sample_count < MINIMUM_SAMPLE_COUNT) throw fail("probe reported too few samples");
-  if (typeof probe.transcript_nonempty !== "boolean" || !Array.isArray(probe.events)) {
-    throw fail("probe transcript or event metadata was malformed");
-  }
+  if (probe.transcript_nonempty !== true) throw fail("probe did not report a non-empty transcript");
+  if (!Array.isArray(probe.events)) throw fail("probe event metadata was malformed");
   if (!probe.events.every((event) => typeof event === "string" && SAFE_EVENT_NAMES.has(event))) {
     throw fail("probe event metadata was not safe to report");
   }
+  if (!probe.events.includes("audio_persisted") || !probe.events.includes("raw_final")) {
+    throw fail("probe omitted required events");
+  }
+  if (probe.events.includes("failed") || probe.events.includes("held")) {
+    throw fail("probe contained a forbidden event");
+  }
+  if (probe.release_to_delivery_policy_p50_ms > probe.release_to_delivery_policy_p95_ms) {
+    throw fail("probe p50 exceeded p95");
+  }
+  if (probe.audio_ms === 0) throw fail("probe audio duration was invalid");
   if (
     !Array.isArray(probe.unmeasured) ||
     !probe.unmeasured.includes("physical_os_field_injection")
@@ -440,11 +500,11 @@ function writeReport(report) {
   return target;
 }
 
-async function forceKill(child) {
+async function forceKill(child, deadlineMs) {
   if (process.platform === "win32") {
     try {
       await runCommand("taskkill", ["/PID", String(child.pid), "/T", "/F"], {
-        timeoutMs: FORCE_KILL_GRACE_MS,
+        timeoutMs: remainingControllerMs(deadlineMs, Date.now(), FORCE_KILL_GRACE_MS),
       });
     } catch {
       child.kill();
@@ -454,18 +514,32 @@ async function forceKill(child) {
   }
 }
 
-async function stopChild(child, state, completion) {
+async function stopChild(child, state, completion, deadlineMs) {
   if (state.done) return;
   child.kill();
   try {
-    await awaitWithTimeout(completion, TERMINATE_GRACE_MS, "child terminate timed out");
+    await awaitWithTimeout(
+      completion,
+      remainingControllerMs(deadlineMs, Date.now(), TERMINATE_GRACE_MS),
+      "child terminate timed out",
+    );
     return;
   } catch {
     // Continue to the platform's forced termination path.
   }
-  if (!state.done) await forceKill(child);
+  if (!state.done) {
+    try {
+      await forceKill(child, deadlineMs);
+    } catch {
+      child.kill(process.platform === "win32" ? undefined : "SIGKILL");
+    }
+  }
   try {
-    await awaitWithTimeout(completion, FORCE_KILL_GRACE_MS, "child kill timed out");
+    await awaitWithTimeout(
+      completion,
+      remainingControllerMs(deadlineMs, Date.now(), FORCE_KILL_GRACE_MS),
+      "child kill timed out",
+    );
   } catch {
     // Cleanup is bounded even if the host never reports process closure.
   }
@@ -478,15 +552,28 @@ function selectedLane() {
   throw fail("requested lane was not reviewed");
 }
 
-function requestedIdleMs() {
-  const requested = Number(process.env.KAYDENCE_REFERENCE_IDLE_MS || MINIMUM_IDLE_MS);
-  if (!Number.isInteger(requested) || requested < 0) {
+export function validateIdleMs(requested) {
+  if (!Number.isInteger(requested) || requested < 0 || requested > MAXIMUM_IDLE_MS) {
     throw fail("requested idle interval was invalid");
   }
   return Math.max(requested, MINIMUM_IDLE_MS);
 }
 
+function requestedIdleMs() {
+  const requested = Number(process.env.KAYDENCE_REFERENCE_IDLE_MS || MINIMUM_IDLE_MS);
+  return validateIdleMs(requested);
+}
+
+export function remainingControllerMs(deadlineMs, nowMs, requestedMs) {
+  const remaining = deadlineMs - nowMs;
+  if (!Number.isFinite(remaining) || remaining <= 0) {
+    throw fail("reference benchmark controller deadline exceeded");
+  }
+  return Math.min(remaining, requestedMs);
+}
+
 async function run() {
+  const controllerDeadlineMs = Date.now() + MAXIMUM_CONTROLLER_RUNTIME_MS;
   const requestedLane = selectedLane();
   const idleMs = requestedIdleMs();
   const binary = process.env.KAYDENCE_REFERENCE_BIN || resolve("target", "release", "reference-bench");
@@ -496,7 +583,15 @@ async function run() {
   const clip =
     process.env.KAYDENCE_WHISPER_CLIP ||
     join(homedir(), "Documents", "Kaydence", "models", "clip16k.wav");
-  if (!existsSync(binary) || !existsSync(model) || !existsSync(clip)) {
+  const modelId = process.env.KAYDENCE_WHISPER_MODEL_ID;
+  const modelSha256 = process.env.KAYDENCE_WHISPER_SHA256;
+  if (
+    !existsSync(binary) ||
+    !existsSync(model) ||
+    !existsSync(clip) ||
+    !MODEL_ID_PATTERN.test(modelId || "") ||
+    !SHA256_PATTERN.test(modelSha256 || "")
+  ) {
     throw fail("reference benchmark inputs were unavailable");
   }
 
@@ -506,6 +601,8 @@ async function run() {
   const child = makeChild(binary, {
     ...process.env,
     KAYDENCE_WHISPER_MODEL: model,
+    KAYDENCE_WHISPER_MODEL_ID: modelId,
+    KAYDENCE_WHISPER_SHA256: modelSha256,
     KAYDENCE_WHISPER_CLIP: clip,
     KAYDENCE_WHISPER_LANE: requestedLane === "local_gpu" ? "gpu" : "cpu",
     KAYDENCE_REFERENCE_SAMPLES: process.env.KAYDENCE_REFERENCE_SAMPLES || "10",
@@ -514,22 +611,41 @@ async function run() {
   });
 
   try {
-    const readyState = await waitForReady(readyFile, child.child, child.state);
+    const readyState = await waitForReady(
+      readyFile,
+      child.child,
+      child.state,
+      controllerDeadlineMs,
+    );
     const completionDeadlineMs =
       readyState.observedAtMs + readyState.ready.idle_ms + COMPLETION_MARGIN_MS;
-    const before = await sampleProcess(child.child.pid);
+    const before = await sampleProcess(
+      child.child.pid,
+      remainingControllerMs(controllerDeadlineMs, Date.now(), HOST_COMMAND_TIMEOUT_MS),
+    );
     ensureRunning(child.state, child.child);
-    await sleep(SAMPLE_WAIT_MS);
-    const after = await sampleProcess(child.child.pid);
+    await sleep(remainingControllerMs(controllerDeadlineMs, Date.now(), SAMPLE_WAIT_MS));
+    const after = await sampleProcess(
+      child.child.pid,
+      remainingControllerMs(controllerDeadlineMs, Date.now(), HOST_COMMAND_TIMEOUT_MS),
+    );
     ensureRunning(child.state, child.child);
-    const completionRemainingMs = Math.max(0, completionDeadlineMs - Date.now());
+    const completionRemainingMs = remainingControllerMs(
+      controllerDeadlineMs,
+      Date.now(),
+      Math.max(0, completionDeadlineMs - Date.now()),
+    );
     await awaitWithTimeout(child.completion, completionRemainingMs, "probe completion timed out");
     if (child.state.error || child.state.code !== 0 || child.state.signal !== null) {
       throw fail("probe exited unsuccessfully");
     }
 
     const probe = parseProbeOutput(child.stdout.join(""));
-    validateProbe(probe);
+    validateProbe(probe, {
+      requestedLane,
+      expectedModelId: modelId,
+      expectedModelSha256: modelSha256,
+    });
     return buildReport({
       probe,
       requestedLane,
@@ -538,7 +654,7 @@ async function run() {
       childStderrBytes: child.stderr.join("").length,
     });
   } catch (error) {
-    await stopChild(child.child, child.state, child.completion);
+    await stopChild(child.child, child.state, child.completion, controllerDeadlineMs);
     throw error;
   } finally {
     rmSync(readyFile, { force: true });

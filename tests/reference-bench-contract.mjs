@@ -4,15 +4,21 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
+  MAXIMUM_CONTROLLER_RUNTIME_MS,
+  MAXIMUM_IDLE_MS,
   MINIMUM_IDLE_MS,
   MINIMUM_OBSERVATION_MS,
   awaitWithTimeout,
   buildReport,
   computeIdleMetrics,
   parseMacCpuTime,
+  parseLinuxSample,
   parseProbeOutput,
+  parseWindowsSample,
+  remainingControllerMs,
   runCommand,
   safeProbe,
+  validateIdleMs,
   validateProbe,
   validateReady,
 } from "../scripts/bench-reference.mjs";
@@ -40,6 +46,13 @@ assert.equal(help.stdout.trim(), "usage: node scripts/bench-reference.mjs [--che
 
 assert.equal(MINIMUM_OBSERVATION_MS, 3_000);
 assert.ok(MINIMUM_IDLE_MS >= 5_000);
+assert.equal(MAXIMUM_IDLE_MS, 30_000);
+assert.ok(MAXIMUM_CONTROLLER_RUNTIME_MS <= 180_000);
+assert.equal(validateIdleMs(30_000), 30_000);
+assert.throws(() => validateIdleMs(30_001), /idle interval was invalid/);
+assert.equal(remainingControllerMs(10_000, 9_000, 5_000), 1_000);
+assert.equal(remainingControllerMs(10_000, 5_000, 2_000), 2_000);
+assert.throws(() => remainingControllerMs(10_000, 10_000, 1_000), /deadline/);
 assert.equal(parseMacCpuTime("00:03.25"), 3.25);
 assert.equal(parseMacCpuTime("01:02:03.50"), 3_723.5);
 assert.equal(parseMacCpuTime("2-01:02:03.25"), 176_523.25);
@@ -67,6 +80,9 @@ function probe(overrides = {}) {
     schema: 1,
     platform: "linux",
     lane: "local_cpu",
+    model_id: "ggml-base.en",
+    model_sha256: "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002",
+    fixture_sha256: "085e4b157e9f3ce0114b072354d07ede5cbcecce95bc59771b808e78abd94247",
     warmup_ms: 50,
     sample_count: 10,
     release_to_delivery_policy_p50_ms: 600,
@@ -79,8 +95,15 @@ function probe(overrides = {}) {
   };
 }
 
+const expected = {
+  expectedPlatform: "linux",
+  requestedLane: "local_gpu",
+  expectedModelId: "ggml-base.en",
+  expectedModelSha256: "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002",
+};
+
 const fallbackProbe = probe();
-assert.doesNotThrow(() => validateProbe(fallbackProbe, "linux"));
+assert.doesNotThrow(() => validateProbe(fallbackProbe, expected));
 const fallbackReport = buildReport({
   probe: fallbackProbe,
   requestedLane: "local_gpu",
@@ -93,6 +116,37 @@ assert.equal(fallbackReport.requested_lane, "local_gpu");
 assert.equal(fallbackReport.budgets.release_to_delivery_policy_p95_ms, 1_200);
 assert.deepEqual(fallbackReport.budget_failures, []);
 assert.equal(fallbackReport.status, "pass");
+
+for (const [overrides, message] of [
+  [{ transcript_nonempty: false }, /non-empty transcript/],
+  [{ events: ["raw_final"] }, /required events/],
+  [{ events: ["audio_persisted"] }, /required events/],
+  [{ events: ["audio_persisted", "raw_final", "failed"] }, /forbidden event/],
+  [{ events: ["audio_persisted", "raw_final", "held"] }, /forbidden event/],
+  [{ sample_count: 5.5 }, /invalid measurement/],
+  [{ sample_count: 4 }, /too few samples/],
+  [{ warmup_ms: 1.5 }, /invalid measurement/],
+  [{ warmup_ms: -1 }, /invalid measurement/],
+  [{ release_to_delivery_policy_p50_ms: Number.POSITIVE_INFINITY }, /invalid measurement/],
+  [{ release_to_delivery_policy_p50_ms: 1_201 }, /p50 exceeded p95/],
+  [{ audio_ms: 0 }, /audio duration/],
+  [{ model_id: "../../model" }, /model identifier/],
+  [{ model_sha256: "0".repeat(64) }, /model hash/],
+  [{ fixture_sha256: "xyz" }, /fixture hash/],
+]) {
+  assert.throws(() => validateProbe(probe(overrides), expected), message);
+}
+
+assert.throws(
+  () => validateProbe(probe({ lane: "local_gpu" }), { ...expected, requestedLane: "local_cpu" }),
+  /requested CPU lane/,
+);
+assert.doesNotThrow(() =>
+  validateProbe(probe({ lane: "local_cpu" }), { ...expected, requestedLane: "local_cpu" }),
+);
+assert.doesNotThrow(() =>
+  validateProbe(probe({ lane: "local_gpu" }), { ...expected, requestedLane: "local_gpu" }),
+);
 
 const justOverReport = buildReport({
   probe: fallbackProbe,
@@ -108,7 +162,7 @@ assert.equal(justOverReport.status, "fail");
 
 assert.throws(() => parseProbeOutput("not JSON"), /probe JSON was malformed/);
 assert.throws(
-  () => validateProbe(probe({ events: ["raw_final", "/private/source/path"] }), "linux"),
+  () => validateProbe(probe({ events: ["raw_final", "/private/source/path"] }), expected),
   /event metadata was not safe/,
 );
 const redacted = safeProbe(
@@ -120,6 +174,35 @@ assert.equal(JSON.stringify(redacted).includes("/private/source/path"), false);
 assert.throws(
   () => validateReady({ pid: 41, phase: "idle", idle_ms: 5_000 }, 42),
   /spawned idle process/,
+);
+assert.doesNotThrow(() => validateReady({ pid: 42, phase: "idle", idle_ms: 30_000 }, 42));
+assert.throws(
+  () => validateReady({ pid: 42, phase: "idle", idle_ms: 30_001 }, 42),
+  /spawned idle process/,
+);
+
+const windowsSample = parseWindowsSample(
+  '{"Id":42,"CPU":1.25,"WorkingSet64":1048576,"SampledAtMs":1234}',
+  42,
+);
+assert.deepEqual(windowsSample, { rssBytes: 1_048_576, cpuSeconds: 1.25, observedAtMs: 1_234 });
+assert.throws(() => parseWindowsSample("not json", 42), /Windows process sampler data/);
+assert.throws(
+  () => parseWindowsSample('{"Id":41,"CPU":1,"WorkingSet64":1,"SampledAtMs":1}', 42),
+  /Windows process sampler found no child/,
+);
+
+const linuxSample = parseLinuxSample(
+  "42 (reference bench) S 1 2 3 4 5 6 7 8 9 10 120 30 0 0",
+  "Name:\treference-bench\nVmRSS:\t2048 kB\n",
+  100,
+  1_234,
+);
+assert.deepEqual(linuxSample, { rssBytes: 2_097_152, cpuSeconds: 1.5, observedAtMs: 1_234 });
+assert.throws(() => parseLinuxSample("malformed", "VmRSS:\t1 kB\n", 100, 1), /Linux process sampler data/);
+assert.throws(
+  () => parseLinuxSample("42 (x) S 1 2 3 4 5 6 7 8 9 10 11 nope 1", "VmRSS:\t1 kB\n", 100, 1),
+  /Linux process CPU time/,
 );
 
 const timeoutStarted = Date.now();

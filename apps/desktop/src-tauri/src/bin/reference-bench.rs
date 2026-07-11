@@ -1,6 +1,8 @@
 #[cfg(any(feature = "asr-whisper", test))]
 const MINIMUM_SAMPLE_COUNT: u64 = 5;
 #[cfg(any(feature = "asr-whisper", test))]
+const MAXIMUM_IDLE_MS: u64 = 30_000;
+#[cfg(any(feature = "asr-whisper", test))]
 fn nearest_rank(samples: &[u64], percentile: u8) -> u64 {
     assert!(!samples.is_empty());
     assert!((1..=100).contains(&percentile), "invalid percentile");
@@ -22,6 +24,42 @@ fn parse_sample_count(value: Option<&str>) -> Result<u64, String> {
     }
     Ok(count)
 }
+#[cfg(any(feature = "asr-whisper", test))]
+fn parse_sha256(value: Option<&str>) -> Result<String, String> {
+    let value = value.ok_or_else(|| "KAYDENCE_WHISPER_SHA256 must be set".to_string())?;
+    if value.len() != 64 || !value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err("KAYDENCE_WHISPER_SHA256 must be exactly 64 hex characters".into());
+    }
+    Ok(value.to_ascii_lowercase())
+}
+#[cfg(any(feature = "asr-whisper", test))]
+fn parse_model_id(value: Option<&str>) -> Result<String, String> {
+    let value = value.ok_or_else(|| "KAYDENCE_WHISPER_MODEL_ID must be set".to_string())?;
+    if value.is_empty()
+        || value.len() > 64
+        || !value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+    {
+        return Err(
+            "KAYDENCE_WHISPER_MODEL_ID must be a 1-64 character [A-Za-z0-9._-] identifier".into(),
+        );
+    }
+    Ok(value.to_string())
+}
+#[cfg(any(feature = "asr-whisper", test))]
+fn parse_idle_ms(value: Option<&str>) -> Result<u64, String> {
+    let idle_ms = value
+        .unwrap_or("0")
+        .parse::<u64>()
+        .map_err(|_| "KAYDENCE_REFERENCE_IDLE_MS must be an integer".to_string())?;
+    if idle_ms > MAXIMUM_IDLE_MS {
+        return Err(format!(
+            "KAYDENCE_REFERENCE_IDLE_MS must be at most {MAXIMUM_IDLE_MS}"
+        ));
+    }
+    Ok(idle_ms)
+}
 #[cfg(feature = "asr-whisper")]
 fn main() {
     probe::main();
@@ -33,7 +71,7 @@ fn main() {
 }
 #[cfg(feature = "asr-whisper")]
 mod probe {
-    use super::{nearest_rank, parse_sample_count};
+    use super::{nearest_rank, parse_idle_ms, parse_model_id, parse_sample_count, parse_sha256};
     use kaydence_lib::audio::{self, vad::EnergyVad, vad::SpeechGateConfig, wal};
     use kaydence_lib::engine::{
         local_asr_stack, AsrEngine, AsrError, AsrRequest, AsrTranscript, EngineLane, EngineStack,
@@ -45,8 +83,9 @@ mod probe {
         TextInjector, UnknownFieldPolicy,
     };
     use kaydence_lib::pipeline::{self, TranscriptionPipeline};
+    use sha2::{Digest, Sha256};
     use std::fs::{self, OpenOptions};
-    use std::io::Write;
+    use std::io::{Read, Write};
     use std::path::{Path, PathBuf};
     use std::time::{Duration, Instant};
     use ulid::Ulid;
@@ -63,6 +102,8 @@ mod probe {
     }
     struct Config {
         model: PathBuf,
+        model_id: String,
+        model_sha256: String,
         clip: PathBuf,
         lane: EngineLane,
         count: u64,
@@ -80,13 +121,22 @@ mod probe {
             };
             Ok(Self {
                 model: required_file("KAYDENCE_WHISPER_MODEL")?,
+                model_id: parse_model_id(
+                    std::env::var("KAYDENCE_WHISPER_MODEL_ID").ok().as_deref(),
+                )
+                .map_err(Error::Config)?,
+                model_sha256: parse_sha256(
+                    std::env::var("KAYDENCE_WHISPER_SHA256").ok().as_deref(),
+                )
+                .map_err(Error::Config)?,
                 clip: required_file("KAYDENCE_WHISPER_CLIP")?,
                 lane,
                 count: parse_sample_count(
                     std::env::var("KAYDENCE_REFERENCE_SAMPLES").ok().as_deref(),
                 )
                 .map_err(Error::Config)?,
-                idle_ms: optional_u64("KAYDENCE_REFERENCE_IDLE_MS")?.unwrap_or(0),
+                idle_ms: parse_idle_ms(std::env::var("KAYDENCE_REFERENCE_IDLE_MS").ok().as_deref())
+                    .map_err(Error::Config)?,
                 ready: std::env::var_os(READY).map(PathBuf::from),
             })
         }
@@ -144,11 +194,18 @@ mod probe {
     }
     fn run() -> Result<serde_json::Value, Error> {
         let settings = Config::from_env()?;
+        let model_sha256 = hash_file_sha256(&settings.model)?;
+        if model_sha256 != settings.model_sha256 {
+            return Err(config(
+                "KAYDENCE_WHISPER_MODEL sha256 did not match KAYDENCE_WHISPER_SHA256",
+            ));
+        }
+        let fixture_sha256 = hash_file_sha256(&settings.clip)?;
         let samples = read_wav(&settings.clip)?;
         let audio_ms = samples.len() as u64 * 1_000 / u64::from(wal::SAMPLE_RATE);
         let fixture = create_fixture(&samples)?;
         let spec = LocalAsrAdapterSpec {
-            model_id: "reference-bench".into(),
+            model_id: settings.model_id.clone(),
             lane: settings.lane,
             runtime: "whisper.cpp".into(),
             artifact_size_bytes: fs::metadata(&settings.model)?.len(),
@@ -200,6 +257,9 @@ mod probe {
             "schema": 1,
             "platform": std::env::consts::OS,
             "lane": lane_label(warmed_lane),
+            "model_id": settings.model_id,
+            "model_sha256": model_sha256,
+            "fixture_sha256": fixture_sha256,
             "warmup_ms": warmup_ms,
             "sample_count": settings.count,
             "release_to_delivery_policy_p50_ms": nearest_rank(&timings, 50),
@@ -225,18 +285,6 @@ mod probe {
             .any(|event| matches!(event, SessionEvent::Failed { .. })))
         .then_some(())
         .ok_or("reference benchmark sample contains a failed event")
-    }
-    fn optional_u64(name: &str) -> Result<Option<u64>, Error> {
-        match std::env::var(name) {
-            Ok(value) => value
-                .parse()
-                .map(Some)
-                .map_err(|_| config(format!("{name} must be an integer"))),
-            Err(std::env::VarError::NotPresent) => Ok(None),
-            Err(std::env::VarError::NotUnicode(_)) => {
-                Err(config(format!("{name} must be Unicode")))
-            }
-        }
     }
     fn required_file(name: &str) -> Result<PathBuf, Error> {
         let path = std::env::var_os(name)
@@ -301,6 +349,19 @@ mod probe {
             .chunks_exact(2)
             .map(|pair| i16::from_le_bytes([pair[0], pair[1]]) as f32 / i16::MAX as f32)
             .collect())
+    }
+    fn hash_file_sha256(path: &Path) -> Result<String, Error> {
+        let mut file = fs::File::open(path)?;
+        let mut hasher = Sha256::new();
+        let mut buffer = [0_u8; 64 * 1024];
+        loop {
+            let read = file.read(&mut buffer)?;
+            if read == 0 {
+                break;
+            }
+            hasher.update(&buffer[..read]);
+        }
+        Ok(format!("{:x}", hasher.finalize()))
     }
     fn le16(bytes: &[u8], offset: usize) -> u16 {
         u16::from_le_bytes([bytes[offset], bytes[offset + 1]])
@@ -439,4 +500,31 @@ fn percentile_uses_nearest_rank() {
 #[test]
 fn sample_count_rejects_values_below_five() {
     assert!(parse_sample_count(Some("4")).is_err());
+}
+
+#[test]
+fn sha256_requires_exactly_64_hex_characters() {
+    let valid = "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002";
+    assert_eq!(parse_sha256(Some(valid)).unwrap(), valid);
+    assert!(parse_sha256(None).is_err());
+    assert!(parse_sha256(Some(&valid[..63])).is_err());
+    assert!(parse_sha256(Some(&format!("{}g", &valid[..63]))).is_err());
+}
+
+#[test]
+fn model_id_accepts_only_conservative_identifiers() {
+    assert_eq!(
+        parse_model_id(Some("ggml-base.en")).unwrap(),
+        "ggml-base.en"
+    );
+    assert!(parse_model_id(None).is_err());
+    assert!(parse_model_id(Some("")).is_err());
+    assert!(parse_model_id(Some("model/path")).is_err());
+    assert!(parse_model_id(Some(&"a".repeat(65))).is_err());
+}
+
+#[test]
+fn idle_interval_has_a_reviewed_upper_bound() {
+    assert_eq!(parse_idle_ms(Some("30000")).unwrap(), 30_000);
+    assert!(parse_idle_ms(Some("30001")).is_err());
 }
