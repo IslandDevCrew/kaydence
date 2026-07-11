@@ -299,6 +299,10 @@ button {
   font-weight: 850;
 }
 
+.setup-rebind:not(.has-error) > span {
+  color: var(--ink);
+}
+
 .setup-rebind .hotkey-binding-option {
   min-height: 38px;
 }

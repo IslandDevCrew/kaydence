@@ -26,6 +26,9 @@ IMPLEMENTED
   four test gates, and reset/save footer.
 - Reused the Option 1-derived native app icon and shared cockpit glyph/dial/nav
   primitives. Disabled future nav rows remain visible without fake routes.
+- Preserved the old page's hotkey functionality by moving Hold/Toggle and all
+  five binding choices into the always-available Setup surface; replacement of
+  Cleanup no longer removes the user's mode/rebind controls.
 - OS copy is conservative and platform-specific: macOS AX plus CGEvent/
   clipboard restore; Windows UI Automation plus SendInput/clipboard restore;
   Linux AT-SPI detection plus the uinput/portal/X11 capability ladder.
@@ -43,6 +46,8 @@ BROWSER EVIDENCE
   #1f9d63 with AT-SPI detection + native best effort; macOS restored #14a7a1.
 - Check permissions navigated to First run setup and Cleanup P2 returned to the
   Board 03 surface. A clean final Browser tab reported zero console errors.
+- Setup regression proof changed Hold -> Toggle and RightAlt -> F14 in the
+  Browser fixture, then returned to Cleanup with zero console errors.
 - Screenshots: 2026-07-10-p1-g4-board03-browser-540x800.jpg and
   2026-07-10-p1-g4-board03-browser-900x600.jpg.
 - Combined source/implementation evidence:
@@ -64,6 +69,9 @@ NATIVE MACOS EVIDENCE
   fallback, and test-gate copy. macOS was restored before evidence capture.
 - Check permissions opened the real Screen Family 10 backend setup contract;
   Cleanup returned to Board 03. No OS security setting was changed.
+- Native Setup changed Hold -> Toggle and F13 -> F14 through the Rust commands,
+  then restored the user's persisted defaults to Hold and F13 before returning
+  to Cleanup.
 - WebKit's shorter content area initially hid Round Trip. The final short-window
   density contract displays all four gates with no internal scrollbar.
 - Screenshot: 2026-07-10-p1-g4-board03-native-macos.png.

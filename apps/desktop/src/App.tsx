@@ -21,6 +21,8 @@ const markUrl = new URL(
 ).href;
 const appIconUrl = new URL("../src-tauri/icons/128x128.png", import.meta.url).href;
 
+type HotkeyMode = "push_to_talk" | "toggle";
+
 interface LaneSpec extends CleanupLaneSpec {
   injection: string;
 }
@@ -758,6 +760,8 @@ export function App(): JSX.Element {
     useState<FirstRunModelDownloadPreflight | null>(null);
   const [modelDownloadPreflightIssue, setModelDownloadPreflightIssue] =
     useState<string | null>(null);
+  const [hotkeyModePending, setHotkeyModePending] = useState<HotkeyMode | null>(null);
+  const [hotkeyModeIssue, setHotkeyModeIssue] = useState<string | null>(null);
   const [cleanupDialPending, setCleanupDialPending] = useState<CleanupDial | null>(null);
   const [cleanupDialIssue, setCleanupDialIssue] = useState<string | null>(null);
   const [hotkeyBindingPending, setHotkeyBindingPending] = useState<string | null>(null);
@@ -990,6 +994,34 @@ export function App(): JSX.Element {
       });
   }
 
+  function setHotkeyMode(mode: HotkeyMode) {
+    setHotkeyModePending(mode);
+    setHotkeyModeIssue(null);
+    if (snapshotSource === "preview") {
+      setSnapshot((current) => ({
+        ...current,
+        settings: {
+          ...current.settings,
+          hotkey: { ...current.settings.hotkey, mode },
+        },
+      }));
+      setHotkeyModePending(null);
+      return;
+    }
+    void invoke<AppSnapshot>("set_hotkey_mode", { mode })
+      .then((nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setSnapshotSource("backend");
+      })
+      .catch((error) => {
+        console.error("Kaydence hotkey mode update failed", error);
+        setHotkeyModeIssue("Hotkey mode can be changed when capture is idle.");
+      })
+      .finally(() => {
+        setHotkeyModePending(null);
+      });
+  }
+
   function setCleanupDial(dial: CleanupDial) {
     setCleanupDialPending(dial);
     setCleanupDialIssue(null);
@@ -1021,6 +1053,17 @@ export function App(): JSX.Element {
   function setHotkeyBinding(binding: string) {
     setHotkeyBindingPending(binding);
     setHotkeyBindingIssue(null);
+    if (snapshotSource === "preview") {
+      setSnapshot((current) => ({
+        ...current,
+        settings: {
+          ...current.settings,
+          hotkey: { ...current.settings.hotkey, primary_binding: binding },
+        },
+      }));
+      setHotkeyBindingPending(null);
+      return;
+    }
     void invoke<AppSnapshot>("set_hotkey_binding", { binding })
       .then((nextSnapshot) => {
         setSnapshot(nextSnapshot);
@@ -1668,9 +1711,38 @@ export function App(): JSX.Element {
                 ) : null}
               </div>
             ) : null}
-            {snapshot.settings.first_run.hotkey_registration_error ? (
-              <div className="setup-rebind">
-                <span>Try another hotkey</span>
+            <div
+              className={
+                snapshot.settings.first_run.hotkey_registration_error
+                  ? "setup-rebind has-error"
+                  : "setup-rebind"
+              }
+            >
+                <span>
+                  {snapshot.settings.first_run.hotkey_registration_error
+                    ? "Try another hotkey"
+                    : "Global dictation hotkey"}
+                </span>
+                <div className="segmented hotkey-mode-control" role="group" aria-label="Hotkey mode">
+                  <button
+                    aria-pressed={snapshot.settings.hotkey.mode === "push_to_talk"}
+                    className={snapshot.settings.hotkey.mode === "push_to_talk" ? "selected" : ""}
+                    disabled={hotkeyModePending !== null}
+                    onClick={() => setHotkeyMode("push_to_talk")}
+                    type="button"
+                  >
+                    Hold
+                  </button>
+                  <button
+                    aria-pressed={snapshot.settings.hotkey.mode === "toggle"}
+                    className={snapshot.settings.hotkey.mode === "toggle" ? "selected" : ""}
+                    disabled={hotkeyModePending !== null}
+                    onClick={() => setHotkeyMode("toggle")}
+                    type="button"
+                  >
+                    Toggle
+                  </button>
+                </div>
                 <div className="hotkey-binding-grid compact" role="group" aria-label="Setup hotkey binding">
                   {hotkeyBindingOptions.map((option) => (
                     <button
@@ -1692,8 +1764,10 @@ export function App(): JSX.Element {
                 {hotkeyBindingIssue ? (
                   <small className="proof-export-issue">{hotkeyBindingIssue}</small>
                 ) : null}
+                {hotkeyModeIssue ? (
+                  <small className="proof-export-issue">{hotkeyModeIssue}</small>
+                ) : null}
               </div>
-            ) : null}
             {asrCandidates.length > 0 ? (
               <div className="model-picker" aria-label="Local ASR model picker">
                 <div className="model-picker-heading">
