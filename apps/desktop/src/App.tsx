@@ -18,6 +18,7 @@ import {
   type PrivacyAuditItem,
   PrivacyView,
 } from "./views/PrivacyView";
+import { FirstRunView } from "./views/FirstRunView";
 
 const markUrl = new URL(
   "../../../assets/brand/logos/kaydence-logo-option-1.png",
@@ -29,12 +30,6 @@ type HotkeyMode = "push_to_talk" | "toggle";
 
 interface LaneSpec extends CleanupLaneSpec {
   injection: string;
-}
-
-interface ChecklistItem {
-  label: string;
-  status: "Ready" | "Needs hardware" | "Next" | "Issue";
-  detail?: string;
 }
 
 interface AppRef {
@@ -488,19 +483,6 @@ const lanes: LaneSpec[] = [
   },
 ];
 
-const navItems: NavRailItem[] = [
-  { label: "Dictate", phase: "P1", view: "Dictate" },
-  { label: "Whisper-Ahead", phase: "P3" },
-  { label: "Cleanup", phase: "P2", view: "Cleanup" },
-  { label: "Relay", phase: "P4" },
-  { label: "Voiceprint", phase: "P4" },
-  { label: "Conductor", phase: "P4" },
-  { label: "Privacy", phase: "P1", view: "Privacy" },
-  { label: "Dictionary", phase: "P2" },
-  { label: "Analytics", phase: "P3" },
-  { label: "Setup", phase: "P1", view: "Setup" },
-];
-
 const cleanupNavItems: NavRailItem[] = [
   { icon: "settings", label: "General", view: "Setup" },
   { icon: "waveform", label: "Dictation", view: "Dictate" },
@@ -523,118 +505,6 @@ function detectOsLane(): OsLane {
   return "mac";
 }
 
-function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
-  const firstRun = snapshot.settings.first_run;
-  const permissionsReady = permissionRequirementsReady(firstRun.permission_requirements);
-
-  return [
-    {
-      label: "Choose local ASR engine",
-      status: firstRun.model_ready
-        ? "Ready"
-        : firstRun.model_readiness_error
-          ? "Issue"
-          : "Next",
-      detail: firstRun.model_readiness_error ?? undefined,
-    },
-    {
-      label: "Grant OS permissions",
-      status: permissionsReady ? "Ready" : "Needs hardware",
-      detail: permissionsReady ? undefined : "Review runtime requirements below.",
-    },
-    {
-      label: "Set global hotkey",
-      status: firstRun.hotkey_registered
-        ? "Ready"
-        : firstRun.hotkey_registration_error
-          ? "Issue"
-          : "Next",
-      detail: firstRun.hotkey_registration_error ?? undefined,
-    },
-    { label: "Confirm privacy defaults", status: "Ready" },
-    {
-      label: "Start first dictation",
-      status: firstRun.first_dictation_completed ? "Ready" : "Next",
-    },
-  ];
-}
-
-function setupTimingLabel(timing: FirstRunSetupTiming): string {
-  if (timing.within_target === true && timing.elapsed_ms !== null) {
-    return `Complete in ${formatDuration(timing.elapsed_ms)}`;
-  }
-  if (timing.within_target === false && timing.elapsed_ms !== null) {
-    return `${formatDuration(timing.elapsed_ms)} total`;
-  }
-  if (timing.completed_at_ms !== null) {
-    return "Completion recorded";
-  }
-  if (timing.started_at_ms !== null) {
-    return "Timer armed";
-  }
-  return "Waiting for app data";
-}
-
-function setupTimingDetail(timing: FirstRunSetupTiming): string {
-  const target = formatDuration(timing.target_ms);
-  if (timing.within_target === true) {
-    return `Inside ${target} target.`;
-  }
-  if (timing.within_target === false) {
-    return `Over ${target} target; keep proof visible.`;
-  }
-  if (timing.completed_at_ms !== null) {
-    return "Start time unavailable; keep proof visible.";
-  }
-  if (timing.started_at_ms !== null) {
-    return `${target} target armed for the first injected dictation.`;
-  }
-  return `${target} target starts when the desktop app opens with app data.`;
-}
-
-function asrRuntimeStateLabel(runtime: FirstRunAsrRuntimeStatus): string {
-  if (runtime.adapter_ready) {
-    return "Adapter ready";
-  }
-  switch (runtime.state) {
-    case "pending":
-      return "Waiting";
-    case "blocked":
-      return "Blocked";
-    case "verified_artifact":
-      return "Artifact ready";
-  }
-}
-
-function asrRuntimeArtifactDetail(runtime: FirstRunAsrRuntimeStatus): string | null {
-  if (!runtime.artifact_path) {
-    return null;
-  }
-  if (runtime.artifact_size_bytes === null) {
-    return runtime.artifact_path;
-  }
-  const sizeKb = Math.max(1, Math.ceil(runtime.artifact_size_bytes / 1024));
-  return `${runtime.artifact_path} (${sizeKb} KB)`;
-}
-
-function formatDuration(ms: number): string {
-  const seconds = Math.max(0, Math.round(ms / 100) / 10);
-  return `${seconds.toFixed(seconds % 1 === 0 ? 0 : 1)}s`;
-}
-
-function permissionStateLabel(state: FirstRunPermissionState): string {
-  switch (state) {
-    case "ready":
-      return "Ready";
-    case "needs_hardware":
-      return "Needs hardware";
-    case "needs_review":
-      return "Needs review";
-    case "blocked":
-      return "Blocked";
-  }
-}
-
 function permissionSummary(requirements: FirstRunPermissionRequirement[]): string {
   if (requirements.length === 0) {
     return "No runtime contract";
@@ -646,10 +516,6 @@ function permissionRequirementsReady(requirements: FirstRunPermissionRequirement
   return (
     requirements.length > 0 && requirements.every((requirement) => requirement.state === "ready")
   );
-}
-
-function statusClassName(status: string): string {
-  return status.toLowerCase().replace(/\s+/g, "-");
 }
 
 function historyStatus(session: HistorySession): string {
@@ -789,7 +655,6 @@ export function App(): JSX.Element {
   const asrCandidates = snapshot.settings.first_run.asr_candidates;
   const selectedAsr = asrCandidates.find((candidate) => candidate.selected);
   const asrRuntime = snapshot.settings.first_run.asr_runtime;
-  const asrRuntimeArtifact = asrRuntimeArtifactDetail(asrRuntime);
   const engineLabel =
     selectedAsr?.id ??
     (snapshot.settings.engine.default_local_asr === "parakeet_cpu"
@@ -799,13 +664,8 @@ export function App(): JSX.Element {
     snapshot.settings.injection.unknown_focus_policy === "warn_and_allow"
       ? "Warn on opaque focus"
       : "Refuse opaque focus";
-  const privacyLabel = snapshot.settings.privacy.local_context_enabled
-    ? "Local context on"
-    : "Local context off";
-  const checklist = firstRunChecklist(snapshot);
   const permissionRequirements = snapshot.settings.first_run.permission_requirements;
   const permissionSummaryText = permissionSummary(permissionRequirements);
-  const setupTiming = snapshot.settings.first_run.setup_timing;
   const nextStep = snapshot.settings.first_run.next_step;
   const firstRunActionDisabled =
     nextStep.kind === "setup" ||
@@ -816,26 +676,6 @@ export function App(): JSX.Element {
     setupRefreshPending ||
     modelRefreshPending ||
     modelPreflightPendingId !== null;
-  const firstRunProofExportLabel = firstRunProofExport?.exported
-    ? `${firstRunProofExport.item_count} proof items`
-    : "Build-agent handoff";
-  const viewHeading: Record<AppView, string> = {
-    Dictate: "Dictation cockpit",
-    Cleanup: "Cleanup & injection",
-    Privacy: "Privacy & context",
-    Setup: "First run setup",
-  };
-  const viewFamily: Record<AppView, string> = {
-    Dictate: "Screen family 01",
-    Cleanup: "Screen family 03",
-    Privacy: "Screen family 07",
-    Setup: "Screen family 10",
-  };
-  const requiredModels = snapshot.settings.first_run.required_models;
-  const showModelRecheck =
-    !snapshot.settings.first_run.model_ready &&
-    (requiredModels.length > 0 ||
-      snapshot.settings.first_run.model_readiness_error !== null);
   const latestHistory = historySessions[0];
   const latestTarget = latestHistory?.target_app ?? null;
   const latestInjection = historySessions.find(
@@ -1207,6 +1047,11 @@ export function App(): JSX.Element {
   async function handleFirstRunAction() {
     setFirstRunActionNote(null);
 
+    if (nextStep.kind === "dictation" || nextStep.kind === "complete") {
+      setActiveView("Dictate");
+      return;
+    }
+
     if (snapshotSource === "preview") {
       setFirstRunActionNote(nextStep.proof_requirement);
       return;
@@ -1237,14 +1082,6 @@ export function App(): JSX.Element {
       return;
     }
 
-    if (nextStep.kind === "dictation") {
-      setFirstRunActionNote(nextStep.proof_requirement);
-      return;
-    }
-
-    if (nextStep.kind === "complete") {
-      setFirstRunActionNote(nextStep.proof_requirement);
-    }
   }
 
   function exportFirstRunProofPlan() {
@@ -1514,414 +1351,67 @@ export function App(): JSX.Element {
     );
   }
 
-  return (
-    <main
-      className="app-shell"
-      style={{ "--accent": lane.accent } as React.CSSProperties}
-    >
-      <NavRail
-        activeView={activeView}
-        appName={snapshot.app_name}
-        items={navItems}
-        markUrl={markUrl}
-        onSelect={setActiveView}
-        privacySummary={`No telemetry. ${snapshot.settings.privacy.history_retention_days}-day local history. ${privacyLabel}.`}
-      />
+  if (activeView === "Setup") {
+    return (
+      <main
+        className="app-shell first-run-shell"
+        style={{ "--accent": lane.accent } as React.CSSProperties}
+      >
+        <FirstRunView
+          appName={snapshot.app_name}
+          cleanupDial={cleanupDefault}
+          cleanupDialIssue={cleanupDialIssue}
+          cleanupDialPending={cleanupDialPending}
+          exportingProof={exportingFirstRunProof}
+          firstRun={snapshot.settings.first_run}
+          firstRunActionDisabled={firstRunActionDisabled}
+          firstRunActionNote={firstRunActionNote}
+          hotkeyBinding={snapshot.settings.hotkey.primary_binding}
+          hotkeyBindingIssue={hotkeyBindingIssue}
+          hotkeyBindingOptions={hotkeyBindingOptions}
+          hotkeyBindingPending={hotkeyBindingPending}
+          hotkeyMode={snapshot.settings.hotkey.mode}
+          hotkeyModeIssue={hotkeyModeIssue}
+          hotkeyModePending={hotkeyModePending}
+          installingModelId={installingModelId}
+          lane={lane}
+          lanes={lanes}
+          markUrl={appIconUrl}
+          modelDownloadPreflight={modelDownloadPreflight}
+          modelDownloadPreflightIssue={modelDownloadPreflightIssue}
+          modelInstallIssue={modelInstallIssue}
+          modelPreflightPendingId={modelPreflightPendingId}
+          modelRefreshPending={modelRefreshPending}
+          onCleanupDialChange={setCleanupDial}
+          onExportProof={exportFirstRunProofPlan}
+          onHotkeyBindingChange={setHotkeyBinding}
+          onHotkeyModeChange={setHotkeyMode}
+          onInstallModel={(modelId) => void installModelArtifact(modelId)}
+          onLaneChange={setActiveLane}
+          onModelChange={selectAsrModel}
+          onNavigate={setActiveView}
+          onOpenPermissionSettings={openPermissionSettings}
+          onPrimaryAction={() => void handleFirstRunAction()}
+          onRefreshModels={refreshModelReadiness}
+          onRefreshSetup={refreshSetupSnapshot}
+          onReviewModel={reviewModelDownload}
+          onShowPermission={showPermissionAction}
+          permissionActionIssue={permissionActionIssue}
+          permissionActionOutcome={permissionActionOutcome}
+          permissionActionPendingId={permissionActionPendingId}
+          permissionSettingsIssue={permissionSettingsIssue}
+          permissionSettingsOutcome={permissionSettingsOutcome}
+          permissionSettingsPendingId={permissionSettingsPendingId}
+          previewFixture={snapshotSource === "preview"}
+          proofExport={firstRunProofExport}
+          proofIssue={firstRunProofIssue}
+          runtimeLane={runtimeLane}
+          setupRefreshIssue={setupRefreshIssue}
+          setupRefreshPending={setupRefreshPending}
+        />
+      </main>
+    );
+  }
 
-      <section className="workspace" aria-label={`${snapshot.app_name} cockpit`}>
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">{viewFamily[activeView]}</p>
-            <h1>{viewHeading[activeView]}</h1>
-            <span className="snapshot-source">{snapshotSource} config</span>
-          </div>
-          <div className="lane-switcher" aria-label="Operating system lane">
-            {lanes.map((candidate) => (
-              <button
-                aria-pressed={candidate.id === lane.id}
-                className={candidate.id === lane.id ? "lane active" : "lane"}
-                key={candidate.id}
-                onClick={() => setActiveLane(candidate.id)}
-                type="button"
-              >
-                {candidate.label}
-              </button>
-            ))}
-          </div>
-        </header>
-
-        <section className={`content-grid view-${activeView.toLowerCase()}`}>
-          {activeView === "Setup" ? (
-          <article className="panel setup-panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Screen family 10</p>
-                <h2>First run</h2>
-              </div>
-              <div className="setup-header-actions">
-                <button
-                  className="mini-action"
-                  disabled={setupRefreshPending}
-                  onClick={refreshSetupSnapshot}
-                  type="button"
-                >
-                  {setupRefreshPending ? "Refreshing" : "Refresh"}
-                </button>
-                <span className="pill">Free selected</span>
-              </div>
-            </div>
-            {setupRefreshIssue ? <p className="hotkey-mode-note">{setupRefreshIssue}</p> : null}
-            <div className={`next-step-card step-${nextStep.kind}`} aria-label="First-run next step">
-              <div>
-                <span>Next step</span>
-                <strong>{nextStep.title}</strong>
-                <p>{nextStep.detail}</p>
-                <small>Proof: {nextStep.proof_requirement}</small>
-              </div>
-              <button
-                className="secondary-action next-step-action"
-                disabled={firstRunActionDisabled}
-                onClick={() => void handleFirstRunAction()}
-                type="button"
-              >
-                {nextStep.action_label}
-              </button>
-              {firstRunActionNote ? (
-                <small className="next-step-note" role="status">
-                  {firstRunActionNote}
-                </small>
-              ) : null}
-            </div>
-            <ol className="setup-list">
-              {checklist.map((item) => (
-                <li className={`setup-item status-${statusClassName(item.status)}`} key={item.label}>
-                  <span>
-                    {item.label}
-                    {item.detail ? <small>{item.detail}</small> : null}
-                  </span>
-                  <strong>{item.status}</strong>
-                </li>
-              ))}
-            </ol>
-            <div className="setup-timing" aria-label="First-run setup timing">
-              <span>60-second setup proof</span>
-              <strong>{setupTimingLabel(setupTiming)}</strong>
-              <small>{setupTimingDetail(setupTiming)}</small>
-            </div>
-            <div
-              className={`asr-runtime-card status-${asrRuntime.state}`}
-              aria-label="Selected ASR runtime status"
-            >
-              <span>Selected ASR runtime</span>
-              <strong>{asrRuntimeStateLabel(asrRuntime)}</strong>
-              <small>
-                {asrRuntime.selected_model_id ?? "No model selected"}
-                {asrRuntime.lane ? ` / ${asrRuntime.lane}` : ""}
-                {asrRuntime.runtime ? ` / ${asrRuntime.runtime}` : ""}
-              </small>
-              <small>{asrRuntime.detail}</small>
-              {asrRuntimeArtifact ? <small>Artifact: {asrRuntimeArtifact}</small> : null}
-              <small>Proof: {asrRuntime.proof_requirement}</small>
-            </div>
-            <div className="proof-export-card" aria-label="First-run proof export">
-              <div>
-                <span>Local proof JSON</span>
-                <strong>{firstRunProofExportLabel}</strong>
-                <small>
-                  {firstRunProofExport?.json_path ??
-                    "Rust snapshot, next step, permissions, models, hotkey, dictation."}
-                </small>
-              </div>
-              <button
-                className="secondary-action proof-export-action"
-                disabled={exportingFirstRunProof}
-                onClick={exportFirstRunProofPlan}
-                type="button"
-              >
-                {exportingFirstRunProof ? "Exporting" : "Export Proof"}
-              </button>
-              {firstRunProofIssue ? (
-                <small className="proof-export-issue" role="status">
-                  {firstRunProofIssue}
-                </small>
-              ) : null}
-            </div>
-            {permissionRequirements.length > 0 ? (
-              <div className="permission-list" aria-label="OS permission requirements">
-                <div className="permission-list-heading">
-                  <span>OS permission requirements</span>
-                  <strong>Runtime contract</strong>
-                </div>
-                {permissionRequirements.map((requirement) => (
-                  <div
-                    className={`permission-item status-${requirement.state}`}
-                    key={requirement.id}
-                  >
-                    <div>
-                      <strong>{requirement.label}</strong>
-                      <span>{requirement.detail}</span>
-                      <small>{requirement.action}</small>
-                    </div>
-                    <div className="permission-item-actions">
-                      <em>{permissionStateLabel(requirement.state)}</em>
-                      <button
-                        className="mini-action permission-action"
-                        disabled={permissionActionPendingId !== null}
-                        onClick={() => showPermissionAction(requirement.id)}
-                        type="button"
-                      >
-                        {permissionActionPendingId === requirement.id
-                          ? "Loading"
-                          : requirement.action_label}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {permissionActionOutcome ? (
-                  <div className="permission-action-outcome" role="status">
-                    <strong>{permissionActionOutcome.label}</strong>
-                    <span>{permissionActionOutcome.manual_step}</span>
-                    {permissionActionOutcome.settings_target &&
-                    permissionActionOutcome.settings_open_label ? (
-                      <div className="permission-settings-open">
-                        <button
-                          className="mini-action"
-                          disabled={permissionSettingsPendingId !== null}
-                          onClick={() =>
-                            openPermissionSettings(permissionActionOutcome.requirement_id)
-                          }
-                          type="button"
-                        >
-                          {permissionSettingsPendingId === permissionActionOutcome.requirement_id
-                            ? "Opening"
-                            : permissionActionOutcome.settings_open_label}
-                        </button>
-                        <code>{permissionActionOutcome.settings_target}</code>
-                      </div>
-                    ) : (
-                      <small>Manual-only: no stable OS settings panel for this proof.</small>
-                    )}
-                    <small>Proof: {permissionActionOutcome.proof_requirement}</small>
-                    {permissionActionOutcome.proof_command ? (
-                      <code>{permissionActionOutcome.proof_command}</code>
-                    ) : null}
-                    <small>Evidence: {permissionActionOutcome.expected_evidence}</small>
-                    <small>Ready boundary: {permissionActionOutcome.ready_boundary}</small>
-                    {permissionSettingsOutcome ? (
-                      <small>
-                        {permissionSettingsOutcome.opened
-                          ? "Settings panel requested. Return here and run the proof before marking ready."
-                          : "Use the manual step above; this requirement has no stable settings target."}
-                      </small>
-                    ) : null}
-                    {permissionSettingsIssue ? (
-                      <small className="proof-export-issue">{permissionSettingsIssue}</small>
-                    ) : null}
-                  </div>
-                ) : null}
-                {permissionActionIssue ? (
-                  <p className="model-install-note">{permissionActionIssue}</p>
-                ) : null}
-              </div>
-            ) : null}
-            <div
-              className={
-                snapshot.settings.first_run.hotkey_registration_error
-                  ? "setup-rebind has-error"
-                  : "setup-rebind"
-              }
-            >
-                <span>
-                  {snapshot.settings.first_run.hotkey_registration_error
-                    ? "Try another hotkey"
-                    : "Global dictation hotkey"}
-                </span>
-                <div className="segmented hotkey-mode-control" role="group" aria-label="Hotkey mode">
-                  <button
-                    aria-pressed={snapshot.settings.hotkey.mode === "push_to_talk"}
-                    className={snapshot.settings.hotkey.mode === "push_to_talk" ? "selected" : ""}
-                    disabled={hotkeyModePending !== null}
-                    onClick={() => setHotkeyMode("push_to_talk")}
-                    type="button"
-                  >
-                    Hold
-                  </button>
-                  <button
-                    aria-pressed={snapshot.settings.hotkey.mode === "toggle"}
-                    className={snapshot.settings.hotkey.mode === "toggle" ? "selected" : ""}
-                    disabled={hotkeyModePending !== null}
-                    onClick={() => setHotkeyMode("toggle")}
-                    type="button"
-                  >
-                    Toggle
-                  </button>
-                </div>
-                <div className="hotkey-binding-grid compact" role="group" aria-label="Setup hotkey binding">
-                  {hotkeyBindingOptions.map((option) => (
-                    <button
-                      aria-pressed={snapshot.settings.hotkey.primary_binding === option.id}
-                      className={
-                        snapshot.settings.hotkey.primary_binding === option.id
-                          ? "hotkey-binding-option selected"
-                          : "hotkey-binding-option"
-                      }
-                      disabled={hotkeyBindingPending !== null}
-                      key={option.id}
-                      onClick={() => setHotkeyBinding(option.id)}
-                      type="button"
-                    >
-                      <span>{option.label}</span>
-                    </button>
-                  ))}
-                </div>
-                {hotkeyBindingIssue ? (
-                  <small className="proof-export-issue">{hotkeyBindingIssue}</small>
-                ) : null}
-                {hotkeyModeIssue ? (
-                  <small className="proof-export-issue">{hotkeyModeIssue}</small>
-                ) : null}
-              </div>
-            {asrCandidates.length > 0 ? (
-              <div className="model-picker" aria-label="Local ASR model picker">
-                <div className="model-picker-heading">
-                  <span>Local ASR</span>
-                  <strong>{snapshot.settings.first_run.recommended_asr_model_id ?? "none"}</strong>
-                </div>
-                {asrCandidates.map((model) => (
-                  <button
-                    aria-pressed={model.selected}
-                    className={`model-option status-${model.state}${model.selected ? " selected" : ""}`}
-                    key={model.id}
-                    onClick={() => selectAsrModel(model.id)}
-                    type="button"
-                  >
-                    <span>
-                      <strong>{model.id}</strong>
-                      <small>{model.recommendation ?? `${model.runtime} / ${model.min_hw}`}</small>
-                      {model.download_available ? (
-                        <small>
-                          {model.download_size_mb ?? model.size_mb} MB / {model.download_source_count} sources
-                        </small>
-                      ) : null}
-                    </span>
-                    <em>{model.state}</em>
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            {requiredModels.length > 0 ? (
-              <div className="model-status-list" aria-label="Required local models">
-                {requiredModels.map((model) => (
-                  <div className={`model-status status-${model.state}`} key={model.id}>
-                    <div>
-                      <strong>{model.id}</strong>
-                      <span>{model.task}{model.lane ? ` / ${model.lane}` : ""}</span>
-                    </div>
-                    <div>
-                      <em>{model.state}</em>
-                      <small>{model.detail}</small>
-                      {model.download_available ? (
-                        <small>
-                          {model.download_size_mb ?? 0} MB / {model.download_source_count} sources
-                        </small>
-                      ) : null}
-                      {model.state !== "ready" ? (
-                        <div className="model-status-actions">
-                          <button
-                            className="mini-action model-review-action"
-                            disabled={modelPreflightPendingId !== null || modelRefreshPending}
-                            onClick={() => reviewModelDownload(model.id)}
-                            type="button"
-                          >
-                            {modelPreflightPendingId === model.id ? "Reviewing" : "Review"}
-                          </button>
-                          <button
-                            className="mini-action model-install-action"
-                            disabled={
-                              !model.download_available ||
-                              installingModelId !== null ||
-                              modelRefreshPending
-                            }
-                            onClick={() => void installModelArtifact(model.id)}
-                            type="button"
-                          >
-                            {installingModelId === model.id ? "Installing" : "Install"}
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            {modelDownloadPreflight ? (
-              <div
-                className={`model-preflight-card status-${modelDownloadPreflight.state}`}
-                aria-label="Model download preflight"
-              >
-                <div className="model-preflight-heading">
-                  <span>Download preflight</span>
-                  <strong>{modelDownloadPreflight.available ? "Available" : "Blocked"}</strong>
-                </div>
-                <strong>{modelDownloadPreflight.model_id}</strong>
-                <span>
-                  {modelDownloadPreflight.task}
-                  {modelDownloadPreflight.lane ? ` / ${modelDownloadPreflight.lane}` : ""} /{" "}
-                  {modelDownloadPreflight.runtime}
-                </span>
-                <small>{modelDownloadPreflight.detail}</small>
-                {modelDownloadPreflight.available ? (
-                  <>
-                    <small>
-                      Destination: {modelDownloadPreflight.destination_path ?? "not available"}
-                    </small>
-                    <small>
-                      Expected sha256: {modelDownloadPreflight.expected_sha256 ?? "not available"}
-                    </small>
-                    <small>
-                      Sources: {modelDownloadPreflight.source_count}; License:{" "}
-                      {modelDownloadPreflight.license}
-                      {modelDownloadPreflight.license_review_required
-                        ? " / review required"
-                        : ""}
-                    </small>
-                    <small>{modelDownloadPreflight.sources[0] ?? "No source URL exposed"}</small>
-                  </>
-                ) : (
-                  <small>{modelDownloadPreflight.blocked_reason}</small>
-                )}
-                <small>Action: {modelDownloadPreflight.operator_action}</small>
-                <small>Proof: {modelDownloadPreflight.proof_requirement}</small>
-              </div>
-            ) : null}
-            {modelDownloadPreflightIssue ? (
-              <p className="model-install-note">{modelDownloadPreflightIssue}</p>
-            ) : null}
-            {modelInstallIssue ? (
-              <p className="model-install-note">{modelInstallIssue}</p>
-            ) : null}
-            {showModelRecheck ? (
-              <button
-                className="secondary-action"
-                disabled={modelRefreshPending}
-                onClick={refreshModelReadiness}
-                type="button"
-              >
-                {modelRefreshPending ? "Checking Models" : "Recheck Models"}
-              </button>
-            ) : null}
-            <button
-              className="primary-action"
-              disabled={firstRunActionDisabled}
-              onClick={() => void handleFirstRunAction()}
-              type="button"
-            >
-              {nextStep.action_label}
-            </button>
-          </article>
-          ) : null}
-        </section>
-      </section>
-    </main>
-  );
+  throw new Error("Unsupported Kaydence view");
 }

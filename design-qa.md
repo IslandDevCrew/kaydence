@@ -123,3 +123,46 @@ final result: passed (Board 03 scope only)
 - P3: native titlebar tint follows the user's macOS appearance while the board captures a light titlebar.
 
 final result: passed (Board 07 scope only)
+
+## Board 10
+
+- Source visual truth: `assets/brand/screens/kaydence-screen-family-10.png`
+- Browser implementation: `ops/mission/evidence/2026-07-11-p1-g4-board10-browser-540x800.jpg`
+- Native implementation: `ops/mission/evidence/2026-07-11-p1-g4-board10-native-macos.jpg`
+- Combined comparison: `ops/mission/evidence/2026-07-11-p1-g4-board10-comparison.png`
+- Viewport/state: macOS Aqua ready-state Browser fixture at 540 x 800 and 900 x 600; backend-owned native state at 900 x 600.
+
+**Findings**
+
+- No actionable P0/P1/P2 mismatch remains for Board 10 composition.
+- Typography and layout: the compact nine-step rail, progress line, next-step proof strip, six setup controls, four license/service choices, pricing clarification, and action footer preserve the locked information hierarchy. Browser document and board bounds equal their viewports at both verified sizes.
+- Colors and tokens: neutral light surfaces and 8px-or-smaller radii remain constant. macOS Aqua, Windows Cobalt, and Linux Emerald are the only lane color variation.
+- Brand and icons: the selected Option 1-derived mark occupies the reserved product positions. Existing Lucide paths communicate model, permissions, hotkey, cleanup, privacy, and tier state without placeholder assets.
+- Copy and truth: the implementation deliberately corrects illustrative claims that conflict with accepted ADRs or current capability. Whisper-Ahead remains disabled/P3; desktop capability is one-time while Harbor is optional and self-hostable; only Free is selectable; and native model, permission, timing, and first-dictation state come from Rust instead of optimistic fixtures.
+- Platform truth: the host macOS lane renders backend permission rows and working runtime actions. Windows and Linux are explicit reference lanes with their own permission vocabulary and disabled host-only model, hotkey, proof-refresh, and runtime actions.
+- Interaction and accessibility: model/hotkey/cleanup selectors, Hold/Toggle, Evidence dialog tabs, Escape/close/autofocus, setup proof export, three OS lanes, and Start Dictating navigation pass. Native accessibility exposes the evidence dialog and disabled reference controls with correct roles.
+
+**Comparison History**
+
+1. RED baseline: the prior Setup surface was embedded in the App monolith and did not match the board's nine-step rail, pricing choices, progress line, or dedicated first-run hierarchy.
+2. Initial board build: extracted `FirstRunView` plus split CSS, implemented the full source-order composition, and retained deep model/permission/proof controls in an evidence dialog.
+3. Truth pass: replaced "No subscriptions. Pay once." with the accepted one-time desktop plus optional Harbor contract; kept Whisper-Ahead at P3 and paid choices informational until their owning flows exist.
+4. Responsive/browser pass: proved exact 540 x 800 and 900 x 600 bounds, stable controls, modal tabs, lane accents, Dictate round trip, and an empty warning/error log.
+5. Native pass: caught and repaired a cross-OS truth defect where Windows initially inherited macOS permission labels. Rebuilt the signed app and proved macOS host controls plus Windows/Linux reference contracts and disabled runtime-only actions.
+
+**Implementation Checklist**
+
+- [x] Locked Board 10 composition
+- [x] Browser interactions at 540 x 800 and 900 x 600
+- [x] Signed native macOS rendering and interaction proof
+- [x] Backend-owned model, permission, hotkey, timing, and first-dictation states
+- [x] Explicit macOS, Windows, and Linux capability copy and accents
+- [x] First-run view and both CSS files remain under 800 lines
+
+**Follow-up Polish**
+
+- P1-G4: real Windows and Linux WebView captures plus final human sign-off remain required before the parent fidelity gate can close.
+- P1-P0-8: reviewed model metadata/download flow, remaining live permission proof, real first-dictation journey, and <=60-second reference-machine timing remain open.
+- P3: Whisper-Ahead controls become interactive only when their owning capability lands.
+
+final result: passed (Board 10 scope only; P1-G4 remains pending)
