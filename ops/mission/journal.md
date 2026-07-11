@@ -554,3 +554,13 @@
 - Windows runtime proof is closed for this ARM64 toolchain. P1-G3 remains pending for full release-to-inject, ASR-resident RAM/idle CPU, reference p50/p95, and the no-model 86 MB process-group gap. Parakeet/ort and human-voice WER also remain open.
 - Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-whisper-runtime.txt` and its raw `.log`; continuation: `docs/WINDOWS_CODEX_HANDOFF_2026-07-11.md`.
 - Opened stacked draft PR #13 from `codex/p1-g3-windows-asr-runtime`, based on PR #12 so its diff remains the Windows proof layer. Retarget only after PRs #11 and #12 land; a fresh full matrix is still mandatory.
+
+## 2026-07-11T16:17Z - Codex Windows ARM64 release build contract
+- Converted the one-off Windows ARM64 recipe into `scripts/windows-arm64-build.ps1`: Build Tools discovery, official component diagnostics, parsed PE-machine validation, VsDevCmd import, target-generated bindings, portable `GGML_NATIVE=OFF`, locked explicit-target Cargo, stale-output removal, and final AA64 verification.
+- Added a fail-closed filesystem fixture under both PowerShell 5.1 and 7 CI hosts. Red/green cycles cover missing tools, wrong PE machines, x64 PowerShell on ARM64 Windows, whitespace bindings overrides, Cargo target/lock truth, and help output.
+- Bootstrapped official Node v24.18.0 ARM64 in the isolated VM, verified its published sha256, pinned repository-declared pnpm 11.10.0, and installed the frozen workspace before the release proof.
+- The review-fixed explicit-target build completed from the `a5dc909` application archive in 2m38s at `target/aarch64-pc-windows-msvc/release/kaydence.exe`. The script and independent dumpbin both report AA64 for the 12,018,176-byte executable; sha256 is `ba0e358927bc4e1eebff2c2e25d6d3cf64059c7c5f9c0da5af60e73090da89c5`.
+- Fresh targeted gates passed: Windows contract fixture, frontend type/lint, network audit (0), privacy posture, ADR status, build/run contract, mission JSON/render, and diff checks. A fresh hosted three-OS matrix is still billing-blocked.
+- P1-G3 remains pending for full release-to-inject p50/p95, ASR-resident RAM/idle CPU, the no-model process-group gap, and reference-machine proof. This unit produced no installer and makes no P3-G2 signing/package claim.
+- Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-arm64-build-contract.txt`.
+- Opened draft stack #14 plan -> #15 implementation -> #16 independent-review fixes -> #17 mission heartbeat on top of runtime proof PR #13. Each work unit stays below 400 changed lines; all remain unmerged until retargeted in order and a fresh full 3-OS matrix passes.
