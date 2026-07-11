@@ -342,7 +342,8 @@ function Capture-Region {
     [int] $Height,
     [string] $Path,
     [int] $ExpectedWidth = 0,
-    [int] $ExpectedHeight = 0
+    [int] $ExpectedHeight = 0,
+    [switch] $AllowUniform
   )
 
   $bitmap = [System.Drawing.Bitmap]::new(
@@ -365,7 +366,15 @@ function Capture-Region {
   }
 
   try {
-    $validation = Test-CapturedBitmap -Bitmap $bitmap -ExpectedWidth $ExpectedWidth -ExpectedHeight $ExpectedHeight
+    if ($AllowUniform.IsPresent) {
+      $validation = [ordered]@{
+        width = $bitmap.Width
+        height = $bitmap.Height
+        validation = "unchecked_startup_diagnostic"
+      }
+    } else {
+      $validation = Test-CapturedBitmap -Bitmap $bitmap -ExpectedWidth $ExpectedWidth -ExpectedHeight $ExpectedHeight
+    }
     $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
   } finally {
     $bitmap.Dispose()
@@ -429,6 +438,110 @@ function Capture-AppState {
   }
 }
 
+function Save-StartupDiagnostics {
+  param(
+    [IntPtr] $WindowHandle,
+    [int] $Attempt,
+    [string] $ErrorMessage
+  )
+
+  $diagnostic = [ordered]@{
+    attempt = $Attempt
+    captured_at_utc = [DateTime]::UtcNow.ToString("o")
+    error = $ErrorMessage
+  }
+  try {
+    $metrics = Get-WindowMetrics -WindowHandle $WindowHandle
+    $diagnostic["client_width"] = $metrics.ClientWidth
+    $diagnostic["client_height"] = $metrics.ClientHeight
+    $diagnostic["window_width"] = $metrics.WindowWidth
+    $diagnostic["window_height"] = $metrics.WindowHeight
+
+    if ($metrics.ClientWidth -gt 0 -and $metrics.ClientHeight -gt 0) {
+      $origin = [NativeWindowProof+POINT]::new()
+      if ([NativeWindowProof]::ClientToScreen($WindowHandle, [ref] $origin)) {
+        $null = Capture-Region `
+          -X $origin.X `
+          -Y $origin.Y `
+          -Width $metrics.ClientWidth `
+          -Height $metrics.ClientHeight `
+          -Path (Join-Path $OutputDirectory "startup-attempt-$Attempt-client.png") `
+          -AllowUniform
+      }
+    }
+
+    if ($metrics.WindowWidth -gt 0 -and $metrics.WindowHeight -gt 0) {
+      $null = Capture-Region `
+        -X $metrics.WindowX `
+        -Y $metrics.WindowY `
+        -Width $metrics.WindowWidth `
+        -Height $metrics.WindowHeight `
+        -Path (Join-Path $OutputDirectory "startup-attempt-$Attempt-window.png") `
+        -AllowUniform
+    }
+
+    try {
+      Export-UiaTree `
+        -WindowHandle $WindowHandle `
+        -Path (Join-Path $OutputDirectory "startup-attempt-$Attempt-uia.tsv")
+    } catch {
+      $diagnostic["uia_export_error"] = $_.Exception.Message
+    }
+  } catch {
+    $diagnostic["diagnostic_capture_error"] = $_.Exception.Message
+  }
+
+  $diagnostic | ConvertTo-Json -Depth 6 | Set-Content `
+    -LiteralPath (Join-Path $OutputDirectory "startup-attempt-$Attempt.json") `
+    -Encoding utf8
+}
+
+function Start-ProofSession {
+  param(
+    [string] $Path,
+    [int] $Attempts = 3
+  )
+
+  $startupErrors = [System.Collections.Generic.List[string]]::new()
+  for ($attempt = 1; $attempt -le $Attempts; $attempt += 1) {
+    $process = $null
+    $handle = [IntPtr]::Zero
+    try {
+      Write-Host "Starting native WebView proof attempt $attempt of $Attempts."
+      $process = Start-Process -FilePath $Path -PassThru
+      $handle = Wait-NativeWindow -Process $process -Timeout 30
+      $null = Resize-NativeClient -WindowHandle $handle -Width 900 -Height 600
+      $null = Wait-UiaElement `
+        -WindowHandle $handle `
+        -Name "Recent clean transcript" `
+        -Timeout 35
+      return [pscustomobject]@{
+        Process = $process
+        WindowHandle = $handle
+        Attempt = $attempt
+      }
+    } catch {
+      $message = $_.Exception.Message
+      $null = $startupErrors.Add("attempt ${attempt}: $message")
+      if ($handle -ne [IntPtr]::Zero) {
+        Save-StartupDiagnostics `
+          -WindowHandle $handle `
+          -Attempt $attempt `
+          -ErrorMessage $message
+      }
+      if ($null -ne $process -and -not $process.HasExited) {
+        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+        $process.WaitForExit(5000) | Out-Null
+      }
+      if ($attempt -lt $Attempts) {
+        Start-Sleep -Seconds 2
+      }
+    }
+  }
+
+  throw "Native WebView startup failed after $Attempts attempts: $($startupErrors -join '; ')"
+}
+
 $appProcess = $null
 $windowHandle = [IntPtr]::Zero
 $captures = [System.Collections.Generic.List[object]]::new()
@@ -443,17 +556,22 @@ try {
     throw "Release executable not found: $ExecutablePath"
   }
 
+  $forceAccessibility = "--force-renderer-accessibility"
+  if ([string]::IsNullOrWhiteSpace($env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS)) {
+    $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $forceAccessibility
+  } elseif (-not $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS.Contains($forceAccessibility)) {
+    $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "$($env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS) $forceAccessibility"
+  }
+
   try {
     $null = [NativeWindowProof]::SetProcessDpiAwarenessContext([IntPtr]::new(-4))
   } catch {
     Write-Host "DPI awareness context was already fixed by the runner host; continuing with measured client bounds."
   }
 
-  $appProcess = Start-Process -FilePath $ExecutablePath -PassThru
-  $windowHandle = Wait-NativeWindow -Process $appProcess -Timeout $TimeoutSeconds
-  $null = Resize-NativeClient -WindowHandle $windowHandle -Width 900 -Height 600
-
-  $null = Wait-UiaElement -WindowHandle $windowHandle -Name "Recent clean transcript"
+  $session = Start-ProofSession -Path $ExecutablePath
+  $appProcess = $session.Process
+  $windowHandle = $session.WindowHandle
   $captures.Add((Capture-AppState -WindowHandle $windowHandle -Slug "board01" -ExpectedName "Recent clean transcript"))
 
   Invoke-UiaButton -WindowHandle $windowHandle -Name "Cleanup"
@@ -484,6 +602,8 @@ try {
     run_id = $env:GITHUB_RUN_ID
     run_attempt = $env:GITHUB_RUN_ATTEMPT
     workflow = $env:GITHUB_WORKFLOW
+    startup_attempt = $session.Attempt
+    webview2_additional_browser_arguments = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
     executable = [System.IO.Path]::GetFileName($ExecutablePath)
     executable_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $ExecutablePath).Hash.ToLowerInvariant()
     host = (Get-HostFacts)
@@ -501,6 +621,7 @@ try {
     elapsed_seconds = [Math]::Round(([DateTime]::UtcNow - $startedAt).TotalSeconds, 3)
     commit = $env:GITHUB_SHA
     run_id = $env:GITHUB_RUN_ID
+    webview2_additional_browser_arguments = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
     executable = $ExecutablePath
     host = (Get-HostFacts)
     source_hashes = (Get-SourceHashes)
