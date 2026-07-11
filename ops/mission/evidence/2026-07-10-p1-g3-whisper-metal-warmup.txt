@@ -139,7 +139,9 @@ LOCAL GATES
   while active-capture/runtime-lock coordination errors still reject the command.
 - PR CI now runs default gates plus the shipped feature on every OS:
   `asr-whisper-metal` on macOS and `asr-whisper` on Windows/Linux. A fresh hosted
-  3-OS run is still required after the account billing block is removed.
+  3-OS run is still required after the account billing block is removed. Latest
+  attempt `29142969657` at `72f6013` failed before checkout with zero setup steps
+  and GitHub's failed-payments/spending-limit annotation; no tests ran.
 - privacy/network posture and ADR status: PASS
 - raw pipeline benchmark: PASS for measured fields; prediction benchmark remains
   a P3 dependency and cannot run until `llama-cli` is installed.
