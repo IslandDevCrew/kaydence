@@ -36,6 +36,11 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
   tree, and fails closed on non-interactive, blank, uniform, or wrong-sized
   output. This proves rendering/navigation only; it never marks microphone,
   hotkey, injection, secure-field, ASR, or first-dictation readiness.
+- `windows-arm64-build.ps1` — Windows PowerShell 5.1+/PowerShell 7 entry point
+  for native ARM64 release builds. It validates the official VS Build Tools
+  LLVM toolset, imports the ARM64 developer environment, forces portable
+  whisper.cpp codegen through native libclang, and fails before Cargo when the
+  architecture or required tools are wrong.
 
 Scripts are products too: `--help` text, non-zero exit on failure, no silent
 fallthrough.

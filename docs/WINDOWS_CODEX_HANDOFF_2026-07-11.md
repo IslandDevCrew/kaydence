@@ -62,10 +62,26 @@ Do not set `WHISPER_DONT_GENERATE_BINDINGS` on Windows ARM64. The bundled
 whisper-rs-sys bindings contain incompatible glibc layout assertions; native
 libclang must generate target-correct bindings.
 
+This contract is now encoded in `scripts/windows-arm64-build.ps1` and guarded
+by `tests/windows-arm64-build-contract.ps1` on every Windows CI leg. Windows
+PowerShell 5.1 may run as an x64 process on ARM64 Windows, so the script uses
+the Rust host plus resolved compiler/linker targets as architecture authority.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
+  scripts\windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Profile release
+```
+
+Real VM proof: the cold production build completed in 3m51s and the exact final
+script rebuilt it from the warm cache in 1m47s. `dumpbin` reports `AA64 machine
+(ARM64)` for the 12,018,176-byte executable, whose final sha256 is
+`e9d9dee45c8e5c9a39c6c2f2184f676eacc1a1fb2180400d837c62a85067aef4`.
+Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-arm64-build-contract.txt`.
+
 ## Still Needed On Windows
 
-1. Carry the ARM64 Clang/bindgen contract into P3 installer and release
-   automation before claiming Windows ARM64 packaging readiness.
+1. Integrate the proven ARM64 release-build primitive into P3 `.msi` packaging,
+   signing, checksums, and release publication before claiming packaging readiness.
 2. Complete P1-G4 with one passing Windows WebView proof that captures Boards
    01/03/07/10 plus the permissions modal, then obtain final human signoff.
 3. Prove the real first-run journey: model install, microphone/privacy state,

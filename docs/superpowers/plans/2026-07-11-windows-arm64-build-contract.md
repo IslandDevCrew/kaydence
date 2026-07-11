@@ -6,14 +6,14 @@
 
 **Architecture:** Add one PowerShell entry point that discovers or accepts a Visual Studio Build Tools installation, validates every ARM64 LLVM/MSVC file, imports the native developer environment, and builds Kaydence with target-generated Whisper bindings. Exercise its discovery contract with a filesystem fixture on every Windows CI leg; the real ARM64 VM remains the native execution authority.
 
-**Tech Stack:** PowerShell 7, Visual Studio Build Tools 2022, clang-cl, Ninja, libclang, Rust/Cargo, pnpm, GitHub Actions.
+**Tech Stack:** Windows PowerShell 5.1+/PowerShell 7, Visual Studio Build Tools 2022, clang-cl, Ninja, libclang, Rust/Cargo, pnpm, GitHub Actions.
 
 ## Global Constraints
 
 - Windows ARM64 requires `Microsoft.VisualStudio.Component.VC.Llvm.Clang` and `Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset`.
 - Build with `GGML_NATIVE=OFF`, `CXXFLAGS=/EHsc`, Ninja, and native ARM64 `clang-cl`/`libclang`.
 - `WHISPER_DONT_GENERATE_BINDINGS` must be absent; incompatible bundled glibc bindings must never enter a Windows ARM64 release.
-- The real build must run in a native `Arm64` PowerShell process with Rust host `aarch64-pc-windows-msvc`.
+- The real build must use Rust host `aarch64-pc-windows-msvc`; Windows PowerShell 5.1 may itself run as x64 under ARM64 Windows and is not a build-target authority.
 - No dependency, network-allowlist, model-registry, UI invariant, or installer-format change belongs in this unit.
 - Keep the unit within the repository's 400-line review limit and save runtime proof under `ops/mission/evidence/`.
 
@@ -47,7 +47,7 @@ Delete `clang-cl.exe`, invoke again, and require failure text containing both of
 Run on Windows:
 
 ```powershell
-pwsh -NoProfile -File tests/windows-arm64-build-contract.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/windows-arm64-build-contract.ps1
 ```
 
 Expected: FAIL because `scripts/windows-arm64-build.ps1` does not exist.
@@ -108,7 +108,7 @@ Include absolute resolved paths for Build Tools, `VsDevCmd`, clang, libclang, Ni
 
 The non-check path must:
 
-1. Reject non-ARM64 OS/process architectures and non-`aarch64-pc-windows-msvc` Rust hosts.
+1. Reject non-`aarch64-pc-windows-msvc` Rust hosts; do not infer the build target from the PowerShell process architecture.
 2. Reject a non-empty `WHISPER_DONT_GENERATE_BINDINGS`.
 3. Import `VsDevCmd.bat -arch=arm64 -host_arch=arm64` through a temporary command file.
 4. Prepend native LLVM and Ninja paths.
@@ -120,7 +120,7 @@ The non-check path must:
 - [ ] **Step 4: Run the fixture test and verify GREEN**
 
 ```powershell
-pwsh -NoProfile -File tests/windows-arm64-build-contract.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/windows-arm64-build-contract.ps1
 ```
 
 Expected: `PASS: Windows ARM64 build contract is fail-closed`.
@@ -151,7 +151,7 @@ Expected: all pass; no network surface or ADR status changes.
 - [ ] **Step 1: Run check mode in the real VM**
 
 ```powershell
-pwsh -NoProfile -File scripts/windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Check
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Check
 ```
 
 Expected: JSON names the native ARM64 clang, Ninja, libclang, and linker paths; `generate_bindings` is `true`.
@@ -159,7 +159,7 @@ Expected: JSON names the native ARM64 clang, Ninja, libclang, and linker paths; 
 - [ ] **Step 2: Run the real release build**
 
 ```powershell
-pwsh -NoProfile -File scripts/windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Profile release
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Profile release
 ```
 
 Expected: exit 0 and `target\release\kaydence.exe` exists. Capture tool versions, source SHA, command output, binary SHA256, and binary architecture in the evidence file. If disk or tool state prevents completion, record the exact failure and leave release automation unverified.
