@@ -1,0 +1,100 @@
+KAYDENCE P1-G4 UNIT 2 - BOARD 03 CLEANUP & INJECTION
+Captured: 2026-07-11T00:22:23Z
+Branch: codex/p1-g4-cleanup-injection
+Base: ac90ec67f0117e9b43e81dbc438c6500f3a394e2 (origin/main)
+
+SCOPE AND TRUTH BOUNDARY
+- This unit implements Board 03 only. P1-G4 remains pending at 2 of 4 boards;
+  Boards 07 and 10, real Windows/Linux WebView captures, and final human
+  sign-off remain mandatory.
+- Rust remains the source of truth. The working cleanup dial calls the existing
+  set_cleanup_dial command; permissions and injection health come from
+  AppSnapshot and recent history. Rule/profile editors and manual injection
+  tests stay disabled because their backend commands do not exist yet.
+- Browser-only fixtures exercise enabled/delivered presentation. The signed
+  native app shows Setup required, no target, no delivery proof, and Pending
+  reference p95 rather than copying optimistic board values.
+- No dependency, Supabase surface, account, telemetry, model registry, runtime
+  download, or network call was added.
+
+IMPLEMENTED
+- Extracted Board 03 into views/CleanupView.tsx (229 lines) and
+  views/CleanupView.css (shorter than the 800-line file limit).
+- Matched the locked two-pane composition: compact nav rail, Raw/Light/Full,
+  seven output rules, three before/after examples, per-app destination,
+  platform injection method/status, fallback, health, real latency budgets,
+  four test gates, and reset/save footer.
+- Reused the Option 1-derived native app icon and shared cockpit glyph/dial/nav
+  primitives. Disabled future nav rows remain visible without fake routes.
+- Preserved the old page's hotkey functionality by moving Hold/Toggle and all
+  five binding choices into the always-available Setup surface; replacement of
+  Cleanup no longer removes the user's mode/rebind controls.
+- OS copy is conservative and platform-specific: macOS AX plus CGEvent/
+  clipboard restore; Windows UI Automation plus SendInput/clipboard restore;
+  Linux AT-SPI detection plus the uinput/portal/X11 capability ladder.
+
+BROWSER EVIDENCE
+- RED baseline at 900 x 600 measured document 885 x 1074 and lacked the board's
+  injection evidence. Screenshot: 2026-07-10-p1-g4-board03-red-baseline.jpg.
+- Final 540 x 800 and 900 x 600 document scroll bounds exactly match their
+  viewports. Both left and right panels have client size equal to scroll size;
+  no horizontal or hidden vertical panel overflow remains.
+- Raw produced 0 checked rules and identical before/after examples. Full
+  enabled the verified six-rule floor. Reset returned Light and Save retained
+  the saved state.
+- Windows selected #2f72f2 with UI Automation (ValuePattern); Linux selected
+  #1f9d63 with AT-SPI detection + native best effort; macOS restored #14a7a1.
+- Check permissions navigated to First run setup and Cleanup P2 returned to the
+  Board 03 surface. A clean final Browser tab reported zero console errors.
+- Setup regression proof changed Hold -> Toggle and RightAlt -> F14 in the
+  Browser fixture, then returned to Cleanup with zero console errors.
+- Screenshots: 2026-07-10-p1-g4-board03-browser-540x800.jpg and
+  2026-07-10-p1-g4-board03-browser-900x600.jpg.
+- Combined source/implementation evidence:
+  2026-07-10-p1-g4-board03-comparison.png and companion HTML.
+- design-qa.md final result: passed for Board 03 scope only.
+
+NATIVE MACOS EVIDENCE
+- ./script/build_and_run.sh --verify: PASS; exact release source launched from
+  target/release/Kaydence.app at tauri://localhost (pid 86336).
+- codesign --verify --deep --strict: PASS. The app remained stable at 0.0% CPU
+  and 109,376 KB RSS after more than five minutes.
+- Computer Use proved backend-native state: parakeet-v3 local engine label;
+  permission proof pending; no captured target or delivery proof; reference p95
+  Pending P1-G3; secure-input policy OK while Accessibility/latest delivery/
+  round trip remain Pending.
+- Native Raw disabled all rules and preserved all examples. Full persisted the
+  explicit opt-in state. Reset and Save restored the persisted default to Light.
+- Native Windows and Linux lane selections rendered their correct method,
+  fallback, and test-gate copy. macOS was restored before evidence capture.
+- Check permissions opened the real Screen Family 10 backend setup contract;
+  Cleanup returned to Board 03. No OS security setting was changed.
+- Native Setup changed Hold -> Toggle and F13 -> F14 through the Rust commands,
+  then restored the user's persisted defaults to Hold and F13 before returning
+  to Cleanup.
+- WebKit's shorter content area initially hid Round Trip. The final short-window
+  density contract displays all four gates with no internal scrollbar.
+- Screenshot: 2026-07-10-p1-g4-board03-native-macos.png.
+
+FRESH LOCAL GATES
+- cargo fmt --all -- --check: PASS.
+- cargo clippy --all-targets -- -D warnings: PASS.
+- cargo test --all-targets: PASS (225 lib, 2 crash-recovery,
+  5 event-sequence, 5 short-utterance; 0 failures).
+- scripts/check-frontend.sh: PASS; production Vite build: PASS.
+- tests/build_and_run.sh: PASS; exact release build/run and strict signature:
+  PASS.
+- audit-network: PASS, 0 network-capable call sites.
+- privacy posture: PASS; no screen-capture primitives.
+- ADR status: PASS (0009 remains the declared by-design exception).
+- bench --check: PASS for 4 implemented synthetic Raw metrics (7/120/7/1 ms);
+  PARTIAL for real GPU, prediction, idle RAM/CPU, and reference-machine p95.
+
+REMOTE BASELINE AND REMAINING WORK
+- Board 01 merged in PR #3 at ac90ec6. Its post-merge Linux push run
+  29131422736 is green; the full PR matrix run 29130796977 was green on macOS,
+  Ubuntu, and Windows.
+- This Board 03 branch still requires its own full PR matrix before merge.
+- P1-G4 remains pending for Boards 07 and 10, real Windows/Linux WebView
+  captures, and final human sign-off. P1-G3 remains pending for real GPU,
+  idle-footprint, and reference-machine performance proof.

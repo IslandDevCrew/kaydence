@@ -13,18 +13,17 @@ import {
   type DictateHistoryItem,
   DictateView,
 } from "./views/DictateView";
+import { CleanupView, type CleanupLaneSpec } from "./views/CleanupView";
 
 const markUrl = new URL(
   "../../../assets/brand/logos/kaydence-logo-option-1.png",
   import.meta.url,
 ).href;
+const appIconUrl = new URL("../src-tauri/icons/128x128.png", import.meta.url).href;
 
 type HotkeyMode = "push_to_talk" | "toggle";
 
-interface LaneSpec {
-  id: OsLane;
-  label: string;
-  accent: string;
+interface LaneSpec extends CleanupLaneSpec {
   injection: string;
 }
 
@@ -461,18 +460,33 @@ const lanes: LaneSpec[] = [
     label: "macOS",
     accent: "#14a7a1",
     injection: "AX native insert",
+    primaryMethod: "AX API (Accessibility)",
+    primaryDetail: "Selected-text insertion with a secure-field refusal boundary.",
+    fallbackMethod: "CGEvent + clipboard restore",
+    fallbackDetail: "Unicode events, then snapshot, paste, and restore when needed.",
+    gates: ["Accessibility", "Secure Input", "Latest Delivery", "Round Trip"],
   },
   {
     id: "windows",
     label: "Windows",
     accent: "#2f72f2",
     injection: "UI Automation + SendInput",
+    primaryMethod: "UI Automation (ValuePattern)",
+    primaryDetail: "ValuePattern insertion when the focused control exposes a writable value.",
+    fallbackMethod: "SendInput + clipboard restore",
+    fallbackDetail: "Unicode input, then a restored clipboard path when direct input is unavailable.",
+    gates: ["UI Automation", "Secure Desktop", "Latest Delivery", "Round Trip"],
   },
   {
     id: "linux",
     label: "Linux",
     accent: "#1f9d63",
     injection: "AT-SPI detect + uinput",
+    primaryMethod: "AT-SPI detection + native best effort",
+    primaryDetail: "Detects editable accessibility targets without claiming universal compositor proof.",
+    fallbackMethod: "uinput / portal / X11 ladder",
+    fallbackDetail: "Runtime capabilities select the safest available Wayland or X11 delivery path.",
+    gates: ["AT-SPI / X11", "Secure Input", "Latest Delivery", "Round Trip"],
   },
 ];
 
@@ -488,6 +502,28 @@ const navItems: NavRailItem[] = [
   { label: "Analytics", phase: "P3" },
   { label: "Setup", phase: "P1", view: "Setup" },
 ];
+
+const cleanupNavItems: NavRailItem[] = [
+  { icon: "settings", label: "General", view: "Setup" },
+  { icon: "waveform", label: "Dictation", view: "Dictate" },
+  { icon: "waveform", label: "Whisper-Ahead", phase: "P3" },
+  { icon: "cleanup", label: "Cleanup & Inject", view: "Cleanup" },
+  { icon: "square", label: "Relay", phase: "P4" },
+  { icon: "waveform", label: "Voiceprint", phase: "P4" },
+  { icon: "cpu", label: "Conductor", phase: "P4" },
+  { icon: "privacy", label: "Privacy", view: "Privacy" },
+  { icon: "database", label: "Dictionary", phase: "P2" },
+  { icon: "target", label: "Profiles", phase: "P2" },
+  { icon: "history", label: "Analytics", phase: "P3" },
+  { icon: "settings", label: "License", phase: "P3" },
+];
+
+function detectOsLane(): OsLane {
+  const userAgent = navigator.userAgent.toLowerCase();
+  if (userAgent.includes("win")) return "windows";
+  if (userAgent.includes("linux")) return "linux";
+  return "mac";
+}
 
 function privacyPosture(snapshot: AppSnapshot, lane: LaneSpec): PrivacyPostureItem[] {
   const contextState = snapshot.settings.privacy.local_context_enabled
@@ -696,7 +732,7 @@ function historyTimestamp(startedMs: number | null): string {
 
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
-  const [activeLane, setActiveLane] = useState<OsLane>("mac");
+  const [activeLane, setActiveLane] = useState<OsLane>(detectOsLane);
   const [activeView, setActiveView] = useState<AppView>("Dictate");
   const [previewRecording, setPreviewRecording] = useState(true);
   const [snapshot, setSnapshot] = useState<AppSnapshot>(previewSnapshot);
@@ -806,6 +842,14 @@ export function App(): JSX.Element {
   const privacyItems = privacyPosture(snapshot, lane);
   const latestHistory = historySessions[0];
   const latestTarget = latestHistory?.target_app ?? null;
+  const latestInjection = historySessions.find(
+    (session) =>
+      session.injected_method !== null ||
+      session.held_reason !== null ||
+      session.failure?.stage === "inject",
+  );
+  const injectionFailure =
+    latestInjection?.failure?.stage === "inject" ? latestInjection.failure.error : null;
   const cockpitTranscript = latestHistory?.clean_text ?? latestHistory?.raw_text ?? "";
   const captureFailure = historySessions.find((session) => session.failure?.stage === "capture");
   const permissionsReady = permissionRequirementsReady(permissionRequirements);
@@ -953,6 +997,17 @@ export function App(): JSX.Element {
   function setHotkeyMode(mode: HotkeyMode) {
     setHotkeyModePending(mode);
     setHotkeyModeIssue(null);
+    if (snapshotSource === "preview") {
+      setSnapshot((current) => ({
+        ...current,
+        settings: {
+          ...current.settings,
+          hotkey: { ...current.settings.hotkey, mode },
+        },
+      }));
+      setHotkeyModePending(null);
+      return;
+    }
     void invoke<AppSnapshot>("set_hotkey_mode", { mode })
       .then((nextSnapshot) => {
         setSnapshot(nextSnapshot);
@@ -998,6 +1053,17 @@ export function App(): JSX.Element {
   function setHotkeyBinding(binding: string) {
     setHotkeyBindingPending(binding);
     setHotkeyBindingIssue(null);
+    if (snapshotSource === "preview") {
+      setSnapshot((current) => ({
+        ...current,
+        settings: {
+          ...current.settings,
+          hotkey: { ...current.settings.hotkey, primary_binding: binding },
+        },
+      }));
+      setHotkeyBindingPending(null);
+      return;
+    }
     void invoke<AppSnapshot>("set_hotkey_binding", { binding })
       .then((nextSnapshot) => {
         setSnapshot(nextSnapshot);
@@ -1374,6 +1440,46 @@ export function App(): JSX.Element {
     );
   }
 
+  if (activeView === "Cleanup") {
+    return (
+      <main
+        className="app-shell cleanup-shell"
+        style={{ "--accent": lane.accent } as React.CSSProperties}
+      >
+        <NavRail
+          compact
+          activeView="Cleanup"
+          appName={snapshot.app_name}
+          footerTitle="Engine: Local"
+          items={cleanupNavItems}
+          markUrl={appIconUrl}
+          onSelect={setActiveView}
+          privacySummary={`Model: ${engineLabel}`}
+        />
+        <CleanupView
+          appName={snapshot.app_name}
+          cleanupDial={cleanupDefault}
+          cleanupIssue={cleanupDialIssue}
+          cleanupPending={cleanupDialPending !== null}
+          deliveryMethod={latestInjection?.injected_method ?? null}
+          heldReason={latestInjection?.held_reason ?? null}
+          injectionFailure={injectionFailure}
+          lane={lane}
+          lanes={lanes}
+          markUrl={appIconUrl}
+          onCleanupChange={setCleanupDial}
+          onLaneChange={setActiveLane}
+          onNavigate={setActiveView}
+          permissionSummary={permissionSummaryText}
+          permissionsReady={permissionsReady}
+          previewFixture={snapshotSource === "preview"}
+          targetApp={latestTarget?.name ?? null}
+          unknownFocus={unknownFocus}
+        />
+      </main>
+    );
+  }
+
   return (
     <main
       className="app-shell"
@@ -1411,125 +1517,6 @@ export function App(): JSX.Element {
         </header>
 
         <section className={`content-grid view-${activeView.toLowerCase()}`}>
-          {activeView === "Cleanup" ? (
-          <>
-          <article className="panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Cleanup dial</p>
-                <h2>Output rules</h2>
-              </div>
-            </div>
-            <div className="segmented" role="group" aria-label="Cleanup level">
-              <button
-                aria-pressed={cleanupDefault === "raw"}
-                className={cleanupDefault === "raw" ? "selected" : ""}
-                disabled={cleanupDialPending !== null}
-                onClick={() => setCleanupDial("raw")}
-                type="button"
-              >
-                Raw
-              </button>
-              <button
-                aria-pressed={cleanupDefault === "light"}
-                className={cleanupDefault === "light" ? "selected" : ""}
-                disabled={cleanupDialPending !== null}
-                onClick={() => setCleanupDial("light")}
-                type="button"
-              >
-                Light
-              </button>
-              <button
-                aria-pressed={cleanupDefault === "full"}
-                className={cleanupDefault === "full" ? "selected" : ""}
-                disabled={cleanupDialPending !== null}
-                onClick={() => setCleanupDial("full")}
-                type="button"
-              >
-                Full
-              </button>
-            </div>
-            {cleanupDialIssue ? (
-              <p className="hotkey-mode-note">{cleanupDialIssue}</p>
-            ) : null}
-            <div className="segmented hotkey-mode-control" role="group" aria-label="Hotkey mode">
-              <button
-                className={snapshot.settings.hotkey.mode === "push_to_talk" ? "selected" : ""}
-                disabled={hotkeyModePending !== null}
-                onClick={() => setHotkeyMode("push_to_talk")}
-                type="button"
-              >
-                Hold
-              </button>
-              <button
-                className={snapshot.settings.hotkey.mode === "toggle" ? "selected" : ""}
-                disabled={hotkeyModePending !== null}
-                onClick={() => setHotkeyMode("toggle")}
-                type="button"
-              >
-                Toggle
-              </button>
-            </div>
-            {hotkeyModeIssue ? (
-              <p className="hotkey-mode-note">{hotkeyModeIssue}</p>
-            ) : null}
-            <div className="hotkey-binding-grid" role="group" aria-label="Hotkey binding">
-              {hotkeyBindingOptions.map((option) => (
-                <button
-                  aria-pressed={snapshot.settings.hotkey.primary_binding === option.id}
-                  className={
-                    snapshot.settings.hotkey.primary_binding === option.id
-                      ? "hotkey-binding-option selected"
-                      : "hotkey-binding-option"
-                  }
-                  disabled={hotkeyBindingPending !== null}
-                  key={option.id}
-                  onClick={() => setHotkeyBinding(option.id)}
-                  type="button"
-                >
-                  <span>{option.label}</span>
-                  <small>{option.detail}</small>
-                </button>
-              ))}
-            </div>
-            {hotkeyBindingIssue ? (
-              <p className="hotkey-mode-note">{hotkeyBindingIssue}</p>
-            ) : null}
-            <ul className="rule-list">
-              <li>{hotkeyMode} on {snapshot.settings.hotkey.primary_binding}</li>
-              <li>Filler removal enabled</li>
-              <li>Self-correction collapse enabled</li>
-              <li>Full rewrite requires opt-in</li>
-              <li>Secure fields always refuse injection</li>
-            </ul>
-          </article>
-
-          <article className="panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Screen family 03</p>
-                <h2>{lane.label} injection</h2>
-              </div>
-              <span className="pill subtle">{lane.injection}</span>
-            </div>
-            <div className="capability-list">
-              <div>
-                <span>Primary path</span>
-                <strong>{lane.injection}</strong>
-              </div>
-              <div>
-                <span>Runtime permissions</span>
-                <strong>{permissionSummaryText}</strong>
-              </div>
-              <div>
-                <span>Unknown focus</span>
-                <strong>{unknownFocus}</strong>
-              </div>
-            </div>
-          </article>
-          </>
-          ) : null}
-
           {activeView === "Privacy" ? (
           <article className="panel privacy-panel">
             <div className="panel-header">
@@ -1724,9 +1711,38 @@ export function App(): JSX.Element {
                 ) : null}
               </div>
             ) : null}
-            {snapshot.settings.first_run.hotkey_registration_error ? (
-              <div className="setup-rebind">
-                <span>Try another hotkey</span>
+            <div
+              className={
+                snapshot.settings.first_run.hotkey_registration_error
+                  ? "setup-rebind has-error"
+                  : "setup-rebind"
+              }
+            >
+                <span>
+                  {snapshot.settings.first_run.hotkey_registration_error
+                    ? "Try another hotkey"
+                    : "Global dictation hotkey"}
+                </span>
+                <div className="segmented hotkey-mode-control" role="group" aria-label="Hotkey mode">
+                  <button
+                    aria-pressed={snapshot.settings.hotkey.mode === "push_to_talk"}
+                    className={snapshot.settings.hotkey.mode === "push_to_talk" ? "selected" : ""}
+                    disabled={hotkeyModePending !== null}
+                    onClick={() => setHotkeyMode("push_to_talk")}
+                    type="button"
+                  >
+                    Hold
+                  </button>
+                  <button
+                    aria-pressed={snapshot.settings.hotkey.mode === "toggle"}
+                    className={snapshot.settings.hotkey.mode === "toggle" ? "selected" : ""}
+                    disabled={hotkeyModePending !== null}
+                    onClick={() => setHotkeyMode("toggle")}
+                    type="button"
+                  >
+                    Toggle
+                  </button>
+                </div>
                 <div className="hotkey-binding-grid compact" role="group" aria-label="Setup hotkey binding">
                   {hotkeyBindingOptions.map((option) => (
                     <button
@@ -1745,8 +1761,13 @@ export function App(): JSX.Element {
                     </button>
                   ))}
                 </div>
+                {hotkeyBindingIssue ? (
+                  <small className="proof-export-issue">{hotkeyBindingIssue}</small>
+                ) : null}
+                {hotkeyModeIssue ? (
+                  <small className="proof-export-issue">{hotkeyModeIssue}</small>
+                ) : null}
               </div>
-            ) : null}
             {asrCandidates.length > 0 ? (
               <div className="model-picker" aria-label="Local ASR model picker">
                 <div className="model-picker-heading">
