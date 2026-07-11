@@ -17,8 +17,9 @@ export type CockpitIcon =
   | "check";
 
 export interface NavRailItem {
+  icon?: CockpitIcon;
   label: string;
-  phase: string;
+  phase?: string;
   view?: AppView;
 }
 
@@ -56,6 +57,8 @@ export function CockpitGlyph({ name }: { name: CockpitIcon }): JSX.Element {
 export function NavRail({
   activeView,
   appName,
+  compact = false,
+  footerTitle = "Local only",
   items,
   markUrl,
   onSelect,
@@ -63,13 +66,15 @@ export function NavRail({
 }: {
   activeView: AppView;
   appName: string;
+  compact?: boolean;
+  footerTitle?: string;
   items: NavRailItem[];
   markUrl: string;
   onSelect: (view: AppView) => void;
   privacySummary: string;
 }): JSX.Element {
   return (
-    <aside className="sidebar" aria-label={`${appName} navigation`}>
+    <aside className={compact ? "sidebar compact-sidebar" : "sidebar"} aria-label={`${appName} navigation`}>
       <div className="brand-lockup">
         <img className="brand-mark" src={markUrl} alt="" />
         <div><strong>{appName}</strong><span>Local voice platform</span></div>
@@ -84,13 +89,17 @@ export function NavRail({
             onClick={() => item.view && onSelect(item.view)}
             type="button"
           >
-            <span>{item.label}</span><small>{item.phase}</small>
+            <span className="nav-item-label">
+              {item.icon ? <CockpitGlyph name={item.icon} /> : null}
+              <span>{item.label}</span>
+            </span>
+            {item.phase ? <small>{item.phase}</small> : null}
           </button>
         ))}
       </nav>
       <div className="sidebar-card">
         <span className="status-dot" aria-hidden="true" />
-        <div><strong>Local only</strong><p>{privacySummary}</p></div>
+        <div><strong>{footerTitle}</strong><p>{privacySummary}</p></div>
       </div>
     </aside>
   );

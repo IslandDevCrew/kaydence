@@ -1,0 +1,736 @@
+/* Screen family 03: compact cleanup rules and platform injection evidence. */
+.app-shell.cleanup-shell {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  color-scheme: light;
+  --bg: #eef2f4;
+  --surface: #ffffff;
+  --surface-soft: #f6f8f9;
+  --ink: #1b2226;
+  --muted: #69767c;
+  --line: #dce3e6;
+  background: var(--bg);
+}
+
+.cleanup-shell .compact-sidebar {
+  gap: 7px;
+  min-height: 0;
+  overflow: hidden;
+  border-right-color: var(--line);
+  background: #f8fafb;
+  color: var(--ink);
+  padding: 9px 7px;
+}
+
+.cleanup-shell .compact-sidebar .brand-lockup {
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  min-height: 68px;
+}
+
+.cleanup-shell .compact-sidebar .brand-mark {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+}
+
+.cleanup-shell .compact-sidebar .brand-lockup > div {
+  display: none;
+}
+
+.cleanup-shell .compact-sidebar .nav-list {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 2px;
+  min-height: 0;
+}
+
+.cleanup-shell .compact-sidebar .nav-item {
+  min-height: 27px;
+  border-radius: 6px;
+  color: #4f5d63;
+  padding: 0 5px;
+}
+
+.cleanup-shell .compact-sidebar .nav-item-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  font-size: .61rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.cleanup-shell .compact-sidebar .nav-item-label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cleanup-shell .compact-sidebar .nav-item .cockpit-glyph {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+}
+
+.cleanup-shell .compact-sidebar .nav-item small {
+  font-size: .51rem;
+}
+
+.cleanup-shell .compact-sidebar .nav-item.active,
+.cleanup-shell .compact-sidebar .nav-item:hover {
+  background: color-mix(in srgb, var(--accent) 14%, #ffffff);
+  color: color-mix(in srgb, var(--accent) 78%, #203037);
+}
+
+.cleanup-shell .compact-sidebar .nav-item:disabled {
+  color: #8c999e;
+  opacity: .64;
+}
+
+.cleanup-shell .compact-sidebar .sidebar-card {
+  grid-template-columns: 7px minmax(0, 1fr);
+  gap: 6px;
+  border-color: var(--line);
+  background: #ffffff;
+  color: var(--ink);
+  padding: 7px;
+}
+
+.cleanup-shell .compact-sidebar .sidebar-card strong,
+.cleanup-shell .compact-sidebar .sidebar-card p {
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  font-size: .56rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-shell .compact-sidebar .sidebar-card p {
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+.cleanup-shell .compact-sidebar .status-dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 3px;
+}
+
+.cleanup-board {
+  display: grid;
+  grid-template-rows: 36px 42px minmax(0, 1fr) 38px;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
+  padding: 8px;
+  color: var(--ink);
+}
+
+.cleanup-titlebar,
+.cleanup-panel,
+.cleanup-actions {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.cleanup-titlebar,
+.cleanup-titlebar > div:first-child,
+.cleanup-heading,
+.cleanup-method-section > div:first-child,
+.cleanup-health-section > div,
+.cleanup-current-p95,
+.cleanup-gates-section > div,
+.cleanup-actions {
+  display: flex;
+  align-items: center;
+}
+
+.cleanup-titlebar {
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+}
+
+.cleanup-titlebar > div:first-child {
+  gap: 6px;
+  min-width: 0;
+}
+
+.cleanup-titlebar img {
+  width: 23px;
+  height: 23px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.cleanup-titlebar strong {
+  overflow: hidden;
+  font-size: .7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-lane-switcher {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.cleanup-lane-switcher button,
+.cleanup-dial-section .cockpit-dial button {
+  min-width: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: .58rem;
+  padding: 4px 6px;
+}
+
+.cleanup-lane-switcher button[aria-pressed="true"],
+.cleanup-dial-section .cockpit-dial button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.cleanup-heading {
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 5px;
+}
+
+.cleanup-heading div {
+  min-width: 0;
+}
+
+.cleanup-heading span {
+  color: var(--muted);
+  font-size: .56rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.cleanup-heading h1 {
+  overflow: hidden;
+  margin: 1px 0 0;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-main-grid {
+  display: grid;
+  grid-template-columns: minmax(225px, 1.55fr) minmax(160px, .82fr);
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cleanup-panel {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 8px;
+}
+
+.cleanup-panel h2,
+.cleanup-panel h3,
+.cleanup-panel p {
+  margin: 0;
+}
+
+.cleanup-panel h2 {
+  font-size: .72rem;
+}
+
+.cleanup-panel h3 {
+  font-size: .64rem;
+}
+
+.cleanup-panel p,
+.cleanup-panel small,
+.cleanup-panel dt,
+.cleanup-panel dd {
+  color: var(--muted);
+  font-size: .56rem;
+  line-height: 1.35;
+}
+
+.cleanup-rules-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 7px;
+}
+
+.cleanup-dial-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, .85fr);
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.cleanup-dial-section .cockpit-dial {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 3px;
+}
+
+.cleanup-dial-section > p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-issue {
+  grid-column: 1 / -1;
+  color: var(--danger) !important;
+  font-weight: 800;
+}
+
+.cleanup-rule-section,
+.cleanup-example-section {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-height: 0;
+}
+
+.cleanup-rule-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px 6px;
+}
+
+.cleanup-rule-list label {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 22px;
+  border-bottom: 1px solid #edf1f2;
+  font-size: .58rem;
+}
+
+.cleanup-rule-list label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-rule-list input {
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  accent-color: var(--accent);
+  opacity: 1;
+}
+
+.cleanup-rule-list small {
+  overflow: hidden;
+  max-width: 58px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-examples {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  min-height: 0;
+}
+
+.cleanup-examples > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.cleanup-examples strong {
+  display: block;
+  grid-column: 1 / -1;
+  padding: 4px 5px;
+  background: var(--surface-soft);
+  font-size: .57rem;
+}
+
+.cleanup-examples p {
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr);
+  gap: 4px;
+  min-width: 0;
+  padding: 4px 5px;
+  font-size: .53rem;
+  line-height: 1.25;
+}
+
+.cleanup-examples p + p {
+  border-left: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.cleanup-examples p span {
+  color: var(--muted);
+  font-size: .49rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.cleanup-destination-section {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(120px, .9fr) auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+}
+
+.cleanup-destination-section > div,
+.cleanup-destination-section button span {
+  min-width: 0;
+}
+
+.cleanup-destination-section small {
+  display: block;
+  overflow: hidden;
+  margin-top: 1px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-destination-section button,
+.cleanup-method-section button,
+.cleanup-actions button {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--ink);
+  font-size: .56rem;
+  padding: 5px 7px;
+}
+
+.cleanup-destination-section button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.cleanup-destination-section button .cockpit-glyph {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+}
+
+.cleanup-destination-section button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cleanup-injection-panel {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.cleanup-injection-panel > section + section {
+  border-top: 1px solid var(--line);
+  padding-top: 3px;
+}
+
+.cleanup-method-section {
+  display: grid;
+  gap: 4px;
+}
+
+.cleanup-method-section > div:first-child,
+.cleanup-health-section > div,
+.cleanup-current-p95 {
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.cleanup-method-section > div:first-child > span,
+.cleanup-health-section span,
+.cleanup-gates-section > div > span {
+  border-radius: 5px;
+  padding: 2px 4px;
+  font-size: .5rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.cleanup-method-section span.ready,
+.cleanup-health-section span.ready,
+.cleanup-gates-section span.ready {
+  background: #e4f5eb;
+  color: #237047;
+}
+
+.cleanup-method-section span.pending,
+.cleanup-health-section span.pending,
+.cleanup-gates-section span.pending {
+  background: #f6eedc;
+  color: #8c651d;
+}
+
+.cleanup-health-section span.issue {
+  background: #f9e3e3;
+  color: var(--danger);
+}
+
+.cleanup-method-section > strong,
+.cleanup-fallback-section > strong,
+.cleanup-health-section strong {
+  font-size: .61rem;
+}
+
+.cleanup-method-section dl {
+  display: grid;
+  gap: 2px;
+  margin: 1px 0;
+}
+
+.cleanup-method-section dl div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
+}
+
+.cleanup-method-section dt,
+.cleanup-method-section dd {
+  margin: 0;
+}
+
+.cleanup-method-section dd {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.cleanup-method-section button {
+  justify-self: start;
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+  color: color-mix(in srgb, var(--accent) 78%, #22383e);
+  font-weight: 800;
+}
+
+.cleanup-fallback-section,
+.cleanup-health-section,
+.cleanup-latency-section,
+.cleanup-gates-section {
+  display: grid;
+  gap: 4px;
+}
+
+.cleanup-budget-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.cleanup-budget-grid > div {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  border-radius: 5px;
+  background: var(--surface-soft);
+  padding: 4px;
+}
+
+.cleanup-budget-grid span,
+.cleanup-current-p95 span {
+  color: var(--muted);
+  font-size: .48rem;
+}
+
+.cleanup-budget-grid strong,
+.cleanup-current-p95 strong {
+  overflow: hidden;
+  font-size: .54rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-current-p95 {
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--accent) 8%, #ffffff);
+  padding: 4px;
+}
+
+.cleanup-gates-section > div {
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  gap: 5px;
+  min-height: 19px;
+  border-bottom: 1px solid #edf1f2;
+}
+
+.cleanup-gates-section > div > span {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+}
+
+.cleanup-gates-section .cockpit-glyph {
+  width: 10px;
+  height: 10px;
+}
+
+.cleanup-gates-section strong {
+  overflow: hidden;
+  font-size: .55rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cleanup-gates-section small {
+  white-space: nowrap;
+}
+
+.cleanup-actions {
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 7px;
+}
+
+.cleanup-actions span {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: .55rem;
+}
+
+.cleanup-actions button:last-child {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.cleanup-shell button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  outline-offset: 1px;
+}
+
+@media (max-height: 620px) {
+  .cleanup-injection-panel {
+    gap: 2px;
+    padding: 5px;
+  }
+
+  .cleanup-injection-panel > section + section {
+    padding-top: 2px;
+  }
+
+  .cleanup-injection-panel p,
+  .cleanup-injection-panel small,
+  .cleanup-injection-panel dt,
+  .cleanup-injection-panel dd {
+    line-height: 1.2;
+  }
+
+  .cleanup-method-section,
+  .cleanup-fallback-section,
+  .cleanup-health-section,
+  .cleanup-latency-section,
+  .cleanup-gates-section {
+    gap: 2px;
+  }
+
+  .cleanup-gates-section > div {
+    min-height: 17px;
+  }
+}
+
+@media (max-width: 700px) and (min-width: 501px) {
+  .app-shell.cleanup-shell {
+    grid-template-columns: 118px minmax(0, 1fr);
+  }
+
+  .cleanup-main-grid {
+    grid-template-columns: minmax(210px, 1fr) minmax(174px, .72fr);
+  }
+
+  .cleanup-lane-switcher button {
+    padding-inline: 4px;
+  }
+
+  .cleanup-dial-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cleanup-dial-section .cockpit-dial {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  .cleanup-destination-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cleanup-destination-section > button:last-child,
+  .cleanup-destination-section > div small {
+    display: none;
+  }
+}
+
+@media (max-width: 500px) {
+  .app-shell.cleanup-shell {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .cleanup-shell .compact-sidebar {
+    display: none;
+  }
+
+  .cleanup-board {
+    grid-template-rows: auto auto auto auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .cleanup-main-grid,
+  .cleanup-dial-section,
+  .cleanup-destination-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cleanup-dial-section .cockpit-dial {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  .cleanup-rule-list,
+  .cleanup-examples {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
