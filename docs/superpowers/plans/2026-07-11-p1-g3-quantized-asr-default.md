@@ -144,18 +144,18 @@ Compare f16 GPU `268.188 MB / 77 ms p95 / fail` with q5 GPU, and f16 CPU `220.85
 
 Run Rust default and shipped-feature tests/Clippy, Node benchmark contract, frontend type/lint, network audit, privacy, ADR, synthetic benchmark, JSON validation, renderer, and `git diff --check`.
 
-- [ ] **Step 2: Obtain independent review**
+- [x] **Step 2: Obtain independent review**
 
 Require no unresolved Critical or Important findings. Fix findings test-first and rerun affected gates.
 
 - [x] **Step 2a: Move the model-default decision into ADR-0015**
 
-Restore immutable ADR-0014, create a superseding Proposed decision with an explicit operator gate, limit initial promotion to proven macOS, and test effective CPU/GPU lane labels in default and Metal-feature builds.
+Restore immutable ADR-0014, create a superseding Proposed decision with an explicit operator gate, limit `default_for` promotion to proven macOS/Linux, keep Windows usable through reviewed fallback, and test effective CPU/GPU lane labels across candidate, required-model, preflight, and runtime surfaces in default and Metal-feature builds.
 
-- [ ] **Step 3: Update mission truth without closing P1-G3**
+- [x] **Step 3: Update mission truth without closing P1-G3**
 
 Record the Mac q5 GPU/CPU and Linux CPU passes plus both Windows outcomes, and remove only the proven q5 resident-RAM blockers. Preserve stable Windows p95, physical injection, full-process-group, hosted CI, and P1-G4 blockers.
 
-- [ ] **Step 4: Commit, push, and open a draft stacked PR**
+- [x] **Step 4: Commit, push, and open a draft stacked PR**
 
 Base the new draft on `codex/p1-g3-reference-bench-final-review-fixes`; do not merge while hosted three-OS CI is billing-blocked.
