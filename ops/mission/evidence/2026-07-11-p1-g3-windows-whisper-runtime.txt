@@ -1,0 +1,109 @@
+P1-G3 - WINDOWS ARM64 WHISPER RUNTIME PROOF
+Captured: 2026-07-11T08:20Z
+Source commit: a5dc909318716195f5ac90359eadca0bff77cff5
+Branch: codex/p1-g3-windows-asr-runtime (stacked on PR #12 -> PR #11)
+
+SCOPE
+- Real production local_asr_stack() -> WhisperCppEngine transcription.
+- Isolated source archive from the commit above, not the mutable host checkout.
+- Real ggml base.en model and 16 kHz mono golden clip transferred separately.
+- Caller requested the GPU lane while the Windows build compiled only
+  `asr-whisper`; the production planner therefore had to run and report CPU.
+- This proves the Windows ARM64 adapter runtime. It is not a full
+  hotkey-release-to-inject measurement.
+
+HOST
+- UTM Windows 11 Pro 10.0.26200, ARM64-based PC.
+- OS architecture: ARM 64-bit Processor.
+- VM CPU: 4 logical processors, virt-10.0.
+- VM memory: 17,170,169,856 bytes (16 GiB configured).
+- rustc 1.97.0 and cargo 1.97.0, host aarch64-pc-windows-msvc.
+
+SOURCE / INPUT PARITY
+- Source archive: 35,230,665 bytes.
+- Source archive sha256:
+  6e839b06aad16d6039424f6d74dd0a4de572f14d68a432e5e628c1bbd1a19125
+- Guest and host hashes matched for Cargo.toml, Cargo.lock, asr_golden.rs,
+  engine/whisper.rs, and script/build_and_run.sh.
+- Model: 147,964,211 bytes.
+- Model sha256:
+  a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
+- Clip: 21,894 bytes.
+- Clip sha256:
+  2b1aa6d79c35e790927cafdb7f5b10b81543895e5f7e4b7951761612348d3895
+- Expected case-insensitive substring: `hello there`.
+
+BUILD BOUNDARIES FOUND AND CLOSED
+1. The first real compile hit Windows CRC/data-write failures while the Mac
+   host had only 101 MiB free. That attempt is invalid infrastructure evidence.
+   `cargo clean` removed 34.3 GiB of disposable host Kaydence artifacts, and
+   the npm cache cleanup restored enough headroom for a clean retry.
+2. Current whisper.cpp explicitly rejects MSVC on ARM. The official Visual
+   Studio Build Tools components were added:
+   - Microsoft.VisualStudio.Component.VC.Llvm.Clang
+   - Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset
+3. Native ARM64 clang-cl 19.1.5, Ninja 1.12.1, and the ARM64 MSVC linker were
+   verified in one environment. The build used CMake 3.31.6-msvc6 and linker
+   14.44.35228.0.
+4. clang-cl needed C++ exceptions enabled (`CXXFLAGS=/EHsc`) for gguf.cpp.
+5. The bundled whisper-rs-sys bindings contained glibc layout assertions and
+   were invalid on Windows ARM64. Native libclang generated target-correct
+   bindings instead; no source patch or downloaded model weight entered git.
+
+FINAL NATIVE BUILD ENVIRONMENT
+  VsDevCmd.bat -arch=arm64 -host_arch=arm64
+  CMAKE_GENERATOR=Ninja
+  CMAKE_C_COMPILER=C:\BuildTools\VC\Tools\Llvm\ARM64\bin\clang-cl.exe
+  CMAKE_CXX_COMPILER=C:\BuildTools\VC\Tools\Llvm\ARM64\bin\clang-cl.exe
+  CMAKE_ASM_COMPILER=C:\BuildTools\VC\Tools\Llvm\ARM64\bin\clang-cl.exe
+  CXXFLAGS=/EHsc
+  LIBCLANG_PATH=C:\BuildTools\VC\Tools\Llvm\ARM64\bin
+  GGML_NATIVE=OFF
+  KAYDENCE_WHISPER_LANE=gpu
+
+COMMAND
+  cargo test --manifest-path apps\desktop\src-tauri\Cargo.toml \
+    --features asr-whisper --test asr_golden -- --nocapture
+
+NATIVE / RUNTIME TRUTH
+  clang version 19.1.5
+  Target: aarch64-pc-windows-msvc
+  whisper_init_with_params_no_state: use gpu    = 0
+  whisper_init_with_params_no_state: devices    = 1
+  whisper_init_with_params_no_state: backends   = 1
+  whisper_backend_init_gpu: no GPU found
+  whisper final_text = "Hello there"
+  P1-G2/P1-G3 metrics: warmup_ms=513 audio_ms=681 transcribe_ms=1071 \
+    rtf=1.573 warmed_lane=Some(LocalCpu) lane=LocalCpu partials=1
+  test whisper_transcribes_a_local_golden_clip ... ok
+  test result: ok. 1 passed; 0 failed; finished in 1.60s
+  batch exitCode=0
+
+RESULT
+- Exact transcript: PASS.
+- Runtime/backend label truth: PASS. A GPU request without compiled Windows
+  acceleration warmed and ran LocalCpu; no false GPU claim returned.
+- Warm LocalCpu budget: PASS, 1071 ms <= 1200 ms on this ARM64 VM.
+- Windows ARM64 whisper.cpp runtime leg: PASS for this tested toolchain.
+
+ARTIFACT HASHES
+- Guest raw passing log sha256:
+  396d76f4dbcaed211e6ff4cce366cf220a92f641f71faf36052541b8d264f87a
+- Repository LF-normalized log sha256:
+  b793e9fa32a89f6c4e28a4d58a43040e4f885f2ddfd1b4094e5b2282d7f33116
+- Batch status sha256:
+  f32e9e50dea03fcaa0788b16323e1716a2bfcca066be044039ffd3a61ecc485d
+- Native test executable sha256:
+  1323da42f42245090eb5337e4a3781df458457db95b0c80f3748a297776e9fb4
+- LF-normalized raw log preserved beside this file as
+  `2026-07-11-p1-g3-windows-whisper-runtime.log`.
+
+LIMITS / STILL OPEN
+- P1-G3 remains pending for full release-to-inject timing, ASR-resident RAM and
+  idle CPU, reference-machine p50/p95, and the 86 MB no-model process-group gap.
+- This does not satisfy the independent Parakeet/ort runtime hedge or
+  human-voice WER evidence.
+- It does not replace the mandatory fresh hosted macOS/Windows/Linux matrix;
+  GitHub Actions is still blocked before checkout by account billing state.
+- The ARM64 Clang requirement must be carried into installer/release automation
+  before Windows ARM64 packaging is called production-ready.

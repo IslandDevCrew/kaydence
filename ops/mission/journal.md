@@ -544,3 +544,12 @@
 - P1-P0-3 remains in progress only for Linux Unicode beyond ASCII, optional portal/libei where uinput permission is unavailable, and the disclosed opaque-client policy boundary; the operator normal/password focus check itself is complete.
 - Opened stacked draft PR #12 from `codex/p1-p0-3-linux-human-focus`, based on PR #11's branch so its diff stays limited to this proof. Retarget it to `main` after PR #11 lands; the mandatory matrix remains billing-blocked.
 - Evidence: `ops/mission/evidence/2026-07-11-linux-human-focus-injection.txt`, `2026-07-11-linux-human-focus-normal.jpg`, and `2026-07-11-linux-human-focus-secure.jpg`.
+
+## 2026-07-11T08:20Z - Codex Windows ARM64 Whisper runtime proof
+- Booted the isolated Windows 11 Pro ARM64 UTM proof clone and verified the exact `a5dc909` source archive, base.en model, and 681 ms golden clip by sha256. Guest source hashes matched the host branch for Cargo.toml, Cargo.lock, the golden harness, Whisper adapter, and canonical launcher.
+- The first real compile exposed a host-capacity failure: with only 101 MiB free, Windows returned CRC/data-write errors in Cargo artifacts. Removed 34.3 GiB of disposable host Kaydence build output and cleared npm cache headroom; the invalid attempt is not counted as product evidence.
+- The clean retry found the real Windows ARM64 boundary: current whisper.cpp rejects MSVC on ARM. Installed the official Visual Studio Build Tools Clang compiler and clang-cl toolset, then verified native ARM64 clang-cl 19.1.5, Ninja 1.12.1, CMake 3.31.6, and ARM64 linker 14.44 in one environment.
+- Closed two further target-specific build boundaries without changing product source: enabled C++ exceptions for gguf.cpp, and replaced incompatible bundled glibc bindings with native Windows ARM64 bindings generated through libclang.
+- The production `local_asr_stack() -> WhisperCppEngine` path then passed: exact `Hello there`, 513 ms warmup, 1071 ms warm LocalCpu inference against the 1200 ms hard gate, truthful CPU reporting after a GPU request, and 1/1 test green with batch exit code 0.
+- Windows runtime proof is closed for this ARM64 toolchain. P1-G3 remains pending for full release-to-inject, ASR-resident RAM/idle CPU, reference p50/p95, and the no-model 86 MB process-group gap. Parakeet/ort and human-voice WER also remain open.
+- Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-whisper-runtime.txt` and its raw `.log`; continuation: `docs/WINDOWS_CODEX_HANDOFF_2026-07-11.md`.

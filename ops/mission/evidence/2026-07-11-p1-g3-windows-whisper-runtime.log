@@ -1,0 +1,66 @@
+   Compiling bindgen v0.72.1
+   Compiling whisper-rs-sys v0.15.0
+   Compiling whisper-rs v0.16.0
+   Compiling kaydence v0.1.0 (C:\KaydenceProof\a5dc909\apps\desktop\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 37.72s
+     Running tests\asr_golden.rs (C:\KaydenceProof\target\debug\deps\asr_golden-5b91d99a7352c711.exe)
+
+running 1 test
+whisper_init_from_file_with_params_no_state: loading model from 'C:\KaydenceProof\a5dc909\ggml-base.en.bin'
+whisper_init_with_params_no_state: use gpu    = 0
+whisper_init_with_params_no_state: flash attn = 0
+whisper_init_with_params_no_state: gpu_device = 0
+whisper_init_with_params_no_state: dtw        = 0
+whisper_init_with_params_no_state: devices    = 1
+whisper_init_with_params_no_state: backends   = 1
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51864
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 512
+whisper_model_load: n_audio_head  = 8
+whisper_model_load: n_audio_layer = 6
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 512
+whisper_model_load: n_text_head   = 8
+whisper_model_load: n_text_layer  = 6
+whisper_model_load: n_mels        = 80
+whisper_model_load: ftype         = 1
+whisper_model_load: qntvr         = 0
+whisper_model_load: type          = 2 (base)
+whisper_model_load: adding 1607 extra tokens
+whisper_model_load: n_langs       = 99
+whisper_model_load:          CPU total size =   147.37 MB
+whisper_model_load: model size    =  147.37 MB
+whisper_backend_init_gpu: no GPU found
+whisper_init_state: kv self size  =    6.29 MB
+whisper_init_state: kv cross size =   18.87 MB
+whisper_init_state: kv pad  size  =    3.15 MB
+whisper_init_state: compute buffer (conv)   =   16.28 MB
+whisper_init_state: compute buffer (encode) =   85.88 MB
+whisper_init_state: compute buffer (cross)  =    4.66 MB
+whisper_init_state: compute buffer (decode) =   96.37 MB
+
+whisper_full_with_state: strategy = 0, decoding with 1 decoders, temperature = 0.00
+
+
+whisper_full_with_state: prompt[0] = [_PREV_]
+whisper_full_with_state: prompt[1] = Kay
+whisper_full_with_state: prompt[2] = den
+whisper_full_with_state: prompt[3] = ce
+whisper_full_with_state: prompt[4] = [_SOT_]
+
+
+whisper_full_with_state: id =   0, decoder = 0, token =  50363, p =  0.754, ts =    [_BEG_],  0.754, result_len =    0 '[_BEG_]'
+whisper_full_with_state: id =   1, decoder = 0, token =  18435, p =  0.881, ts =        [?],  0.000, result_len =    0 ' Hello'
+whisper_full_with_state: id =   2, decoder = 0, token =    612, p =  0.755, ts =        [?],  0.034, result_len =    0 ' there'
+whisper_full_with_state: id =   3, decoder = 0, token =  50395, p =  0.105, ts =   [_TT_32],  0.105, result_len =    4 '[_TT_32]'
+whisper_full_with_state: decoder 0 completed
+whisper_full_with_state: decoder  0: score = -0.73693, result_len =   4, avg_logprobs = -0.73693, entropy =  1.38629
+whisper_full_with_state: best decoder = 0
+single timestamp ending - skip entire chunk
+seek = 67, seek_delta = 67
+whisper final_text = "Hello there"
+P1-G2/P1-G3 metrics: warmup_ms=513 audio_ms=681 transcribe_ms=1071 rtf=1.573 warmed_lane=Some(LocalCpu) lane=LocalCpu partials=1
+test whisper_transcribes_a_local_golden_clip ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.60s
