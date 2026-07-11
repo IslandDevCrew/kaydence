@@ -29,6 +29,13 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
   Light output pairs).
 - `release.sh` — version bump, changelog from conventional commits, build,
   sign (notarize on macOS), checksum.
+- `windows-webview-proof.ps1` — Windows-only native visual evidence harness for
+  manual GitHub Actions dispatch. It launches the release Tauri executable,
+  navigates the real WebView through Windows UI Automation, captures exact
+  900x600 client images plus native-window provenance frames, exports the UIA
+  tree, and fails closed on non-interactive, blank, uniform, or wrong-sized
+  output. This proves rendering/navigation only; it never marks microphone,
+  hotkey, injection, secure-field, ASR, or first-dictation readiness.
 
 Scripts are products too: `--help` text, non-zero exit on failure, no silent
 fallthrough.
