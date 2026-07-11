@@ -14,6 +14,10 @@ import {
   DictateView,
 } from "./views/DictateView";
 import { CleanupView, type CleanupLaneSpec } from "./views/CleanupView";
+import {
+  type PrivacyAuditItem,
+  PrivacyView,
+} from "./views/PrivacyView";
 
 const markUrl = new URL(
   "../../../assets/brand/logos/kaydence-logo-option-1.png",
@@ -25,12 +29,6 @@ type HotkeyMode = "push_to_talk" | "toggle";
 
 interface LaneSpec extends CleanupLaneSpec {
   injection: string;
-}
-
-interface PrivacyPostureItem {
-  label: string;
-  value: string;
-  detail: string;
 }
 
 interface ChecklistItem {
@@ -525,46 +523,6 @@ function detectOsLane(): OsLane {
   return "mac";
 }
 
-function privacyPosture(snapshot: AppSnapshot, lane: LaneSpec): PrivacyPostureItem[] {
-  const contextState = snapshot.settings.privacy.local_context_enabled
-    ? "Opt-in local"
-    : "Off by default";
-  const ocrState = snapshot.settings.privacy.local_ocr_enabled ? "local OCR on" : "OCR off";
-
-  return [
-    {
-      label: "Telemetry",
-      value: "None",
-      detail: "No usage beacon, account event stream, or hidden crash upload path.",
-    },
-    {
-      label: "Network",
-      value: "0 unreviewed",
-      detail: "audit-network is the source gate for every new egress-capable call site.",
-    },
-    {
-      label: "Screen capture",
-      value: "Banned",
-      detail: "Cloud screenshots and screen streams are permanently out of scope.",
-    },
-    {
-      label: "Context",
-      value: contextState,
-      detail: `${ocrState}; held in memory only and blocked for secure fields.`,
-    },
-    {
-      label: "History",
-      value: `${snapshot.settings.privacy.history_retention_days} days`,
-      detail: "Audio, raw text, cleaned text, playback, export, delete, and purge stay local.",
-    },
-    {
-      label: `${lane.label} secure fields`,
-      value: "Refuse",
-      detail: `${lane.injection} must hold instead of injecting when the target is secure.`,
-    },
-  ];
-}
-
 function firstRunChecklist(snapshot: AppSnapshot): ChecklistItem[] {
   const firstRun = snapshot.settings.first_run;
   const permissionsReady = permissionRequirementsReady(firstRun.permission_requirements);
@@ -730,9 +688,48 @@ function historyTimestamp(startedMs: number | null): string {
   }).format(new Date(startedMs));
 }
 
+function privacyAuditItem(session: HistorySession): PrivacyAuditItem {
+  const detail = `${session.target_app?.name ?? "Local target"} / ${session.event_count} local events`;
+  if (session.failure) {
+    return {
+      id: session.id,
+      timestamp: historyTimestamp(session.started_ms),
+      title: `${session.failure.stage} issue recorded`,
+      detail,
+      outcome: "Review",
+    };
+  }
+  if (session.held_reason) {
+    return {
+      id: session.id,
+      timestamp: historyTimestamp(session.started_ms),
+      title: "Delivery held safely",
+      detail,
+      outcome: session.held_reason.replaceAll("_", " "),
+    };
+  }
+  if (session.injected_method) {
+    return {
+      id: session.id,
+      timestamp: historyTimestamp(session.started_ms),
+      title: "Local dictation completed",
+      detail,
+      outcome: session.injected_method.replaceAll("_", " "),
+    };
+  }
+  return {
+    id: session.id,
+    timestamp: historyTimestamp(session.started_ms),
+    title: session.audio_path ? "Local audio retained" : "Session metadata recorded",
+    detail,
+    outcome: session.audio_path ? "WAL ready" : "Local only",
+  };
+}
+
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
-  const [activeLane, setActiveLane] = useState<OsLane>(detectOsLane);
+  const runtimeLane = useMemo(detectOsLane, []);
+  const [activeLane, setActiveLane] = useState<OsLane>(runtimeLane);
   const [activeView, setActiveView] = useState<AppView>("Dictate");
   const [previewRecording, setPreviewRecording] = useState(true);
   const [snapshot, setSnapshot] = useState<AppSnapshot>(previewSnapshot);
@@ -839,7 +836,6 @@ export function App(): JSX.Element {
     !snapshot.settings.first_run.model_ready &&
     (requiredModels.length > 0 ||
       snapshot.settings.first_run.model_readiness_error !== null);
-  const privacyItems = privacyPosture(snapshot, lane);
   const latestHistory = historySessions[0];
   const latestTarget = latestHistory?.target_app ?? null;
   const latestInjection = historySessions.find(
@@ -914,6 +910,7 @@ export function App(): JSX.Element {
           }
         : undefined,
   }));
+  const privacyAuditItems = historySessions.map(privacyAuditItem);
   const historyExportNote = historyExportOutcome
     ? historyExportOutcome.exported
       ? `Exported to ${historyExportOutcome.text_path ?? historyExportOutcome.json_path}`
@@ -1480,6 +1477,43 @@ export function App(): JSX.Element {
     );
   }
 
+  if (activeView === "Privacy") {
+    return (
+      <main
+        className="app-shell privacy-shell"
+        style={{ "--accent": lane.accent } as React.CSSProperties}
+      >
+        <NavRail
+          compact
+          activeView="Privacy"
+          appName={snapshot.app_name}
+          footerTitle="Private by design"
+          items={cleanupNavItems}
+          markUrl={appIconUrl}
+          onSelect={setActiveView}
+          privacySummary={`${snapshot.settings.privacy.history_retention_days}-day local history`}
+        />
+        <PrivacyView
+          appName={snapshot.app_name}
+          auditItems={privacyAuditItems}
+          contextEnabled={snapshot.settings.privacy.local_context_enabled}
+          engineLabel={engineLabel}
+          historyRetentionDays={snapshot.settings.privacy.history_retention_days}
+          lane={lane}
+          lanes={lanes}
+          markUrl={appIconUrl}
+          ocrEnabled={snapshot.settings.privacy.local_ocr_enabled}
+          onLaneChange={setActiveLane}
+          onNavigate={setActiveView}
+          operational={cockpitOperational}
+          permissionRequirements={permissionRequirements}
+          previewFixture={snapshotSource === "preview"}
+          runtimeLane={runtimeLane}
+        />
+      </main>
+    );
+  }
+
   return (
     <main
       className="app-shell"
@@ -1517,27 +1551,6 @@ export function App(): JSX.Element {
         </header>
 
         <section className={`content-grid view-${activeView.toLowerCase()}`}>
-          {activeView === "Privacy" ? (
-          <article className="panel privacy-panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Screen family 07</p>
-                <h2>Privacy & context</h2>
-              </div>
-              <span className="pill subtle">Local only</span>
-            </div>
-            <div className="privacy-grid" aria-label="Privacy posture">
-              {privacyItems.map((item) => (
-                <div className="privacy-item" key={item.label}>
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                  <small>{item.detail}</small>
-                </div>
-              ))}
-            </div>
-          </article>
-          ) : null}
-
           {activeView === "Setup" ? (
           <article className="panel setup-panel">
             <div className="panel-header">
