@@ -135,13 +135,22 @@ if [ "$live_status" -ne 0 ]; then
   exit 1
 fi
 
+expected_asr_feature="asr-whisper"
+if [ "$(uname -s)" = "Darwin" ]; then
+  expected_asr_feature="asr-whisper-metal"
+fi
+if ! grep -q -- "--features custom-protocol,$expected_asr_feature" "$TMP_DIR/cargo-live"; then
+  echo "FAIL: release run path did not compile the platform ASR adapter" >&2
+  exit 1
+fi
+
 if [ "$(uname -s)" = "Darwin" ]; then
   app_bundle="$TMP_DIR/target-live/release/Kaydence.app"
   if ! grep -q -- '--release' "$TMP_DIR/cargo-live"; then
     echo "FAIL: macOS run path did not build the self-contained release profile" >&2
     exit 1
   fi
-  if ! grep -q -- '--features custom-protocol' "$TMP_DIR/cargo-live"; then
+  if ! grep -q -- '--features custom-protocol,asr-whisper-metal' "$TMP_DIR/cargo-live"; then
     echo "FAIL: macOS run path did not enable Tauri's embedded custom protocol" >&2
     exit 1
   fi

@@ -1,0 +1,49 @@
+P1-G4 - HOSTED WINDOWS WEBVIEW DIAGNOSTIC (NOT FINAL PROOF)
+Captured: 2026-07-11 UTC
+Workflow run: 29137950481 at merged main 0d30883961a003af9d091580ab3c18997a13db8a
+Host: Windows Server 2025 Datacenter, build 26100, x64 Microsoft VM,
+interactive session 2, runner image win25-vs2026
+
+WHAT PASSED BEFORE THE FAIL-CLOSED STOP
+- Standard Windows product gates passed.
+- Release Tauri binary built and launched natively.
+- Windows UI Automation navigated to Boards 01, 03, 07, and 10.
+- Each board produced an exact 900x600 client capture, a 916x639 native-titlebar
+  frame, a UIA tree, source hashes, host manifest, and pixel-variance checks.
+- Each image sampled 45-71 colors with luma range about 23-255 and non-dark
+  ratio 1.0.
+- Captures and diagnostics are preserved in:
+  ops/mission/evidence/windows-proof-run-29137950481/
+
+VISIBLE COMPARISON
+`browser-vs-native-comparison.png` places the already source-reviewed 900x600
+Browser fixture above the 900x600 native Windows capture for each family in the
+order 01, 03, 07, 10. The combined review found:
+- shared information architecture and compact density are preserved;
+- Windows cobalt is limited to the lane accent and active selections;
+- no text, panel, control, footer, or navigation overlap is visible;
+- all four views are fully framed with no cropped app content;
+- state differences are intentional: Browser fixtures demonstrate ready states,
+  while native captures preserve backend-owned blocked/pending proof states;
+- titlebar frames separately prove native Windows provenance.
+
+WHY THIS RUN IS NOT FINAL PROOF
+The harness expected the shorthand permission label `UI Automation`; production
+correctly exposed `UI Automation focus access`. The run failed closed after the
+four board captures and before the Board 10 permissions modal. These images are
+diagnostic evidence only and cannot close P1-G4.
+
+FOLLOW-UP RUNS
+- PR #9 aligned the exact production permission labels and passed full 3-OS run
+  29138662377 before merge at 80c9374.
+- Hosted proof run 29139047425 passed standard gates and built/launched the app,
+  but that runner never exposed the initial WebView UIA subtree; it failed closed
+  before any validated capture.
+- Draft PR #10 adds force-renderer-accessibility, three bounded startup attempts,
+  process restart between attempts, and unchecked diagnostics that cannot satisfy
+  proof. Run 29139988632 did not start; GitHub annotated failed account payments
+  or an insufficient spending limit.
+
+GATE STATUS
+P1-G4 remains PENDING until a passing workflow captures Boards 01/03/07/10 plus
+the Windows permissions modal and the operator completes final visual signoff.

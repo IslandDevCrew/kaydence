@@ -62,16 +62,17 @@ fn select_asr_model(
             .path()
             .app_data_dir()
             .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        state.set_settings_store(&app_data_dir);
         state
             .select_asr_model(&model_id)
             .map_err(|err| err.to_string())?;
-        let snapshot = state.refresh_asr_runtime_status(
-            &models::source_tree_registry_path(),
-            &app_data_dir.join("models"),
-        );
-        apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime)
+        let snapshot = state
+            .refresh_models(&models::source_tree_registry_path(), &app_data_dir)
             .map_err(|err| err.to_string())?;
-        Ok(snapshot)
+        complete_asr_runtime_update(
+            &state,
+            apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime),
+        )
     }
 
     #[cfg(not(desktop))]
@@ -194,9 +195,10 @@ fn refresh_model_readiness(
         let snapshot = state
             .refresh_models_from_app_data(&app_data_dir)
             .map_err(|err| err.to_string())?;
-        apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime)
-            .map_err(|err| err.to_string())?;
-        Ok(snapshot)
+        complete_asr_runtime_update(
+            &state,
+            apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime),
+        )
     }
 
     #[cfg(not(desktop))]
@@ -232,9 +234,10 @@ fn install_model_artifact(
                 &PathBuf::from(source_path),
             )
             .map_err(|err| err.to_string())?;
-        apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime)
-            .map_err(|err| err.to_string())?;
-        Ok(snapshot)
+        complete_asr_runtime_update(
+            &state,
+            apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime),
+        )
     }
 
     #[cfg(not(desktop))]
@@ -772,14 +775,14 @@ impl HotkeyRuntimeHandle {
     fn apply_asr_adapter_state(
         &self,
         state: engine::LocalAsrAdapterState,
-    ) -> Result<(), AsrRuntimeUpdateError> {
+    ) -> Result<Option<engine::EngineLane>, AsrRuntimeUpdateError> {
         let Some(runtime) = self
             .inner
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
         else {
-            return Ok(());
+            return Ok(None);
         };
 
         let mut runtime = runtime
@@ -1184,9 +1187,24 @@ impl RuntimeSnapshot {
         Ok(self.apply_hotkey_binding(&binding))
     }
 
-    #[cfg(desktop)]
+    #[cfg(all(desktop, test))]
     fn refresh_model_readiness(&self, registry_path: &Path, models_dir: &Path) {
-        let readiness = first_run_model_readiness(registry_path, models_dir);
+        let selected_asr_model_id = self.snapshot().settings.first_run.selected_asr_model_id;
+        self.refresh_model_readiness_for_selection(
+            registry_path,
+            models_dir,
+            selected_asr_model_id.as_deref(),
+        );
+    }
+
+    #[cfg(desktop)]
+    fn refresh_model_readiness_for_selection(
+        &self,
+        registry_path: &Path,
+        models_dir: &Path,
+        selected_asr_model_id: Option<&str>,
+    ) {
+        let readiness = first_run_model_readiness(registry_path, models_dir, selected_asr_model_id);
         self.update_first_run(|first_run| {
             first_run.model_ready = readiness.model_ready;
             first_run.model_readiness_error = readiness.model_readiness_error;
@@ -1220,7 +1238,16 @@ impl RuntimeSnapshot {
     ) -> Result<settings::AppSnapshot, settings::SettingsStoreError> {
         self.set_settings_store(app_data_dir);
         self.ensure_first_run_started_at(current_unix_ms())?;
-        self.refresh_model_readiness(registry_path, &app_data_dir.join("models"));
+        let selected_asr_model_id = self
+            .settings_store()
+            .map(|store| store.load())
+            .transpose()?
+            .and_then(|settings| settings.selected_asr_model_id);
+        self.refresh_model_readiness_for_selection(
+            registry_path,
+            &app_data_dir.join("models"),
+            selected_asr_model_id.as_deref(),
+        );
         self.apply_persisted_user_settings()?;
         Ok(self.refresh_asr_runtime_status(registry_path, &app_data_dir.join("models")))
     }
@@ -1456,6 +1483,38 @@ impl RuntimeSnapshot {
         update(&mut snapshot.settings.first_run);
         snapshot.settings.first_run.recompute_next_step();
     }
+
+    #[cfg(desktop)]
+    fn mark_asr_adapter_ready(&self, lane: engine::EngineLane) {
+        self.update_first_run(|first_run| {
+            let runtime = first_run
+                .asr_runtime
+                .runtime
+                .clone()
+                .unwrap_or_else(|| "local ASR".to_string());
+            first_run.asr_runtime.lane = Some(engine_lane_snapshot_label(lane).to_string());
+            first_run.asr_runtime.adapter_ready = true;
+            first_run.asr_runtime.detail = format!(
+                "Verified {runtime} adapter loaded and warmed on the {} lane.",
+                engine_lane_snapshot_label(lane)
+            );
+            first_run.asr_runtime.proof_requirement =
+                "Keep the real golden-clip transcript and lane-specific latency gate green before release."
+                    .to_string();
+        });
+    }
+
+    #[cfg(desktop)]
+    fn mark_asr_adapter_warmup_failed(&self, error: &str) {
+        self.update_first_run(|first_run| {
+            first_run.asr_runtime.state = settings::FirstRunAsrRuntimeState::Blocked;
+            first_run.asr_runtime.adapter_ready = false;
+            first_run.asr_runtime.detail = format!("Local ASR adapter warmup failed: {error}");
+            first_run.asr_runtime.proof_requirement =
+                "Resolve the runtime initialization failure and rerun warmup before first dictation."
+                    .to_string();
+        });
+    }
 }
 
 #[cfg(desktop)]
@@ -1492,6 +1551,8 @@ enum AsrRuntimeUpdateError {
     CaptureActive,
     #[error("ASR runtime lock poisoned")]
     RuntimePoisoned,
+    #[error("ASR warmup: {0}")]
+    Warmup(#[from] pipeline::PipelineError),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -1567,7 +1628,11 @@ struct FirstRunModelReadiness {
 }
 
 #[cfg(desktop)]
-fn first_run_model_readiness(registry_path: &Path, models_dir: &Path) -> FirstRunModelReadiness {
+fn first_run_model_readiness(
+    registry_path: &Path,
+    models_dir: &Path,
+    selected_asr_model_id: Option<&str>,
+) -> FirstRunModelReadiness {
     let registry = match models::ModelRegistry::load(registry_path) {
         Ok(registry) => registry,
         Err(err) => {
@@ -1584,10 +1649,17 @@ fn first_run_model_readiness(registry_path: &Path, models_dir: &Path) -> FirstRu
     let platform_tag = first_run_platform_tag();
     let recommended_asr = first_run_asr_recommendation(&registry, platform_tag);
     let recommended_asr_model_id = recommended_asr.map(|model| model.id.clone());
-    let selected_asr_model_id = recommended_asr_model_id.clone();
+    let selected_asr_model_id = selected_asr_model_id
+        .and_then(|model_id| {
+            registry
+                .get(model_id)
+                .filter(|model| model.task == models::ModelTask::Asr && model.recommended)
+        })
+        .map(|model| model.id.clone())
+        .or_else(|| recommended_asr_model_id.clone());
 
     let required_models = registry
-        .verify_required_first_run_models(models_dir)
+        .verify_required_first_run_models(models_dir, selected_asr_model_id.as_deref())
         .into_iter()
         .map(|(model, status)| first_run_model_status(model, status, models_dir))
         .collect::<Vec<_>>();
@@ -1599,6 +1671,7 @@ fn first_run_model_readiness(registry_path: &Path, models_dir: &Path) -> FirstRu
                 model,
                 model.verify_artifact(models_dir),
                 models_dir,
+                selected_asr_model_id.as_deref(),
                 recommended_asr_model_id.as_deref(),
                 platform_tag,
             )
@@ -1685,11 +1758,12 @@ fn first_run_asr_candidate(
     model: &models::ModelEntry,
     status: Result<models::ModelArtifactStatus, models::ModelRegistryError>,
     models_dir: &Path,
+    selected_asr_model_id: Option<&str>,
     recommended_asr_model_id: Option<&str>,
     platform_tag: &str,
 ) -> settings::FirstRunAsrCandidate {
     let base = first_run_model_status(model, status, models_dir);
-    let selected = recommended_asr_model_id == Some(model.id.as_str());
+    let selected = selected_asr_model_id == Some(model.id.as_str());
 
     settings::FirstRunAsrCandidate {
         id: model.id.clone(),
@@ -1703,7 +1777,8 @@ fn first_run_asr_candidate(
         download_size_mb: base.download_size_mb,
         download_source_count: base.download_source_count,
         selected,
-        recommendation: selected.then(|| recommendation_reason(model, platform_tag).to_string()),
+        recommendation: (recommended_asr_model_id == Some(model.id.as_str()))
+            .then(|| recommendation_reason(model, platform_tag).to_string()),
         license: model.license.clone(),
         license_review_required: model.license_review_required,
     }
@@ -1941,12 +2016,27 @@ impl HotkeyRuntime {
     fn set_asr_adapter_state(
         &mut self,
         state: engine::LocalAsrAdapterState,
-    ) -> Result<(), AsrRuntimeUpdateError> {
+    ) -> Result<Option<engine::EngineLane>, AsrRuntimeUpdateError> {
         if !self.is_idle() {
             return Err(AsrRuntimeUpdateError::CaptureActive);
         }
-        self.processor = Box::new(pipeline::default_runtime_pipeline_with_asr(state));
-        Ok(())
+        let mut processor: Box<dyn pipeline::CaptureProcessor + Send> =
+            Box::new(pipeline::default_runtime_pipeline_with_asr(state));
+        let warmup_started = Instant::now();
+        let warmed_lane = processor.warm_up()?;
+        if let Some(lane) = warmed_lane {
+            println!(
+                "Kaydence ASR replacement warmed: lane={} elapsed_ms={}",
+                engine_lane_snapshot_label(lane),
+                elapsed_ms(warmup_started)
+            );
+        }
+        self.processor = processor;
+        Ok(warmed_lane)
+    }
+
+    fn warm_up_asr(&mut self) -> Result<Option<engine::EngineLane>, pipeline::PipelineError> {
+        self.processor.warm_up()
     }
 
     fn is_idle(&self) -> bool {
@@ -2149,12 +2239,29 @@ fn apply_selected_asr_to_runtime(
     snapshot: &settings::AppSnapshot,
     app_data_dir: &Path,
     runtime: &HotkeyRuntimeHandle,
-) -> Result<(), AsrRuntimeUpdateError> {
+) -> Result<Option<engine::EngineLane>, AsrRuntimeUpdateError> {
     runtime.apply_asr_adapter_state(selected_asr_runtime_state(
         &snapshot.settings.first_run,
         &models::source_tree_registry_path(),
         &app_data_dir.join("models"),
     ))
+}
+
+#[cfg(desktop)]
+fn complete_asr_runtime_update(
+    state: &RuntimeSnapshot,
+    result: Result<Option<engine::EngineLane>, AsrRuntimeUpdateError>,
+) -> Result<settings::AppSnapshot, String> {
+    match result {
+        Ok(Some(lane)) => state.mark_asr_adapter_ready(lane),
+        Ok(None) => {}
+        Err(err @ AsrRuntimeUpdateError::Warmup(_)) => {
+            let detail = err.to_string();
+            state.mark_asr_adapter_warmup_failed(&detail);
+        }
+        Err(err) => return Err(err.to_string()),
+    }
+    Ok(state.snapshot())
 }
 
 #[cfg(desktop)]
@@ -2234,11 +2341,11 @@ fn first_run_asr_runtime_status(
                 artifact_size_bytes: Some(spec.artifact_size_bytes),
                 adapter_ready: false,
                 detail: format!(
-                    "Verified {} artifact is ready, but the ASR runtime adapter is not implemented yet.",
+                    "Verified {} artifact is ready; adapter warmup has not completed in the active build.",
                     spec.runtime
                 ),
                 proof_requirement:
-                    "Do not claim golden ASR output until a real adapter loads this artifact and emits transcript events."
+                    "Do not claim first-dictation readiness until a real adapter warms this artifact and passes the golden-clip latency gate."
                         .to_string(),
             }
         }
@@ -2511,7 +2618,25 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
             None
         }
     };
-    let runtime = Arc::new(Mutex::new(HotkeyRuntime::new(app_data_dir, &settings)?));
+    let mut runtime = HotkeyRuntime::new(app_data_dir, &settings)?;
+    let warmup_started = Instant::now();
+    match runtime.warm_up_asr() {
+        Ok(Some(lane)) => {
+            app.state::<RuntimeSnapshot>().mark_asr_adapter_ready(lane);
+            println!(
+                "Kaydence ASR startup warmup complete: lane={} elapsed_ms={}",
+                engine_lane_snapshot_label(lane),
+                elapsed_ms(warmup_started)
+            );
+        }
+        Ok(None) => {}
+        Err(err) => {
+            app.state::<RuntimeSnapshot>()
+                .mark_asr_adapter_warmup_failed(&err.to_string());
+            eprintln!("Kaydence ASR startup warmup failed: {err}");
+        }
+    }
+    let runtime = Arc::new(Mutex::new(runtime));
     let started = Instant::now();
     let handler_runtime = Arc::clone(&runtime);
 
@@ -2712,6 +2837,10 @@ mod tests {
         seen_dials: Arc<Mutex<Vec<CleanupDial>>>,
     }
 
+    struct WarmupProcessor {
+        calls: Arc<Mutex<u32>>,
+    }
+
     impl ScriptedProcessor {
         fn new(seen_dials: Arc<Mutex<Vec<CleanupDial>>>) -> Self {
             Self {
@@ -2746,6 +2875,22 @@ mod tests {
                 });
             }
             Ok(events)
+        }
+    }
+
+    impl pipeline::CaptureProcessor for WarmupProcessor {
+        fn warm_up(&mut self) -> Result<Option<engine::EngineLane>, pipeline::PipelineError> {
+            *self.calls.lock().unwrap() += 1;
+            Ok(Some(engine::EngineLane::LocalGpu))
+        }
+
+        fn set_cleanup_dial(&mut self, _cleanup_dial: CleanupDial) {}
+
+        fn process_capture(
+            &mut self,
+            summary: &audio::CaptureSessionSummary,
+        ) -> Result<Vec<events::SessionEvent>, pipeline::PipelineError> {
+            Ok(vec![summary.audio_persisted_event()])
         }
     }
 
@@ -2917,6 +3062,28 @@ mod tests {
         std::fs::create_dir_all(&registry_dir).unwrap();
         let registry_path = registry_dir.join("registry.json");
         std::fs::write(&registry_path, selectable_asr_registry_json()).unwrap();
+        registry_path
+    }
+
+    fn write_ready_selectable_asr_registry(app_data: &std::path::Path) -> std::path::PathBuf {
+        let mut registry: serde_json::Value =
+            serde_json::from_str(&selectable_asr_registry_json()).unwrap();
+        for model in registry["models"].as_array_mut().unwrap() {
+            model["sha256"] = match model["id"].as_str().unwrap() {
+                "fixture-asr" => sha256_for(b"cpu").into(),
+                "fixture-gpu" => sha256_for(b"gpu").into(),
+                "fixture-vad" => sha256_for(b"vad").into(),
+                id => panic!("unexpected fixture model: {id}"),
+            };
+        }
+        let registry_dir = app_data.join("registry");
+        std::fs::create_dir_all(&registry_dir).unwrap();
+        let registry_path = registry_dir.join("registry.json");
+        std::fs::write(
+            &registry_path,
+            serde_json::to_vec_pretty(&registry).unwrap(),
+        )
+        .unwrap();
         registry_path
     }
 
@@ -3244,7 +3411,7 @@ mod tests {
                 "Model registry needs verified metadata, checksums, or artifact repair".to_string()
             )
         );
-        assert_eq!(first_run.required_models.len(), 2);
+        assert_eq!(first_run.required_models.len(), 1);
         assert!(first_run
             .required_models
             .iter()
@@ -3401,7 +3568,6 @@ mod tests {
         let models_dir = app_data.join("models");
         std::fs::create_dir_all(&models_dir).unwrap();
         std::fs::write(models_dir.join("fixture-asr.onnx"), b"asr").unwrap();
-        std::fs::write(models_dir.join("fixture-vad.onnx"), b"vad").unwrap();
 
         let refreshed = state.refresh_models(&registry_path, &app_data).unwrap();
 
@@ -3424,16 +3590,14 @@ mod tests {
         let registry_path =
             write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
         let asr_source = source_dir.join("reviewed-asr.onnx");
-        let vad_source = source_dir.join("reviewed-vad.onnx");
         std::fs::write(&asr_source, b"asr").unwrap();
-        std::fs::write(&vad_source, b"vad").unwrap();
         let state = RuntimeSnapshot::default();
 
         let asr_snapshot = state
             .install_model_artifact(&registry_path, &app_data, "fixture-asr", &asr_source)
             .unwrap();
 
-        assert!(!asr_snapshot.settings.first_run.model_ready);
+        assert!(asr_snapshot.settings.first_run.model_ready);
         assert_eq!(
             std::fs::read(app_data.join("models/fixture-asr.onnx")).unwrap(),
             b"asr"
@@ -3450,16 +3614,7 @@ mod tests {
             settings::FirstRunModelState::Ready
         );
 
-        let ready_snapshot = state
-            .install_model_artifact(&registry_path, &app_data, "fixture-vad", &vad_source)
-            .unwrap();
-
-        assert!(ready_snapshot.settings.first_run.model_ready);
-        assert_eq!(
-            std::fs::read(app_data.join("models/fixture-vad.onnx")).unwrap(),
-            b"vad"
-        );
-        assert!(ready_snapshot
+        assert!(asr_snapshot
             .settings
             .first_run
             .required_models
@@ -3558,7 +3713,6 @@ mod tests {
         let models_dir = app_data.join("models");
         std::fs::create_dir_all(&models_dir).unwrap();
         std::fs::write(models_dir.join("fixture-asr.onnx"), b"asr").unwrap();
-        std::fs::write(models_dir.join("fixture-vad.onnx"), b"vad").unwrap();
         let registry_path =
             write_first_run_registry(&app_data, &sha256_for(b"asr"), &sha256_for(b"vad"));
         let state = RuntimeSnapshot::default();
@@ -3568,7 +3722,7 @@ mod tests {
         let first_run = state.snapshot().settings.first_run;
         assert!(first_run.model_ready);
         assert_eq!(first_run.model_readiness_error, None);
-        assert_eq!(first_run.required_models.len(), 2);
+        assert_eq!(first_run.required_models.len(), 1);
         assert!(first_run
             .required_models
             .iter()
@@ -3584,7 +3738,13 @@ mod tests {
         assert!(first_run
             .asr_runtime
             .proof_requirement
-            .contains("Do not claim golden ASR output"));
+            .contains("Do not claim first-dictation readiness"));
+
+        state.mark_asr_adapter_ready(engine::EngineLane::LocalCpu);
+        let warmed = state.snapshot().settings.first_run.asr_runtime;
+        assert!(warmed.adapter_ready);
+        assert_eq!(warmed.lane.as_deref(), Some("cpu"));
+        assert!(warmed.detail.contains("loaded and warmed"));
         let _ = std::fs::remove_dir_all(app_data);
     }
 
@@ -3706,7 +3866,7 @@ mod tests {
     #[test]
     fn persisted_asr_selection_applies_after_model_refresh() {
         let app_data = tmp();
-        let registry_path = write_selectable_asr_registry(&app_data);
+        let registry_path = write_ready_selectable_asr_registry(&app_data);
         let store = settings::SettingsStore::new(&app_data);
         store
             .save(&settings::UserSettingsFile {
@@ -3714,13 +3874,14 @@ mod tests {
                 ..settings::UserSettingsFile::default()
             })
             .unwrap();
+        let models_dir = app_data.join("models");
+        std::fs::create_dir_all(&models_dir).unwrap();
+        std::fs::write(models_dir.join("fixture-gpu.bin"), b"gpu").unwrap();
         let state = RuntimeSnapshot::default();
-        state.set_settings_store(&app_data);
 
-        state.refresh_model_readiness(&registry_path, &app_data.join("models"));
-        state.apply_persisted_user_settings().unwrap();
+        let snapshot = state.refresh_models(&registry_path, &app_data).unwrap();
 
-        let first_run = state.snapshot().settings.first_run;
+        let first_run = snapshot.settings.first_run;
         assert_eq!(
             first_run.selected_asr_model_id.as_deref(),
             Some("fixture-gpu")
@@ -3729,6 +3890,13 @@ mod tests {
             .asr_candidates
             .iter()
             .any(|candidate| candidate.id == "fixture-gpu" && candidate.selected));
+        assert!(first_run.model_ready);
+        assert_eq!(first_run.required_models.len(), 1);
+        assert_eq!(first_run.required_models[0].id, "fixture-gpu");
+        assert_eq!(
+            first_run.required_models[0].state,
+            settings::FirstRunModelState::Ready
+        );
         let _ = std::fs::remove_dir_all(app_data);
     }
 
@@ -4012,6 +4180,50 @@ mod tests {
         let _ = runtime.handle_signal(hotkeys::Signal::Release { at_ms: 400 });
         let _ = runtime.handle_signal(hotkeys::Signal::Tick { at_ms: 700 });
         let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn hotkey_runtime_warms_the_capture_processor_before_dictation() {
+        let app_data = tmp();
+        let calls = Arc::new(Mutex::new(0));
+        let mut runtime = HotkeyRuntime::new_wal_only(&app_data)
+            .unwrap()
+            .with_processor(Box::new(WarmupProcessor {
+                calls: Arc::clone(&calls),
+            }));
+
+        let lane = runtime.warm_up_asr().unwrap();
+
+        assert_eq!(lane, Some(engine::EngineLane::LocalGpu));
+        assert_eq!(*calls.lock().unwrap(), 1);
+        let _ = std::fs::remove_dir_all(app_data);
+    }
+
+    #[test]
+    fn asr_warmup_failure_returns_the_blocked_snapshot_to_setup() {
+        let state = RuntimeSnapshot::default();
+        let warmup_error = AsrRuntimeUpdateError::Warmup(pipeline::PipelineError::Asr(
+            engine::AsrError::Unavailable("Metal initialization failed".to_string()),
+        ));
+
+        let snapshot = complete_asr_runtime_update(&state, Err(warmup_error)).unwrap();
+
+        assert_eq!(
+            snapshot.settings.first_run.asr_runtime.state,
+            settings::FirstRunAsrRuntimeState::Blocked
+        );
+        assert!(!snapshot.settings.first_run.asr_runtime.adapter_ready);
+        assert!(snapshot
+            .settings
+            .first_run
+            .asr_runtime
+            .detail
+            .contains("Metal initialization failed"));
+
+        let lock_error =
+            complete_asr_runtime_update(&state, Err(AsrRuntimeUpdateError::RuntimePoisoned))
+                .unwrap_err();
+        assert_eq!(lock_error, "ASR runtime lock poisoned");
     }
 
     #[test]

@@ -1,8 +1,17 @@
+CORRECTION - 2026-07-10
+The original record below compiled `--features asr-whisper`, not
+`asr-whisper-metal`. `whisper-rs` has no acceleration features by default, and
+fresh backend inspection later showed `whisper_backend_init_gpu: no GPU found`
+followed by `using BLAS backend`. The transcripts and CPU timings remain valid;
+the original Metal, LocalGpu, and GPU-to-CPU-fallback conclusions are invalid.
+This exposed and led to a lane-reporting fix. Superseding backend proof:
+`ops/mission/evidence/2026-07-10-p1-g3-whisper-metal-warmup.txt`.
+
 P1-G2 — REAL-ADAPTER GOLDEN ASR FINALS (ADR-0014)
-Captured: 2026-07-10T18:34Z  ·  host: macOS Apple Silicon (Metal)  ·  engine: whisper.cpp base.en
+Captured: 2026-07-10T18:34Z  ·  host: macOS Apple Silicon (CPU/BLAS)  ·  engine: whisper.cpp base.en
 Model: /Users/IDC2.5/Documents/Kaydence/models/ggml-base.en.bin (147,964,211 B)
 Model sha256: a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
-Path under test: production local_asr_stack() -> WhisperCppEngine (feature asr-whisper)
+Path under test: production local_asr_stack() -> WhisperCppEngine (feature asr-whisper; Metal was not compiled)
 Clips: macOS `say` (Samantha) -> ffmpeg 16 kHz mono PCM16 (synthetic speech).
 
 RESULTS (all 4 PASS; whisper final vs spoken input):
@@ -12,8 +21,9 @@ RESULTS (all 4 PASS; whisper final vs spoken input):
   [PASS] 1.80s  "open the pull request and merge it"           -> "Open the pull request and merge it."         transcribe=252ms rtf=0.140
 
 WER on content words = 0 across the corpus (case/punctuation are cleanup/'s job, not ASR).
-Latency 249-263 ms end-to-end on Metal, independent of clip length; well under the
-Raw-path budget (root AGENTS §5). Lane resolved = LocalGpu (Metal).
+Latency 249-263 ms through the CPU/BLAS backend, independent of clip length; under
+the local CPU Raw-path budget (root AGENTS section 5). Rust incorrectly reported
+LocalGpu in this run; that labeling defect is corrected by the superseding change.
 
 WHAT THIS PROVES: the app now genuinely turns speech into text through the real
 adapter and the real event contract, for short (<1s) and normal utterances,
@@ -23,8 +33,8 @@ blocker is resolved.
 HONEST CAVEATS (hardening, tracked):
 - Corpus is synthetic TTS, not recorded human voice; real-mic WER is P2's zero-edit
   gate territory and needs a human-voice corpus.
-- macOS/Metal (LocalGpu) only here; CPU (Parakeet/ort) lane + Windows/Linux legs
-  need the same proof (CI billing-blocked for the 3-OS run).
+- macOS CPU/BLAS only here; true Metal and corrected lane proof are in the
+  superseding evidence. Parakeet/ort and Windows/Linux legs remain owed.
 - Reproduce: KAYDENCE_WHISPER_MODEL=<ggml.bin> KAYDENCE_WHISPER_CLIP=<16k mono wav> \
     KAYDENCE_WHISPER_EXPECT=<substr> cargo test --features asr-whisper --test asr_golden -- --nocapture
 
@@ -35,7 +45,8 @@ Same corpus forced through the CPU lane (KAYDENCE_WHISPER_LANE=cpu):
   [PASS] lane=LocalCpu "send the report"    -> "Send the report."     245ms rtf=0.254
   [PASS] lane=LocalCpu pangram              -> exact                  250ms rtf=0.100
   [PASS] lane=LocalCpu "open the pull ..."  -> "Open the pull request and merge it." 250ms rtf=0.139
-Gives a real local GPU->CPU fallback, both lanes on genuine whisper.cpp inference.
+This proves an explicit whisper.cpp CPU lane only. It does not prove a GPU-to-CPU
+fallback because the original build contained no GPU backend.
 NOTE: this is the whisper.cpp runtime on CPU — it is NOT the independent Parakeet/ort
 runtime. ADR-0002's ≥2-independent-runtimes supply-chain/licensing hedge is still
 OWED (Parakeet/ort adapter = mel features + RNNT decode, a larger separate unit).

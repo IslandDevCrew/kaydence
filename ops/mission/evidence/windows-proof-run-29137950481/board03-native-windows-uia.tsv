@@ -1,0 +1,138 @@
+index	control_type	name	automation_id	enabled
+0	ControlType.Pane			True
+1	ControlType.Pane	Kaydence		True
+2	ControlType.Pane			False
+3	ControlType.Pane	Kaydence - Web content		True
+4	ControlType.Pane			True
+5	ControlType.Pane			True
+6	ControlType.Pane			True
+7	ControlType.Pane			True
+8	ControlType.Pane			True
+9	ControlType.Pane			True
+10	ControlType.Pane			True
+11	ControlType.Pane			True
+12	ControlType.Pane			True
+13	ControlType.Document	Kaydence	RootWebArea	True
+14	ControlType.Group		root	True
+15	ControlType.Group			True
+16	ControlType.Group	Kaydence navigation		True
+17	ControlType.Group			True
+18	ControlType.Button	General		True
+19	ControlType.Button	Dictation		True
+20	ControlType.Button	Whisper-Ahead P3		False
+21	ControlType.Button	Cleanup & Inject		True
+22	ControlType.Button	Relay P4		False
+23	ControlType.Button	Voiceprint P4		False
+24	ControlType.Button	Conductor P4		False
+25	ControlType.Button	Privacy		True
+26	ControlType.Button	Dictionary P2		False
+27	ControlType.Button	Profiles P2		False
+28	ControlType.Button	Analytics P3		False
+29	ControlType.Button	License P3		False
+30	ControlType.Text	Engine: Local		True
+31	ControlType.Text	Model: parakeet-v3		True
+32	ControlType.Group	Kaydence cleanup and injection		True
+33	ControlType.Group			True
+34	ControlType.Text	Kaydence		True
+35	ControlType.Group	Operating system lane		True
+36	ControlType.Button	macOS		True
+37	ControlType.Button	Windows		True
+38	ControlType.Button	Linux		True
+39	ControlType.Text	SCREEN FAMILY 03		True
+40	ControlType.Text	Cleanup & Injection		True
+41	ControlType.Text	BACKEND STATE		True
+42	ControlType.Group			True
+43	ControlType.Text	Cleanup Dial & Output Rules		True
+44	ControlType.Group	Cleanup level		True
+45	ControlType.Button	Raw		True
+46	ControlType.Button	Light		True
+47	ControlType.Button	Full		True
+48	ControlType.Text	Light applies the deterministic daily cleanup floor.		True
+49	ControlType.Text	Output Rules		True
+50	ControlType.CheckBox	Smart punctuation Profile rule		False
+51	ControlType.Text	Smart punctuation		True
+52	ControlType.Text	Profile rule		True
+53	ControlType.CheckBox	Capitalize sentence start Profile rule		False
+54	ControlType.Text	Capitalize sentence start		True
+55	ControlType.Text	Profile rule		True
+56	ControlType.CheckBox	Remove filler words Profile rule		False
+57	ControlType.Text	Remove filler words		True
+58	ControlType.Text	Profile rule		True
+59	ControlType.CheckBox	Collapse self-corrections Profile rule		False
+60	ControlType.Text	Collapse self-corrections		True
+61	ControlType.Text	Profile rule		True
+62	ControlType.CheckBox	Normalize whitespace Profile rule		False
+63	ControlType.Text	Normalize whitespace		True
+64	ControlType.Text	Profile rule		True
+65	ControlType.CheckBox	Remove verbal clutter Not applied		False
+66	ControlType.Text	Remove verbal clutter		True
+67	ControlType.Text	Not applied		True
+68	ControlType.CheckBox	Apply custom dictionary Profile rule		False
+69	ControlType.Text	Apply custom dictionary		True
+70	ControlType.Text	Profile rule		True
+71	ControlType.Text	Before / After Examples		True
+72	ControlType.Text	Punctuation		True
+73	ControlType.Text	BEFORE		True
+74	ControlType.Text	this is a test lets see how it works		True
+75	ControlType.Text	AFTER		True
+76	ControlType.Text	This is a test. Let's see how it works.		True
+77	ControlType.Text	Filler removal		True
+78	ControlType.Text	BEFORE		True
+79	ControlType.Text	um so basically like the point is uh this		True
+80	ControlType.Text	AFTER		True
+81	ControlType.Text	So basically, the point is this.		True
+82	ControlType.Text	Self-correction		True
+83	ControlType.Text	BEFORE		True
+84	ControlType.Text	I want to go to the store no the market		True
+85	ControlType.Text	AFTER		True
+86	ControlType.Text	I want to go to the market.		True
+87	ControlType.Text	Output Destination (Per App)		True
+88	ControlType.Text	Awaiting first captured target		True
+89	ControlType.Button	No captured app yet		False
+90	ControlType.Button	Configure		False
+91	ControlType.Text	Injection Method & Status		True
+92	ControlType.Text	Setup required		True
+93	ControlType.Text	Windows		True
+94	ControlType.Text	Injection		True
+95	ControlType.Text	UI Automation (ValuePattern)		True
+96	ControlType.Text	ValuePattern insertion when the focused control exposes a writable value.		True
+97	ControlType.List			True
+98	ControlType.ListItem	Status		True
+99	ControlType.Text	Status		True
+100	ControlType.Text	Permission proof pending		True
+101	ControlType.ListItem	Permissions		True
+102	ControlType.Text	Permissions		True
+103	ControlType.Text	Microphone / UI Automation focus access / Keyboard injection fallback		True
+104	ControlType.Button	Check permissions		True
+105	ControlType.Text	Fallback:		True
+106	ControlType.Text	SendInput + clipboard restore		True
+107	ControlType.Text	Unicode input, then a restored clipboard path when direct input is unavailable.		True
+108	ControlType.Text	Warn on opaque focus		True
+109	ControlType.Text	Injection Health		True
+110	ControlType.Text	Pending proof		True
+111	ControlType.Text	No delivery proof yet		True
+112	ControlType.Text	Latency Budget		True
+113	ControlType.Text	Capture		True
+114	ControlType.Text	≤ 50ms		True
+115	ControlType.Text	Partial		True
+116	ControlType.Text	≤ 300ms		True
+117	ControlType.Text	CPU inject		True
+118	ControlType.Text	≤ 1200ms		True
+119	ControlType.Text	Reference p95		True
+120	ControlType.Text	Pending P1-G3		True
+121	ControlType.Text	Test Gates		True
+122	ControlType.Text	UI Automation		True
+123	ControlType.Text	Pending		True
+124	ControlType.Text	Secure Desktop		True
+125	ControlType.Text	OK		True
+126	ControlType.Text	Latest Delivery		True
+127	ControlType.Text	Pending		True
+128	ControlType.Text	Round Trip		True
+129	ControlType.Text	Pending		True
+130	ControlType.Group			True
+131	ControlType.Button	Reset to Defaults		True
+132	ControlType.Text	Changes saved		True
+133	ControlType.Button	Save Changes		True
+134	ControlType.Pane			True
+135	ControlType.Pane			True
+136	ControlType.Pane			True

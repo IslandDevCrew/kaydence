@@ -83,3 +83,6 @@ relay = []
 # Real whisper.cpp ASR adapter (ADR-0014). OFF by default — opts the native
 # whisper.cpp compile in. Not a network surface (loads a local verified model).
 asr-whisper = ["dep:whisper-rs"]
+# macOS-only acceleration proof lane. Keep separate from `asr-whisper` so
+# Windows/Linux CPU builds never inherit Metal linkage through feature unification.
+asr-whisper-metal = ["asr-whisper", "whisper-rs/metal"]

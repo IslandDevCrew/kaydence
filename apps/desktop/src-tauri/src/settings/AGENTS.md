@@ -16,3 +16,7 @@ hardcodes it), and first-run defaults.
 3. Settings file is human-readable JSON with a `schema_version`; unknown keys
    warn, never crash (forward compat).
 4. Secrets API exposes set/clear/exists only — no read-back to the frontend.
+5. First-run readiness is runtime truth, not artifact optimism: a verified model
+   is necessary but insufficient. `ready_to_dictate` and the setup progression
+   require the selected ASR adapter to complete warmup successfully before OS
+   permissions, hotkey proof, or first dictation can be treated as reachable.

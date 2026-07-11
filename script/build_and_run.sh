@@ -18,6 +18,10 @@ case "$BUILD_PROFILE" in
 esac
 APP_BINARY="$CARGO_TARGET_DIR/$BUILD_PROFILE/$APP_NAME"
 PLATFORM="$(uname -s)"
+BACKEND_FEATURES="custom-protocol,asr-whisper"
+if [ "$PLATFORM" = "Darwin" ]; then
+  BACKEND_FEATURES="custom-protocol,asr-whisper-metal"
+fi
 MACOS_APP_BUNDLE="${KAYDENCE_APP_BUNDLE_DIR:-$CARGO_TARGET_DIR/$BUILD_PROFILE/$APP_DISPLAY_NAME.app}"
 MACOS_BUNDLE_BINARY="$MACOS_APP_BUNDLE/Contents/MacOS/$APP_NAME"
 OPEN_BIN="${KAYDENCE_OPEN_BIN:-/usr/bin/open}"
@@ -36,9 +40,9 @@ build_frontend() {
 
 build_backend() {
   if [ "$BUILD_PROFILE" = "release" ]; then
-    cargo build --release --features custom-protocol --manifest-path apps/desktop/src-tauri/Cargo.toml
+    cargo build --release --features "$BACKEND_FEATURES" --manifest-path apps/desktop/src-tauri/Cargo.toml
   else
-    cargo build --features custom-protocol --manifest-path apps/desktop/src-tauri/Cargo.toml
+    cargo build --features "$BACKEND_FEATURES" --manifest-path apps/desktop/src-tauri/Cargo.toml
   fi
 }
 

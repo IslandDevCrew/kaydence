@@ -1,0 +1,138 @@
+P1-G3 - WHISPER BACKEND TRUTH, WARMUP, AND MACOS LATENCY
+Captured: 2026-07-10; release contract reverified 2026-07-11 (America/Chicago)
+Host: Apple M5 Pro, macOS
+Model: /Users/IDC2.5/Documents/Kaydence/models/ggml-base.en.bin
+Model sha256: a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
+Clip: corpus_0.wav, 681 ms, expected substring "hello there"
+
+DEFECT FOUND AND CLOSED IN CODE
+- `asr-whisper` compiled whisper.cpp with no Metal feature. A requested GPU lane
+  still reported `LocalGpu` even while whisper.cpp logged `no GPU found` and
+  `using BLAS backend`.
+- Added explicit `asr-whisper-metal = [asr-whisper, whisper-rs/metal]`.
+- A GPU request without compiled acceleration now plans and reports `LocalCpu`.
+- With acceleration compiled, the ordered stack is GPU then CPU fallback.
+- `AsrEngine::warm_up` now loads the first viable model lane at startup and on
+  idle-only model swaps. It does not load the fallback when the primary warms.
+- A lane that fails warmup is retained as an explicit failed attempt but skipped
+  during transcription, so its initialization cannot return to the hot path.
+- Runtime `adapter_ready` remains false until real warmup succeeds. Warmup failure
+  marks the runtime blocked and leaves the previous processor installed.
+- Backend `ready_to_dictate`, first-run next-step ordering, and Screen Family 10
+  now require `adapter_ready`; a checksum-valid model alone cannot show Ready or
+  advance the user to permissions/first dictation.
+- The real golden test measures warmup separately and enforces <=700 ms warm GPU
+  inference or <=1200 ms warm CPU inference.
+
+TRUE METAL PROOF
+Command:
+  KAYDENCE_WHISPER_MODEL=<model> KAYDENCE_WHISPER_CLIP=<corpus_0.wav> \
+  KAYDENCE_WHISPER_EXPECT='hello there' KAYDENCE_WHISPER_LANE=gpu \
+  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml \
+    --features asr-whisper-metal --test asr_golden -- --nocapture
+
+Native backend evidence:
+  use gpu = 1
+  GPU name: Apple M5 Pro
+  Metal total size = 147.37 MB
+  found GPU device 0: Metal
+  using Metal backend
+
+Result:
+  final_text="Hello there"
+  warmup_ms=649
+  transcribe_ms=55
+  rtf=0.081
+  warmed_lane=LocalGpu
+  inference_lane=LocalGpu
+  GPU budget: PASS (55 ms <= 700 ms)
+  Repeated recheck range: 55-67 ms warm inference; 597-649 ms startup warmup.
+
+CPU PROOF IN THE SAME METAL-CAPABLE BUILD
+Native backend evidence:
+  use gpu = 0
+  CPU total size = 147.37 MB
+  no GPU found
+  using BLAS backend
+
+Result:
+  final_text="Hello there"
+  warmup_ms=511
+  transcribe_ms=208
+  rtf=0.305
+  warmed_lane=LocalCpu
+  inference_lane=LocalCpu
+  CPU budget: PASS (208 ms <= 1200 ms)
+
+NO-METAL LABEL TRUTH
+The same caller request with only `--features asr-whisper` logged `use gpu = 0`,
+used CPU/BLAS, and reported both warmed and inference lanes as LocalCpu. Result:
+warmup_ms=42, transcribe_ms=217, exact expected transcript. This is the regression
+proof for the original false-GPU defect.
+
+CANONICAL BUILD CONTRACT
+- `script/build_and_run.sh` now always includes a production ASR adapter:
+  macOS builds `custom-protocol,asr-whisper-metal`; Windows and Linux build
+  `custom-protocol,asr-whisper`.
+- The hosted Windows native proof compiles the same CPU adapter as the Windows
+  release lane.
+- `tests/build_and_run.sh` failed before this mapping was added and now passes,
+  proving the release launcher cannot silently return to a UI-only binary.
+- A real optimized macOS build with
+  `--features custom-protocol,asr-whisper-metal` completed successfully.
+
+FIRST-RUN MODEL SCOPE
+- First-run readiness now verifies the selected ASR artifact plus only support
+  models explicitly marked `first_run_required`; it no longer requires every
+  recommended ASR and an unused VAD model before setup can continue.
+- The current runtime uses built-in `EnergyVad`, so the registry's Silero entry
+  is not a hidden first-run dependency.
+- A verified artifact is still insufficient by itself: adapter warmup must pass
+  before `ready_to_dictate` or the setup step can advance to permissions.
+
+COLD-START BOUNDARY
+Before warmup wiring, a fresh Metal process once spent 5,772 ms in the first
+transcription; about 4,968 ms was one-time embedded Metal library compilation and
+load. That violated first-dictation latency. Model/backend initialization now runs
+during app startup or an idle-only model swap and is excluded from release-to-final
+latency. A warm process then measured 552 ms before this change; the explicit
+warmup tests above measured 55-67 ms after initialization. Warmup duration has no
+release-to-inject budget, but remains visible and must complete before readiness.
+
+LOCAL GATES
+- cargo test --all-targets (default feature set): PASS
+  232 unit tests + 2 crash recovery + 5 event sequence + 5 short utterance tests.
+- cargo test --features asr-whisper-metal --all-targets: PASS
+  234 unit tests + 1 feature-gated golden harness + 2 crash recovery +
+  5 event sequence + 5 short utterance tests; zero failures. The golden harness
+  skips without a supplied model, so the real commands above are the proof run.
+- cargo clippy --all-targets -- -D warnings: PASS
+- cargo clippy --features asr-whisper-metal --all-targets -- -D warnings: PASS
+- frontend typecheck/lint and production build: PASS
+- build-and-run feature contract: PASS
+- warmup-failure response contract: PASS; Setup receives the Blocked snapshot
+  while active-capture/runtime-lock coordination errors still reject the command.
+- PR CI now runs default gates plus the shipped feature on every OS:
+  `asr-whisper-metal` on macOS and `asr-whisper` on Windows/Linux. A fresh hosted
+  3-OS run is still required after the account billing block is removed.
+- privacy/network posture and ADR status: PASS
+- raw pipeline benchmark: PASS for measured fields; prediction benchmark remains
+  a P3 dependency and cannot run until `llama-cli` is installed.
+- Real Metal golden clip with latency assertion: PASS
+- Real CPU golden clip with latency assertion: PASS
+- Requested GPU without Metal relabeled to CPU: PASS
+
+FOOTPRINT SNAPSHOT (NO MODEL RESIDENT)
+- Main process physical footprint: 30 MB, peak 35 MB.
+- Full Kaydence + WebKit process group physical footprint: about 86 MB.
+- Idle main-process CPU sample: 0.0%.
+The main process is below the constitution's <80 MB no-model target, but the full
+native process group is about 6 MB over it. The measurement boundary must be made
+explicit and the full group optimized or the target clarified before P1-G3 closes.
+ASR-resident total footprint and reference-machine p95 are still unmeasured.
+
+HONEST GATE STATUS
+P1-G3 remains PENDING. macOS warm Metal and CPU inference budgets are now real and
+green, but full release-to-inject timing, ASR-resident RAM/idle CPU, the no-model
+full-process-group overage, Windows/Linux runtime proof, and reference-machine p95
+remain required.

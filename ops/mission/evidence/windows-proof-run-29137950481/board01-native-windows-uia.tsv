@@ -1,0 +1,100 @@
+index	control_type	name	automation_id	enabled
+0	ControlType.Pane			True
+1	ControlType.Pane	Kaydence		True
+2	ControlType.Pane			False
+3	ControlType.Pane	Kaydence - Web content		True
+4	ControlType.Pane			True
+5	ControlType.Pane			True
+6	ControlType.Pane			True
+7	ControlType.Pane			True
+8	ControlType.Pane			True
+9	ControlType.Pane			True
+10	ControlType.Pane			True
+11	ControlType.Pane			True
+12	ControlType.Pane			True
+13	ControlType.Document	Kaydence	RootWebArea	True
+14	ControlType.Group		root	True
+15	ControlType.Group			True
+16	ControlType.Group	Kaydence dictation cockpit		True
+17	ControlType.Group			True
+18	ControlType.Text	Kaydence		True
+19	ControlType.Group	Operating system lane		True
+20	ControlType.Button	MacOS		True
+21	ControlType.Button	Windows		True
+22	ControlType.Button	Linux		True
+23	ControlType.Button	Manual recording unavailable		False
+24	ControlType.Text	Ready		True
+25	ControlType.Text	--:--		True
+26	ControlType.Group	Microphone idle		True
+27	ControlType.Group			True
+28	ControlType.Text	Engine		True
+29	ControlType.Text	Blocked		True
+30	ControlType.Text	parakeet-v3		True
+31	ControlType.Group	issue		True
+32	ControlType.Text	ISSUE		True
+33	ControlType.Group			True
+34	ControlType.Text	Target App		True
+35	ControlType.Text	Awaiting focus		True
+36	ControlType.Text	Runtime source pending		True
+37	ControlType.Group	pending		True
+38	ControlType.Text	PENDING		True
+39	ControlType.Group			True
+40	ControlType.Text	Global Hotkey		True
+41	ControlType.Text	RightAlt		True
+42	ControlType.Text	Push-to-talk / not proven		True
+43	ControlType.Group	issue		True
+44	ControlType.Text	ISSUE		True
+45	ControlType.Group			True
+46	ControlType.Text	Privacy		True
+47	ControlType.Text	Local only		True
+48	ControlType.Text	No telemetry / 30-day history		True
+49	ControlType.Group	ready		True
+50	ControlType.Group			True
+51	ControlType.Text	WAL Recovery		True
+52	ControlType.Text	Pending proof		True
+53	ControlType.Text	0 local sessions tracked		True
+54	ControlType.Group	pending		True
+55	ControlType.Text	PENDING		True
+56	ControlType.Group	Cockpit views		True
+57	ControlType.Button	Dictate		True
+58	ControlType.Button	History		False
+59	ControlType.Button	Cleanup		True
+60	ControlType.Button	Privacy		True
+61	ControlType.Button	Setup		True
+62	ControlType.Text	Recent clean transcript		True
+63	ControlType.Text	No local transcript yet.		True
+64	ControlType.Text	0		True
+65	ControlType.Text	words /		True
+66	ControlType.Text	0		True
+67	ControlType.Text	chars		True
+68	ControlType.Button	Clear		False
+69	ControlType.Text	History		True
+70	ControlType.Button	Refresh		True
+71	ControlType.Text	No local sessions yet.		True
+72	ControlType.Button	Purge local history		False
+73	ControlType.Text	Cleanup		True
+74	ControlType.Group	Cleanup level		True
+75	ControlType.Button	Raw		True
+76	ControlType.Button	Light		True
+77	ControlType.Button	Full		True
+78	ControlType.Text	Balanced cleanup for daily dictation.		True
+79	ControlType.List			True
+80	ControlType.ListItem	Remove filler words		True
+81	ControlType.ListItem	Fix capitalization		True
+82	ControlType.ListItem	Smart punctuation		True
+83	ControlType.ListItem	Normalize spacing		True
+84	ControlType.ListItem	Basic formatting		True
+85	ControlType.Button	Configure cleanups		True
+86	ControlType.Text	Output		True
+87	ControlType.Button	Insert at cursor UI Automation + SendInput		True
+88	ControlType.Text	Auto-paste ready		True
+89	ControlType.CheckBox	Auto-paste ready		False
+90	ControlType.Group			True
+91	ControlType.Text	Kaydence		True
+92	ControlType.Text	Free		True
+93	ControlType.Text	v0.1.0		True
+94	ControlType.Text	Awaiting microphone proof		True
+95	ControlType.Text	Setup action required		True
+96	ControlType.Pane			True
+97	ControlType.Pane			True
+98	ControlType.Pane			True

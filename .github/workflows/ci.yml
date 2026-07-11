@@ -97,6 +97,22 @@ jobs:
       - name: test
         run: cargo test --all
         working-directory: apps/desktop/src-tauri
+      - name: select shipped ASR feature
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            echo "KAYDENCE_SHIPPED_ASR_FEATURE=asr-whisper-metal" >> "$GITHUB_ENV"
+          else
+            echo "KAYDENCE_SHIPPED_ASR_FEATURE=asr-whisper" >> "$GITHUB_ENV"
+          fi
+      - name: clippy shipped ASR adapter
+        shell: bash
+        run: cargo clippy --all-targets --features "$KAYDENCE_SHIPPED_ASR_FEATURE" -- -D warnings
+        working-directory: apps/desktop/src-tauri
+      - name: test shipped ASR adapter
+        shell: bash
+        run: cargo test --all-targets --features "$KAYDENCE_SHIPPED_ASR_FEATURE"
+        working-directory: apps/desktop/src-tauri
       # --- Frontend (pnpm workspace) ---
       - name: install
         shell: bash
@@ -132,7 +148,7 @@ jobs:
             "Frontend build failed with exit code $LASTEXITCODE." | Set-Content (Join-Path $output "build-failure.txt")
             exit $LASTEXITCODE
           }
-          cargo build --release --features custom-protocol --manifest-path apps/desktop/src-tauri/Cargo.toml
+          cargo build --release --features custom-protocol,asr-whisper --manifest-path apps/desktop/src-tauri/Cargo.toml
           if ($LASTEXITCODE -ne 0) {
             "Native release build failed with exit code $LASTEXITCODE." | Set-Content (Join-Path $output "build-failure.txt")
             exit $LASTEXITCODE

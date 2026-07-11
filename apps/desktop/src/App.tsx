@@ -110,6 +110,7 @@ type FirstRunNextStepKind =
   | "setup"
   | "model_metadata"
   | "model_install"
+  | "asr_runtime"
   | "permission"
   | "hotkey"
   | "dictation"
@@ -1059,6 +1060,12 @@ export function App(): JSX.Element {
 
     if (nextStep.kind === "permission" && nextStep.target_id) {
       showPermissionAction(nextStep.target_id);
+      return;
+    }
+
+    if (nextStep.kind === "asr_runtime") {
+      setFirstRunActionNote(nextStep.proof_requirement);
+      refreshModelReadiness();
       return;
     }
 

@@ -507,6 +507,7 @@ impl Default for FirstRunStatus {
 impl FirstRunStatus {
     pub fn ready_to_dictate(&self) -> bool {
         self.model_ready
+            && self.asr_runtime.adapter_ready
             && self.permission_requirements_ready()
             && self.microphone_permission_ready
             && self.input_permission_ready
@@ -708,8 +709,25 @@ impl FirstRunNextStep {
                     .clone()
                     .unwrap_or_else(|| "Model readiness has not been proven yet.".to_string()),
                 action_label: "Review models".to_string(),
-                proof_requirement: "Refresh model readiness with verified ASR and VAD artifacts."
-                    .to_string(),
+                proof_requirement:
+                    "Refresh model readiness with the selected ASR and any explicitly required support artifacts."
+                        .to_string(),
+            };
+        }
+
+        if !status.asr_runtime.adapter_ready {
+            let blocked = status.asr_runtime.state == FirstRunAsrRuntimeState::Blocked;
+            return Self {
+                kind: FirstRunNextStepKind::AsrRuntime,
+                target_id: status.asr_runtime.selected_model_id.clone(),
+                title: if blocked {
+                    "Repair local ASR runtime".to_string()
+                } else {
+                    "Prepare local ASR runtime".to_string()
+                },
+                detail: status.asr_runtime.detail.clone(),
+                action_label: "Retry runtime".to_string(),
+                proof_requirement: status.asr_runtime.proof_requirement.clone(),
             };
         }
 
@@ -775,6 +793,7 @@ pub enum FirstRunNextStepKind {
     Setup,
     ModelMetadata,
     ModelInstall,
+    AsrRuntime,
     Permission,
     Hotkey,
     Dictation,
@@ -1747,6 +1766,8 @@ mod tests {
         for requirement in &mut status.permission_requirements {
             requirement.state = FirstRunPermissionState::Ready;
         }
+        assert!(!status.ready_to_dictate());
+        status.asr_runtime.adapter_ready = true;
         assert!(status.ready_to_dictate());
     }
 
@@ -1833,6 +1854,10 @@ mod tests {
             hotkey_registered: false,
             ..FirstRunStatus::default()
         };
+        status.recompute_next_step();
+        assert_eq!(status.next_step.kind, FirstRunNextStepKind::AsrRuntime);
+
+        status.asr_runtime.adapter_ready = true;
         status.recompute_next_step();
         assert_eq!(status.next_step.kind, FirstRunNextStepKind::Permission);
 
@@ -2008,6 +2033,10 @@ mod tests {
                 license_review_required: false,
             }],
             selected_asr_model_id: Some("fixture-asr".to_string()),
+            asr_runtime: FirstRunAsrRuntimeStatus {
+                adapter_ready: true,
+                ..FirstRunAsrRuntimeStatus::default()
+            },
             permission_requirements: vec![FirstRunPermissionRequirement {
                 id: "uia_focus".to_string(),
                 label: "UI Automation focus access".to_string(),

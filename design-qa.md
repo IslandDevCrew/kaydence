@@ -1,5 +1,32 @@
 # P1-G4 Design QA
 
+## Hosted Windows Checkpoint
+
+- Native diagnostic set: `ops/mission/evidence/windows-proof-run-29137950481/`
+- Same-viewport combined comparison: `ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png`
+- Native provenance frames: `board{01,03,07,10}-native-windows-runner.png`
+- Workflow record: `ops/mission/evidence/2026-07-11-p1-g4-windows-diagnostic.txt`
+- Viewport/state: the source-reviewed Browser fixture and native Windows client are both 900 x 600 for each family; Browser uses the ready fixture, while native Windows preserves backend-owned pending/blocked states.
+
+**Findings**
+
+- Boards 01, 03, 07, and 10 preserve the reviewed composition, density, navigation, footer bounds, and control sizing in the native Windows WebView.
+- Windows cobalt stays confined to lane selection and active controls. Shared prediction, warning, success, and neutral tokens do not drift into a one-note blue palette.
+- No visible text overlap, clipped app content, broken icon, missing asset, or unstable layout appears in the combined comparison. Native titlebar frames separately establish Windows provenance.
+- Differences from the Browser row are expected runtime truth, not visual regressions: the hosted app reports blocked model metadata, pending permissions, no local transcript/history, and setup-required delivery.
+- This is a diagnostic design pass, not the P1-G4 close. Run 29137950481 failed closed before the permissions modal because its expected label differed from production. The second proof VM never exposed the initial WebView UIA tree. PR #10 startup hardening is open and Actions billing-blocked.
+
+**Windows Completion Checklist**
+
+- [x] Four native Windows client captures produced and visually compared at 900 x 600
+- [x] Native titlebar, UIA tree, source hash, host, and pixel diagnostics preserved
+- [x] Exact permission labels fixed in PR #9 with a green 3-OS matrix
+- [ ] PR #10 startup retry hardening receives a fresh green 3-OS matrix
+- [ ] One passing hosted run captures all four families plus the permissions modal
+- [ ] Final human visual signoff
+
+checkpoint result: diagnostic pass; parent gate remains pending
+
 ## Board 01
 
 - Source visual truth: `assets/brand/screens/kaydence-screen-family-01.png`
@@ -39,7 +66,7 @@
 
 - P3: native titlebar tint follows the user's macOS appearance while the board captures a light titlebar.
 - P3: exact source icon glyphs differ slightly from the selected Lucide set, without changing meaning or layout.
-- P1-G4: real Windows WebView capture and final human sign-off remain open.
+- P1-G4: the Windows view has a diagnostic capture; a passing workflow capture, permissions modal, and final human signoff remain open.
 
 final result: passed
 
@@ -82,7 +109,7 @@ final result: passed
 **Follow-up Polish**
 
 - P3: native titlebar tint follows the user's macOS appearance while the board captures a light titlebar.
-- P1-G4: real Windows WebView capture and final human sign-off remain required before the parent gate can close.
+- P1-G4: the Windows view has a diagnostic capture; a passing workflow capture, permissions modal, and final human signoff remain required.
 - P3: board info affordances and profile editing become interactive only with their owning P2 units.
 
 final result: passed (Board 03 scope only)
@@ -126,7 +153,7 @@ final result: passed (Board 03 scope only)
 **Follow-up Polish**
 
 - P3: accessibility context and on-device OCR controls become interactive only when their owning backend capability lands.
-- P1-G4: real Windows WebView capture and final human sign-off remain required before the parent gate can close.
+- P1-G4: the Windows view has a diagnostic capture; a passing workflow capture, permissions modal, and final human signoff remain required.
 - P3: native titlebar tint follows the user's macOS appearance while the board captures a light titlebar.
 
 final result: passed (Board 07 scope only)
@@ -171,7 +198,7 @@ final result: passed (Board 07 scope only)
 
 **Follow-up Polish**
 
-- P1-G4: real Windows WebView captures plus final human sign-off remain required before the parent fidelity gate can close.
+- P1-G4: all four Windows views have diagnostic captures; a passing workflow set including the permissions modal plus final human signoff remain required.
 - P1-P0-8: reviewed model metadata/download flow, remaining live permission proof, real first-dictation journey, and <=60-second reference-machine timing remain open.
 - P3: Whisper-Ahead controls become interactive only when their owning capability lands.
 
