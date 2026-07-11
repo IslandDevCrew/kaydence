@@ -11,6 +11,13 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
   current contract measures the implemented Raw orchestration path and marks
   real ASR/GPU/reference-machine/idle-footprint values as explicit unmeasured
   fields until those adapters and machines land.
+- `bench-reference.mjs` — **present (P1-G3, working reference-machine gate)**.
+  Launches the feature-gated `reference-bench` probe, verifies its ready-file
+  PID, samples the resident child twice with host-native macOS/Windows/Linux
+  process tools, and writes a redacted `bench-results/reference-<platform>-<lane>.json`.
+  It fails when the actual reviewed lane misses its p95 budget, resident RAM
+  exceeds 250 MB, idle CPU exceeds 1%, or the probe overclaims physical
+  OS-field injection. `bench-results/` is local evidence, never a source input.
 - `audit-network.sh` — **present (P0-T6), a working gate**. Fixed-string scan of
   the Rust/TS source for network-capable call sites, diffed against
   `network-allowlist.json` (model mirrors + user-configured BYOK endpoints + Relay
