@@ -535,3 +535,11 @@
 - Final local verification is green: 232 default Rust tests plus integrations, 234 Metal-feature tests plus integrations, strict Clippy in both modes, real portable Metal golden clip, optimized portable release build, frontend type/lint/build, build/cache contract, fmt, workflow YAML, mission JSON/render, privacy/network, ADR, and the measured Raw benchmark fields.
 - Pushed code/evidence commit `72f6013` and refreshed draft PR #11's body. Actions run `29142969657` failed in three seconds before checkout: setup had zero steps, the matrix job was skipped, and GitHub again reported failed payments or an exhausted spending limit. This is not a code/test failure; PR #11 remains intentionally unmerged.
 - Evidence: `ops/mission/evidence/2026-07-11-p1-g3-linux-whisper-runtime.txt` plus the updated cross-platform P1-G3 evidence record.
+
+## 2026-07-11T06:42Z - Codex Linux human-focus injection closure
+- Used the isolated `eaf82f6` integrated `atspi-selftest` in the already-running Debian 12 GNOME/Wayland VM. The harness ran as the logged-in `debian` user on the real AT-SPI session bus with the existing uinput permission.
+- Normal-field proof passed without scripted focus: Alt+F2 opened GNOME's real command entry, AT-SPI classified `role=Text editable=true`, and the uinput backend visibly typed `[Kaydence]` into the focused field.
+- Secure-field proof passed on a real Zenity password entry: AT-SPI classified `role=PasswordText editable=true`, Kaydence mapped it to `Secure`, refused twice across focus events, and the field remained empty. No password was entered or submitted; the dialog was cancelled.
+- Preserved exact logs plus full 1152x768 UTM provenance frames. Removed the Linux human-focus item from active blockers and updated ADR-0013, the Wayland spike, the injection contract, P1-P0-3 state, risk, and resume truth.
+- P1-P0-3 remains in progress only for Linux Unicode beyond ASCII, optional portal/libei where uinput permission is unavailable, and the disclosed opaque-client policy boundary; the operator normal/password focus check itself is complete.
+- Evidence: `ops/mission/evidence/2026-07-11-linux-human-focus-injection.txt`, `2026-07-11-linux-human-focus-normal.jpg`, and `2026-07-11-linux-human-focus-secure.jpg`.

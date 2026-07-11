@@ -111,6 +111,24 @@ is unavailable (opaque focus → the Unknown-focus policy governs). Evidence:
 `GetForegroundWindow` + `QueryFullProcessImageNameW` (executable name) provides the
 frontmost-app identity for `profiles/` — the blessed shared helper, per `inject/AGENTS.md`.
 
+## Amendment 2026-07-11 (Linux human-focus path validated live)
+
+The operator-in-the-loop boundary is now closed on the Debian 12 GNOME/Wayland VM:
+
+- With GNOME's Run a Command entry actually focused, AT-SPI reported
+  `role=Text editable=true`; the integrated uinput backend typed `[Kaydence]` and
+  the marker was visible in the real field.
+- With a real Zenity password entry focused, AT-SPI reported
+  `role=PasswordText editable=true`; Kaydence classified it as `Secure`, refused
+  twice across the focus events, and the field remained empty.
+- No password value was entered or submitted. The prompt was cancelled after the
+  proof. Full UTM frames and exact harness logs are preserved at
+  `ops/mission/evidence/2026-07-11-linux-human-focus-injection.txt`.
+
+This proves the selected AT-SPI gate + uinput insertion ladder on an accessible
+client. It does not erase the opaque-client limitation or finish Unicode beyond
+ASCII / optional portal+libei work.
+
 ## Consequences
 
 - **Easier:** one `TextInjector` trait with the tested policy/selection/fallback core already
