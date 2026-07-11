@@ -3857,7 +3857,7 @@ mod tests {
     fn current_registry_promotes_the_footprint_safe_model_only_on_proven_platforms() {
         let registry = models::ModelRegistry::load(&models::source_tree_registry_path()).unwrap();
 
-        for platform in ["macos", "linux"] {
+        for platform in ["macos", "windows", "linux"] {
             let recommended = first_run_asr_recommendation(&registry, platform).unwrap();
             assert_eq!(recommended.id, "whisper-base-en-q5_1");
             assert_eq!(
@@ -3865,14 +3865,6 @@ mod tests {
                 "Recommended for this OS lane"
             );
         }
-
-        let windows = first_run_asr_recommendation(&registry, "windows").unwrap();
-        assert_eq!(windows.id, "whisper-base-en-q5_1");
-        assert!(!windows.default_for.iter().any(|tag| tag == "windows"));
-        assert_eq!(
-            recommendation_reason(windows, "windows"),
-            "CPU-safe first-run default"
-        );
     }
 
     #[test]

@@ -26,8 +26,8 @@
       "license": "MIT",
       "min_hw": "any",
       "recommended": true,
-      "default_for": ["macos", "linux"],
-      "note": "Measured macOS and Linux P1 default; Windows candidate pending stable p95 proof after one live pass and one live miss. Apple M5 Pro proof: Q5_1 Metal 152.656 MB RSS and 78 ms p95; CPU 138.516 MB and 214 ms p95; 4/4 synthetic golden phrases at zero content-word WER. Debian 12 ARM64 CPU proof: 71.859 MB RSS, 600 ms p95, and exact synthetic golden transcript. Windows 11 ARM64 exact golden passed, but ten-sample CPU p95 varied from 1121 ms PASS to 1433 ms FAIL. Large-v3-turbo remains the quality lane until it independently meets the resident-memory budget.",
+      "default_for": ["macos", "windows", "linux"],
+      "note": "Measured macOS, Windows, and Linux P1 default. Apple M5 Pro proof: Q5_1 Metal 152.656 MB RSS and 78 ms p95; CPU 138.516 MB and 214 ms p95; 4/4 synthetic golden phrases at zero content-word WER. Debian 12 ARM64 CPU proof: 71.859 MB RSS, 600 ms p95, and exact synthetic golden transcript. Windows 11 ARM64 exact golden passed; four consecutive quiescent ten-sample CPU runs passed at 1121, 965, 903, and 902 ms p95 with about 73-75 MB RSS and 0% idle CPU. A 1433 ms immediate-post-build stress miss is retained as a disclosed non-quiescent boundary. Large-v3-turbo remains the quality lane until it independently meets the resident-memory budget.",
       "sources": [
         "https://huggingface.co/ggerganov/whisper.cpp/resolve/c521a4b02f422512d734391fdf08bb08c0862f68/ggml-base.en-q5_1.bin",
         "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en-q5_1.bin"

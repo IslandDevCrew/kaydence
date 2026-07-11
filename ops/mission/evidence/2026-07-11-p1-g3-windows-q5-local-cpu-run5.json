@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "platform": "windows",
+  "lane": "local_cpu",
+  "model_id": "whisper-base-en-q5_1",
+  "model_sha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f",
+  "fixture_sha256": "085e4b157e9f3ce0114b072354d07ede5cbcecce95bc59771b808e78abd94247",
+  "warmup_ms": 70,
+  "sample_count": 10,
+  "release_to_delivery_policy_p50_ms": 866,
+  "release_to_delivery_policy_p95_ms": 902,
+  "audio_ms": 2496,
+  "transcript_nonempty": true,
+  "events": [
+    "audio_persisted",
+    "partial",
+    "raw_final"
+  ],
+  "unmeasured": [
+    "physical_os_field_injection"
+  ],
+  "runner_schema": 1,
+  "requested_lane": "local_cpu",
+  "idle_ram_mb": 73,
+  "idle_cpu_pct": 0,
+  "idle_sample_interval_ms": 3362,
+  "budgets": {
+    "release_to_delivery_policy_p95_ms": 1200,
+    "idle_ram_mb": 250,
+    "idle_cpu_pct": 1
+  },
+  "budget_failures": [],
+  "status": "pass",
+  "diagnostics": {
+    "child_stderr_bytes": 5331
+  }
+}

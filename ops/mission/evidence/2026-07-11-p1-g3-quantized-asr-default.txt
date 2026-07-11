@@ -1,12 +1,12 @@
-P1-G3 - QUANTIZED ASR DEFAULT AND MAC RESIDENT-BUDGET RECOVERY
+P1-G3 - QUANTIZED ASR DEFAULT AND THREE-OS RESIDENT-BUDGET RECOVERY
 Captured: 2026-07-11 (America/Chicago)
 Host: Apple M5 Pro, macOS
 
 DECISION
 - Keep the constitutional ASR-resident ceiling at <=250 MB.
-- Make registry model `whisper-base-en-q5_1` the macOS and Linux P1 first-run
-  default. Keep it selectable on Windows and promote Windows only after its
-  live quality, latency, RAM, and idle-CPU report passes repeatably.
+- Make registry model `whisper-base-en-q5_1` the macOS, Windows, and Linux P1
+  first-run default. Each platform now has direct quality, latency, RAM, and
+  idle-CPU evidence under unchanged budgets.
 - Keep Parakeet V3 as the required independent CPU runtime and
   large-v3-turbo as an optional quality lane. Neither is called runtime-ready.
 - Preserve ADR-0014: this unit adds verified registry metadata and read-only
@@ -65,6 +65,9 @@ CANONICAL EVIDENCE
 - ops/mission/evidence/2026-07-11-p1-g3-linux-q5-reference-bench.txt
 - ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run1.json
 - ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run2.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run3.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run4.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run5.json
 - ops/mission/evidence/2026-07-11-p1-g3-windows-q5-reference-bench.txt
 - All JSON reports identify the model and artifact hashes without paths,
   transcripts, audio, content, or stderr.
@@ -75,9 +78,10 @@ HONEST STATUS
   fields. This removes the Mac GPU resident-RAM blocker for this model.
 - The Debian 12 ARM64 q5 CPU reference lane passes at 71.859 MB RSS, 600 ms p95,
   and 0% idle CPU; its exact synthetic golden transcript also passes.
-- Windows 11 ARM64 passed the exact synthetic golden transcript and one
-  quiescent reference run, but the first ten-sample run missed CPU p95 at
-  1433 ms. Windows is not promoted while that gate is not repeatable.
-- P1-G3 remains PENDING. Stable Windows q5 p95 proof, physical
+- Windows 11 ARM64 passed the exact synthetic golden transcript and four
+  consecutive quiescent ten-sample runs at 1121, 965, 903, and 902 ms p95,
+  about 73-75 MB RSS, and 0% idle CPU. The immediate-post-build 1433 ms miss is
+  retained as a disclosed non-quiescent stress boundary.
+- P1-G3 remains PENDING. Physical
   hotkey-release-to-focused-field timing, the no-model full-process-group gap,
   and fresh hosted three-OS CI remain open.

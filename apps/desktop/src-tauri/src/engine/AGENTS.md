@@ -2,8 +2,8 @@
 
 ## Owns
 The `AsrEngine` trait and its implementations: Parakeet V3 (ONNX Runtime,
-independent CPU lane), whisper.cpp base.en Q5_1 (measured macOS/Linux P1 default
-and Windows candidate pending stable p95), whisper.cpp large-v3-turbo (optional quality lane),
+independent CPU lane), whisper.cpp base.en Q5_1 (measured three-OS P1 default),
+whisper.cpp large-v3-turbo (optional quality lane),
 BYOK cloud (Groq/Deepgram).
 Streaming partial emission, engine selection/fallback chain, model lifecycle
 (load/warm/unload), language detection handoff.

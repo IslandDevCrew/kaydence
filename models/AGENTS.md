@@ -11,8 +11,8 @@ recommended flag. Download/verify scripts. The hardware-recommendation table
    verifies sha256 before load. A checksum mismatch quarantines the file.
 2. ≥2 viable local ASR models at all times (ADR-0002 supply-chain hedge).
    Current set: Parakeet V3 (independent CPU lane), quantized Whisper base.en
-   Q5_1 (measured macOS/Linux P1 default; Windows candidate pending stable live
-   p95 proof; GPU-preferred with truthful CPU fallback), Whisper large-v3-turbo
+   Q5_1 (measured macOS/Windows/Linux P1 default; GPU-preferred with truthful
+   CPU fallback), Whisper large-v3-turbo
    (quality lane, not the default until it proves the resident budget), and
    Silero VAD.
 3. Every registry entry records its license; anything non-permissive for

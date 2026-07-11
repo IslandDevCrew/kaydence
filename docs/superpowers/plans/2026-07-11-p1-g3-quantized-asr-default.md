@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the already-supported quantized Whisper artifact the measured macOS/Linux P1 first-run default and Windows reference candidate, promoting each platform only after its own live evidence, so Kaydence can meet the constitutional `<=250 MB` ASR-resident budget without relaxing the gate.
+**Goal:** Make the already-supported quantized Whisper artifact the measured macOS/Windows/Linux P1 first-run default, promoting each platform only after its own live evidence, so Kaydence can meet the constitutional `<=250 MB` ASR-resident budget without relaxing the gate.
 
-**Architecture:** Keep the existing `whisper.cpp` adapter, lane fallback, checksum verification, and operator-supplied artifact boundary. Add one verified registry entry for `whisper-base-en-q5_1`, select it through the existing `default_for` mechanism on macOS and Linux where direct evidence exists, and use it as Windows' reviewed CPU-safe fallback while its platform-default p95 gate remains open. Automatic fallback excludes placeholder-only candidates when reviewed metadata exists; an all-placeholder registry retains one explicit blocked selection. Point the runner's local default at the q5 artifact filename and normalize every first-run lane label to the compiled backend. The download surface remains preflight-only: this change records pinned HTTPS metadata but adds no fetch command, dependency, or runtime network call.
+**Architecture:** Keep the existing `whisper.cpp` adapter, lane fallback, checksum verification, and operator-supplied artifact boundary. Add one verified registry entry for `whisper-base-en-q5_1` and select it through the existing `default_for` mechanism on all three desktop platforms after direct proof. Automatic fallback excludes placeholder-only candidates when reviewed metadata exists; an all-placeholder registry retains one explicit blocked selection. Point the runner's local default at the q5 artifact filename and normalize every first-run lane label to the compiled backend. The download surface remains preflight-only: this change records pinned HTTPS metadata but adds no fetch command, dependency, or runtime network call.
 
 **Tech Stack:** Existing Rust model registry and first-run logic, existing React preview fixture, Node.js standard-library benchmark runner, existing `whisper-rs` Metal/CPU adapter.
 
@@ -17,7 +17,7 @@
 - Promote q5 through `default_for` one platform at a time only after that platform's live quality, latency, RAM, and idle-CPU evidence passes.
 - A GPU request may fall back truthfully to CPU on builds without acceleration; the actual lane owns the latency budget.
 - Preserve the ADR-0014 operator gate: registry download metadata and read-only preflight are allowed, but downloading requires a separately accepted network decision.
-- Keep P1-G3 pending until Windows reference p95 passes repeatably, physical focused-field injection timing, the no-model process-group boundary, and fresh three-OS CI are complete.
+- Keep P1-G3 pending until physical focused-field injection timing, the no-model process-group boundary, and fresh three-OS CI are complete.
 
 ---
 
@@ -30,7 +30,7 @@
 
 **Interfaces:**
 - Consumes: `ModelRegistry::load`, `first_run_asr_recommendation`, and existing `default_for` selection.
-- Produces: a checksum-valid `whisper-base-en-q5_1` entry selected on proven `macos` and `linux` and available, but not promoted, on `windows`.
+- Produces: a checksum-valid `whisper-base-en-q5_1` entry selected on proven `macos`, `windows`, and `linux`.
 
 - [x] **Step 1: Add failing registry assertions**
 
@@ -48,7 +48,7 @@ Expected before implementation: `ModelNotFound("whisper-base-en-q5_1")`.
 
 - [x] **Step 3: Add a failing current-registry recommendation test**
 
-Assert macOS and Linux return `whisper-base-en-q5_1` with `Recommended for this OS lane`; Windows returns q5 as the reviewed `CPU-safe first-run default` while its `default_for` promotion waits for repeatable p95 proof. Placeholder-only Parakeet must not be auto-selected.
+Assert macOS, Windows, and Linux return `whisper-base-en-q5_1` with `Recommended for this OS lane`. Placeholder-only Parakeet must not displace a reviewed model.
 
 - [x] **Step 4: Verify the recommendation test fails**
 
@@ -58,11 +58,11 @@ Run:
 cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml current_registry_defaults_every_desktop_to_the_footprint_safe_whisper_model -- --nocapture
 ```
 
-Expected before the first implementation: macOS selected ID is `parakeet-v3`. The first review-fix red cycle proved all-platform promotion was too broad. The second review-fix red cycle then expected Windows to receive reviewed q5 fallback and observed placeholder-only Parakeet; it also expected the visible required-model lane to be CPU in a default build and observed GPU.
+Expected before the first implementation: macOS selected ID is `parakeet-v3`. The first review-fix red cycle proved all-platform promotion was too broad. The second review-fix red cycle then expected Windows to receive reviewed q5 fallback and observed placeholder-only Parakeet; it also expected the visible required-model lane to be CPU in a default build and observed GPU. After four consecutive quiescent Windows passes, the final promotion red cycle expected `Recommended for this OS lane` and observed the fallback label until `default_for` was widened.
 
 - [x] **Step 5: Add the minimal registry entry**
 
-Record the exact artifact identity, MIT license, macOS/Linux defaults, two HTTPS source URLs, and measured P1 note. Do not add download execution.
+Record the exact artifact identity, MIT license, three-OS defaults, two HTTPS source URLs, and measured P1 note. Do not add download execution.
 
 - [x] **Step 6: Verify both focused tests pass**
 
@@ -150,11 +150,11 @@ Require no unresolved Critical or Important findings. Fix findings test-first an
 
 - [x] **Step 2a: Move the model-default decision into ADR-0015**
 
-Restore immutable ADR-0014, create a superseding Proposed decision with an explicit operator gate, limit `default_for` promotion to proven macOS/Linux, keep Windows usable through reviewed fallback, and test effective CPU/GPU lane labels across candidate, required-model, preflight, and runtime surfaces in default and Metal-feature builds.
+Restore immutable ADR-0014, create a superseding Proposed decision with an explicit operator gate, limit `default_for` promotion to platforms with direct evidence, and test effective CPU/GPU lane labels across candidate, required-model, preflight, and runtime surfaces in default and Metal-feature builds.
 
 - [x] **Step 3: Update mission truth without closing P1-G3**
 
-Record the Mac q5 GPU/CPU and Linux CPU passes plus both Windows outcomes, and remove only the proven q5 resident-RAM blockers. Preserve stable Windows p95, physical injection, full-process-group, hosted CI, and P1-G4 blockers.
+Record the Mac q5 GPU/CPU and Linux CPU passes plus all five Windows outcomes, and remove only the proven q5 resident-RAM/p95 blockers. Preserve the immediate-post-build Windows stress miss, physical injection, full-process-group, hosted CI, and P1-G4 blockers.
 
 - [x] **Step 4: Commit, push, and open a draft stacked PR**
 

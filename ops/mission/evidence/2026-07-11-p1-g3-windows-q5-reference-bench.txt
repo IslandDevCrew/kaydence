@@ -48,6 +48,19 @@ REFERENCE RUN 2 - QUIESCENT NO-BUILD REPEAT
 - Captured JSON SHA-256:
   2fb49e6287c3888c5133e27c447e35eeeae300da9ef668657bc31966b6a0b1a2
 
+REFERENCE RUNS 3-5 - QUIESCENT REPEATABILITY SERIES
+- Run 3: warmup 81 ms; p50/p95 852/965 ms; 73 MB; 0% idle CPU;
+  PASS. JSON SHA-256:
+  debf684b8cf9114cf0a0e662f0f1f7defb63141df60bf77e573904bf6dfe351a
+- Run 4: warmup 70 ms; p50/p95 869/903 ms; 72.988 MB; 0% idle CPU;
+  PASS. JSON SHA-256:
+  87336b0870cdfd5a7253f5ac8f7ef86e8be65b7b3812705896dd7b7a2517e730
+- Run 5: warmup 70 ms; p50/p95 866/902 ms; 73 MB; 0% idle CPU;
+  PASS. JSON SHA-256:
+  b8698bf18bf150241524a07516d782f29acdf68bd086d809b671c0f83d021429
+- Result: four consecutive quiescent ten-sample runs pass unchanged CPU p95,
+  RAM, and idle-CPU budgets (runs 2-5).
+
 EXACT GOLDEN RESULT
 - Requested/actual lane: CPU/local_cpu.
 - Final text: "Hello there."
@@ -57,9 +70,11 @@ EXACT GOLDEN RESULT
   31ed97331f7d5950677a894ba069fb86489e0db6a6f52ac03a2e12f360eb3f17
 
 DECISION / LIMITS
-- Exact transcript, RAM, and idle CPU pass. Windows q5 remains a candidate
-  because p95 did not pass repeatably; the failed run is retained, not replaced
-  by the later pass.
+- Exact transcript passes, and four consecutive quiescent reference runs pass
+  CPU p95, RAM, and idle CPU. Windows now meets ADR-0015's platform-promotion
+  evidence criterion for the installed-app condition.
+- The immediate-post-build 1433 ms p95 miss remains tracked as a non-quiescent
+  stress boundary; it is not replaced by the later passes.
 - Audio is synthetic and does not replace human-voice WER evidence.
 - Physical focused-field injection remains unmeasured by this probe.
 - This does not close the no-model full-process-group gap or hosted three-OS CI.

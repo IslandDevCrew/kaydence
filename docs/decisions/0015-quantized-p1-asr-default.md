@@ -18,25 +18,25 @@ passed the four-phrase synthetic corpus and both canonical reference lanes,
 Metal at 152.656 MB RSS and 78 ms p95 and CPU at 138.516 MB and 214 ms p95.
 The Debian 12 ARM64 CPU lane also passed at 71.859 MB RSS and 600 ms p95, with
 an exact `Hello there.` synthetic golden transcript. Windows 11 ARM64 passed the
-same exact golden transcript at 828 ms and a quiescent ten-sample reference run
-at 75.348 MB RSS and 1121 ms p95, but the immediately preceding run missed the
-unchanged CPU latency gate at 1433 ms p95. Windows evidence is therefore not yet
-stable enough for default promotion.
+same exact golden transcript at 828 ms and four consecutive quiescent ten-sample
+reference runs at 1121, 965, 903, and 902 ms p95, about 73-75 MB RSS, and 0%
+idle CPU. The immediately preceding run, launched directly after the native
+release build, missed the CPU gate at 1433 ms p95 and remains disclosed as a
+non-quiescent stress boundary.
 
 ## Decision
 Register `whisper-base-en-q5_1` with its exact SHA-256 and source metadata. Make
-it the macOS and Linux first-run default because both platforms have direct
-quality, lane, latency, RAM, and idle-CPU evidence. Keep it as a selectable
-candidate on Windows; promote Windows only after repeatable quiescent reference
-runs pass unchanged budgets.
+it the macOS, Windows, and Linux first-run default because all three platforms
+now have direct quality, lane, latency, RAM, and idle-CPU evidence. The Windows
+promotion is based on the four-run quiescent series that represents an installed
+app; the immediate-post-build stress miss remains evidence, not a passing run.
 
 When at least one reviewed candidate exists, automatic recommendation fallback
 ignores candidates whose checksum or download sources are still placeholders.
-Windows therefore selects q5 as the reviewed, CPU-safe installable fallback
-instead of selecting the unfinished Parakeet entry. If every candidate is still
-unreviewed, Kaydence retains an explicit blocked selection so Setup names the
-metadata failure instead of pretending no model exists. This does not add
-Windows to q5's `default_for` list or close its p95 gate.
+This prevents the unfinished Parakeet entry from displacing reviewed q5. If
+every candidate is still unreviewed, Kaydence retains an explicit blocked
+selection so Setup names the metadata failure instead of pretending no model
+exists.
 
 Normalize pre-warmup candidate and runtime lane labels to the backend compiled
 into the current build. A GPU-preferred `whisper.cpp` artifact reports CPU before
@@ -61,15 +61,15 @@ and operator gate.
   ONNX/RNNT runtime is implemented and benchmarked.
 
 ## Consequences
-- macOS and Linux get a measured, checksum-pinned first-run model that meets
-  current P1 latency, RAM, and idle-CPU budgets.
-- Windows remains usable and truthful: q5 is the reviewed automatic fallback
-  and its exact golden transcript passes, while its platform-default promotion
-  and P1-G3 p95 status remain open.
+- macOS, Windows, and Linux get a measured, checksum-pinned first-run model that
+  meets current P1 quality, latency, RAM, and idle-CPU evidence criteria.
+- Windows retains the immediate-post-build p95 miss alongside four consecutive
+  quiescent passes so later release work can distinguish installed-app behavior
+  from build-host contention.
 - Default and Metal-feature tests must cover effective candidate, pending, and
   verified-artifact lane labels.
 - The current fallback URL is a second revision path in the same Hugging Face
   repository, not an independent host mirror. SHA-256 protects integrity; an
   independently operated mirror remains an availability follow-up.
-- P1-G3 remains pending for stable Windows q5 p95 proof, physical focused-field
-  timing, the no-model process-group boundary, and fresh three-OS CI.
+- P1-G3 remains pending for physical focused-field timing, the no-model
+  process-group boundary, and fresh three-OS CI.
