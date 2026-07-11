@@ -470,10 +470,10 @@ try {
 
   Invoke-UiaButton -WindowHandle $windowHandle -Name "Review"
   $null = Wait-UiaElement -WindowHandle $windowHandle -Name "First Run Proof"
-  foreach ($permissionName in @("Microphone", "UI Automation", "Keyboard fallback")) {
+  $captures.Add((Capture-AppState -WindowHandle $windowHandle -Slug "board10-permissions" -ExpectedName "First Run Proof"))
+  foreach ($permissionName in @("Microphone", "UI Automation focus access", "Keyboard injection fallback")) {
     $null = Wait-UiaElement -WindowHandle $windowHandle -Name $permissionName
   }
-  $captures.Add((Capture-AppState -WindowHandle $windowHandle -Slug "board10-permissions" -ExpectedName "First Run Proof"))
 
   $manifest = [ordered]@{
     schema_version = 1
