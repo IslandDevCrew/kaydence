@@ -553,3 +553,4 @@
 - The production `local_asr_stack() -> WhisperCppEngine` path then passed: exact `Hello there`, 513 ms warmup, 1071 ms warm LocalCpu inference against the 1200 ms hard gate, truthful CPU reporting after a GPU request, and 1/1 test green with batch exit code 0.
 - Windows runtime proof is closed for this ARM64 toolchain. P1-G3 remains pending for full release-to-inject, ASR-resident RAM/idle CPU, reference p50/p95, and the no-model 86 MB process-group gap. Parakeet/ort and human-voice WER also remain open.
 - Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-whisper-runtime.txt` and its raw `.log`; continuation: `docs/WINDOWS_CODEX_HANDOFF_2026-07-11.md`.
+- Opened stacked draft PR #13 from `codex/p1-g3-windows-asr-runtime`, based on PR #12 so its diff remains the Windows proof layer. Retarget only after PRs #11 and #12 land; a fresh full matrix is still mandatory.

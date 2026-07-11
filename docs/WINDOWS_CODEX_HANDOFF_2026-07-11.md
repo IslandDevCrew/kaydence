@@ -11,8 +11,8 @@ This handoff supersedes `docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md`.
 - Draft PR #11 carries truthful Whisper warmup, portable release defaults, and
   Linux runtime proof. Draft PR #12 is stacked on #11 and closes Linux
   human-focus injection proof.
-- Branch `codex/p1-g3-windows-asr-runtime` is stacked on #12 and carries this
-  Windows ARM64 runtime proof.
+- Draft PR #13 (`codex/p1-g3-windows-asr-runtime`) is stacked on #12 and
+  carries this Windows ARM64 runtime proof.
 - GitHub Actions is not running new jobs. PR #11 runs `29142969657` and
   `29143051942` failed before checkout with zero setup steps because the account
   reports failed payments or an exhausted spending limit. This is not a code
