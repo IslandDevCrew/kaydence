@@ -319,7 +319,7 @@ function prTimeline() {
       return `<article class="tl-item"><time>#${esc(p.number ?? "?")}</time><p><b>${esc(p.title ?? "")}</b> &mdash; ${esc(p.phase ?? "?")}${p.mergedAt ? `, merged ${esc(p.mergedAt)}` : ""} ${url ? `&middot; <a href="${url}">view</a>` : ""}</p></article>`;
     })
     .join("");
-  return `<section aria-labelledby="prs"><h2 id="prs">Merged Work (${prLog.length} PRs)</h2><div class="timeline">${rows}</div></section>`;
+  return `<section aria-labelledby="prs"><h2 id="prs">Work Log (${prLog.length} tracked entries)</h2><div class="timeline">${rows}</div></section>`;
 }
 
 function journalSection() {
@@ -410,7 +410,7 @@ button.copy:hover{background:rgba(88,215,179,.2)}
       ${chip(`active phase: ${resume.activePhase ?? "?"}`, "green")}
       ${chip(`${doneTasks}/${allTasks.length} tasks`, "blue")}
       ${chip(`${passedGates}/${allGates.length} gates passed`, gatesChipTone)}
-      ${chip(`${prLog.length} PRs merged`)}
+      ${chip(`${prLog.length} work items tracked`)}
       ${chip(`sessions: ${m.sessionCount ?? 1}`)}
       ${chip(`updated: ${m.updated ?? "?"}`)}
     </div>
@@ -456,4 +456,4 @@ document.querySelectorAll("button.copy").forEach((b) => {
 
 writeFileSync(outPath, html);
 console.log(`Rendered ${outPath}`);
-console.log(`  phases: ${phases.length}, tasks: ${doneTasks}/${allTasks.length}, gates passed: ${passedGates}/${allGates.length}, PRs: ${prLog.length}`);
+console.log(`  phases: ${phases.length}, tasks: ${doneTasks}/${allTasks.length}, gates passed: ${passedGates}/${allGates.length}, work items: ${prLog.length}`);
