@@ -33,8 +33,9 @@ thread model, and event contract there are binding.
 6. Any new crate dependency: justify in PR (size, maintenance, license) —
    licenses must be MIT/Apache-2/BSD-compatible.
 7. User-close destroys the cockpit WebView but keeps the tray-owned hotkey/audio
-   runtime alive. Tray or OS reopen recreates the configured main window;
-   explicit Quit still terminates. Do not replace this with hide-only behavior.
+   runtime alive. Tray interaction recreates the configured main window on
+   desktop; macOS reopen does the same. Explicit Quit still terminates. Do not
+   replace this with hide-only behavior.
 
 ## Testing
 Unit tests beside code; pipeline behavior in `tests/integration/` as event-

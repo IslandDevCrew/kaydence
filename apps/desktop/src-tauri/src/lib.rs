@@ -2747,8 +2747,24 @@ enum MainWindowOpenAction {
 }
 
 #[cfg(desktop)]
-fn keep_running_after_exit_request(window_close_requested: bool, code: Option<i32>) -> bool {
-    window_close_requested && code.is_none()
+#[derive(Debug, Default)]
+struct DesktopLifecycle {
+    window_close_pending: AtomicBool,
+}
+
+#[cfg(desktop)]
+impl DesktopLifecycle {
+    fn mark_window_close(&self) {
+        self.window_close_pending.store(true, Ordering::SeqCst);
+    }
+
+    fn cancel_window_close(&self) {
+        self.window_close_pending.store(false, Ordering::SeqCst);
+    }
+
+    fn should_keep_running_after_exit_request(&self, code: Option<i32>) -> bool {
+        self.window_close_pending.swap(false, Ordering::SeqCst) && code.is_none()
+    }
 }
 
 #[cfg(desktop)]
@@ -2828,18 +2844,18 @@ pub fn run() {
     let builder = builder.plugin(tauri_plugin_dialog::init());
 
     #[cfg(desktop)]
-    let keep_alive_after_close = Arc::new(AtomicBool::new(false));
+    let lifecycle = Arc::new(DesktopLifecycle::default());
     #[cfg(desktop)]
-    let close_requested = Arc::clone(&keep_alive_after_close);
+    let close_lifecycle = Arc::clone(&lifecycle);
     #[cfg(desktop)]
     let builder = builder
         .on_window_event(move |window, event| {
             if window.label() == MAIN_WINDOW_LABEL {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
-                    close_requested.store(true, Ordering::SeqCst);
+                    close_lifecycle.mark_window_close();
                     if let Err(err) = window.destroy() {
-                        close_requested.store(false, Ordering::SeqCst);
+                        close_lifecycle.cancel_window_close();
                         eprintln!("{} window close failed: {err}", settings::APP_NAME);
                     }
                 }
@@ -2928,11 +2944,10 @@ pub fn run() {
 
     #[cfg(desktop)]
     app.run(move |app, event| match event {
-        tauri::RunEvent::ExitRequested { code, api, .. } => {
-            let was_window_close = keep_alive_after_close.swap(false, Ordering::SeqCst);
-            if keep_running_after_exit_request(was_window_close, code) {
-                api.prevent_exit();
-            }
+        tauri::RunEvent::ExitRequested { code, api, .. }
+            if lifecycle.should_keep_running_after_exit_request(code) =>
+        {
+            api.prevent_exit();
         }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::Reopen {
@@ -2959,14 +2974,24 @@ mod tests {
     use std::sync::{Arc, Mutex};
 
     #[test]
-    fn user_window_close_keeps_the_background_runtime_alive() {
-        assert!(keep_running_after_exit_request(true, None));
+    fn user_window_close_is_a_one_shot_background_transition() {
+        let lifecycle = DesktopLifecycle::default();
+
+        lifecycle.mark_window_close();
+        assert!(lifecycle.should_keep_running_after_exit_request(None));
+        assert!(!lifecycle.should_keep_running_after_exit_request(None));
     }
 
     #[test]
-    fn explicit_quit_is_not_intercepted() {
-        assert!(!keep_running_after_exit_request(true, Some(0)));
-        assert!(!keep_running_after_exit_request(false, None));
+    fn explicit_quit_and_failed_close_are_not_intercepted() {
+        let lifecycle = DesktopLifecycle::default();
+
+        lifecycle.mark_window_close();
+        assert!(!lifecycle.should_keep_running_after_exit_request(Some(0)));
+
+        lifecycle.mark_window_close();
+        lifecycle.cancel_window_close();
+        assert!(!lifecycle.should_keep_running_after_exit_request(None));
     }
 
     #[test]

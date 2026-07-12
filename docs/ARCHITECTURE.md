@@ -41,8 +41,9 @@ Rules:
 - One dictation = one `SessionId` (ULID) threading through every stage and log line.
 - The desktop tray owns the always-on runtime. Closing the cockpit destroys its
   WebView and releases the WebContent process without unregistering the global
-  hotkey or stopping audio/pipeline state. Tray and OS reopen events recreate
-  the main window from its checked-in Tauri configuration; explicit Quit exits.
+  hotkey or stopping audio/pipeline state. Tray interaction recreates the main
+  window from its checked-in Tauri configuration on every desktop; macOS reopen
+  does the same. Explicit Quit exits.
 
 ## 3. Pipeline stages & ownership
 
