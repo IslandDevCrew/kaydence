@@ -23,13 +23,19 @@ thread model, and event contract there are binding.
    internal imports. If you need new coupling, extend the event enum via ADR.
 2. Every log line and span carries the `SessionId` (ULID).
 3. `#[cfg(target_os)]` is legal only in `inject/`, `hotkeys/`, `audio/`
-   (device layer), `profiles/` (app detection) — and only behind a trait.
+   (device layer), `profiles/` (app detection), plus minimal Tauri shell events
+   in `lib.rs` such as macOS reopen handling — and only behind a trait where a
+   platform capability is being abstracted.
 4. No `unwrap()`/`expect()` outside tests; module error enums via `thiserror`;
    a stage failure emits `Failed{..}` and must still leave audio + raw text
    recoverable in history (non-negotiable #2).
 5. Hot path allocates nothing avoidable; model loads never on the hot path.
 6. Any new crate dependency: justify in PR (size, maintenance, license) —
    licenses must be MIT/Apache-2/BSD-compatible.
+7. User-close destroys the cockpit WebView but keeps the tray-owned hotkey/audio
+   runtime alive. Tray interaction recreates the configured main window on
+   desktop; macOS reopen does the same. Explicit Quit still terminates. Do not
+   replace this with hide-only behavior.
 
 ## Testing
 Unit tests beside code; pipeline behavior in `tests/integration/` as event-

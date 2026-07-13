@@ -39,6 +39,11 @@ Rules:
 - Model load happens at startup or model-switch, never on the hot path. Keep
   the selected model resident (within the 250 MB idle budget — quantized).
 - One dictation = one `SessionId` (ULID) threading through every stage and log line.
+- The desktop tray owns the always-on runtime. Closing the cockpit destroys its
+  WebView and releases the WebContent process without unregistering the global
+  hotkey or stopping audio/pipeline state. Tray interaction recreates the main
+  window from its checked-in Tauri configuration on every desktop; macOS reopen
+  does the same. Explicit Quit exits.
 
 ## 3. Pipeline stages & ownership
 

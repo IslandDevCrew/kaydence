@@ -41,7 +41,12 @@ Known per-app quirks (documented, not defects):
   characters there. It is a non-issue in practice: Notepad exposes a writable UIA
   `ValuePattern`, so the native-primary path handles it cleanly. Validated
   2026-07-09 (native insert PASS; keystroke PASS on classic Win32 Edit).
+- **Linux GNOME/Wayland:** AT-SPI-gated uinput is live-proven for an accessible
+  `Text` field and refuses a real `PasswordText` field. The current uinput
+  keymap is US-QWERTY ASCII only; Unicode beyond ASCII and optional portal/libei
+  remain required follow-ups. Opaque clients still follow ADR-0013's disclosed
+  Lenient/Strict policy boundary.
 
 ## Definition of done
-Both OSes, matrix green, clipboard-restore test green, secure-field test
+All three OSes, matrix green, clipboard-restore test green, secure-field test
 green, focus-change test green.

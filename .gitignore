@@ -5,5 +5,6 @@ target/
 *.bin
 models/weights/
 .DS_Store
+bench-results/
 apps/desktop/src-tauri/gen/
 *.tsbuildinfo

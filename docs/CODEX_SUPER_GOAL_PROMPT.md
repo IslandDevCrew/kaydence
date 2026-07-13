@@ -82,9 +82,10 @@ Current product state:
 - P1-P0-3 Windows injection is merged and live-validated on the Fable box:
   UIA ValuePattern native insert, SendInput Unicode fallback, clipboard
   snapshot/restore, secure-field refusal, and frontmost app detection.
-- P1-P0-3 remaining work is Linux human-focus validation, Linux
-  unicode-beyond-ASCII, optional portal/libei, and continued macOS/Windows
-  regression proof as changes land.
+- P1-P0-3 human-focus validation is closed on Debian GNOME/Wayland: AT-SPI
+  gated a real Text field for uinput delivery and refused a real PasswordText
+  field twice. Remaining work is Linux unicode-beyond-ASCII, optional
+  portal/libei, and the disclosed opaque-client policy boundary.
 - P1-P0-4 WAL/history core is done: audio persists before ASR, crash recovery
   and short-utterance gates exist, SQLite history lists sessions, safe delete,
   export, purge, orphan recovery, and audio playback are wired.
@@ -92,21 +93,23 @@ Current product state:
   default egress, audit-network plus privacy posture checks, and Screen Family
   07 cockpit panel.
 - P1-P0-6 has a partial enforced latency floor: kaydence --bench emits JSON and
-  scripts/bench.sh --check enforces implemented Raw-path budgets. Real ASR/GPU,
-  idle footprint, and reference-machine p95 evidence remain.
+  scripts/bench.sh --check enforces implemented Raw-path budgets. Real warm ASR
+  now passes at 55-67 ms on Apple Metal, 208 ms on macOS CPU, 999 ms on Debian
+  ARM64 CPU, and 1071 ms on Windows ARM64 CPU. Full release-to-inject,
+  ASR-resident RAM/idle CPU, reference p95, and the no-model footprint gap remain.
 - P1-P0-1 hotkey core is wired: push-to-talk/toggle, selected binding
   persistence, global shortcut registration, idle-only switching/rebinding,
   runtime proof refresh for hotkey and microphone evidence, and short-utterance
   tests. The secondary cleanup override chord can now register Shift+RightAlt/
   Option as a Raw-only per-invocation capture path while the next primary
   capture returns to the profile cleanup dial. Live OS permission/conflict proof
-  and ASR golden clips remain.
-- P1-P0-2 first-run model readiness is honest but not finished: registry
-  verification, ASR picker, selected/recommended model ids, local artifact
-  install, mismatch quarantine, read-only download preflight, and
-  artifact-aware selected ASR runtime status are wired. TODO hashes/sources,
-  approved download/progress UI, real Parakeet/Whisper adapters, WER, and
-  latency evidence remain.
+  remains.
+- P1-P0-2 now has a real whisper.cpp adapter and runtime proof on macOS, Debian
+  ARM64, and Windows ARM64. Registry verification, ASR picker, local artifact
+  install, mismatch quarantine, read-only download preflight, warmup readiness,
+  and artifact-aware runtime status are wired. Reviewed production hashes/
+  sources, approved download/progress UI, independent Parakeet/ort, human-voice
+  WER, and the remaining P1-G3 measurements are still open.
 - P1-P0-8 first run is actively moving: backend-owned next_step, durable
   first-dictation completion only after real Injected, setup timing, permission
   rows for macOS/Windows/Linux, stricter ready_to_dictate contract, proof export
@@ -127,10 +130,10 @@ Best next build sequence:
      where focus cannot be moved safely by automation.
 3. For models, replace registry TODO hashes/sources only with reviewed artifacts
    and ADR/operator approval for any network downloader/progress UI.
-4. Build real ASR adapters after model provenance is solved. Until then, keep
-   runtime states Pending/Blocked/VerifiedArtifact honest and never fake text.
-5. Continue injection proof, especially Linux human-focus and unicode
-   beyond ASCII.
+4. Add the independent Parakeet/ort runtime after model provenance is reviewed,
+   and measure full release-to-inject plus ASR-resident RAM/idle CPU.
+5. Continue Linux injection with unicode beyond ASCII and optional portal/libei;
+   keep the opaque-client secure-field boundary explicit.
 6. Keep SOTU current and pause before any push while hosted CI is billing-blocked.
 
 Local gate set for most P1 slices:
@@ -147,7 +150,7 @@ Local gate set for most P1 slices:
 - Fresh 3-OS CI after push, once GitHub hosted runners execute again
 
 Windows continuation:
-Use docs/WINDOWS_CODEX_HANDOFF_2026-07-09.md. It supersedes the July 8 handoff.
+Use docs/WINDOWS_CODEX_HANDOFF_2026-07-11.md. It supersedes the July 9 handoff.
 
 Never mark complete until every explicit PRD item, gate, invariant, and
 deliverable has current evidence proving completion.

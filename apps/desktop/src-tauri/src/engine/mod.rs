@@ -108,8 +108,19 @@ impl std::fmt::Display for AsrError {
 
 impl std::error::Error for AsrError {}
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AsrWarmup {
+    NotRequired,
+    Ready,
+}
+
 pub trait AsrEngine {
     fn lane(&self) -> EngineLane;
+
+    fn warm_up(&mut self) -> Result<AsrWarmup, AsrError> {
+        Ok(AsrWarmup::NotRequired)
+    }
+
     fn transcribe(&mut self, request: &AsrRequest) -> Result<AsrTranscript, AsrError>;
 }
 
@@ -135,13 +146,16 @@ pub struct EngineRun {
 
 pub struct EngineStack {
     engines: Vec<Box<dyn AsrEngine + Send>>,
+    warmup_failures: Vec<Option<AsrError>>,
     no_speech_threshold: f32,
 }
 
 impl EngineStack {
     pub fn new(engines: Vec<Box<dyn AsrEngine + Send>>) -> Self {
+        let engine_count = engines.len();
         Self {
             engines,
+            warmup_failures: vec![None; engine_count],
             no_speech_threshold: DEFAULT_NO_SPEECH_REJECT_THRESHOLD,
         }
     }
@@ -155,12 +169,43 @@ impl EngineStack {
         self
     }
 
+    pub fn warm_up(&mut self) -> Result<Option<EngineLane>, AsrError> {
+        let mut failures = Vec::new();
+        self.warmup_failures.fill(None);
+
+        for (index, engine) in self.engines.iter_mut().enumerate() {
+            let lane = engine.lane();
+            match engine.warm_up() {
+                Ok(AsrWarmup::Ready) => return Ok(Some(lane)),
+                Ok(AsrWarmup::NotRequired) => {}
+                Err(err) => {
+                    failures.push(format!("{}: {err}", engine_lane_label(lane)));
+                    self.warmup_failures[index] = Some(err);
+                }
+            }
+        }
+
+        if failures.is_empty() {
+            Ok(None)
+        } else {
+            Err(AsrError::AllEnginesFailed { failures })
+        }
+    }
+
     pub fn transcribe(&mut self, request: &AsrRequest) -> Result<EngineRun, AsrError> {
         let mut attempts = Vec::new();
         let mut failures = Vec::new();
 
-        for engine in &mut self.engines {
+        for (index, engine) in self.engines.iter_mut().enumerate() {
             let lane = engine.lane();
+            if let Some(err) = self.warmup_failures[index].clone() {
+                failures.push(format!("{}: {err}", engine_lane_label(lane)));
+                attempts.push(EngineAttempt {
+                    lane,
+                    outcome: EngineAttemptOutcome::Failed(err),
+                });
+                continue;
+            }
             match engine.transcribe(request) {
                 Ok(transcript) => {
                     let events =
@@ -263,11 +308,38 @@ pub fn local_asr_stack(state: LocalAsrAdapterState) -> EngineStack {
     {
         if let LocalAsrAdapterState::VerifiedArtifact { spec } = &state {
             if spec.runtime == "whisper.cpp" {
-                return EngineStack::new(vec![whisper::WhisperCppEngine::boxed(spec.clone())]);
+                let engines = whisper_adapter_specs(spec, whisper_acceleration_compiled())
+                    .into_iter()
+                    .map(whisper::WhisperCppEngine::boxed)
+                    .collect();
+                return EngineStack::new(engines);
             }
         }
     }
     EngineStack::new(vec![LocalAsrAdapterEngine::boxed(state)])
+}
+
+#[cfg(feature = "asr-whisper")]
+fn whisper_acceleration_compiled() -> bool {
+    cfg!(feature = "asr-whisper-metal")
+}
+
+#[cfg(feature = "asr-whisper")]
+fn whisper_adapter_specs(
+    requested: &LocalAsrAdapterSpec,
+    acceleration_compiled: bool,
+) -> Vec<LocalAsrAdapterSpec> {
+    if requested.lane != EngineLane::LocalGpu {
+        return vec![requested.clone()];
+    }
+
+    let mut cpu = requested.clone();
+    cpu.lane = EngineLane::LocalCpu;
+    if acceleration_compiled {
+        vec![requested.clone(), cpu]
+    } else {
+        vec![cpu]
+    }
 }
 
 struct LocalAsrAdapterEngine {
@@ -374,6 +446,7 @@ pub fn stage() -> SessionEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Arc, Mutex};
     use ulid::Ulid;
 
     fn session_id() -> SessionId {
@@ -412,6 +485,45 @@ mod tests {
 
         fn transcribe(&mut self, _request: &AsrRequest) -> Result<AsrTranscript, AsrError> {
             self.result.clone()
+        }
+    }
+
+    struct WarmupEngine {
+        lane: EngineLane,
+        result: Result<AsrWarmup, AsrError>,
+        calls: Arc<Mutex<u32>>,
+    }
+
+    impl WarmupEngine {
+        fn boxed(
+            lane: EngineLane,
+            result: Result<AsrWarmup, AsrError>,
+            calls: Arc<Mutex<u32>>,
+        ) -> Box<dyn AsrEngine + Send> {
+            Box::new(Self {
+                lane,
+                result,
+                calls,
+            })
+        }
+    }
+
+    impl AsrEngine for WarmupEngine {
+        fn lane(&self) -> EngineLane {
+            self.lane
+        }
+
+        fn warm_up(&mut self) -> Result<AsrWarmup, AsrError> {
+            *self.calls.lock().unwrap() += 1;
+            self.result.clone()
+        }
+
+        fn transcribe(&mut self, _request: &AsrRequest) -> Result<AsrTranscript, AsrError> {
+            assert!(
+                self.result.is_ok(),
+                "an engine disabled by failed warmup must not be retried on the hot path"
+            );
+            Ok(AsrTranscript::raw("warm engine"))
         }
     }
 
@@ -501,6 +613,90 @@ mod tests {
     }
 
     #[test]
+    fn warmup_stops_after_the_first_viable_engine() {
+        let primary_calls = Arc::new(Mutex::new(0));
+        let fallback_calls = Arc::new(Mutex::new(0));
+        let mut stack = EngineStack::new(vec![
+            WarmupEngine::boxed(
+                EngineLane::LocalGpu,
+                Ok(AsrWarmup::Ready),
+                Arc::clone(&primary_calls),
+            ),
+            WarmupEngine::boxed(
+                EngineLane::LocalCpu,
+                Ok(AsrWarmup::Ready),
+                Arc::clone(&fallback_calls),
+            ),
+        ]);
+
+        let lane = stack.warm_up().unwrap();
+
+        assert_eq!(lane, Some(EngineLane::LocalGpu));
+        assert_eq!(*primary_calls.lock().unwrap(), 1);
+        assert_eq!(*fallback_calls.lock().unwrap(), 0);
+    }
+
+    #[test]
+    fn warmup_uses_the_fallback_after_primary_initialization_fails() {
+        let primary_calls = Arc::new(Mutex::new(0));
+        let fallback_calls = Arc::new(Mutex::new(0));
+        let mut stack = EngineStack::new(vec![
+            WarmupEngine::boxed(
+                EngineLane::LocalGpu,
+                Err(AsrError::Unavailable("Metal unavailable".to_string())),
+                Arc::clone(&primary_calls),
+            ),
+            WarmupEngine::boxed(
+                EngineLane::LocalCpu,
+                Ok(AsrWarmup::Ready),
+                Arc::clone(&fallback_calls),
+            ),
+        ]);
+
+        let lane = stack.warm_up().unwrap();
+
+        assert_eq!(lane, Some(EngineLane::LocalCpu));
+        assert_eq!(*primary_calls.lock().unwrap(), 1);
+        assert_eq!(*fallback_calls.lock().unwrap(), 1);
+
+        let run = stack.transcribe(&request(session_id())).unwrap();
+        assert_eq!(run.lane, EngineLane::LocalCpu);
+        assert!(matches!(
+            run.attempts[0].outcome,
+            EngineAttemptOutcome::Failed(AsrError::Unavailable(ref detail))
+                if detail == "Metal unavailable"
+        ));
+    }
+
+    #[test]
+    fn warmup_reports_every_initialization_failure() {
+        let mut stack = EngineStack::new(vec![
+            WarmupEngine::boxed(
+                EngineLane::LocalGpu,
+                Err(AsrError::Unavailable("Metal unavailable".to_string())),
+                Arc::new(Mutex::new(0)),
+            ),
+            WarmupEngine::boxed(
+                EngineLane::LocalCpu,
+                Err(AsrError::Inference("model rejected".to_string())),
+                Arc::new(Mutex::new(0)),
+            ),
+        ]);
+
+        let err = stack.warm_up().unwrap_err();
+
+        assert_eq!(
+            err,
+            AsrError::AllEnginesFailed {
+                failures: vec![
+                    "local_gpu: engine unavailable: Metal unavailable".to_string(),
+                    "local_cpu: engine inference failed: model rejected".to_string(),
+                ],
+            }
+        );
+    }
+
+    #[test]
     fn no_speech_probability_rejects_final() {
         let transcript = AsrTranscript {
             partials: Vec::new(),
@@ -580,5 +776,34 @@ mod tests {
             err.to_string(),
             "all configured ASR engines failed: local_cpu: engine unavailable: verified onnxruntime ASR artifact for selected model 'fixture-asr' is ready at /tmp/kaydence-models/fixture-asr.onnx (1024 bytes), but the runtime adapter is not implemented yet"
         );
+    }
+
+    #[cfg(feature = "asr-whisper")]
+    fn verified_whisper_spec(lane: EngineLane) -> LocalAsrAdapterSpec {
+        LocalAsrAdapterSpec {
+            model_id: "whisper-fixture".to_string(),
+            lane,
+            runtime: "whisper.cpp".to_string(),
+            artifact_path: PathBuf::from("/tmp/kaydence-models/whisper-fixture.bin"),
+            artifact_size_bytes: 147_000_000,
+        }
+    }
+
+    #[cfg(feature = "asr-whisper")]
+    #[test]
+    fn whisper_plan_uses_cpu_when_no_acceleration_backend_is_compiled() {
+        let specs = whisper_adapter_specs(&verified_whisper_spec(EngineLane::LocalGpu), false);
+        let lanes = specs.iter().map(|spec| spec.lane).collect::<Vec<_>>();
+
+        assert_eq!(lanes, vec![EngineLane::LocalCpu]);
+    }
+
+    #[cfg(feature = "asr-whisper")]
+    #[test]
+    fn whisper_plan_uses_gpu_then_cpu_when_acceleration_is_compiled() {
+        let specs = whisper_adapter_specs(&verified_whisper_spec(EngineLane::LocalGpu), true);
+        let lanes = specs.iter().map(|spec| spec.lane).collect::<Vec<_>>();
+
+        assert_eq!(lanes, vec![EngineLane::LocalGpu, EngineLane::LocalCpu]);
     }
 }

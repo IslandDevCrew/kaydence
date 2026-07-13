@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "result": "fail",
+  "failed_at_utc": "2026-07-11T03:46:45.1933060Z",
+  "elapsed_seconds": 106.468,
+  "commit": "0d30883961a003af9d091580ab3c18997a13db8a",
+  "run_id": "29137950481",
+  "executable": "D:\\a\\kaydence\\kaydence\\target\\release\\kaydence.exe",
+  "host": {
+    "os_caption": "Microsoft Windows Server 2025 Datacenter",
+    "os_version": "10.0.26100",
+    "os_build": "26100",
+    "architecture": "X64",
+    "manufacturer": "Microsoft Corporation",
+    "model": "Virtual Machine",
+    "user_interactive": true,
+    "session_id": 2,
+    "session_name": null,
+    "runner_name": "GitHub Actions 1000000183",
+    "runner_os": "Windows",
+    "runner_arch": "X64",
+    "runner_image": "win25-vs2026"
+  },
+  "source_hashes": {
+    "apps/desktop/src/App.tsx": "512d7fe892c1adf785d5e1bb439bdef14d483c35f05bc8c149751998cba40c6d",
+    "apps/desktop/src/views/DictateView.tsx": "07a941b7695fc21c7f478a7cc68eaaba1124455f1fa8f4e8d0179f63c9f0a8e4",
+    "apps/desktop/src/views/CleanupView.tsx": "3615be6226ea12a207c4f473131438c210995a034dda72b2d8ab085da65aaaa9",
+    "apps/desktop/src/views/PrivacyView.tsx": "dacc1a01e537edbe6fb7ea2503852a2ad11fb2e6f3b92bca9dc7b6809a1a8823",
+    "apps/desktop/src/views/FirstRunView.tsx": "31a0200461971eaf8cf5c9b1206c894cc72c34115bf68025967edfd5e73b719f"
+  },
+  "completed_captures": [
+    {
+      "slug": "board01",
+      "expected_uia_name": "Recent clean transcript",
+      "client": {
+        "width": 900,
+        "height": 600,
+        "sampled_colors": 45,
+        "minimum_luma": 28,
+        "maximum_luma": 255,
+        "non_dark_ratio": 1.0,
+        "file": "board01-native-windows.png",
+        "sha256": "5e47502920f8c1da9b4e7a7018948eaf80f645c19377fcd1cf5237321531e13c"
+      },
+      "native_window": {
+        "width": 916,
+        "height": 639,
+        "sampled_colors": 120,
+        "minimum_luma": 12,
+        "maximum_luma": 255,
+        "non_dark_ratio": 1.0,
+        "file": "board01-native-windows-runner.png",
+        "sha256": "f27e73e84dd907c07038607d9d321474db784c95d15dc0aadcd07e996403f53d"
+      },
+      "uia_tree": "board01-native-windows-uia.tsv",
+      "uia_tree_sha256": "7d1a6745ad75741773caa004343134120bf0719b08dd538748206d6ef731ead3"
+    },
+    {
+      "slug": "board03",
+      "expected_uia_name": "Cleanup & Injection",
+      "client": {
+        "width": 900,
+        "height": 600,
+        "sampled_colors": 61,
+        "minimum_luma": 23,
+        "maximum_luma": 255,
+        "non_dark_ratio": 1.0,
+        "file": "board03-native-windows.png",
+        "sha256": "2a537f2ecbdede87e4224d946c1d4e138c8050db3ccae33ea6fdb47e86ae5f4c"
+      },
+      "native_window": {
+        "width": 916,
+        "height": 639,
+        "sampled_colors": 136,
+        "minimum_luma": 12,
+        "maximum_luma": 255,
+        "non_dark_ratio": 1.0,
+        "file": "board03-native-windows-runner.png",
+        "sha256": "fa2c42f5c676514362ee417bb048fadba82079d95369be3b0f90b9ea1016a956"
+      },
+      "uia_tree": "board03-native-windows-uia.tsv",
+      "uia_tree_sha256": "e0ee8205d74ba4edc644d27131b6b3e132528d99a18852c9e01dbb584888669a"
+    },
+    {
+      "slug": "board07",
+      "expected_uia_name": "Privacy & Context",
+      "client": {
+        "width": 900,
+        "height": 600,
+        "sampled_colors": 64,
+        "minimum_luma": 23,
+        "maximum_luma": 255,
+        "non_dark_ratio": 1.0,
+        "file": "board07-native-windows.png",
+        "sha256": "e627c9f45e26715b62e288a3f000d53e97c13814cdf97bd61a6e661bd60c8b8e"
+      },
+      "native_window": {
+        "width": 916,
+        "height": 639,
+        "sampled_colors": 132,
+        "minimum_luma": 12,
+        "maximum_luma": 255,
+        "non_dark_ratio": 1.0,
+        "file": "board07-native-windows-runner.png",
+        "sha256": "388b7ae312e21d9964c782255020e84f5cb846a7a72e30456bcfab350f0a4875"
+      },
+      "uia_tree": "board07-native-windows-uia.tsv",
+      "uia_tree_sha256": "cac4f4d38c131f89573fdaa6029ffe3235607ae1440009d4e3c80239b31a4077"
+    },
+    {
+      "slug": "board10",
+      "expected_uia_name": "First Run Setup & License",
+      "client": {
+        "width": 900,
+        "height": 600,
+        "sampled_colors": 71,
+        "minimum_luma": 24,
+        "maximum_luma": 255,
+        "non_dark_ratio": 1.0,
+        "file": "board10-native-windows.png",
+        "sha256": "ef82d988ddd6de49b8be3b20a7f2d437d8d56637ad50709408301ea025eef245"
+      },
+      "native_window": {
+        "width": 916,
+        "height": 639,
+        "sampled_colors": 139,
+        "minimum_luma": 12,
+        "maximum_luma": 255,
+        "non_dark_ratio": 1.0,
+        "file": "board10-native-windows-runner.png",
+        "sha256": "0a7682965342b48421da414fe5cad8236fd1c3dfcb42c24b7bae671160db9916"
+      },
+      "uia_tree": "board10-native-windows-uia.tsv",
+      "uia_tree_sha256": "111cf005d06d6b0619c94a8f4fd3d4599d4d5fb72669d68db007bd77014f6b40"
+    }
+  ],
+  "error": "Timed out waiting for UI Automation element named 'UI Automation'.",
+  "script_stack": "at Wait-UiaElement, D:\\a\\kaydence\\kaydence\\scripts\\windows-webview-proof.ps1: line 233\r\nat <ScriptBlock>, D:\\a\\kaydence\\kaydence\\scripts\\windows-webview-proof.ps1: line 474\r\nat <ScriptBlock>, D:\\a\\_temp\\681e3290-00bb-4bca-b894-6ab02ebc1fca.ps1: line 2\r\nat <ScriptBlock>, <No file>: line 1",
+  "boundary": "Failure is fail-closed. No Windows WebView proof may be claimed from this run."
+}

@@ -115,11 +115,14 @@ impl ModelRegistry {
     pub fn verify_required_first_run_models(
         &self,
         models_dir: &Path,
+        selected_asr_model_id: Option<&str>,
     ) -> Vec<(&ModelEntry, Result<ModelArtifactStatus, ModelRegistryError>)> {
         self.models
             .iter()
             .filter(|model| {
-                model.recommended && matches!(model.task, ModelTask::Asr | ModelTask::Vad)
+                model.first_run_required
+                    || (model.task == ModelTask::Asr
+                        && selected_asr_model_id == Some(model.id.as_str()))
             })
             .map(|model| (model, model.verify_artifact(models_dir)))
             .collect()
@@ -166,6 +169,8 @@ pub struct ModelEntry {
     pub min_hw: String,
     #[serde(default)]
     pub recommended: bool,
+    #[serde(default)]
+    pub first_run_required: bool,
     #[serde(default)]
     pub default_for: Vec<String>,
     #[serde(default)]
@@ -560,6 +565,7 @@ mod tests {
             license_review_required: false,
             min_hw: "any".to_string(),
             recommended: true,
+            first_run_required: false,
             default_for: Vec::new(),
             sources: vec!["TODO_primary".to_string()],
             note: None,
@@ -585,18 +591,33 @@ mod tests {
         let registry = ModelRegistry::load(&registry_path()).unwrap();
 
         assert!(registry.require("parakeet-v3").is_ok());
+        let footprint_safe = registry.require("whisper-base-en-q5_1").unwrap();
+        assert_eq!(footprint_safe.lane.as_deref(), Some("gpu"));
+        assert_eq!(footprint_safe.runtime, "whisper.cpp");
+        assert_eq!(footprint_safe.file, "ggml-base.en-q5_1.bin");
+        assert_eq!(footprint_safe.size_mb, 57);
+        assert_eq!(
+            footprint_safe.sha256,
+            "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f"
+        );
+        assert!(!footprint_safe.is_checksum_placeholder());
+        assert!(!footprint_safe.has_placeholder_sources());
+        assert!(footprint_safe.sources.len() >= 2);
+        assert_eq!(footprint_safe.default_for, ["macos", "windows", "linux"]);
         assert!(registry.require("whisper-large-v3-turbo").is_ok());
         assert!(registry.require("silero-vad").is_ok());
-        assert!(registry.recommended_for(ModelTask::Asr).len() >= 2);
+        assert!(registry.recommended_for(ModelTask::Asr).len() >= 3);
         assert!(!registry.recommended_for(ModelTask::Vad).is_empty());
     }
 
     #[test]
     fn current_placeholder_hashes_fail_closed_for_first_run_readiness() {
         let registry = ModelRegistry::load(&registry_path()).unwrap();
-        let results = registry.verify_required_first_run_models(&repo_models_dir());
+        let results = registry
+            .verify_required_first_run_models(&repo_models_dir(), Some("whisper-large-v3-turbo"));
 
-        assert!(!results.is_empty());
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].0.id, "whisper-large-v3-turbo");
         assert!(results.iter().all(|(_, result)| matches!(
             result,
             Err(ModelRegistryError::PlaceholderChecksum { .. })
@@ -604,6 +625,30 @@ mod tests {
         assert!(results
             .iter()
             .any(|(model, _)| model.has_placeholder_sources()));
+    }
+
+    #[test]
+    fn first_run_scope_includes_selected_asr_and_explicit_support_models_only() {
+        let dir = tmp();
+        let selected = entry("selected-asr", "selected.onnx", sha256_for(b"selected"));
+        let other = entry("other-asr", "other.onnx", sha256_for(b"other"));
+        let mut support = entry("required-vad", "vad.onnx", sha256_for(b"vad"));
+        support.task = ModelTask::Vad;
+        support.lane = None;
+        support.first_run_required = true;
+        let registry = ModelRegistry {
+            schema_version: SUPPORTED_SCHEMA_VERSION,
+            models: vec![selected, other, support],
+        };
+
+        let results = registry.verify_required_first_run_models(&dir, Some("selected-asr"));
+        let ids = results
+            .iter()
+            .map(|(model, _)| model.id.as_str())
+            .collect::<Vec<_>>();
+
+        assert_eq!(ids, ["selected-asr", "required-vad"]);
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

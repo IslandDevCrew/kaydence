@@ -14,6 +14,7 @@ type FirstRunNextStepKind =
   | "setup"
   | "model_metadata"
   | "model_install"
+  | "asr_runtime"
   | "permission"
   | "hotkey"
   | "dictation"
@@ -284,7 +285,7 @@ function timingLabel(timing: FirstRunSetupTiming): string {
 }
 
 function activeStep(kind: FirstRunNextStepKind): number {
-  if (kind === "model_metadata" || kind === "model_install") return 2;
+  if (kind === "model_metadata" || kind === "model_install" || kind === "asr_runtime") return 2;
   if (kind === "permission") return 3;
   if (kind === "hotkey") return 4;
   if (kind === "dictation" || kind === "complete") return 9;
@@ -292,7 +293,7 @@ function activeStep(kind: FirstRunNextStepKind): number {
 }
 
 function evidenceFor(kind: FirstRunNextStepKind): EvidenceSection {
-  if (kind === "model_metadata" || kind === "model_install") return "models";
+  if (kind === "model_metadata" || kind === "model_install" || kind === "asr_runtime") return "models";
   if (kind === "permission") return "permissions";
   return "proof";
 }
@@ -310,6 +311,7 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
   const selectedModel = props.firstRun.selected_asr_model_id ??
     props.firstRun.asr_runtime.selected_model_id ??
     "No model selected";
+  const asrReady = props.firstRun.model_ready && props.firstRun.asr_runtime.adapter_ready;
   const modelOptions = props.firstRun.asr_candidates.length
     ? props.firstRun.asr_candidates
     : [{ id: selectedModel, selected: true }];
@@ -336,7 +338,7 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
 
   const stepDone = (step: number): boolean => {
     if (step === 1 || step === 5 || step === 7 || step === 8) return true;
-    if (step === 2) return props.firstRun.model_ready;
+    if (step === 2) return asrReady;
     if (step === 3) return permissionsReady;
     if (step === 4) return props.firstRun.hotkey_registered;
     if (step === 9) return props.firstRun.first_dictation_completed;
@@ -395,7 +397,7 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
               <select aria-label="Local ASR engine" disabled={props.modelRefreshPending || !selectedRuntime} onChange={(event) => props.onModelChange(event.target.value)} value={selectedModel}>
                 {modelOptions.map((model) => <option key={model.id} value={model.id}>{model.id}</option>)}
               </select>
-              <button aria-label="Review models" className="first-run-status-button" onClick={() => openEvidence("models")} type="button"><span className={props.firstRun.model_ready ? "ready" : "issue"}>{props.firstRun.model_ready ? "Ready" : "Review"}</span></button>
+              <button aria-label="Review models" className="first-run-status-button" onClick={() => openEvidence("models")} type="button"><span className={asrReady ? "ready" : "issue"}>{asrReady ? "Ready" : props.firstRun.asr_runtime.state === "blocked" ? "Blocked" : props.firstRun.model_ready ? "Prepare" : "Review"}</span></button>
             </div>
 
             <div className="first-run-control-row">

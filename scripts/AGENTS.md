@@ -11,6 +11,21 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
   current contract measures the implemented Raw orchestration path and marks
   real ASR/GPU/reference-machine/idle-footprint values as explicit unmeasured
   fields until those adapters and machines land.
+- `bench-reference.mjs` — **present (P1-G3, working reference-machine gate)**.
+  Launches the feature-gated `reference-bench` probe, verifies its ready-file
+  PID, samples the resident child twice with host-native macOS/Windows/Linux
+  process tools across at least three seconds, and writes a redacted
+  `bench-results/reference-<platform>-<lane>.json`. The probe holds its resident
+  state for 7-30 seconds. Every host command has a native timeout with forceful
+  termination, and all controller work is capped at 180 seconds. The runner
+  requires a safe model ID plus an expected 64-hex model SHA-256, verifies the
+  probe's model hash and lane relationship, and reports model/fixture hashes
+  without paths or content. It accepts a truthful GPU-to-CPU fallback, records
+  the requested lane, and uses the actual lane's p95 budget. It validates the
+  complete probe schema and event outcome before comparing raw RAM/CPU values
+  to the strict 250 MB/1% budgets; only serialized output is rounded. It also
+  fails when p95 is exceeded or the probe overclaims physical OS-field injection.
+  `bench-results/` is local evidence, never a source input.
 - `audit-network.sh` — **present (P0-T6), a working gate**. Fixed-string scan of
   the Rust/TS source for network-capable call sites, diffed against
   `network-allowlist.json` (model mirrors + user-configured BYOK endpoints + Relay
@@ -36,6 +51,11 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
   tree, and fails closed on non-interactive, blank, uniform, or wrong-sized
   output. This proves rendering/navigation only; it never marks microphone,
   hotkey, injection, secure-field, ASR, or first-dictation readiness.
+- `windows-arm64-build.ps1` — Windows PowerShell 5.1+/PowerShell 7 entry point
+  for native ARM64 release builds. It validates the official VS Build Tools
+  LLVM toolset, imports the ARM64 developer environment, forces portable
+  whisper.cpp codegen through native libclang, and fails before Cargo when the
+  architecture or required tools are wrong.
 
 Scripts are products too: `--help` text, non-zero exit on failure, no silent
 fallthrough.

@@ -139,6 +139,9 @@ Validated `bin/atspi-selftest` against the reference VM. Three concrete results 
 - **Focus:** a script-launched window does not reliably get keyboard focus on Wayland
   (same isolation), so the final "type into the focused app" check is operator-in-the-loop
   by nature: the operator focuses the target, the injector types, AT-SPI reads it back.
+  **Validated 2026-07-11:** real GNOME Text focus typed `[Kaydence]` through uinput;
+  real Zenity `PasswordText` focus was refused twice and stayed empty. See
+  `ops/mission/evidence/2026-07-11-linux-human-focus-injection.txt`.
 
 ## 8. Recommendation
 

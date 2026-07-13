@@ -1,0 +1,87 @@
+P1-G3 - QUANTIZED ASR DEFAULT AND THREE-OS RESIDENT-BUDGET RECOVERY
+Captured: 2026-07-11 (America/Chicago)
+Host: Apple M5 Pro, macOS
+
+DECISION
+- Keep the constitutional ASR-resident ceiling at <=250 MB.
+- Make registry model `whisper-base-en-q5_1` the macOS, Windows, and Linux P1
+  first-run default. Each platform now has direct quality, latency, RAM, and
+  idle-CPU evidence under unchanged budgets.
+- Keep Parakeet V3 as the required independent CPU runtime and
+  large-v3-turbo as an optional quality lane. Neither is called runtime-ready.
+- Preserve ADR-0014: this unit adds verified registry metadata and read-only
+  preflight only. The q5 artifact was supplied manually for proof; Kaydence
+  performs no network fetch.
+- ADR-0015 records the model-default decision as Proposed and requires operator
+  approval before merge.
+
+ARTIFACT PROVENANCE
+- File: ggml-base.en-q5_1.bin
+- Registry ID: whisper-base-en-q5_1
+- Size: 59,721,011 bytes (57 MiB advertised)
+- SHA-256: 4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f
+- Primary: pinned ggerganov/whisper.cpp Hugging Face revision c521a4b
+- Fallback metadata: the same repository's main artifact URL
+- License metadata: MIT
+- No model bytes are checked into git or packaged in this change.
+
+ROOT-CAUSE INVESTIGATION
+- Canonical f16 Metal report failed only resident RAM: 268.188 MB, p50/p95
+  54/77 ms, idle CPU 0%.
+- Five and ten f16 samples both settled around 270 MB, so this was first-use
+  residency rather than per-dictation accumulation.
+- macOS vmmap showed roughly 80 MB of resident empty malloc regions after
+  inference-state teardown. Flash attention was tested as one variable and
+  reverted: 271.813 MB, p95 116 ms. Explicit allocator pressure relief was
+  tested as one variable and reverted: 268.547 MB, p95 254 ms.
+- The model itself was the controlling variable. Native logs report 147.37 MB
+  Metal model size for f16 versus 59.12 MB for Q5_1.
+
+BEFORE / AFTER (same runner, ten samples, release-to-delivery-policy)
+
+  lane       artifact       p50   p95   idle RAM   idle CPU   result
+  ---------- -------------  ----  ----  ---------  ---------  ------
+  local_gpu  base.en f16     54    77   268.188 MB    0%      FAIL RAM
+  local_gpu  base.en Q5_1    55    78   152.656 MB    0%      PASS
+  local_cpu  base.en f16    202   229   220.859 MB    0%      PASS
+  local_cpu  base.en Q5_1   201   214   138.516 MB    0%      PASS
+
+All four Mac q5 table values pass the unchanged budgets: GPU p95 <=700 ms, CPU p95 <=1200 ms,
+resident RAM <=250 MB, and idle CPU <=1%.
+
+SYNTHETIC GOLDEN CORPUS (TRUE METAL)
+- "hello there" -> "Hello there."; warmup 254 ms; inference 95 ms; PASS
+- "send the report" -> "Send the report."; warmup 226 ms; inference 60 ms; PASS
+- pangram -> exact plus punctuation; warmup 231 ms; inference 67 ms; PASS
+- "open the pull request and merge it" -> exact plus punctuation; warmup 245 ms;
+  inference 72 ms; PASS
+- Result: 4/4 phrases, zero content-word error. This remains synthetic TTS,
+  not human-voice WER.
+
+CANONICAL EVIDENCE
+- ops/mission/evidence/2026-07-11-p1-g3-macos-local-gpu.json
+- ops/mission/evidence/2026-07-11-p1-g3-macos-local-cpu.json
+- ops/mission/evidence/2026-07-11-p1-g3-linux-q5-local-cpu.json
+- ops/mission/evidence/2026-07-11-p1-g3-linux-q5-reference-bench.txt
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run1.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run2.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run3.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run4.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run5.json
+- ops/mission/evidence/2026-07-11-p1-g3-windows-q5-reference-bench.txt
+- All JSON reports identify the model and artifact hashes without paths,
+  transcripts, audio, content, or stderr.
+- All retain `physical_os_field_injection` as unmeasured.
+
+HONEST STATUS
+- The Mac q5 GPU and CPU reference lanes pass the measured latency/RAM/CPU
+  fields. This removes the Mac GPU resident-RAM blocker for this model.
+- The Debian 12 ARM64 q5 CPU reference lane passes at 71.859 MB RSS, 600 ms p95,
+  and 0% idle CPU; its exact synthetic golden transcript also passes.
+- Windows 11 ARM64 passed the exact synthetic golden transcript and four
+  consecutive quiescent ten-sample runs at 1121, 965, 903, and 902 ms p95,
+  about 73-75 MB RSS, and 0% idle CPU. The first recorded 1433 ms miss is
+  retained; its cause was not measured.
+- P1-G3 remains PENDING. Packaged-app measurement, physical
+  hotkey-release-to-focused-field timing, the no-model full-process-group gap,
+  and fresh hosted three-OS CI remain open.

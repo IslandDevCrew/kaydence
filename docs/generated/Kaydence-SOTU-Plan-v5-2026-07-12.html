@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaydence — State of the Union &amp; Plan of Attack v5 · 2026-07-12</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#070f1c; --paper:#0d1b2f; --paper-2:#10243b;
+    --ink:#eef6ff; --muted:#a9bdd3; --line:rgba(169,189,211,.18);
+    --accent:#58d7b3; --blue:#77b7ff; --amber:#ffd166; --red:#ff8f8f;
+    --good:#8ef2c0; --violet:#c4a7ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+    radial-gradient(circle at top left,rgba(88,215,179,.16),transparent 30rem),
+    radial-gradient(circle at top right,rgba(119,183,255,.14),transparent 32rem),
+    var(--bg);color:var(--ink);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+  main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:42px 0 64px}
+  h1,h2,h3{margin:0;line-height:1.14}
+  h1{max-width:960px;margin-top:10px;font-size:clamp(2rem,4.8vw,3.7rem);letter-spacing:-.035em;text-wrap:balance}
+  h2{margin-bottom:14px;font-size:clamp(1.4rem,2.8vw,2rem);text-wrap:balance}
+  h3{margin-bottom:8px;font-size:1.05rem;color:#fff}
+  p{margin:0} a{color:var(--blue)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;color:#dff7ef}
+  .eyebrow{color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;align-items:end;padding:24px 0 30px;border-bottom:1px solid var(--line)}
+  .hero .summary{max-width:790px;margin-top:16px;color:var(--muted);font-size:1.06rem}
+  .panel,.verdict-card,.metric{border:1px solid var(--line);border-radius:16px;
+    background:linear-gradient(180deg,var(--paper-2),var(--paper));box-shadow:0 18px 46px rgba(0,0,0,.25)}
+  .verdict-card{padding:22px}
+  .verdict-card.warn{border-color:rgba(255,209,102,.42)}
+  .metric{padding:18px}
+  .verdict-card strong{display:block;color:var(--amber);font-size:1.5rem;line-height:1.15}
+  .verdict-card span{display:block;margin-top:10px;color:var(--muted);font-size:.95rem}
+  section{padding-top:38px}
+  .grid{display:grid;gap:16px}
+  .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .panel{padding:20px}
+  .panel p,li,.muted{color:var(--muted)}
+  .metric strong{display:block;margin-bottom:6px;color:#fff;font-size:1.7rem;line-height:1;font-variant-numeric:tabular-nums}
+  .metric.warn strong{color:var(--amber)} .metric.good strong{color:var(--good)}
+  .chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;margin:2px 4px 2px 0;background:rgba(255,255,255,.05);color:var(--muted);font-size:.78rem;font-weight:800}
+  .chip.red{color:var(--red);border-color:rgba(255,143,143,.4)}
+  .chip.amber{color:var(--amber);border-color:rgba(255,209,102,.4)}
+  .chip.green{color:var(--good);border-color:rgba(142,242,192,.4)}
+  .chip.blue{color:var(--blue);border-color:rgba(119,183,255,.4)}
+  .chip.violet{color:var(--violet);border-color:rgba(196,167,255,.4)}
+  ul{margin:10px 0 0;padding-left:20px}
+  li+li{margin-top:7px}
+  ol{margin:10px 0 0;padding-left:22px} ol li{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  th{background:rgba(255,255,255,.05);color:#fff;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
+  td{color:var(--muted)} td b,td strong{color:#fff}
+  .table-wrap{overflow-x:auto;border-radius:12px}
+  .st{font-weight:900;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+  .st.pass{color:var(--good)} .st.pend{color:var(--amber)} .st.block{color:var(--red)} .st.prog{color:var(--blue)}
+  .kicker{color:var(--muted);margin-bottom:14px;max-width:900px}
+  .step-card{display:grid;grid-template-columns:56px 1fr;gap:18px;padding:20px;margin-top:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--paper-2),var(--paper))}
+  .step-num{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:rgba(255,143,143,.12);color:var(--red);font-weight:950;font-size:1.05rem}
+  .step-card.b .step-num{background:rgba(255,209,102,.12);color:var(--amber)}
+  .step-card.c .step-num{background:rgba(88,215,179,.12);color:var(--accent)}
+  .step-card.d .step-num{background:rgba(119,183,255,.12);color:var(--blue)}
+  .step-meta{margin-top:2px;font-size:.85rem;color:var(--accent);font-weight:800}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:12px;background:rgba(255,209,102,.06);padding:14px 16px;margin-top:14px;color:var(--muted);font-size:.92rem}
+  .callout.good{border-left-color:var(--good);background:rgba(142,242,192,.06)}
+  .callout.blue{border-left-color:var(--blue);background:rgba(119,183,255,.06)}
+  .callout.red{border-left-color:var(--red);background:rgba(255,143,143,.07)}
+  .footer-note{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.9rem}
+  .decide{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:16px;border:1px solid var(--line);border-radius:14px;background:rgba(196,167,255,.06);margin-top:12px}
+  .decide .n{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:rgba(196,167,255,.16);color:var(--violet);font-weight:900;font-size:.85rem}
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr}
+    .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+    .step-card{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Kaydence · State of the Union &amp; Plan of Attack · v5</p>
+      <h1>The work is done. It just can't land.</h1>
+      <p class="summary">As of <b>July 12, 2026</b>, the Codex run pushed real, heavy P1-G3 engineering — quantized ASR that recovers the footprint budget, cross-platform reference benchmarks, packaged macOS lifecycle, Windows ARM64 build automation. But <b>none of it has merged</b>: it sits in <b>17 stacked draft PRs</b> because the 3-OS merge gate can't pass — <b>CI billing is blocked again</b> and <b>ADR-0015 awaits your approval</b>. The bottleneck is the pipeline, not the build. This plan unjams it, then advances.</p>
+      <div style="margin-top:16px">
+        <span class="chip green">185 commits · P0 closed</span>
+        <span class="chip amber">10 / 23 gates (0 new landed)</span>
+        <span class="chip red">CI billing blocked</span>
+        <span class="chip red">17 draft PRs, 0 merged</span>
+        <span class="chip violet">2 ADRs Proposed (0009, 0015)</span>
+      </div>
+    </div>
+    <div class="verdict-card warn">
+      <strong>Unjam, then advance.</strong>
+      <span>Three operator levers gate everything: fix CI billing durably, approve ADR-0015, and set a draft-PR CI policy so it stops eating the budget. Then land the P1-G3 stack, close P1, and get to the screens and the cleanup differentiator.</span>
+    </div>
+  </header>
+
+  <!-- STATE OF THE UNION -->
+  <section aria-labelledby="sotu-h">
+    <h2 id="sotu-h">State of the Union</h2>
+    <p class="kicker">Verified against git + CI + billing truth. Repo <code>/Users/IDC2.5/Kaydence/kaydence</code> · <code>IslandDevCrew/kaydence</code> (private) · <code>main</code> unchanged since v4; all new work is on the <code>codex/p1-g3-*</code> branch stack (39 commits ahead of main, HEAD <code>bb8e40b</code>).</p>
+
+    <div class="grid four">
+      <div class="metric good"><strong>q5 ✓</strong><p>Quantized Whisper recovers the ≤250 MB gate: Mac Metal 55/78 ms p50/p95, 152.7 MB, 0% idle CPU; Linux + Windows CPU proven too.</p></div>
+      <div class="metric warn"><strong>17</strong><p>Open draft PRs (#10–#26), stacked, <b>zero merged</b>. All the P1-G3 work is trapped behind the merge gate.</p></div>
+      <div class="metric warn"><strong>$0 CI</strong><p>Actions blocked — jobs refused "payments failed / spending limit." The $5 cap was consumed by full-3-OS runs across the PR stack.</p></div>
+      <div class="metric"><strong>10/23</strong><p>Gates passed — <b>unchanged</b> from v4. Nothing new closed because nothing merged and the pending gates need CI + operator sign-off.</p></div>
+    </div>
+
+    <h3 style="margin-top:24px">What the Codex run actually produced (real engineering)</h3>
+    <div class="grid three">
+      <div class="panel"><h3>Footprint recovered (q5)</h3><p>ADR-0015 registers <code>whisper-base-en-q5_1</code> (SHA-pinned) as the per-OS default on <b>measured</b> per-platform evidence. Also corrected a real truth error: the earlier "249–263 ms" P1-G2 number was CPU/BLAS, not Metal — now Metal is measured honestly.</p></div>
+      <div class="panel"><h3>Cross-platform benchmarks</h3><p>A real ASR reference-benchmark probe/runner with model identity + SHA provenance, strict report/lane validation, idle + deadline ceilings. Windows ARM64 Whisper release automation (fail-closed). Debian GNOME/Wayland WebView proof.</p></div>
+      <div class="panel"><h3>Packaged macOS lifecycle</h3><p>Runtime now survives cockpit close (tray-resident), destroys the WebView on user-close, recreates exactly one cockpit on reopen, exits clean on Quit — with one-shot lifecycle state coverage. Background footprint driven toward the strict &lt;80 MB charter line.</p></div>
+    </div>
+
+    <h3 style="margin-top:24px">The jams (why nothing landed)</h3>
+    <div class="grid three">
+      <div class="panel"><h3>① CI billing blocked — again</h3><p>Every hosted run fails at setup: <em>"recent account payments have failed or your spending limit needs to be increased."</em> The $5 Actions cap was exhausted — 17 PRs each triggering the full 3-OS matrix (macOS bills ×10) burned through it. The 3-OS merge gate is mandatory, so <b>nothing can merge until this clears</b>.</p></div>
+      <div class="panel"><h3>② ADR-0015 Proposed</h3><p>The quantized-default decision is sound and evidence-backed, but marked <em>Proposed — operator approval required</em>. It gates PR #24 and the whole q5 stack above it. Until you accept it, the P1-G3 footprint fix can't land.</p></div>
+      <div class="panel"><h3>③ Stacked-PR sprawl</h3><p>17 dependent draft PRs is against the charter (one task = one branch = one merge, ≤400 lines). The stack grew <em>because</em> CI couldn't merge anything — each new unit piled on the last. It needs an ordered landing or a squash-consolidation once unblocked.</p></div>
+    </div>
+  </section>
+
+  <!-- GATE LEDGER -->
+  <section aria-labelledby="gate-h">
+    <h2 id="gate-h">Gate ledger</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gate</th><th>Status</th><th>Truth</th></tr></thead>
+        <tbody>
+          <tr><td><b>P0-G1…G7</b></td><td><span class="st pass">passed</span></td><td>Toolchain &amp; law closed on 3 OSes with CI evidence.</td></tr>
+          <tr><td><b>P1-G1</b> crash recovery</td><td><span class="st pass">passed</span></td><td>Real WAL survives <code>kill -9</code>; green on 3-OS CI (run 29013513964).</td></tr>
+          <tr><td><b>P1-G2</b> real ASR finals</td><td><span class="st pass">passed</span></td><td>whisper.cpp 4/4 golden clips, 0 content-word WER. Metal-vs-CPU number corrected to honest Metal measurement.</td></tr>
+          <tr><td><b>P1-G5</b> event sequences</td><td><span class="st pass">passed</span></td><td>5 integration tests, local + remote.</td></tr>
+          <tr><td><b>P1-G3</b> latency + footprint</td><td><span class="st pend">pending</span></td><td>q5 recovers ≤250 MB on Mac Metal/CPU, Linux CPU, 4× Windows CPU. Remaining: strict &lt;80 MB no-model (packaged = 84.95 MB, PR #25 cuts background to 38–48 MB but visible-idle still open); packaged q5 ASR-resident measurement; physical focused-field timing; fresh 3-OS CI; ADR-0015 accept.</td></tr>
+          <tr><td><b>P1-G4</b> screen fidelity</td><td><span class="st pend">pending</span></td><td>Boards have QA + signed native macOS + Debian Wayland proof. Needs one clean hosted <b>Windows</b> board run (prior captures failed closed = diagnostic) + human visual signoff.</td></tr>
+          <tr><td><b>P2 · P3 · P4</b></td><td><span class="st pend">pending</span></td><td>Cleanup dial → prediction + installers → flagship trio.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout blue"><b>Note on P1-G4 vs. v4:</b> the earlier plan put the screen-fidelity build next. Codex instead drove P1-G3 (footprint/benchmarks) deep — a legitimate reorder, since the footprint budget is a constitutional differentiator. The screens (board-01 cockpit build) are still owed and remain the visible-product work once the pipeline is unjammed.</div>
+  </section>
+
+  <!-- NEW PLAN OF ATTACK -->
+  <section aria-labelledby="plan-h">
+    <h2 id="plan-h">Plan of Attack v5 — unjam, then advance</h2>
+    <p class="kicker">Four stages. Stage A is operator-gated and blocks everything; do it first. Stages B–D are the build, resumed on a pipeline that can actually merge.</p>
+
+    <div class="step-card"><div class="step-num">A</div><div>
+      <h3>Unjam the pipeline</h3><p class="step-meta">operator-gated · do first · unblocks all 17 PRs</p>
+      <ol>
+        <li><b>Fix CI billing durably.</b> Decide the model (see decisions below): raise the cap <em>and</em> stop draft PRs from running the full 3-OS matrix, or make the repo public (free unlimited CI). The current pattern — 17 PRs × full 3-OS × macOS ×10 — will re-exhaust any small cap.</li>
+        <li><b>Set a draft-PR CI policy.</b> Full 3-OS only on <code>ready_for_review</code> / merge, not on every draft push. Drafts run Linux-only (already the push default). This is the single change that keeps spend near $0.</li>
+        <li><b>Approve or revise ADR-0015</b> (quantized q5 default) — it's evidence-backed and I recommend accept; that unblocks PR #24 and the q5 stack.</li>
+        <li><b>Land the P1-G3 stack in order</b> (#18→#26 bottom-up, or squash-consolidate into 2–3 coherent merges to end the sprawl), each passing the now-affordable 3-OS gate.</li>
+      </ol></div></div>
+
+    <div class="step-card b"><div class="step-num">B</div><div>
+      <h3>Close P1</h3><p class="step-meta">after unjam · P1-G3 + P1-G4</p>
+      <ul>
+        <li><b>P1-G3 finish:</b> land the packaged &lt;80 MB no-model reduction (PR #25), measure packaged q5 ASR-resident RAM, capture physical focused-field timing, one fresh green 3-OS CI run.</li>
+        <li><b>P1-G4 finish:</b> one clean hosted Windows run capturing boards 01/03/07/10 + permissions modal → human visual signoff. <b>Then build board-01 cockpit to fidelity</b> (still the owed visible-product work) and split the 1,914-line <code>App.tsx</code> into per-view components.</li>
+        <li><b>P1 exit:</b> Raw mode daily-drivable, all P1 gates green on a fresh 3-OS matrix.</li>
+      </ul></div></div>
+
+    <div class="step-card c"><div class="step-num">C</div><div>
+      <h3>P2 — the cleanup differentiator</h3><p class="step-meta">the moat</p>
+      <p class="muted">Raw/Light/Full dial (rule engine + constrained local LLM), filler removal + self-correction collapse, streaming partials, dictionary + Wispr/Glaido import. Gate: ≥95% zero-edit at Light on a golden corpus — and this is where real human-voice WER gets measured (P1-G2's corpus is synthetic TTS). Closes board-03 fidelity.</p></div></div>
+
+    <div class="step-card d"><div class="step-num">D</div><div>
+      <h3>P3 → P4</h3><p class="step-meta">polish + prediction + flagship trio</p>
+      <p class="muted">Per-app profiles, snippets, <b>signed installers</b>, then Whisper-Ahead prediction. <b>Parakeet/ort</b> lands here (native-streaming payoff + ADR-0002 two-runtime hedge). Then Voiceprint → Relay (ADR-0009 crypto review HALTS the build) → Conductor. Reference-machine benchmarks lock ADR-0007 before P3.5; Gemma-3-1B license review before any paid bundle.</p></div></div>
+  </section>
+
+  <!-- DECISIONS FOR THE OPERATOR -->
+  <section aria-labelledby="dec-h">
+    <h2 id="dec-h">Decisions I need from you (Stage A)</h2>
+    <p class="kicker">These three unblock all 17 PRs. Nothing forward can merge until they're made.</p>
+
+    <div class="decide"><div class="n">1</div><div>
+      <h3>CI billing model</h3>
+      <p class="muted">The $5 cap keeps getting eaten because draft PRs trigger the full 3-OS matrix (macOS ×10). Options: <b>(a)</b> keep private, raise the cap to ~$20 <em>and</em> restrict full 3-OS to ready-for-review (my recommendation — cheap and controlled); <b>(b)</b> make the repo public → free unlimited CI, but the strategy/pricing docs go public; <b>(c)</b> keep hammering the $5 cap and just fix the draft-PR trigger (may still stall on macOS-heavy days).</p></div></div>
+
+    <div class="decide"><div class="n">2</div><div>
+      <h3>ADR-0015 — quantized q5 as the default ASR</h3>
+      <p class="muted">Register <code>whisper-base-en-q5_1</code> as the macOS/Windows/Linux first-run default, on measured per-platform evidence; guard against the unfinished Parakeet entry displacing it; no download authorized. Sound and evidence-backed — <b>recommend: accept</b>. Your call: accept / revise / hold.</p></div></div>
+
+    <div class="decide"><div class="n">3</div><div>
+      <h3>How to land the 17-PR stack</h3>
+      <p class="muted">Bottom-up ordered merges (preserves history, 17 merges) vs. <b>squash-consolidate</b> the coherent P1-G3 work into 2–3 clean merges (ends the sprawl, matches the ≤400-line charter) — my recommendation. Your call.</p></div></div>
+  </section>
+
+  <p class="footer-note">
+    <b>Provenance:</b> generated 2026-07-12 from real repo + CI + billing truth — 185 commits, HEAD <code>bb8e40b</code> on <code>codex/p1-g3-macos-packaged-footprint-heartbeat</code>; <code>main</code> unchanged since v4; gates 10/23. Evidence under <code>ops/mission/evidence/</code> (e.g. <code>2026-07-11-p1-g3-*</code>). ADRs 0014 Accepted, 0015 + 0009 Proposed.
+    <b>Current truth is always</b> <code>ops/mission/state.json</code> + <code>ops/mission/state-of-the-union.html</code>; this document is the human-readable snapshot and forward plan.
+    <b>Supersedes:</b> the v4 handoff (2026-07-10) for status.
+  </p>
+
+</main>
+</body>
+</html>

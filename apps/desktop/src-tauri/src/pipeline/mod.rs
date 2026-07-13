@@ -22,6 +22,10 @@ pub enum PipelineError {
 }
 
 pub trait CaptureProcessor {
+    fn warm_up(&mut self) -> Result<Option<EngineLane>, PipelineError> {
+        Ok(None)
+    }
+
     fn set_cleanup_dial(&mut self, cleanup_dial: CleanupDial);
 
     fn process_capture(
@@ -120,6 +124,10 @@ impl<D> CaptureProcessor for TranscriptionPipeline<D>
 where
     D: VadDetector,
 {
+    fn warm_up(&mut self) -> Result<Option<EngineLane>, PipelineError> {
+        Ok(self.engines.warm_up()?)
+    }
+
     fn set_cleanup_dial(&mut self, cleanup_dial: CleanupDial) {
         self.cleanup_dial = cleanup_dial;
     }
@@ -253,6 +261,10 @@ mod tests {
         requests: Arc<Mutex<Vec<AsrRequest>>>,
     }
 
+    struct WarmupProbeEngine {
+        calls: Arc<Mutex<u32>>,
+    }
+
     impl QueueEngine {
         fn boxed(
             outputs: Vec<Result<AsrTranscript, AsrError>>,
@@ -278,6 +290,21 @@ mod tests {
         }
     }
 
+    impl AsrEngine for WarmupProbeEngine {
+        fn lane(&self) -> EngineLane {
+            EngineLane::LocalCpu
+        }
+
+        fn warm_up(&mut self) -> Result<crate::engine::AsrWarmup, AsrError> {
+            *self.calls.lock().unwrap() += 1;
+            Ok(crate::engine::AsrWarmup::Ready)
+        }
+
+        fn transcribe(&mut self, _request: &AsrRequest) -> Result<AsrTranscript, AsrError> {
+            Ok(AsrTranscript::raw("ready"))
+        }
+    }
+
     fn pipeline(
         outputs: Vec<Result<AsrTranscript, AsrError>>,
         requests: Arc<Mutex<Vec<AsrRequest>>>,
@@ -285,6 +312,23 @@ mod tests {
         let engines = EngineStack::new(vec![QueueEngine::boxed(outputs, requests)]);
         TranscriptionPipeline::new(EnergyVad::new(0.2), test_vad_config(), engines)
             .with_dictionary_hints(vec!["Kaydence".to_string()])
+    }
+
+    #[test]
+    fn capture_processor_warmup_delegates_to_the_engine_stack() {
+        let calls = Arc::new(Mutex::new(0));
+        let mut pipeline = TranscriptionPipeline::new(
+            EnergyVad::new(0.2),
+            test_vad_config(),
+            EngineStack::new(vec![Box::new(WarmupProbeEngine {
+                calls: Arc::clone(&calls),
+            })]),
+        );
+
+        let lane = CaptureProcessor::warm_up(&mut pipeline).unwrap();
+
+        assert_eq!(lane, Some(EngineLane::LocalCpu));
+        assert_eq!(*calls.lock().unwrap(), 1);
     }
 
     #[test]
