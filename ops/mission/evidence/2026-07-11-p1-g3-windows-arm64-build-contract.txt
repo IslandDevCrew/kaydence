@@ -1,0 +1,83 @@
+KAYDENCE P1-G3 WINDOWS ARM64 RELEASE BUILD CONTRACT
+Date: 2026-07-11 (America/Chicago)
+Host: Windows 11 Pro ARM64 VM `Windows-Kaydence-Proof` under UTM
+Scope: repeatable native Windows ARM64 build primitive only
+VERDICT
+PASS. The repository PowerShell entry point validated the required native
+toolchain, built the production frontend, regenerated target-correct Whisper
+bindings, and produced an optimized AA64 Kaydence executable. This closes the
+previously open Windows ARM64 release-build automation sub-item. It does not
+close P1-G3, P1-G4, signed installer packaging, or the three-OS merge gate.
+SOURCE IDENTITY
+- Application source archive: a5dc909
+- scripts/windows-arm64-build.ps1 sha256: 17e64996ecf625dca7e38190a54e724f885e8d9f8e614850031c5ad8eb5b58d3
+- tests/windows-arm64-build-contract.ps1 sha256: 56181eac83e9b2255c8566d2b7b64f11f935a77c5436c81542fe1288bf27f269
+- Guest hashes matched the host hashes above.
+REQUIRED VISUAL STUDIO COMPONENTS
+- Microsoft.VisualStudio.Component.VC.Llvm.Clang
+- Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset
+REAL TOOLCHAIN CHECK
+Command: powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Check
+Result: exit 0. Resolved:
+- VsDevCmd: C:\BuildTools\Common7\Tools\VsDevCmd.bat
+- clang-cl: C:\BuildTools\VC\Tools\Llvm\ARM64\bin\clang-cl.exe
+- libclang: C:\BuildTools\VC\Tools\Llvm\ARM64\bin\libclang.dll
+- Ninja: C:\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe
+- link: C:\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostarm64\arm64\link.exe
+- PE machines: clang/libclang/link=AA64; official Ninja host tool=x86
+- GGML_NATIVE: OFF; target-generated bindings: true
+- Cargo target=aarch64-pc-windows-msvc; locked=true; PowerShell host is not authority
+TDD CONTRACT
+RED 1: exit 1 because scripts/windows-arm64-build.ps1 did not exist.
+RED 2: exit 1 when the contract did not describe the valid x64 PowerShell host
+       on ARM64 Windows.
+RED 3: exit 1 before the required machine-independent -Help path existed.
+RED 4: exit 1 before Cargo lock/target and PE-machine truth were contractual.
+RED 5: exit 1 while an unsupported Ninja PE machine was still accepted.
+GREEN:
+  PASS: Windows ARM64 build contract is fail-closed
+  EXITCODE=0
+Negative fixtures cover every required path, wrong core-tool/host PE machines,
+and a whitespace-only WHISPER_DONT_GENERATE_BINDINGS override.
+RELEASE BUILD
+Command: powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\windows-arm64-build.ps1 -BuildToolsPath C:\BuildTools -Profile release
+Environment contract:
+- CMAKE_GENERATOR=Ninja
+- CMAKE_C_COMPILER/CXX_COMPILER/ASM_COMPILER=native ARM64 clang-cl
+- CXXFLAGS=/EHsc; LIBCLANG_PATH=native ARM64 LLVM bin; GGML_NATIVE=OFF
+- Binding override absent; Cargo: --locked --target aarch64-pc-windows-msvc
+- Cargo features: custom-protocol,asr-whisper; stale expected output removed first
+Result:
+- Frontend: tsc --noEmit + Vite production build passed (44 modules).
+- whisper-rs-sys: rebuilt after a package-scoped clean; bindgen ran via libclang.
+- Cargo: review-fixed explicit-target release finished in 2m38s.
+- Exit code: 0.
+- Output: C:\KaydenceProof\a5dc909\target\aarch64-pc-windows-msvc\release\kaydence.exe
+- Size: 12,018,176 bytes.
+- SHA256: ba0e358927bc4e1eebff2c2e25d6d3cf64059c7c5f9c0da5af60e73090da89c5
+- dumpbin: AA64 machine (ARM64), PE32+, Windows GUI executable.
+- Final raw build log sha256: 42307b4e3b77e7ff1a794cf881f761771a3bee7f98f091ad35821d22bcbb95a8
+VERSIONS
+- rustc 1.97.0; host aarch64-pc-windows-msvc; LLVM 22.1.6
+- cargo 1.97.0
+- clang-cl 19.1.5; target aarch64-pc-windows-msvc
+- Ninja 1.12.1
+- MSVC COFF/PE Dumper 14.44.35228.0
+- Node v24.18.0 Windows ARM64 portable zip
+- Node zip sha256: f274669adb93b1fd0fbf8f21fd078609e9dcc84333d4f2718d2dde3f9a161a01
+- pnpm 11.10.0 (repository-pinned)
+TARGETED REPOSITORY GATES
+- Windows PowerShell 5.1 parser + fail-closed fixture: PASS
+- workflow YAML parse: PASS
+- bash scripts/check-frontend.sh: PASS
+- bash scripts/audit-network.sh: PASS (0 network-capable call sites)
+- bash scripts/check-privacy-posture.sh --check: PASS
+- bash scripts/check-adr-status.sh: PASS (ADR-0009 waived by design)
+- bash tests/build_and_run.sh: PASS
+- git diff --check: PASS
+OPEN GATES / NON-CLAIMS
+- GitHub Actions remains billing-blocked; this is not a fresh hosted 3-OS matrix.
+- P1-G3 still needs full release-to-inject p50/p95, ASR-resident RAM, idle CPU,
+  reference-machine evidence, and disposition of the ~86 MB no-model process group.
+- P1-G4 still needs a passing hosted Windows screen/permissions capture and human signoff.
+- No .msi was produced or signed; P3-G2 remains pending.

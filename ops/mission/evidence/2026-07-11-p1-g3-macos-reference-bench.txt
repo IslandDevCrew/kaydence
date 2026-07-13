@@ -1,0 +1,136 @@
+KAYDENCE P1-G3 MACOS REFERENCE BENCHMARK FINAL-REVIEW FIX EVIDENCE
+Date: 2026-07-11 (UTC)
+Branch: codex/p1-g3-reference-bench-final-review-fixes
+Runtime/test commit: 8c98ac1
+Scope: final-review fixes, fresh Mac reports, and canonical sanitized evidence
+
+VERDICT
+P1-G3 remains PENDING. The canonical macOS CPU report passes every recorded
+budget. The canonical macOS Metal/GPU report passes latency and idle CPU but
+fails resident RAM. Windows and Linux live reference reports, physical focused-
+field timing, fresh three-OS CI, and final independent re-review remain pending.
+This package does not claim final-review approval.
+
+FINAL-REVIEW FIX CONTRACT
+- KAYDENCE_WHISPER_MODEL_ID is required and restricted to 1-64 characters from
+  [A-Za-z0-9._-]. The reviewed value is ggml-base.en.
+- KAYDENCE_WHISPER_SHA256 is required as exactly 64 hex characters. The probe
+  hashes the model before constructing LocalAsrAdapterState::VerifiedArtifact
+  and fails on mismatch.
+- The probe hashes the fixture and reports model_id, model_sha256, and
+  fixture_sha256. No source path, transcript text, content, or stderr is in the
+  canonical reports.
+- The runner fail-closes transcript/event, integer timing, percentile, audio,
+  sample-count, model identity/hash, platform, and requested/actual lane truth.
+- Idle is bounded to 7000-30000 ms. The controller has an absolute 180000 ms
+  deadline and clamps post-ready commands and waits to remaining time.
+- Pure Windows PowerShell JSON and Linux /proc parsers are exported and covered
+  by valid and malformed fixtures. Live Windows/Linux reports remain pending.
+
+TDD RED
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --bin reference-bench
+  FAILED as intended: parse_sha256, parse_model_id, and parse_idle_ms did not
+  exist (11 E0425 errors).
+- node tests/reference-bench-contract.mjs
+  FAILED as intended: MAXIMUM_CONTROLLER_RUNTIME_MS was not exported.
+
+TDD GREEN
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --bin reference-bench
+  PASS: 5 passed, 0 failed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper --bin reference-bench
+  PASS: 8 passed, 0 failed.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper-metal --bin reference-bench
+  PASS: 8 passed, 0 failed.
+- node tests/reference-bench-contract.mjs
+  PASS: reference-bench behavioral contract.
+
+REVIEWED ARTIFACT IDENTITY
+- model_id: ggml-base.en
+- model_sha256:
+  a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
+- fixture_sha256:
+  085e4b157e9f3ce0114b072354d07ede5cbcecce95bc59771b808e78abd94247
+- Local shasum -a 256 matched both expected values before the live runs.
+
+HOST MANIFEST
+- OS: macOS 26.5 (build 25F71)
+- Kernel: Darwin 25.5.0
+- Architecture: arm64
+- Hardware: MacBook Pro Mac17,8; Apple M5 Pro; 18 cores; 48 GB memory
+- Binary feature set: asr-whisper-metal (includes asr-whisper)
+- Samples per lane: 10
+- Fixture duration: 2496 ms
+- Measurement endpoint: release-to-delivery-policy, not physical OS injection
+
+EXACT REPRODUCTION COMMANDS (LOCAL PATHS REDACTED)
+Build:
+
+  cargo build --release --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper-metal --bin reference-bench
+
+GPU:
+
+  KAYDENCE_REFERENCE_BIN=target/release/reference-bench KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" KAYDENCE_WHISPER_MODEL_ID=ggml-base.en KAYDENCE_WHISPER_SHA256=a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002 KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" KAYDENCE_WHISPER_LANE=gpu KAYDENCE_REFERENCE_SAMPLES=10 node scripts/bench-reference.mjs --check
+
+Expected GPU exit: 1 only because idle_ram_mb exceeds 250 MB.
+
+CPU:
+
+  KAYDENCE_REFERENCE_BIN=target/release/reference-bench KAYDENCE_WHISPER_MODEL="$LOCAL_REVIEWED_MODEL" KAYDENCE_WHISPER_MODEL_ID=ggml-base.en KAYDENCE_WHISPER_SHA256=a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002 KAYDENCE_WHISPER_CLIP="$LOCAL_16KHZ_FIXTURE" KAYDENCE_WHISPER_LANE=cpu KAYDENCE_REFERENCE_SAMPLES=10 node scripts/bench-reference.mjs --check
+
+Expected CPU exit: 0 with no budget failures.
+
+CANONICAL SANITIZED REPORTS
+| lane | exit | warmup | p50 | p95 | RAM MB | CPU % | interval ms | failures | status |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| local_gpu | 1 | 304 | 54 | 77 | 268.188 | 0 | 3104.5 | idle_ram_mb | fail |
+| local_cpu | 0 | 173 | 202 | 229 | 220.859 | 0 | 3104.5 | none | pass |
+
+- ops/mission/evidence/2026-07-11-p1-g3-macos-local-gpu.json
+  sha256 1ca045aadd16d1a3ab447129d0b42e46853275521f92cf9d5d0a8184150f70d9
+- ops/mission/evidence/2026-07-11-p1-g3-macos-local-cpu.json
+  sha256 00193406ac163e7205c09e4d304973cd22a3830254f992f805f63ec6adeb1a15
+
+Both canonical reports contain complete safe probe + runner measurements,
+model/fixture hashes, required audio_persisted and raw_final events, and the
+physical_os_field_injection limitation. They contain no diagnostics object.
+Ignored bench-results files remain the raw local runner output.
+
+LOCAL GATES
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+  PASS.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+  PASS.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --features asr-whisper --all-targets -- -D warnings
+  PASS.
+- node --check scripts/bench-reference.mjs
+  PASS.
+- bash scripts/check-frontend.sh
+  PASS: TypeScript and ESLint.
+- bash scripts/audit-network.sh
+  PASS: 0 network-capable call sites, 0 unreviewed.
+- bash scripts/check-privacy-posture.sh --check
+  PASS: privacy posture and network audit clean.
+- bash scripts/check-adr-status.sh
+  PASS: ADR-0009 remains the declared by-design waiver.
+- bash scripts/bench.sh --check
+  PASS for four measured synthetic fields; disclosed PARTIAL fields remain.
+- jq empty on state and both canonical reports; renderer; git diff --check
+  PASS.
+
+REMOTE STACK TRUTH
+- Draft PR #18: plan, based on the Windows ARM64 heartbeat branch.
+- Draft PR #19: probe, stacked on #18.
+- Draft PR #20: cross-platform runner, stacked on #19.
+- Draft PR #21: gate fixes, stacked on #20.
+- Draft PR #22: Mac evidence, stacked on #21.
+- codex/p1-g3-reference-bench-final-review-fixes contains this final-review fix
+  wave and is pending publication/final re-review.
+
+NON-CLAIMS / OPEN CONCERNS
+- Final independent re-review has not approved this fix wave.
+- P1-G3 stays pending; task and gate completion counts do not increase.
+- GPU resident RAM remains 18.188 MB above the 250 MB budget.
+- Physical OS focused-field injection timing is still unmeasured.
+- Live Windows and Linux reference reports remain pending.
+- Hosted three-OS CI remains required before merge.
+- The no-model full process group remains about 86 MB against the <80 MB target.

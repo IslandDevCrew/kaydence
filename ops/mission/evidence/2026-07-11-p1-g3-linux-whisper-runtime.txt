@@ -1,0 +1,104 @@
+P1-G3 - LINUX ARM64 WHISPER RUNTIME PROOF
+Captured: 2026-07-11T06:08Z
+Source commit: eaf82f639844f867b1819b4b64a00edbb9b6020d
+Branch: codex/p1-g3-whisper-metal-truth
+
+SCOPE
+- Real production local_asr_stack() -> WhisperCppEngine transcription.
+- Isolated source archive from the commit above, not the mutable VM checkout.
+- Real ggml base.en model and 16 kHz mono golden clip transferred separately.
+- Caller requested the GPU lane while the Linux build compiled only
+  `asr-whisper`; the production planner therefore had to run and report CPU.
+- The already-running Linux Kaydence Tauri/WebView app remained open throughout.
+
+HOST
+- UTM Debian GNU/Linux 12 (bookworm), aarch64.
+- Kernel: Linux 6.1.0-50-arm64, Debian 6.1.176-1 (2026-07-02).
+- VM CPU: 6 vCPU, Apple/QEMU virt-10.0 CPU @ 2.0GHz.
+- VM memory: 3.8 GiB RAM. An 8 GiB temporary swap file was added only after the
+  first test link was OOM-killed; runtime inference itself did not require it.
+- rustc 1.96.1; cargo 1.96.1; GCC 12.2.0; CMake 3.25.1.
+
+INPUT PARITY
+- Model sha256:
+  a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002
+- Clip sha256:
+  2b1aa6d79c35e790927cafdb7f5b10b81543895e5f7e4b7951761612348d3895
+- Expected case-insensitive substring: `hello there`.
+
+BUILD-HOST DEFECT FOUND
+whisper.cpp's default `GGML_NATIVE=ON` translated this virtual ARM host into a
+GCC target containing `fp16fml` but not the FP16 vector-arithmetic option needed
+by `vfmaq_f16`. GCC correctly rejected it with:
+
+  error: inlining failed in call to 'always_inline' ... vfmaq_f16(...):
+  target specific option mismatch
+
+`GGML_NATIVE=OFF` compiled successfully and produced the exact transcript, but
+the fully portable ARMv8 baseline took 1500 ms and therefore failed Kaydence's
+1200 ms LocalCpu assertion. That attempt is diagnostic, not a passing gate.
+
+PASSING CAPABILITY-MATCHED ARM BUILD
+The VM advertises `fphp`, `asimdhp`, and `asimddp`. The passing build kept native
+autodetection off and selected those reviewed capabilities explicitly:
+
+  GGML_NATIVE=OFF
+  GGML_CPU_ARM_ARCH=armv8.2-a+fp16+dotprod
+
+CMake cache and generated compiler flags:
+
+  GGML_NATIVE:BOOL=OFF
+  GGML_CPU_ARM_ARCH:STRING=armv8.2-a+fp16+dotprod
+  CXX_FLAGS = ... -march=armv8.2-a+fp16+dotprod -std=gnu++17
+
+Command:
+
+  GGML_NATIVE=OFF \
+  GGML_CPU_ARM_ARCH=armv8.2-a+fp16+dotprod \
+  KAYDENCE_WHISPER_MODEL="$PWD/ggml-base.en.bin" \
+  KAYDENCE_WHISPER_CLIP="$PWD/corpus_0.wav" \
+  KAYDENCE_WHISPER_EXPECT="hello there" \
+  KAYDENCE_WHISPER_LANE=gpu \
+  cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml \
+    --features asr-whisper --test asr_golden -- --nocapture
+
+NATIVE/RUNTIME TRUTH
+  whisper_init_with_params_no_state: use gpu    = 0
+  whisper_init_with_params_no_state: devices    = 1
+  whisper_init_with_params_no_state: backends   = 1
+  whisper_backend_init_gpu: no GPU found
+  whisper final_text = "Hello there"
+  P1-G2/P1-G3 metrics: warmup_ms=65 audio_ms=681 transcribe_ms=999 \
+    rtf=1.467 warmed_lane=Some(LocalCpu) lane=LocalCpu partials=1
+  test whisper_transcribes_a_local_golden_clip ... ok
+  test result: ok. 1 passed; 0 failed; finished in 1.08s
+
+RESULT
+- Exact transcript: PASS.
+- Runtime/backend label truth: PASS. A GPU request without compiled Linux
+  acceleration warmed and ran `LocalCpu`; no false GPU claim returned.
+- Warm LocalCpu budget: PASS, 999 ms <= 1200 ms on this constrained ARM64 VM.
+- Linux whisper.cpp runtime leg: PASS for the tested ARMv8.2+fp16+dotprod build.
+
+PORTABLE RELEASE HARDENING
+- `script/build_and_run.sh` now defaults `GGML_NATIVE=OFF` for every shipped
+  adapter build, while preserving an explicit operator override for reviewed
+  architecture-specific releases.
+- A build-config stamp invalidates the matching Cargo debug/release Whisper
+  profile when native/CMake/compiler settings change; this closes Cargo reuse of
+  an older native artifact because upstream does not declare these env inputs.
+- PR CI exports `GGML_NATIVE=OFF`, including shipped-feature Clippy/tests and
+  the Windows native proof binary.
+- `tests/build_and_run.sh` was captured red before the launcher change and green
+  afterward. It proves first-build invalidation, unchanged reuse, architecture-
+  change invalidation, and correct release-profile cleaning.
+- A clean macOS release rebuild then proved `GGML_NATIVE:BOOL=OFF` together with
+  `GGML_METAL:BOOL=ON`; the real clip still passed on Metal at 59 ms.
+
+LIMITS / STILL OPEN
+- This does not prove a generic ARMv8 baseline meets the latency target; that
+  diagnostic run was truthful but 300 ms over budget on the 2 GHz VM.
+- It does not prove Windows runtime, full hotkey-release-to-inject timing,
+  ASR-resident RAM/idle CPU, or reference-machine p50/p95.
+- It does not satisfy the independent Parakeet/ort runtime hedge.
+- P1-G3 therefore remains pending.

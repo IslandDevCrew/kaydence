@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaydence — State of the Union v5 &amp; Plan of Attack · 2026-07-12</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#070f1c; --paper:#0d1b2f; --paper-2:#10243b;
+    --ink:#eef6ff; --muted:#a9bdd3; --line:rgba(169,189,211,.18);
+    --accent:#58d7b3; --blue:#77b7ff; --amber:#ffd166; --red:#ff8f8f;
+    --good:#8ef2c0; --violet:#c4a7ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+    radial-gradient(circle at top left,rgba(88,215,179,.16),transparent 30rem),
+    radial-gradient(circle at top right,rgba(119,183,255,.14),transparent 32rem),
+    var(--bg);color:var(--ink);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+  main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:42px 0 64px}
+  h1,h2,h3{margin:0;line-height:1.14}
+  h1{max-width:960px;margin-top:10px;font-size:clamp(2rem,4.8vw,3.6rem);letter-spacing:-.035em;text-wrap:balance}
+  h2{margin-bottom:16px;font-size:clamp(1.4rem,2.8vw,2rem);text-wrap:balance}
+  h3{margin-bottom:8px;font-size:1.05rem;color:#fff}
+  p{margin:0} a{color:var(--blue)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;color:#dff7ef}
+  .eyebrow{color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;align-items:end;padding:24px 0 30px;border-bottom:1px solid var(--line)}
+  .hero .summary{max-width:780px;margin-top:16px;color:var(--muted);font-size:1.06rem}
+  .panel,.verdict-card,.metric{border:1px solid var(--line);border-radius:16px;
+    background:linear-gradient(180deg,var(--paper-2),var(--paper));box-shadow:0 18px 46px rgba(0,0,0,.25)}
+  .verdict-card{padding:22px}
+  .metric{padding:18px}
+  .verdict-card strong{display:block;color:var(--accent);font-size:1.55rem;line-height:1.15}
+  .verdict-card span{display:block;margin-top:10px;color:var(--muted);font-size:.95rem}
+  section{padding-top:38px}
+  .grid{display:grid;gap:16px}
+  .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .panel{padding:20px}
+  .panel p,li,.muted{color:var(--muted)}
+  .metric strong{display:block;margin-bottom:6px;color:#fff;font-size:1.8rem;line-height:1;font-variant-numeric:tabular-nums}
+  .chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;margin:2px 4px 2px 0;background:rgba(255,255,255,.05);color:var(--muted);font-size:.78rem;font-weight:800}
+  .chip.red{color:var(--red);border-color:rgba(255,143,143,.4)}
+  .chip.amber{color:var(--amber);border-color:rgba(255,209,102,.4)}
+  .chip.green{color:var(--good);border-color:rgba(142,242,192,.4)}
+  .chip.blue{color:var(--blue);border-color:rgba(119,183,255,.4)}
+  .chip.violet{color:var(--violet);border-color:rgba(196,167,255,.4)}
+  ul{margin:10px 0 0;padding-left:20px}
+  li+li{margin-top:7px}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  th{background:rgba(255,255,255,.05);color:#fff;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
+  td{color:var(--muted)} td b,td strong{color:#fff}
+  .table-wrap{overflow-x:auto;border-radius:12px}
+  .st{font-weight:900;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+  .st.pass{color:var(--good)} .st.pend{color:var(--amber)} .st.block{color:var(--red)} .st.prog{color:var(--blue)}
+  .kicker{color:var(--muted);margin-bottom:14px;max-width:900px}
+  .phase-card{display:grid;grid-template-columns:64px 1fr;gap:18px;padding:20px;margin-top:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--paper-2),var(--paper))}
+  .phase-num{display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:rgba(88,215,179,.12);color:var(--accent);font-weight:950;font-size:1.02rem}
+  .phase-card.now .phase-num{background:rgba(255,209,102,.12);color:var(--amber)}
+  .phase-card.p3 .phase-num{background:rgba(119,183,255,.12);color:var(--blue)}
+  .phase-card.p4 .phase-num{background:rgba(196,167,255,.12);color:var(--violet)}
+  .phase-meta{margin-top:2px;font-size:.85rem;color:var(--accent);font-weight:800}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:12px;background:rgba(255,209,102,.06);padding:14px 16px;margin-top:14px;color:var(--muted);font-size:.92rem}
+  .callout.good{border-left-color:var(--good);background:rgba(142,242,192,.06)}
+  .callout.blue{border-left-color:var(--blue);background:rgba(119,183,255,.06)}
+  .callout.red{border-left-color:var(--red);background:rgba(255,143,143,.06)}
+  .decision{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--paper-2),var(--paper));padding:20px;margin-top:14px}
+  .decision .dn{color:var(--amber);font-weight:950;font-size:.8rem;letter-spacing:.1em}
+  .decision h3{font-size:1.15rem;margin-top:4px}
+  .footer-note{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.9rem}
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr}
+    .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+    .phase-card{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Kaydence · State of the Union v5 &amp; Plan of Attack · July 12, 2026</p>
+      <h1>The engineering is outrunning the paperwork. Clear four operator gates and P1 closes.</h1>
+      <p class="summary">The GPT-5.6 Codex run was excellent: 47 disciplined commits across 16 stacked draft PRs — quantized Whisper (q5) proven on <b>all three platforms</b>, a packaged-app footprint campaign that cut idle background to <b>38–49 MB</b>, Windows ARM64 release automation, the Linux human-focus injection proof, and honest evidence for every claim. Nothing in the critical path is a code problem anymore. What blocks P1 today is operator-shaped: a burned-through $5 CI budget, one Proposed ADR awaiting your

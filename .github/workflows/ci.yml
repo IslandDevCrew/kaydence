@@ -40,6 +40,10 @@ jobs:
 
   build-test:
     needs: setup
+    env:
+      # Do not let whisper.cpp bind shipped adapter checks or proof binaries to
+      # whichever instruction set happens to back the hosted runner.
+      GGML_NATIVE: "OFF"
     strategy:
       fail-fast: false
       # non-negotiable #5 (ADR-0011) — 3-OS, permanent — enforced on every PR to
@@ -51,19 +55,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Windows WebView proof harness contract
+      - name: Windows PowerShell harness contracts
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $tokens = $null
-          $errors = $null
-          $path = (Resolve-Path "scripts/windows-webview-proof.ps1").Path
-          $null = [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors)
-          if ($errors.Count -gt 0) {
-            $errors | Format-List | Out-String | Write-Error
-            exit 1
-          }
-          Write-Host "PowerShell syntax contract passed: $path"
+          ./tests/windows-arm64-build-contract.ps1
+          powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File tests/windows-arm64-build-contract.ps1
       - uses: dtolnay/rust-toolchain@stable
         with: { components: rustfmt, clippy }
       - uses: actions/setup-node@v4
@@ -96,6 +94,22 @@ jobs:
         working-directory: apps/desktop/src-tauri
       - name: test
         run: cargo test --all
+        working-directory: apps/desktop/src-tauri
+      - name: select shipped ASR feature
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            echo "KAYDENCE_SHIPPED_ASR_FEATURE=asr-whisper-metal" >> "$GITHUB_ENV"
+          else
+            echo "KAYDENCE_SHIPPED_ASR_FEATURE=asr-whisper" >> "$GITHUB_ENV"
+          fi
+      - name: clippy shipped ASR adapter
+        shell: bash
+        run: cargo clippy --all-targets --features "$KAYDENCE_SHIPPED_ASR_FEATURE" -- -D warnings
+        working-directory: apps/desktop/src-tauri
+      - name: test shipped ASR adapter
+        shell: bash
+        run: cargo test --all-targets --features "$KAYDENCE_SHIPPED_ASR_FEATURE"
         working-directory: apps/desktop/src-tauri
       # --- Frontend (pnpm workspace) ---
       - name: install
@@ -132,7 +146,7 @@ jobs:
             "Frontend build failed with exit code $LASTEXITCODE." | Set-Content (Join-Path $output "build-failure.txt")
             exit $LASTEXITCODE
           }
-          cargo build --release --features custom-protocol --manifest-path apps/desktop/src-tauri/Cargo.toml
+          cargo build --release --features custom-protocol,asr-whisper --manifest-path apps/desktop/src-tauri/Cargo.toml
           if ($LASTEXITCODE -ne 0) {
             "Native release build failed with exit code $LASTEXITCODE." | Set-Content (Join-Path $output "build-failure.txt")
             exit $LASTEXITCODE

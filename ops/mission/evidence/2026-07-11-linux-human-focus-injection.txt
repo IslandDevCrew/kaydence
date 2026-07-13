@@ -1,0 +1,61 @@
+P1-P0-3 - LINUX HUMAN-FOCUS INJECTION + SECURE-FIELD REFUSAL
+Captured: 2026-07-11T06:40Z
+Harness source: eaf82f639844f867b1819b4b64a00edbb9b6020d
+Host: Debian GNU/Linux 12 ARM64, GNOME/Mutter Wayland in UTM
+Harness: target/debug/atspi-selftest from the isolated source build
+
+PURPOSE
+Close the operator-in-the-loop boundary that headless Wayland CI cannot perform:
+the operator must place keyboard focus in the real target, while Kaydence uses
+AT-SPI to classify that focused field and uinput to type only when it is safe.
+
+NORMAL EDITABLE FIELD - PASS
+1. Started the integrated focus harness as the logged-in `debian` user on the
+   active AT-SPI session bus. `/dev/uinput` access came from the existing `input`
+   group/udev setup.
+2. Opened GNOME's Run a Command dialog with Alt+F2. Its command entry gained
+   real keyboard focus.
+3. AT-SPI reported the focused object as `role=Text editable=true`.
+4. Kaydence's uinput backend emitted the ASCII marker into that focused field.
+5. The full UTM provenance frame visibly shows `[Kaydence]` in the GNOME field:
+   `2026-07-11-linux-human-focus-normal.jpg`.
+
+Exact harness evidence:
+
+  [focus] role=Text editable=true -> Editable
+    TYPED "[Kaydence] " (11 chars) via uinput (1).
+
+SECURE PASSWORD FIELD - PASS
+1. Restarted the same integrated harness on the same session.
+2. Opened a real Zenity password prompt titled `Kaydence-Secure-Field-Proof`.
+   No password or other secret was entered.
+3. The focused password entry was exposed over AT-SPI as
+   `role=PasswordText editable=true`.
+4. Kaydence classified it as `Secure` and refused injection twice across the
+   focus events. The uinput typing branch was never entered.
+5. The full UTM provenance frame shows the real password dialog with its focused
+   field still empty: `2026-07-11-linux-human-focus-secure.jpg`.
+6. The dialog was cancelled with Escape; nothing was submitted.
+
+Exact harness evidence:
+
+  [focus] role=PasswordText editable=true -> Secure
+    REFUSED: secure/password field - not injecting (non-negotiable #8).
+  [focus] role=PasswordText editable=true -> Secure
+    REFUSED: secure/password field - not injecting (non-negotiable #8).
+
+RESULT
+- Human-focus normal-field delivery through AT-SPI gate + uinput: PASS.
+- Human-focus password-field refusal through the same integrated path: PASS.
+- The field remained empty and no sensitive value was handled.
+- The Debian Kaydence app stayed open throughout the proof.
+
+LIMITS / STILL OPEN
+- Linux uinput currently covers the documented US-QWERTY ASCII set; Unicode
+  beyond ASCII still needs compose/keymap handling.
+- Portal/libei remains an optional path for machines where `/dev/uinput`
+  permission is unavailable.
+- Opaque non-AT-SPI Wayland clients still cannot expose a password-field signal;
+  ADR-0013's Lenient warning / opt-in Strict refusal policy remains necessary.
+- Those follow-ups keep P1-P0-3 in progress, but the previously open human-focus
+  normal-field and password-field operator proof is complete.
