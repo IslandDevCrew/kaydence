@@ -113,6 +113,12 @@ fn whisper_transcribes_a_local_golden_clip() {
     };
     let mut stack = local_asr_stack(LocalAsrAdapterState::VerifiedArtifact { spec });
 
+    let warmup_started = std::time::Instant::now();
+    let warmed_lane = stack
+        .warm_up()
+        .expect("real whisper.cpp warmup should load a valid model");
+    let warmup_ms = warmup_started.elapsed().as_millis();
+
     let request = AsrRequest::new(
         SessionId::new(Ulid::new()),
         wal::SAMPLE_RATE,
@@ -131,13 +137,29 @@ fn whisper_transcribes_a_local_golden_clip() {
     let audio_ms = (n_samples as u128) * 1000 / (wal::SAMPLE_RATE as u128);
     eprintln!("whisper final_text = {text:?}");
     eprintln!(
-        "P1-G2 metrics: audio_ms={audio_ms} transcribe_ms={elapsed_ms} \
-         rtf={:.3} lane={:?} partials={}",
+        "P1-G2/P1-G3 metrics: warmup_ms={warmup_ms} audio_ms={audio_ms} \
+         transcribe_ms={elapsed_ms} rtf={:.3} warmed_lane={warmed_lane:?} \
+         lane={:?} partials={}",
         elapsed_ms as f64 / audio_ms.max(1) as f64,
         run.lane,
         run.transcript.partials.len(),
     );
     assert!(!text.is_empty(), "transcription produced empty final text");
+    assert_eq!(
+        warmed_lane,
+        Some(run.lane),
+        "warmup and inference lanes differ"
+    );
+    let latency_budget_ms = match run.lane {
+        EngineLane::LocalGpu => 700,
+        EngineLane::LocalCpu => 1_200,
+        EngineLane::ByokCloud => 2_000,
+    };
+    assert!(
+        elapsed_ms <= latency_budget_ms,
+        "warm ASR inference exceeded the {:?} lane budget: {elapsed_ms} ms > {latency_budget_ms} ms",
+        run.lane
+    );
 
     if let Ok(expect) = std::env::var(EXPECT_ENV) {
         let got = text.to_lowercase();

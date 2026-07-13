@@ -110,6 +110,7 @@ type FirstRunNextStepKind =
   | "setup"
   | "model_metadata"
   | "model_install"
+  | "asr_runtime"
   | "permission"
   | "hotkey"
   | "dictation"
@@ -343,14 +344,14 @@ const previewSnapshot: AppSnapshot = {
       required_models: [],
       asr_candidates: [],
       recommended_asr_model_id: null,
-      selected_asr_model_id: "whisper-large-v3-turbo",
+      selected_asr_model_id: "whisper-base-en-q5_1",
       asr_runtime: {
         state: "verified_artifact",
-        selected_model_id: "whisper-large-v3-turbo",
+        selected_model_id: "whisper-base-en-q5_1",
         lane: "gpu",
         runtime: "whisper_cpp",
-        artifact_path: "/preview/models/ggml-base.en.bin",
-        artifact_size_bytes: 147_964_211,
+        artifact_path: "/preview/models/ggml-base.en-q5_1.bin",
+        artifact_size_bytes: 59_721_011,
         adapter_ready: true,
         detail: "Ready-state fixture for the local whisper.cpp lane.",
         proof_requirement: "Native readiness remains backend-owned.",
@@ -1059,6 +1060,12 @@ export function App(): JSX.Element {
 
     if (nextStep.kind === "permission" && nextStep.target_id) {
       showPermissionAction(nextStep.target_id);
+      return;
+    }
+
+    if (nextStep.kind === "asr_runtime") {
+      setFirstRunActionNote(nextStep.proof_requirement);
+      refreshModelReadiness();
       return;
     }
 

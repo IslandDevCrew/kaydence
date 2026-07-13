@@ -15,6 +15,12 @@ cat >"$TMP_DIR/bin/cargo" <<'SCRIPT'
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [ "${1:-}" = "clean" ]; then
+  printf 'GGML_NATIVE=%s\nGGML_CPU_ARM_ARCH=%s\n%s\n' \
+    "${GGML_NATIVE:-}" "${GGML_CPU_ARM_ARCH:-}" "$*" >"$FAKE_CARGO_CLEAN_MARKER"
+  exit 0
+fi
+
 if [ "${1:-}" = "build" ]; then
   profile="debug"
   for argument in "$@"; do
@@ -22,7 +28,8 @@ if [ "${1:-}" = "build" ]; then
       profile="release"
     fi
   done
-  printf '%s\n' "$*" >"$FAKE_CARGO_MARKER"
+  printf 'GGML_NATIVE=%s\nGGML_CPU_ARM_ARCH=%s\n%s\n' \
+    "${GGML_NATIVE:-}" "${GGML_CPU_ARM_ARCH:-}" "$*" >"$FAKE_CARGO_MARKER"
   mkdir -p "$CARGO_TARGET_DIR/$profile"
   if [ "${FAKE_APP_BEHAVIOR:-crash}" = "live" ]; then
     cat >"$CARGO_TARGET_DIR/$profile/kaydence" <<'APP'
@@ -111,6 +118,7 @@ run_verify() {
     FAKE_APP_BEHAVIOR="$behavior" \
     FAKE_APP_PID_FILE="$TMP_DIR/pid-$behavior" \
     FAKE_CARGO_MARKER="$TMP_DIR/cargo-$behavior" \
+    FAKE_CARGO_CLEAN_MARKER="$TMP_DIR/cargo-clean-$behavior" \
     FAKE_CODESIGN_MARKER="$TMP_DIR/codesign-$behavior" \
     KAYDENCE_CODESIGN_BIN="$TMP_DIR/bin/codesign" \
     KAYDENCE_OPEN_BIN="$TMP_DIR/bin/open" \
@@ -135,13 +143,34 @@ if [ "$live_status" -ne 0 ]; then
   exit 1
 fi
 
+expected_asr_feature="asr-whisper"
+if [ "$(uname -s)" = "Darwin" ]; then
+  expected_asr_feature="asr-whisper-metal"
+fi
+if ! grep -q -- "--features custom-protocol,$expected_asr_feature" "$TMP_DIR/cargo-live"; then
+  echo "FAIL: release run path did not compile the platform ASR adapter" >&2
+  exit 1
+fi
+if ! grep -q '^GGML_NATIVE=OFF$' "$TMP_DIR/cargo-live"; then
+  echo "FAIL: release run path did not disable build-host-specific whisper.cpp tuning" >&2
+  exit 1
+fi
+if ! grep -q -- '-p whisper-rs-sys' "$TMP_DIR/cargo-clean-live"; then
+  echo "FAIL: release run path did not invalidate an unstamped whisper.cpp build" >&2
+  exit 1
+fi
+if ! grep -q -- '--release' "$TMP_DIR/cargo-clean-live"; then
+  echo "FAIL: release run path invalidated the wrong Cargo profile" >&2
+  exit 1
+fi
+
 if [ "$(uname -s)" = "Darwin" ]; then
   app_bundle="$TMP_DIR/target-live/release/Kaydence.app"
   if ! grep -q -- '--release' "$TMP_DIR/cargo-live"; then
     echo "FAIL: macOS run path did not build the self-contained release profile" >&2
     exit 1
   fi
-  if ! grep -q -- '--features custom-protocol' "$TMP_DIR/cargo-live"; then
+  if ! grep -q -- '--features custom-protocol,asr-whisper-metal' "$TMP_DIR/cargo-live"; then
     echo "FAIL: macOS run path did not enable Tauri's embedded custom protocol" >&2
     exit 1
   fi
@@ -172,5 +201,22 @@ if ! kill -0 "$live_pid" >/dev/null 2>&1; then
   exit 1
 fi
 kill "$live_pid" >/dev/null 2>&1 || true
+
+rm -f "$TMP_DIR/cargo-clean-live"
+cached_status="$(run_verify live)"
+if [ "$cached_status" -ne 0 ] || [ -e "$TMP_DIR/cargo-clean-live" ]; then
+  echo "FAIL: unchanged whisper.cpp build configuration was needlessly invalidated" >&2
+  exit 1
+fi
+cached_pid="$(sed -n 's/.*pid \([0-9][0-9]*\).*/\1/p' "$TMP_DIR/live.log")"
+kill "$cached_pid" >/dev/null 2>&1 || true
+
+changed_status="$(GGML_CPU_ARM_ARCH=armv8.2-a+fp16 run_verify live)"
+if [ "$changed_status" -ne 0 ] || ! grep -q '^GGML_CPU_ARM_ARCH=armv8.2-a+fp16$' "$TMP_DIR/cargo-clean-live"; then
+  echo "FAIL: changed whisper.cpp architecture did not invalidate its cached build" >&2
+  exit 1
+fi
+changed_pid="$(sed -n 's/.*pid \([0-9][0-9]*\).*/\1/p' "$TMP_DIR/live.log")"
+kill "$changed_pid" >/dev/null 2>&1 || true
 
 echo "PASS: build-and-run verification tracks the launched child process"

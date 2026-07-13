@@ -29,8 +29,12 @@ WAL already produces. Specifically:
    *second* adapter (ADR-0002's two-engine hedge) and lands next — deferred here
    only to keep this unit ≤400 lines and the dep surface minimal.
 2. **Feature-gated, default-off.** The default build, CI, and every other module
-   stay dependency-free and fast; `asr-whisper` opts the native compile in. This
-   keeps the standing gates green while the heavy C++ dep is proven incrementally.
+   stay dependency-free and fast; `asr-whisper` opts the native CPU compile in.
+   macOS Metal is a separate `asr-whisper-metal` feature that composes
+   `asr-whisper` with `whisper-rs/metal`. A requested GPU lane is relabeled and
+   routed to CPU when no acceleration feature is compiled. This keeps the
+   standing gates green while the heavy C++ dep is proven incrementally and
+   prevents a requested lane from masquerading as backend evidence.
 3. **Model input is local-only in this ADR.** The adapter loads weights from the
    already-verified artifact path (`LocalAsrAdapterSpec.artifact_path`, sha256
    checked upstream). **No network fetch is added here.**
@@ -46,6 +50,24 @@ WAL already produces. Specifically:
    locally-provided model (env `KAYDENCE_WHISPER_MODEL`); it is `#[ignore]`d when
    absent. P1-G2 is **not** claimed passed until that test runs green on a real
    model with a measured WER/latency artifact.
+7. **Warm before first dictation.** `AsrEngine` exposes an explicit lifecycle
+   warmup. Startup and idle-only adapter replacement warm the first viable lane;
+   a failed accelerated initialization falls through to CPU, while a successful
+   primary warm leaves the fallback unloaded. Runtime readiness becomes true only
+   after this warmup succeeds. The golden proof records one-time warmup separately
+   and enforces the warm inference budget for the lane that actually ran.
+8. **Production launcher includes the adapter.** Default developer builds remain
+   feature-free, but `script/build_and_run.sh` compiles the canonical macOS app
+   with `custom-protocol,asr-whisper-metal` and Windows/Linux with
+   `custom-protocol,asr-whisper`. The Windows hosted WebView proof uses the same
+   CPU feature. A shell contract test prevents the launcher from regressing to a
+   UI-only release binary. Canonical release and CI builds also default
+   `GGML_NATIVE=OFF`: the binary must not inherit whichever instruction set backs
+   the build host. A reviewed architecture-specific release may override that
+   default and must record the exact target plus runtime proof. The launcher
+   stamps the relevant native build settings and invalidates only the matching
+   Cargo profile's Whisper artifacts when they change, because upstream does not
+   declare generic GGML/CMake environment flags as Cargo rerun inputs.
 
 ## Alternatives considered
 - **Parakeet/ort first:** ort downloads ONNX Runtime binaries at build (build-time
@@ -62,9 +84,12 @@ WAL already produces. Specifically:
 - Easier: a verified local model now yields real `RawFinal` text through the
   existing event contract; P1-G2 becomes runnable the moment a model is present.
 - Harder / to maintain: `whisper-rs` pulls a C++ (whisper.cpp) build — cmake/clang
-  required when `asr-whisper` is on; per-OS acceleration features (Metal/CUDA) need
-  matrix coverage once CI billing is restored. The feature stays off by default to
-  contain that cost.
+  required when `asr-whisper` is on; each acceleration feature needs native
+  backend-log proof and matrix coverage once CI billing is restored. Metal is now
+  explicit and proven on the Apple Silicon reference host; Linux ARM64 CPU is
+  runtime-proven, while Windows runtime and Windows/Linux acceleration remain
+  owed. The features stay off by default for development, while the canonical
+  production launcher selects the supported adapter per OS.
 - Now owed (tracked, not done here): the Parakeet/ort CPU adapter; the gated
   model-download network surface (its own ADR-accept); real WER/latency evidence on
   the reference machines for P1-G2/P1-G3.

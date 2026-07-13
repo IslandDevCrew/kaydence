@@ -2,25 +2,24 @@
 //!
 //! Plugs into the existing `AsrEngine` trait and the `VerifiedArtifact` seam:
 //! a checksum-verified LOCAL ggml model (path from `LocalAsrAdapterSpec`) is
-//! loaded lazily on the first `transcribe` and run over the 16 kHz mono f32 the
-//! WAL already produces (`audio/wal.rs`). No network surface — the model file is
-//! supplied locally; on-demand download stays a separate gated decision
-//! (ADR-0014 §4).
+//! loaded during runtime warmup (with lazy transcription fallback) and run over
+//! the 16 kHz mono f32 the WAL already produces (`audio/wal.rs`). No network
+//! surface — the model file is supplied locally; on-demand download stays a
+//! separate gated decision (ADR-0014 §4).
 //!
 //! This whole module compiles only under `--features asr-whisper`, so the
 //! default build stays free of the native whisper.cpp compile.
 
 use super::{
-    AsrEngine, AsrError, AsrRequest, AsrTranscript, EngineLane, LocalAsrAdapterSpec,
+    AsrEngine, AsrError, AsrRequest, AsrTranscript, AsrWarmup, EngineLane, LocalAsrAdapterSpec,
     PartialTranscript,
 };
 use crate::audio::wal::SAMPLE_RATE;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 
-/// A whisper.cpp-backed engine. The model is loaded lazily so construction is
-/// infallible (the `AsrEngine` trait has no fallible constructor), and a bad
-/// model surfaces as an `AsrError` at transcribe time where the fallback stack
-/// can react.
+/// A whisper.cpp-backed engine. Construction is infallible; explicit runtime
+/// warmup loads the model before dictation, while `transcribe` retains a lazy
+/// fallback for direct callers that do not run the lifecycle hook.
 pub struct WhisperCppEngine {
     spec: LocalAsrAdapterSpec,
     ctx: Option<WhisperContext>,
@@ -48,14 +47,19 @@ impl WhisperCppEngine {
             })?;
             self.ctx = Some(ctx);
         }
-        // Just populated above if it was None.
-        Ok(self.ctx.as_ref().expect("ctx loaded"))
+        self.ctx.as_ref().ok_or_else(|| {
+            AsrError::Unavailable("whisper context was not retained after loading".to_string())
+        })
     }
 }
 
 impl AsrEngine for WhisperCppEngine {
     fn lane(&self) -> EngineLane {
         self.spec.lane
+    }
+
+    fn warm_up(&mut self) -> Result<AsrWarmup, AsrError> {
+        self.ensure_loaded().map(|_| AsrWarmup::Ready)
     }
 
     fn transcribe(&mut self, request: &AsrRequest) -> Result<AsrTranscript, AsrError> {
