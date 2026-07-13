@@ -2943,22 +2943,29 @@ pub fn run() {
         });
 
     #[cfg(desktop)]
-    app.run(move |app, event| match event {
-        tauri::RunEvent::ExitRequested { code, api, .. }
-            if lifecycle.should_keep_running_after_exit_request(code) =>
-        {
-            api.prevent_exit();
-        }
-        #[cfg(target_os = "macos")]
-        tauri::RunEvent::Reopen {
-            has_visible_windows: false,
-            ..
-        } => {
-            if let Err(err) = open_main_window(app) {
-                eprintln!("{} window reopen failed: {err}", settings::APP_NAME);
+    app.run(move |app, event| {
+        // `app` is only consumed by the macOS Reopen arm below; keep it live on
+        // the other desktops without a warning (mirrors the `let _ = app;` idiom
+        // used elsewhere in this module).
+        #[cfg(not(target_os = "macos"))]
+        let _ = &app;
+        match event {
+            tauri::RunEvent::ExitRequested { code, api, .. }
+                if lifecycle.should_keep_running_after_exit_request(code) =>
+            {
+                api.prevent_exit();
             }
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen {
+                has_visible_windows: false,
+                ..
+            } => {
+                if let Err(err) = open_main_window(app) {
+                    eprintln!("{} window reopen failed: {err}", settings::APP_NAME);
+                }
+            }
+            _ => {}
         }
-        _ => {}
     });
 
     #[cfg(not(desktop))]
