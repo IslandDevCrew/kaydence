@@ -1,0 +1,51 @@
+# P1-G4 Native Windows Host Proof
+
+Date: 2026-07-14 local / 2026-07-15 UTC
+Branch: `mission/p1-g4-windows-host-proof`
+Source commit: `24957aafe305a9f264079070b4d04a794b423083`
+Scope: native Windows WebView rendering, Windows UI Automation navigation, and design-review evidence for Screen Families 01, 03, 07, and 10. Parent P1-G4 remains pending only for operator visual signoff.
+
+## Host and shipping build
+
+- Host: Windows 11 Pro 10.0.26200, x64, GMKtec NucBox_M2Pro_S, Intel i7-1185G7, 32 GB RAM, interactive session 1.
+- Frontend production build: PASS (`pnpm --filter kaydence-desktop build`).
+- Shipping-feature native build: PASS (`cargo build --release --features custom-protocol,asr-whisper --manifest-path apps/desktop/src-tauri/Cargo.toml`).
+- The first native build failed before compilation because bindgen could not locate `libclang.dll`. No product fallback or feature reduction was accepted.
+- Host remediation used the official LLVM 22.1.8 Windows archive from the LLVM GitHub release, extracted under `%LOCALAPPDATA%/KaydenceToolchains` without a machine-wide install. The 862,053,924-byte archive matched GitHub's published SHA-256 `d96c2cc1736f4eb7fa43cb9bbdf56d93551a9ae0a9aadb9c99c3c3b2b712a234` exactly.
+- Release executable: `target/release/kaydence.exe`, 16,037,376 bytes, SHA-256 `873d588c4decec35a1c933ce5b8047f382efed7a0a26e53706c2ec62263439d2`.
+
+## Native proof result
+
+- Harness: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows-webview-proof.ps1 -ExecutablePath target/release/kaydence.exe -OutputDirectory ops/mission/evidence/2026-07-14-windows-webview-proof -TimeoutSeconds 120`
+- Result: PASS in 8.238 seconds.
+- Manifest: `ops/mission/evidence/2026-07-14-windows-webview-proof/manifest.json`.
+- To keep the mission work unit below 400 changed text lines without discarding raw evidence, the five lossless UIA TSV exports named by the manifest are stored in `uia-trees.zip` (8,392 bytes, SHA-256 `c36eb7539672e3685f08476ab11e7de2deb67c350a687cab92c8104adf6d375b`). The ten PNGs and manifest remain directly visible.
+- Five native Windows client captures passed the exact 900 x 600, non-blank, non-uniform, source-hash, executable-hash, titlebar-provenance, and UIA-tree checks: Board 01, Board 03, Board 07, Board 10, and the Board 10 First Run Proof permissions modal.
+- The permissions-modal UIA tree contains the exact production labels `Microphone`, `UI Automation focus access`, and `Keyboard injection fallback`.
+
+## Visual review against locked boards
+
+- PASS: Windows cobalt remains limited to lane selection and active controls.
+- PASS: Option 1 product mark, compact navigation, 8px card system, status footers, and each board's required information hierarchy are present.
+- PASS: no clipped application content, overlapping text, missing icon, missing asset, horizontal overflow, or unstable layout appears in the five 900 x 600 client captures.
+- PASS: blocked model metadata, pending permission proof, absent transcript/history, and setup-required delivery remain visibly truthful rather than copying optimistic reference-board values.
+- PASS: the permissions modal is readable, keyboard-oriented, and exposes the conservative Hardware Proof / Review boundaries.
+- Operator visual signoff remains a deliberate human gate; this evidence does not self-approve that final checkbox.
+
+## Fresh gates
+
+- `cargo fmt --all -- --check`: PASS.
+- `cargo clippy --workspace --all-targets -- -D warnings`: PASS.
+- `cargo test --workspace`: PASS — 224 library tests, 5 reference-bench tests, 2 crash-recovery tests, 5 event-sequence tests, and 5 short-utterance tests; 0 failures.
+- P1 filters: crash recovery 2/2 PASS; short utterance 5/5 PASS; event sequences 5/5 PASS.
+- `pnpm --dir apps/desktop run check`: PASS.
+- Production frontend and shipping-feature native release builds: PASS.
+- `bash scripts/bench.sh --check`: PASS for 4 measured Raw-path metrics; correctly PARTIAL for GPU, prediction, idle RAM, and idle CPU.
+- `bash scripts/check-privacy-posture.sh --check`: PASS; 0 network-capable call sites and no banned screen-capture primitives.
+- `bash scripts/check-adr-status.sh`: PASS; only ADR-0009 remains the declared by-design exception.
+
+## Judge and auditor
+
+- Judge: PASS for this evidence-only work unit. No product code, dependency, network surface, model registry, event contract, platform behavior, or locked visual invariant changed.
+- Auditor: PASS for native Windows rendering/UIA proof. Every claim maps to the manifest, five client captures, five native provenance captures, five UIA exports, source hashes, executable hash, and fresh gates above.
+- Boundary: this proof does not establish microphone readiness, hotkey conflict behavior, text injection, secure-field refusal, ASR accuracy, first-dictation readiness, tray lifecycle, or physical release-to-focused-field latency.

@@ -1,0 +1,167 @@
+﻿{
+    "schema_version":  1,
+    "result":  "pass",
+    "captured_at_utc":  "2026-07-15T00:41:03.2736356Z",
+    "elapsed_seconds":  8.238,
+    "commit":  "24957aafe305a9f264079070b4d04a794b423083",
+    "run_id":  "local-windows-host-20260714",
+    "run_attempt":  "1",
+    "workflow":  "local-windows-host-proof",
+    "executable":  "kaydence.exe",
+    "executable_sha256":  "873d588c4decec35a1c933ce5b8047f382efed7a0a26e53706c2ec62263439d2",
+    "host":  {
+                 "os_caption":  "Microsoft Windows 11 Pro",
+                 "os_version":  "10.0.26200",
+                 "os_build":  "26200",
+                 "architecture":  "X64",
+                 "manufacturer":  "GMKtec",
+                 "model":  "NucBox_M2Pro_S",
+                 "user_interactive":  true,
+                 "session_id":  1,
+                 "session_name":  null,
+                 "runner_name":  null,
+                 "runner_os":  null,
+                 "runner_arch":  null,
+                 "runner_image":  null
+             },
+    "source_hashes":  {
+                          "apps/desktop/src/App.tsx":  "46f2f8765d5756724746e482007391b1c16c68d508ccc197d13572d42900ed74",
+                          "apps/desktop/src/views/DictateView.tsx":  "07a941b7695fc21c7f478a7cc68eaaba1124455f1fa8f4e8d0179f63c9f0a8e4",
+                          "apps/desktop/src/views/CleanupView.tsx":  "3615be6226ea12a207c4f473131438c210995a034dda72b2d8ab085da65aaaa9",
+                          "apps/desktop/src/views/PrivacyView.tsx":  "dacc1a01e537edbe6fb7ea2503852a2ad11fb2e6f3b92bca9dc7b6809a1a8823",
+                          "apps/desktop/src/views/FirstRunView.tsx":  "a02707780e932d8cb9ccbcdcdb11f9fa33bc0ecc0f96796be24e455c289c4529"
+                      },
+    "captures":  [
+                     {
+                         "slug":  "board01",
+                         "expected_uia_name":  "Recent clean transcript",
+                         "client":  {
+                                        "width":  900,
+                                        "height":  600,
+                                        "sampled_colors":  44,
+                                        "minimum_luma":  28,
+                                        "maximum_luma":  255,
+                                        "non_dark_ratio":  1,
+                                        "file":  "board01-native-windows.png",
+                                        "sha256":  "ef449da02ea974ec5952cbfa2b1ceb016bee15dc3361534c5ca3b5888f115008"
+                                    },
+                         "native_window":  {
+                                               "width":  916,
+                                               "height":  639,
+                                               "sampled_colors":  83,
+                                               "minimum_luma":  11,
+                                               "maximum_luma":  255,
+                                               "non_dark_ratio":  1,
+                                               "file":  "board01-native-windows-runner.png",
+                                               "sha256":  "e2b17e557ff3909f2d730123717afd1f277f4cd4fa26dfad9660fcffa67814b4"
+                                           },
+                         "uia_tree":  "board01-native-windows-uia.tsv",
+                         "uia_tree_sha256":  "824ed6b3dcab0b0ecc1da3703479fc9af7c093ed2c18d4fccb9a84b9a98570b2"
+                     },
+                     {
+                         "slug":  "board03",
+                         "expected_uia_name":  "Cleanup \u0026 Injection",
+                         "client":  {
+                                        "width":  900,
+                                        "height":  600,
+                                        "sampled_colors":  60,
+                                        "minimum_luma":  24,
+                                        "maximum_luma":  255,
+                                        "non_dark_ratio":  1,
+                                        "file":  "board03-native-windows.png",
+                                        "sha256":  "2bcb496d2fa4d72bdefbddab495e7857e8bda0d6f9dda54c8653dbf9f31cd2ba"
+                                    },
+                         "native_window":  {
+                                               "width":  916,
+                                               "height":  639,
+                                               "sampled_colors":  115,
+                                               "minimum_luma":  11,
+                                               "maximum_luma":  255,
+                                               "non_dark_ratio":  1,
+                                               "file":  "board03-native-windows-runner.png",
+                                               "sha256":  "4cf60d8f06fc8ff2799b0c64d97b258d6d082924b7b0d4f32aa6957550bb076d"
+                                           },
+                         "uia_tree":  "board03-native-windows-uia.tsv",
+                         "uia_tree_sha256":  "80b7a2b3d88b9b98cc7c3e48df77f82270a4ac2401ce796b3fa30a21a7a55ba2"
+                     },
+                     {
+                         "slug":  "board07",
+                         "expected_uia_name":  "Privacy \u0026 Context",
+                         "client":  {
+                                        "width":  900,
+                                        "height":  600,
+                                        "sampled_colors":  65,
+                                        "minimum_luma":  24,
+                                        "maximum_luma":  255,
+                                        "non_dark_ratio":  1,
+                                        "file":  "board07-native-windows.png",
+                                        "sha256":  "106d296ca8774be4b3107ad4f72202090585787e7ce91129f063ea6f030e8f8e"
+                                    },
+                         "native_window":  {
+                                               "width":  916,
+                                               "height":  639,
+                                               "sampled_colors":  108,
+                                               "minimum_luma":  11,
+                                               "maximum_luma":  255,
+                                               "non_dark_ratio":  1,
+                                               "file":  "board07-native-windows-runner.png",
+                                               "sha256":  "d02a057bc67add9bd545705329df276333f37a0b6189bcc7ccd8f22403cad8ae"
+                                           },
+                         "uia_tree":  "board07-native-windows-uia.tsv",
+                         "uia_tree_sha256":  "b6f99c91cd6d76f77810a4e8af659d9c5d19fb6b84499d76a1956f3194e3566a"
+                     },
+                     {
+                         "slug":  "board10",
+                         "expected_uia_name":  "First Run Setup \u0026 License",
+                         "client":  {
+                                        "width":  900,
+                                        "height":  600,
+                                        "sampled_colors":  75,
+                                        "minimum_luma":  24,
+                                        "maximum_luma":  255,
+                                        "non_dark_ratio":  1,
+                                        "file":  "board10-native-windows.png",
+                                        "sha256":  "29186792c07c58d7301031f7b5877a55c8df4e53b3c17351e43f5c58dd4cfa57"
+                                    },
+                         "native_window":  {
+                                               "width":  916,
+                                               "height":  639,
+                                               "sampled_colors":  110,
+                                               "minimum_luma":  11,
+                                               "maximum_luma":  255,
+                                               "non_dark_ratio":  1,
+                                               "file":  "board10-native-windows-runner.png",
+                                               "sha256":  "1aec77148d6fa9c987f47dc37fcd53c92c270a1bbd3427d7a6420bf6336b6f83"
+                                           },
+                         "uia_tree":  "board10-native-windows-uia.tsv",
+                         "uia_tree_sha256":  "1e23cdb46e495fc774e1589b7e0a693a50b6e0c516ffffe8fd87b6bb35a73795"
+                     },
+                     {
+                         "slug":  "board10-permissions",
+                         "expected_uia_name":  "First Run Proof",
+                         "client":  {
+                                        "width":  900,
+                                        "height":  600,
+                                        "sampled_colors":  95,
+                                        "minimum_luma":  23,
+                                        "maximum_luma":  255,
+                                        "non_dark_ratio":  1,
+                                        "file":  "board10-permissions-native-windows.png",
+                                        "sha256":  "779f050d97a1c3326aca28ed713c7621dbdec15dd94c7625cdc0bc260306e65f"
+                                    },
+                         "native_window":  {
+                                               "width":  916,
+                                               "height":  639,
+                                               "sampled_colors":  143,
+                                               "minimum_luma":  11,
+                                               "maximum_luma":  255,
+                                               "non_dark_ratio":  1,
+                                               "file":  "board10-permissions-native-windows-runner.png",
+                                               "sha256":  "8591575a4d5cf1750aaeb18c8972621df95ab55866596ff0668e584a24e1ffe7"
+                                           },
+                         "uia_tree":  "board10-permissions-native-windows-uia.tsv",
+                         "uia_tree_sha256":  "1b2570264873970b1a55f1ba129a22cd4c0698ac43e4ee2db34e69311d204b7d"
+                     }
+                 ],
+    "boundary":  "This proves native Windows Tauri/WebView rendering and UI Automation navigation only. It does not prove microphone, global hotkey, text injection, secure-field refusal, ASR, or first-dictation readiness."
+}
