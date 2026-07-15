@@ -1,0 +1,42 @@
+# P1-G3 Windows Runtime Diagnostic
+
+Date: 2026-07-14 local / 2026-07-15 UTC
+Source commit: `71890fd90283c0f2bf76506f1c0b59941ac2349e`
+Host: Windows 11 Pro 10.0.26200, x64, interactive session 1
+Scope: production Windows UIA delivery/refusal and close-to-tray lifecycle behavior. This is failure evidence, not a P1-G3 gate close.
+
+## Production UIA self-test
+
+The release `uia-selftest.exe` (SHA-256 `8ec5e60c27349281f75712a55076e7fb564650ecb7f8932d1696c6bdb71a44d6`) ran the real `inject_committed_text` policy path against focused local WinForms controls.
+
+- Editable field: PASS. `FieldKind::Editable`; event `Injected { method: Native }`.
+- Secure field: PASS. `FieldKind::Secure`; native/keystroke/clipboard capabilities were all unavailable; event `Held { reason: SecureField }`.
+- The test proves focused Windows UIA classification, native insertion success, and the load-bearing secure-field refusal. It does not measure the full hotkey -> WAL -> ASR -> focused-field release latency.
+
+## Close-to-tray lifecycle
+
+The shipping `target/release/kaydence.exe` (SHA-256 `873d588c4decec35a1c933ce5b8047f382efed7a0a26e53706c2ec62263439d2`) was launched in the interactive desktop session. The normal Windows `WM_CLOSE` request was posted to its native main-window handle.
+
+```json
+{
+  "captured_at_utc": "2026-07-15T01:07:30.3935819Z",
+  "pid": 24548,
+  "initial_hwnd": 23005164,
+  "startup_to_window_ms": 47,
+  "wm_close_posted": true,
+  "after_close_alive": false,
+  "after_close_observation_ms": 569,
+  "exit_code": 0
+}
+```
+
+- Result: FAIL. User-close terminated the process with exit code 0 instead of preserving a tray-owned runtime.
+- Because the process exited, same-PID tray reopen, retained hotkey/backend state, and tray Quit could not be tested.
+- This reproduces the open Windows tray-lifecycle blocker on real hardware. The existing macOS lifecycle proof does not generalize to Windows.
+
+## Decision boundary
+
+- Judge: PASS for an evidence-only diagnostic; no product code, dependency, network surface, model registry, or visual invariant changed.
+- Auditor: PASS for the UIA insertion/refusal claims and FAIL for the required Windows close-to-tray behavior. P1-G3 remains pending.
+- Likely fault area: the desktop close/destroy/`ExitRequested` handling in `apps/desktop/src-tauri/src/lib.rs`; causal instrumentation is still required before selecting a fix.
+- Fixing Windows lifecycle behavior touches platform code and non-negotiable #5. Per `prompts/JUDGE-AUDITOR.md`, implementation/merge requires a dedicated ADR and explicit operator `go`.

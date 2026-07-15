@@ -23,7 +23,7 @@
 - [x] Four native Windows client captures produced and visually compared at 900 x 600
 - [x] Native titlebar, UIA tree, source hash, host, and pixel diagnostics preserved
 - [x] Exact permission labels fixed in PR #9 with a green 3-OS matrix
-- [x] Startup retry hardening was consolidated through PR #27; current remote head `24957aa` has a green 3-OS run
+- [x] Startup retry hardening was consolidated through PR #27; proof PR #28 passed a fresh 3-OS matrix and merged as `71890fd`
 - [x] One passing interactive Windows run captures all four families plus the permissions modal
 - [ ] Final human visual signoff
 

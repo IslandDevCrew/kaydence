@@ -139,14 +139,14 @@
   "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
   "status": "active",
   "started": "2026-07-07",
-  "updated": "2026-07-15T00:54Z",
+  "updated": "2026-07-15T01:08Z",
   "sessionCount": 26
  },
  "policies": {
   "merge": "auto",
   "branchPrefix": "mission/",
   "maxPrLines": 400,
-   "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence is PUBLIC with 3-OS Actions CI live; active gh auth is IslandDevCrew. Pushes run Linux-only, while PRs into main and manual dispatch run the full macOS/Windows/Linux matrix. Latest verified full matrix: PR #27 head 5b451f7, Actions run 29228958267 GREEN on macOS, Windows, and Linux; current main 24957aa also has green Linux push run 29229629905. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test, frontend check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
+   "notes": "auto = merge own branch to main when all phase gates + standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence is PUBLIC with 3-OS Actions CI live; active gh auth is IslandDevCrew. Pushes run Linux-only, while PRs into main and manual dispatch run the full macOS/Windows/Linux matrix. Latest verified full matrix: PR #28 head a375d0f, Actions run 29380294117 GREEN on macOS, Windows, and Linux; merged to main as 71890fd. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test, frontend check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths (JUDGE-AUDITOR.md: non-negotiable reinterpretation, new dependency/network surface, platform code, model registry, cleanup/prediction/Relay-crypto prompt contracts) HALT for operator go + ADR."
  },
  "phases": [
   {
@@ -344,9 +344,9 @@
      "title": "Latency + footprint budgets met in Raw mode (release->inject <=700ms GPU / <=1200ms CPU; idle RAM <=250MB)",
      "command": "bash scripts/bench.sh --check",
      "status": "pending",
-     "evidence": "ops/mission/evidence/2026-07-10-p1-g3-whisper-metal-warmup.txt; ops/mission/evidence/2026-07-11-p1-g3-macos-reference-bench.txt; ops/mission/evidence/2026-07-11-p1-g3-macos-local-gpu.json; ops/mission/evidence/2026-07-11-p1-g3-macos-local-cpu.json; ops/mission/evidence/2026-07-11-p1-g3-quantized-asr-default.txt; ops/mission/evidence/2026-07-11-p1-g3-linux-q5-local-cpu.json; ops/mission/evidence/2026-07-11-p1-g3-linux-q5-reference-bench.txt; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run1.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run2.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run3.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run4.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run5.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-reference-bench.txt; ops/mission/evidence/2026-07-11-p1-g3-macos-packaged-background-footprint.txt",
-     "lastRun": "2026-07-11T23:50Z",
-     "notes": "PENDING with a verified q5 remedy and a substantial packaged macOS background optimization. Q5_1 passes Mac Metal at p50/p95 55/78 ms, 152.656 MB, 0% idle CPU; Mac CPU at 201/214 ms, 138.516 MB, 0%; Debian ARM64 CPU at 594/600 ms, 71.859 MB, 0%; and four consecutive Windows ARM64 CPU runs at 1121, 965, 903, and 902 ms p95, about 73-75 MB RSS, and 0%. The first Windows 1433 ms p95 failure remains evidence without an assigned cause. The production macOS bundle with no model installed measured 84,954,424 bytes after more than ten visible idle minutes: 4,954,424 bytes above the strict 80 MB line, so the general no-model idle gate remains open. Closing the cockpit destroys WebContent while preserving the same PID and F13 hotkey; exact process-group background samples pass at 48,892,448 bytes after 30 seconds and 38,618,936 bytes after 120 seconds, both at 0% CPU. PR #27 consolidated and merged the q5/lifecycle work; ADR-0015 is Accepted, PR #27 passed full 3-OS CI, and current main passed its Linux push gate. P1-G3 remains open for the visible no-model overage, packaged q5 ASR-resident measurement, physical focused-field timing, complete release-to-inject evidence, and Windows/Linux tray lifecycle proof."
+     "evidence": "ops/mission/evidence/2026-07-10-p1-g3-whisper-metal-warmup.txt; ops/mission/evidence/2026-07-11-p1-g3-macos-reference-bench.txt; ops/mission/evidence/2026-07-11-p1-g3-macos-local-gpu.json; ops/mission/evidence/2026-07-11-p1-g3-macos-local-cpu.json; ops/mission/evidence/2026-07-11-p1-g3-quantized-asr-default.txt; ops/mission/evidence/2026-07-11-p1-g3-linux-q5-local-cpu.json; ops/mission/evidence/2026-07-11-p1-g3-linux-q5-reference-bench.txt; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run1.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run2.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run3.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run4.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-local-cpu-run5.json; ops/mission/evidence/2026-07-11-p1-g3-windows-q5-reference-bench.txt; ops/mission/evidence/2026-07-11-p1-g3-macos-packaged-background-footprint.txt; ops/mission/evidence/2026-07-14-p1-g3-windows-runtime-diagnostic.txt",
+     "lastRun": "2026-07-15T01:07Z",
+     "notes": "PENDING with a verified q5 remedy and a substantial packaged macOS background optimization. Q5_1 passes Mac Metal at p50/p95 55/78 ms, 152.656 MB, 0% idle CPU; Mac CPU at 201/214 ms, 138.516 MB, 0%; Debian ARM64 CPU at 594/600 ms, 71.859 MB, 0%; and four consecutive Windows ARM64 CPU runs at 1121, 965, 903, and 902 ms p95, about 73-75 MB RSS, and 0%. The first Windows 1433 ms p95 failure remains evidence without an assigned cause. The production macOS bundle with no model installed measured 84,954,424 bytes after more than ten visible idle minutes: 4,954,424 bytes above the strict 80 MB line, so the general no-model idle gate remains open. Closing the macOS cockpit preserves the tray-owned runtime at 38.619-48.892 MB and 0% CPU. On the real Windows 11 host, production UIA native insertion and secure-field refusal pass, but `WM_CLOSE` terminates the release process with exit code 0 in 569 ms instead of preserving the tray-owned runtime. The Windows lifecycle failure now requires a dedicated ADR and operator go before any platform-code fix. P1-G3 remains open for the visible no-model overage, packaged q5 ASR-resident measurement, full physical release-to-inject timing, the Windows lifecycle defect, and Linux tray proof."
     },
     {
      "id": "P1-G4",
@@ -424,7 +424,7 @@
       "P0-T6"
      ],
      "pr": null,
-     "notes": "PARTIAL gate with the constitutional <=250 MB ASR-resident ceiling preserved. Q5_1 resolves the Mac GPU overage without relaxing the gate: Metal p50/p95 55/78 ms at 152.656 MB and CPU 201/214 ms at 138.516 MB. Debian ARM64 CPU passes 594/600 ms at 71.859 MB. Windows ARM64 has four consecutive quiescent passes at 1121, 965, 903, and 902 ms p95, about 73-75 MB RSS, and 0% idle CPU. The retained first run is a 1433 ms p95 failure; its cause was not measured. Every report retains physical_os_field_injection as unmeasured. PR #27 merged the q5 three-OS default and packaged macOS background-footprint work; ADR-0015 is Accepted. PR #27 head 5b451f7 passed hosted macOS/Windows/Linux CI run 29228958267, and current main 24957aa passed Linux push run 29229629905. The visible idle cockpit still fails the general 80 MB line at 84,954,424 bytes. P1-G3 remains pending for that visible no-model overage, packaged q5 ASR-resident measurement, physical focused-field timing, complete release-to-inject evidence, and Windows/Linux tray proof."
+     "notes": "PARTIAL gate with the constitutional <=250 MB ASR-resident ceiling preserved. Q5_1 resolves the Mac GPU overage without relaxing the gate: Metal p50/p95 55/78 ms at 152.656 MB and CPU 201/214 ms at 138.516 MB. Debian ARM64 CPU passes 594/600 ms at 71.859 MB. Windows ARM64 has four consecutive quiescent passes at 1121, 965, 903, and 902 ms p95, about 73-75 MB RSS, and 0% idle CPU. The retained first run is a 1433 ms p95 failure; its cause was not measured. PR #28 head a375d0f passed hosted macOS/Windows/Linux CI run 29380294117 and merged as 71890fd. The real Windows 11 UIA path now passes native insertion and secure-field refusal, but full physical release-to-inject remains unmeasured. Windows close-to-tray explicitly fails: a normal WM_CLOSE terminates the release process with exit code 0 after 569 ms, preventing same-PID reopen. The visible macOS idle cockpit still fails the general 80 MB line at 84,954,424 bytes. P1-G3 remains pending for that visible no-model overage, packaged q5 ASR-resident measurement, full physical release-to-inject timing, an ADR-gated Windows lifecycle fix, and Linux tray proof."
     },
     {
      "id": "P1-P0-7",
@@ -847,7 +847,7 @@
   {
    "label": "Platform parity (CI legs green)",
    "baseline": "0 / 3 (Mac-first field; Linux unserved)",
-   "current": "3 / 3 on PR #27: Actions run 29228958267 passed macOS, Windows, and Linux at head 5b451f7; merged to main. Main 24957aa Linux push run 29229629905 is also green.",
+   "current": "3 / 3 on PR #28: Actions run 29380294117 passed macOS, Windows, and Linux at head a375d0f; merged to main as 71890fd.",
    "target": "3 / 3 incl. Wayland",
    "direction": "up"
   },
@@ -882,9 +882,9 @@
  ],
  "risks": [
   {
-   "title": "GitHub Actions cost-control and matrix discipline",
-   "severity": "high",
-   "note": "Billing is blocking new hosted jobs again. PR #9's full matrix 29138662377 was green and main heartbeat 29139044571 is green at 80c9374, but draft PR #10 run 29139988632, draft PR #11's latest code run 29142969657 at 72f6013, and rerun 29143051942 at 2026-07-11T16:29Z all failed before checkout with zero setup steps and GitHub's explicit failed-payments/spending-limit annotation. Do not merge either draft until a fresh macOS/Windows/Linux matrix can start and pass."
+   "title": "GitHub Actions matrix discipline",
+   "severity": "low",
+   "note": "Billing is no longer blocking the public repository. PR #28 Actions run 29380294117 passed the full macOS/Windows/Linux matrix and merged as 71890fd. Keep the cost-aware trigger contract: pushes to main run Linux; every PR to main runs all three OSes."
   },
   {
    "title": "v2 -> v3 documentation drift",
@@ -913,6 +913,7 @@
   },
   {
    "id": "R-ASR-HEDGE",
+   "title": "Independent second ASR runtime",
    "severity": "medium",
    "note": "ADR-0002 two-independent-ASR-runtimes hedge not yet met: CPU lane currently uses whisper.cpp (same runtime as GPU). Independent Parakeet/ort adapter (mel + RNNT decode) still owed."
   }
@@ -1431,119 +1432,119 @@
   },
   {
    "number": 10,
-   "title": "P1-G4 retry Windows WebView startup - OPEN DRAFT, Actions billing-blocked",
+   "title": "P1-G4 retry Windows WebView startup - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/10",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 11,
-   "title": "P1 truthful Whisper warmup and shipped ASR lanes - OPEN DRAFT, Actions billing-blocked",
+   "title": "P1 truthful Whisper warmup and shipped ASR lanes - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/11",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 12,
-   "title": "P1 close Linux human-focus injection proof - OPEN STACKED DRAFT on PR #11",
+   "title": "P1 close Linux human-focus injection proof - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/12",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 13,
-   "title": "P1 prove Windows ARM64 Whisper runtime - OPEN STACKED DRAFT on PR #12",
+   "title": "P1 prove Windows ARM64 Whisper runtime - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/13",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 14,
-   "title": "P1 plan Windows ARM64 build contract - OPEN STACKED DRAFT on PR #13",
+   "title": "P1 plan Windows ARM64 build contract - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/14",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 15,
-   "title": "P1 automate Windows ARM64 Whisper releases - OPEN STACKED DRAFT on PR #14",
+   "title": "P1 automate Windows ARM64 Whisper releases - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/15",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 16,
-   "title": "P1 fail closed on Windows ARM64 release target - OPEN STACKED DRAFT on PR #15",
+   "title": "P1 fail closed on Windows ARM64 release target - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/16",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 17,
-   "title": "P1 record Windows ARM64 build automation - OPEN STACKED DRAFT on PR #16",
+   "title": "P1 record Windows ARM64 build automation - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/17",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 18,
-   "title": "P1 plan real ASR reference benchmark - OPEN STACKED DRAFT",
+   "title": "P1 plan real ASR reference benchmark - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/18",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 19,
-   "title": "P1 add real ASR reference benchmark probe - OPEN STACKED DRAFT on PR #18",
+   "title": "P1 add real ASR reference benchmark probe - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/19",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 20,
-   "title": "P1 measure reference ASR footprint cross-platform - OPEN STACKED DRAFT on PR #19",
+   "title": "P1 measure reference ASR footprint cross-platform - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/20",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 21,
-   "title": "P1 reference benchmark gate fixes - OPEN STACKED DRAFT on PR #20",
+   "title": "P1 reference benchmark gate fixes - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/21",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 22,
-   "title": "P1 record Mac reference benchmark evidence - OPEN STACKED DRAFT on PR #21",
+   "title": "P1 record Mac reference benchmark evidence - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/22",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 23,
-   "title": "P1 harden reference benchmark evidence - OPEN STACKED DRAFT on PR #22",
+   "title": "P1 harden reference benchmark evidence - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/23",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 24,
-   "title": "P1 make quantized Whisper the evidence-gated first-run model - OPEN STACKED DRAFT on PR #23",
+   "title": "P1 make quantized Whisper the evidence-gated first-run model - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/24",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 25,
-   "title": "P1 reduce packaged macOS background footprint - OPEN STACKED DRAFT on PR #24",
+   "title": "P1 reduce packaged macOS background footprint - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/25",
    "phase": "P1",
    "mergedAt": null
   },
   {
    "number": 26,
-   "title": "P1 record packaged macOS lifecycle heartbeat - OPEN STACKED DRAFT on PR #25",
+   "title": "P1 record packaged macOS lifecycle heartbeat - CLOSED; superseded by merged PR #27",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/26",
    "phase": "P1",
    "mergedAt": null
@@ -1560,12 +1561,13 @@
    "title": "P1-G4 native Windows screen-family proof",
    "url": "https://github.com/IslandDevCrew/kaydence/pull/28",
    "phase": "P1",
-   "mergedAt": null
+   "mergedAt": "2026-07-15"
   }
  ],
  "resume": {
   "activePhase": "P1",
   "nextActions": [
+   "P1-G3 WINDOWS RUNTIME DIAGNOSTIC (2026-07-14 local / 2026-07-15 UTC): production UIA native insertion passes against a focused editable control and the secure-field path correctly returns Held(SecureField). The shipping release then fails Windows tray lifecycle: WM_CLOSE terminates PID 24548 with exit code 0 after 569 ms instead of preserving a tray-owned runtime. Evidence: ops/mission/evidence/2026-07-14-p1-g3-windows-runtime-diagnostic.txt. NEXT: operator gives explicit go for a dedicated Windows lifecycle ADR/fix work unit; do not change platform code silently. Full release-to-inject timing still requires a reviewed local model artifact and end-to-end hotkey/audio/ASR proof.",
    "STAGE A COMPLETE (2026-07-13, operator decisions executed): (1) repo made PUBLIC -> GitHub Actions is free/unlimited on 3 OSes; the billing wall is permanently gone. (2) ADR-0015 ACCEPTED (quantized whisper-base-en-q5_1 as per-OS default); check-adr-status.sh allowlist tightened so only ADR-0009 (Relay) stays by-design Proposed. (3) The 17 stacked draft PRs (#10-#26) were CONSOLIDATED into one clean PR #27 (2 commits: change/record + 1 cross-platform clippy fix) and MERGED to main (6c0f1b3) after a full GREEN 3-OS CI run (macOS 5m / Linux 7m / Windows 12m). All 16 stale drafts closed; 0 open PRs. CORRECTION discovered while landing: local main was stale — boards #1-#9 (Board 01/03/07/10 cockpit builds + Windows proof) were ALREADY merged to main, so the P1-G4 cockpit surfaces exist in code and the earlier 'build board-01 next' framing is partly done; re-verify P1-G4 against the built surfaces before more UI work. NEXT = STAGE B (close P1): finish P1-G3 (strict <80MB no-model packaged; packaged q5 ASR-resident RAM; physical focused-field timing; one fresh green 3-OS run on main) and P1-G4 (clean hosted Windows board capture + human visual signoff), then P1 exit.",
    "P1-G3 PACKAGED MACOS BACKGROUND (2026-07-11): draft PR #25 publishes codex/p1-g3-macos-packaged-footprint on #24. The production custom-protocol,asr-whisper-metal bundle with no model installed measured 84,954,424 bytes after more than ten visible idle minutes: 4,954,424 bytes above the strict 80 MB charter line, so the general no-model gate remains open. User-close now destroys the WebView while preserving the same backend PID, registered F13 hotkey, and tray runtime. Exact process-group samples pass at 48,892,448 bytes after 30 seconds and 38,618,936 bytes after 120 seconds, both at 0% CPU. Tray and macOS reopen recreate the cockpit in the same PID; Command-Q and tray Quit terminate normally. P1-G3 stays open for the visible no-model overage, packaged q5 ASR-resident measurement, physical focused-field timing, Windows/Linux tray proof, fresh hosted three-OS CI, and ADR-0015 approval.",
    "P1-G3 QUANTIZED ASR DEFAULT (2026-07-11): draft PR #24 publishes codex/p1-g3-quantized-asr-default on #23. The pinned q5 artifact recovers the unchanged <=250 MB gate on Mac Metal/CPU, Linux CPU, and Windows CPU. macOS, Windows, and Linux are evidence-backed default_for platforms after Windows produced four consecutive quiescent ten-sample passes at 1121, 965, 903, and 902 ms p95 with about 73-75 MB RSS and 0% idle CPU. The first recorded 1433 ms p95 failure remains evidence; no host-load data establishes its cause, and the probe is not packaged-app evidence. Candidate, required-model, preflight, and runtime lanes report the compiled backend, and an all-placeholder registry still fails closed with an explicit blocked model. Proposed ADR-0015 requires operator approval and does not authorize downloads. Russell's exact re-review of `feef1db..cb0a2a2` found no Critical, Important, or Minor findings. Ready for stacked draft review, not merge; keep P1-G3 open.",
@@ -1576,7 +1578,7 @@
   ],
   "blockers": [
    "P1-G4 native Windows proof is complete at current source commit 24957aa: Boards 01/03/07/10 plus the permissions modal passed the fail-closed interactive Windows 11 harness. The sole remaining P1-G4 blocker is explicit operator visual signoff on the five retained captures.",
-   "P1-G3 remains pending even though q5 passes the reference gate on Mac Metal/CPU, Linux CPU, and four consecutive quiescent Windows CPU runs, and the packaged macOS background process measures 38.619-48.892 MB with 0% CPU. ADR-0015 is Accepted, PR #27 passed full 3-OS CI, and current main passed its Linux push gate. The visible idle cockpit still fails the general 80 MB line at 84.954 MB; the first Windows 1433 ms p95 failure also remains disclosed without an assigned cause. Remaining blockers are the visible no-model overage, packaged q5 ASR-resident measurement, physical focused-field timing, complete release-to-inject evidence, and Windows/Linux tray proof.",
+   "P1-G3 remains pending even though q5 passes the reference gate on Mac Metal/CPU, Linux CPU, and four consecutive quiescent Windows CPU runs, and the packaged macOS background process measures 38.619-48.892 MB with 0% CPU. PR #28 passed full 3-OS CI and merged. The visible macOS cockpit still fails the general 80 MB line at 84.954 MB; the first Windows 1433 ms p95 failure remains disclosed without an assigned cause; physical release-to-inject remains incomplete; and real Windows close-to-tray now fails because WM_CLOSE terminates the process. Remaining blockers are visible no-model reduction, packaged q5 ASR-resident measurement, full physical release-to-inject evidence, an ADR-gated Windows lifecycle fix, and Linux tray proof.",
    "P3-BENCH requires the two physical reference machines (M-series Mac + mid-range Windows laptop) to lock ADR-0007 prediction defaults before P3.5.",
    "Gemma 3 1B license review required before any paid build bundles it (ADR-0007/0010).",
    "ADR-0009 (Relay crypto) remains the sole Proposed ADR by design and requires operator review before P4 Relay work. ADR-0015 is Accepted and merged through PR #27."
