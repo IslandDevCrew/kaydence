@@ -632,3 +632,13 @@
 - Merged PR #27 to main (6c0f1b3); closed all 16 stale drafts; 0 open PRs. The one-branch-one-merge charter is restored.
 - Heartbeat: state.json updated (repo public, prLog +#27, billing blocker cleared), SOTU re-rendered. Gates remain 10/23 (P1-G3 sub-work landed but the gate stays pending on the strict <80MB no-model + resident + reference-machine + fresh-3-OS items).
 - NEXT: Stage B — close P1 (finish P1-G3 footprint items; P1-G4 Windows board capture + human signoff), then P1 exit.
+
+## 2026-07-15T00:43Z — session 26 (Codex: native Windows P1-G4 proof)
+- Cold-started from `ops/mission/state.json`, verified `main` at `24957aa` and a real interactive Windows 11 Pro x64 host (GMKtec NucBox_M2Pro_S, i7-1185G7, 32 GB RAM).
+- The first shipping-feature release build failed closed because bindgen could not locate `libclang.dll`; no feature reduction was accepted. Provisioned the official LLVM 22.1.8 Windows archive portably under `%LOCALAPPDATA%/KaydenceToolchains`, verifying GitHub's published SHA-256 `d96c2cc1736f4eb7fa43cb9bbdf56d93551a9ae0a9aadb9c99c3c3b2b712a234`, then built `custom-protocol,asr-whisper` successfully.
+- Ran `scripts/windows-webview-proof.ps1` against the 16,037,376-byte release executable. PASS in 8.238 seconds: exact 900x600 native captures for Boards 01/03/07/10 plus the First Run Proof permissions modal, with native titlebar frames, UIA trees, source hashes, executable hash, host manifest, and pixel checks.
+- Visual review against the locked boards found no actionable clipping, overlap, missing asset, overflow, or lane-token drift. Runtime blocked/pending states remain truthful. The parent P1-G4 gate remains pending only because final operator visual signoff is intentionally human-owned.
+- Fresh gates PASS: fmt; strict Clippy; 224 library + 5 reference-bench + 2 crash-recovery + 5 event-sequence + 5 short-utterance tests; frontend type/lint and production build; shipping-feature release build; privacy/network (0 call sites); ADR status. Synthetic bench PASS for 4 measured metrics and remains explicitly PARTIAL for GPU/prediction/idle fields.
+- Evidence: `ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt` and `ops/mission/evidence/2026-07-14-windows-webview-proof/`.
+- Published the evidence/reporting work unit as PR #28: `https://github.com/IslandDevCrew/kaydence/pull/28`; merge remains subject to its fresh full 3-OS PR matrix.
+- NEXT: operator signs off the five Windows captures; then close P1-G4. Independently, use this Windows host for P1-G3 tray lifecycle and physical focused-field timing without conflating those runtime proofs with visual fidelity.

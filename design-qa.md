@@ -2,6 +2,8 @@
 
 ## Hosted Windows Checkpoint
 
+- Passing Windows 11 host set: `ops/mission/evidence/2026-07-14-windows-webview-proof/`
+- Passing ledger: `ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt`
 - Native diagnostic set: `ops/mission/evidence/windows-proof-run-29137950481/`
 - Same-viewport combined comparison: `ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png`
 - Native provenance frames: `board{01,03,07,10}-native-windows-runner.png`
@@ -14,18 +16,18 @@
 - Windows cobalt stays confined to lane selection and active controls. Shared prediction, warning, success, and neutral tokens do not drift into a one-note blue palette.
 - No visible text overlap, clipped app content, broken icon, missing asset, or unstable layout appears in the combined comparison. Native titlebar frames separately establish Windows provenance.
 - Differences from the Browser row are expected runtime truth, not visual regressions: the hosted app reports blocked model metadata, pending permissions, no local transcript/history, and setup-required delivery.
-- This is a diagnostic design pass, not the P1-G4 close. Run 29137950481 failed closed before the permissions modal because its expected label differed from production. The second proof VM never exposed the initial WebView UIA tree. PR #10 startup hardening is open and Actions billing-blocked.
+- The historical hosted set remains diagnostic: run 29137950481 failed closed before the permissions modal because its expected label differed from production. The second proof VM never exposed the initial WebView UIA tree. On 2026-07-14, the current `24957aa` shipping-feature release passed the same fail-closed harness on an interactive Windows 11 Pro x64 host and captured all four families plus the permissions modal. The five client captures, five native provenance frames, five UIA trees, source hashes, executable hash, and host manifest are retained in the passing set above.
 
 **Windows Completion Checklist**
 
 - [x] Four native Windows client captures produced and visually compared at 900 x 600
 - [x] Native titlebar, UIA tree, source hash, host, and pixel diagnostics preserved
 - [x] Exact permission labels fixed in PR #9 with a green 3-OS matrix
-- [ ] PR #10 startup retry hardening receives a fresh green 3-OS matrix
-- [ ] One passing hosted run captures all four families plus the permissions modal
+- [x] Startup retry hardening was consolidated through PR #27; current remote head `24957aa` has a green 3-OS run
+- [x] One passing interactive Windows run captures all four families plus the permissions modal
 - [ ] Final human visual signoff
 
-checkpoint result: diagnostic pass; parent gate remains pending
+checkpoint result: Windows evidence pass; parent gate remains pending only for final operator visual signoff
 
 ## Board 01
 
