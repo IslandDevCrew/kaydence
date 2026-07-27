@@ -9,11 +9,32 @@
       "runtime": "onnxruntime",
       "file": "parakeet-v3-int8.onnx",
       "sha256": "TODO",
-      "size_mb": 600,
-      "license": "Apache-2.0",
+      "size_mb": 671,
+      "license": "CC-BY-4.0",
+      "min_hw": "any",
+      "recommended": false,
+      "sources": [
+        "TODO_primary",
+        "TODO_mirror"
+      ],
+      "note": "CORRECTED 2026-07-10 (ADR-0016 research): license is CC-BY-4.0 (attribution-required), NOT Apache-2.0. nvidia/parakeet-tdt-0.6b-v3 is a FOUR-file model (encoder-model.int8.onnx + decoder_joint-model.int8.onnx + nemo128.onnx mel preprocessor + vocab.txt, ~671MB on disk), NOT the single parakeet-v3-int8.onnx named here. TDT (token+duration transducer) decoding + ~2GB inference RAM exceeds the <=250MB ASR-resident budget (invariant 9), so it is DEMOTED (recommended:false) and DEFERRED behind the CTC-first ONNX lane until a real TDT adapter and per-platform resident evidence exist. sha256/sources stay TODO (fail-closed)."
+    },
+    {
+      "id": "onnx-ctc-asr",
+      "task": "asr",
+      "lane": "cpu",
+      "runtime": "onnxruntime",
+      "file": "onnx-ctc-asr-int8.onnx",
+      "sha256": "TODO",
+      "size_mb": 120,
+      "license": "CC-BY-4.0",
       "min_hw": "any",
       "recommended": true,
-      "sources": ["TODO_primary", "TODO_mirror"]
+      "sources": [
+        "TODO_primary",
+        "TODO_mirror"
+      ],
+      "note": "ADR-0016 CTC-first ONNX ASR lane (the ADR-0002 supply-chain hedge alongside whisper.cpp). Runs a bundled mel preprocessor + encoder ONNX graph via `ort` and decodes greedy CTC (argmax -> collapse dups -> strip blank -> vocab) — no TDT loop. Candidate model: Parakeet-CTC-110M ONNX (OpenVoiceOS/nvidia-parakeet-tdt_ctc-110m-onnx) or a Conformer/Zipformer-CTC export; ~110M params, plausibly within the <=250MB resident budget (to be MEASURED per platform before any default_for promotion, invariant 9). OPERATOR DECISIONS PENDING (ADR-0016): exact model + pinned HTTPS sources + real per-file sha256, CC-BY-4.0 attribution in app notices, and the vendored libonnxruntime binary provenance. sha256/sources stay TODO -> fail-closed (models cannot auto-select or download until real hashes land)."
     },
     {
       "id": "whisper-base-en-q5_1",
@@ -26,7 +47,11 @@
       "license": "MIT",
       "min_hw": "any",
       "recommended": true,
-      "default_for": ["macos", "windows", "linux"],
+      "default_for": [
+        "macos",
+        "windows",
+        "linux"
+      ],
       "note": "Measured macOS, Windows, and Linux P1 default. Apple M5 Pro proof: Q5_1 Metal 152.656 MB RSS and 78 ms p95; CPU 138.516 MB and 214 ms p95; 4/4 synthetic golden phrases at zero content-word WER. Debian 12 ARM64 CPU proof: 71.859 MB RSS, 600 ms p95, and exact synthetic golden transcript. Windows 11 ARM64 exact golden passed; four consecutive quiescent ten-sample CPU runs passed at 1121, 965, 903, and 902 ms p95 with about 73-75 MB RSS and 0% idle CPU. The first recorded 1433 ms miss is retained; its cause was not measured. Large-v3-turbo remains the quality lane until it independently meets the resident-memory budget.",
       "sources": [
         "https://huggingface.co/ggerganov/whisper.cpp/resolve/c521a4b02f422512d734391fdf08bb08c0862f68/ggml-base.en-q5_1.bin",
@@ -44,7 +69,10 @@
       "license": "MIT",
       "min_hw": "metal_or_dgpu",
       "recommended": true,
-      "sources": ["TODO_primary", "TODO_mirror"]
+      "sources": [
+        "TODO_primary",
+        "TODO_mirror"
+      ]
     },
     {
       "id": "silero-vad",
@@ -56,7 +84,9 @@
       "license": "MIT",
       "min_hw": "any",
       "recommended": true,
-      "sources": ["TODO_primary"]
+      "sources": [
+        "TODO_primary"
+      ]
     },
     {
       "id": "qwen2.5-1.5b",
@@ -69,8 +99,13 @@
       "license": "Apache-2.0",
       "min_hw": "apple_silicon_or_gpu",
       "recommended": true,
-      "default_for": ["macos"],
-      "sources": ["TODO_primary", "TODO_mirror"]
+      "default_for": [
+        "macos"
+      ],
+      "sources": [
+        "TODO_primary",
+        "TODO_mirror"
+      ]
     },
     {
       "id": "gemma3-1b",
@@ -84,9 +119,14 @@
       "license_review_required": true,
       "min_hw": "any",
       "recommended": true,
-      "default_for": ["windows_mid"],
+      "default_for": [
+        "windows_mid"
+      ],
       "note": "Gemma Terms, not Apache. Legal review before commercial bundling. Download on demand; do not bundle.",
-      "sources": ["TODO_primary", "TODO_mirror"]
+      "sources": [
+        "TODO_primary",
+        "TODO_mirror"
+      ]
     },
     {
       "id": "qwen3-0.6b",
@@ -99,8 +139,14 @@
       "license": "Apache-2.0",
       "min_hw": "any",
       "recommended": true,
-      "default_for": ["low_end", "cpu_only_windows"],
-      "sources": ["TODO_primary", "TODO_mirror"]
+      "default_for": [
+        "low_end",
+        "cpu_only_windows"
+      ],
+      "sources": [
+        "TODO_primary",
+        "TODO_mirror"
+      ]
     }
   ]
 }

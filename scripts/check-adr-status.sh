@@ -17,10 +17,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIR="$ROOT/docs/decisions"
 
 # ADR numbers allowed to be non-Accepted (space-separated), + reasons in one place.
-PROPOSED_OK=" 0009 "
+PROPOSED_OK=" 0009 0016 "
 reason_for() { case "$1" in
   0009) echo "Relay crypto — critical decision path; operator review gates P4-1" ;;
-  0015) echo "Quantized P1 ASR default — operator review gates PR #24 merge" ;;
+  0016) echo "ONNX 2nd ASR lane + Silero VAD — operator go gates the vendored ORT binary + CTC model/CC-BY + source pins" ;;
   *)    echo "" ;;
 esac; }
 
