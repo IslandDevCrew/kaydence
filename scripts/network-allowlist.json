@@ -18,10 +18,10 @@
     },
     {
       "file": "models/download",
-      "reason": "On-demand model downloads from configured mirrors, checksum-verified (no weights in git).",
-      "adr": "ADR-0002",
-      "toggle": "implicit on first model fetch; mirrors in models/registry.json",
-      "status": "planned"
+      "reason": "On-demand model downloads from registry-pinned HTTPS mirrors, sha256 verify-before-install. ureq client behind the off-by-default `model-download` feature; explicit user action only, no telemetry/background fetch (ADR-0015).",
+      "adr": "ADR-0015",
+      "toggle": "cargo feature `model-download` (off by default) + explicit first-run/CLI action; mirrors pinned in models/registry.json",
+      "status": "active"
     },
     {
       "file": "relay",

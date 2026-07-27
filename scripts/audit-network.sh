@@ -89,10 +89,15 @@ allowed() {
   done
 }
 
+# NOTE: the trailing `|| true` guards `set -e`: when a hit IS allowed the final
+# `[ -z ... ] && echo` in the loop body returns non-zero, and without the guard
+# the pipe's non-zero exit would abort the script before the RESULT line below.
 echo "$hits" | while IFS= read -r line; do
   [ -z "$line" ] && continue
-  [ -z "$(allowed "${line%%:*}")" ] && echo "  UNREVIEWED: $line"
-done
+  if [ -z "$(allowed "${line%%:*}")" ]; then
+    echo "  UNREVIEWED: $line"
+  fi
+done || true
 
 # Count unreviewed for the exit code (subshell above can't set a parent var).
 unreviewed="$(echo "$hits" | while IFS= read -r line; do

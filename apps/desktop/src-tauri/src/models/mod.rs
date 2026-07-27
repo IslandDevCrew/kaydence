@@ -14,6 +14,11 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+// The one model-fetch network surface (ADR-0015), off by default. Every other
+// path in this module stays download-free.
+#[cfg(feature = "model-download")]
+pub mod download;
+
 pub const SUPPORTED_SCHEMA_VERSION: u16 = 1;
 pub const QUARANTINE_DIR_NAME: &str = "quarantine";
 const HASH_BUFFER_BYTES: usize = 64 * 1024;

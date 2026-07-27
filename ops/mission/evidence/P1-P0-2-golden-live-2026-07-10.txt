@@ -1,0 +1,10 @@
+P1-P0-2 / P1-G2 — REAL whisper.cpp transcription, verified live (2026-07-10)
+Host: Apple Silicon macOS (this dev host). Feature: asr-whisper (CPU lane).
+Model: ggml-base.en-q5_1.bin, sha256 4baf70dd...fdd2f — MATCHES models/registry.json.
+Clip: macOS `say "the quick brown fox jumps over the lazy dog"` -> 16kHz mono WAV.
+Run: cargo test --features asr-whisper --test asr_golden (production local_asr_stack seam).
+Result: final_text = "The quick brown fox jumps over the lazy dog." (exact golden match)
+Metrics: warmup_ms=51 audio_ms=2533 transcribe_ms=205 rtf=0.081 lane=LocalCpu partials=1
+Meaning: the whisper.cpp adapter transcribes real audio end-to-end through the
+production trait/stack. P1-P0-2 whisper lane + P1-G2 golden proof are GENUINELY
+green on this machine (was falsely flagged "nothing transcribes" from stale notes).

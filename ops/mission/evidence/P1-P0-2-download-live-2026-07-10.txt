@@ -1,0 +1,17 @@
+P1-P0-2 / P1-P0-8 — Model download surface, verified live (2026-07-10, ADR-0015)
+Host: Apple Silicon macOS. Feature: model-download (OFF by default; ureq/rustls).
+Surface: models/download.rs — the ONE model-fetch call site, allowlisted (audit-network
+  PASS, 1 reviewed site). Default build stays zero-egress (feature off).
+Live proof (opt-in KAYDENCE_DOWNLOAD_TEST=1, tests/model_download.rs):
+  - Fetched whisper-base-en-q5_1 from the registry-pinned HuggingFace source.
+  - Downloaded 59,721,011 bytes (~57 MB); sha256 verified vs registry BEFORE install.
+  - Installed to temp dir; re-install call verified the existing artifact (no-op).
+  - Result: test PASS in 12.74s.
+Fail-closed design proven by construction: install_artifact_from_path hashes bytes and
+  refuses on mismatch; license_review_required models are refused; sources tried in order.
+Side fix: audit-network.sh had a latent `set -e` abort that the FIRST real allowlisted
+  call site exposed (the report loop's `[ -z ] && echo` returns non-zero when a hit is
+  allowed, killing the script pre-RESULT). Fixed with an `if`+`|| true` guard; re-verified
+  PASS on the allowed site AND FAIL on a planted reqwest in a non-allowlisted file.
+Gate for ship: enabling `model-download` in the DEFAULT first-run build users receive is
+  a separate operator go (ADR-0015 Consequences). Surface is built + proven, dormant by default.
