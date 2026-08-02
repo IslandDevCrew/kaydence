@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#0b0e12"/>
+  <g fill="none" stroke="#3b444f" stroke-width="4"><path d="M180 560 H1740"/><path d="M420 390 V730M800 390V730M1180 390V730M1560 390V730"/></g>
+  <g font-family="Avenir Next,Segoe UI,sans-serif" text-anchor="middle">
+    <text x="960" y="120" font-size="34" font-weight="700" fill="#f4f2ed">ACT 04 / CLOSE P1 IN ORDER</text>
+    <text x="960" y="190" font-size="62" font-weight="700" fill="#f4f2ed">Turn evidence gaps into</text>
+    <text x="960" y="260" font-size="62" font-weight="700" fill="#f4f2ed">five bounded work units.</text>
+    <g font-size="24" fill="#f4f2ed">
+      <circle cx="250" cy="560" r="70" fill="#151a21" stroke="#d7a84a" stroke-width="5"/><text x="250" y="572">SIGNOFF</text>
+      <circle cx="610" cy="560" r="70" fill="#151a21" stroke="#48c9c2" stroke-width="5"/><text x="610" y="572">FIRST RUN</text>
+      <circle cx="990" cy="560" r="70" fill="#151a21" stroke="#4f7fe8" stroke-width="5"/><text x="990" y="572">TIMING</text>
+      <circle cx="1370" cy="560" r="70" fill="#151a21" stroke="#4dbb7b" stroke-width="5"/><text x="1370" y="572">LIFECYCLE</text>
+      <circle cx="1730" cy="560" r="70" fill="#151a21" stroke="#df6b61" stroke-width="5"/><text x="1730" y="572">FOOTPRINT</text>
+    </g>
+    <text x="960" y="900" font-size="30" fill="#aab1ba">One branch. One PR. One merge. Fresh three-OS proof on each risk-bearing unit.</text>
+  </g>
+</svg>

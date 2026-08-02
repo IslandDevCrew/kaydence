@@ -1,0 +1,65 @@
+Kaydence live-repo reconciliation - 2026-08-02
+
+Repository
+- remote: https://github.com/IslandDevCrew/kaydence
+- branch: main
+- audited SHA: 8b47521c338641e0d8a972dc653522c9bf82df25
+- open pull requests: 0
+
+Current GitHub Actions proof
+- run: https://github.com/IslandDevCrew/kaydence/actions/runs/30755723029
+- event: push
+- conclusion: success
+- setup: success
+- build-test (ubuntu-latest): success
+- build-test (macos-latest): success
+- build-test (windows-latest): success
+- started: 2026-08-02T16:02:34Z
+- completed: 2026-08-02T16:15:01Z
+
+Workflow truth
+- .github/workflows/ci.yml now emits ubuntu-latest, windows-latest, and
+  macos-latest for every normal push and pull request.
+- Only a manual workflow_dispatch with windows_visual_proof=true narrows the
+  matrix to Windows for the native evidence harness.
+- The previous Linux-only push cost saver is retired.
+
+Fresh local standing gates at the same SHA
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check: PASS
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings: PASS
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS
+  - 236 library tests
+  - 5 reference-bench tests
+  - 2 crash-recovery tests
+  - 5 event-sequence tests
+  - 5 short-utterance tests
+- pnpm --dir apps/desktop run check: PASS
+- pnpm --dir apps/desktop run build: PASS
+- bash scripts/bench.sh --check: PASS for four measured synthetic-path fields;
+  PARTIAL for GPU, prediction, idle RAM, and idle CPU
+- bash scripts/audit-network.sh: PASS, one allowlisted call site
+- bash scripts/check-privacy-posture.sh: PASS
+- bash scripts/check-adr-status.sh: PASS with declared Proposed exceptions
+  ADR-0009 and ADR-0016
+
+Confirmed report drift
+- ops/mission/state.json still said updated=2026-07-15T01:08Z before this
+  reconciliation, despite July 27 and August 2 product commits.
+- It still described pushes as Linux-only and named PR #28 as the latest full
+  matrix, both superseded by run 30755723029 at current main.
+- It still listed the independent second ASR runtime as missing even though
+  ADR-0016's ONNX CTC adapter and Silero VAD are implemented and live-proven.
+- It still described model download as only preflight/manual-install work even
+  though the ADR-0015 downloader and first_run_model_download Tauri command now
+  exist. The React first-run flow does not yet invoke that command.
+
+Claims intentionally left open
+- P1-G4 operator visual signoff is not recorded.
+- Physical hotkey/audio/ASR-to-focused-field timing is not measured.
+- Packaged q5 ASR-resident application footprint is not measured.
+- The visible no-model macOS cockpit remains 84.954 MB against the strict
+  sub-80 MB line.
+- Windows WM_CLOSE still terminates the process; Linux tray/reopen proof remains
+  absent.
+- The real first-run journey has no <=60-second reference-machine proof.
+- ADR-0016 remains Proposed; implementation proof is not shipping approval.
