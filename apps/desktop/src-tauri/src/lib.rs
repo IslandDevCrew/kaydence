@@ -284,6 +284,52 @@ fn first_run_model_download_preflight(
     }
 }
 
+/// Result of an actual first-run model fetch (P1-P0-8, ADR-0015).
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct FirstRunModelDownloadResult {
+    pub model_id: String,
+    pub path: String,
+    pub size_bytes: u64,
+}
+
+/// Perform the first-run "model download" step: fetch a registry-pinned model
+/// through the reviewed downloader (ADR-0015) and verify sha256 before install.
+/// Feature-gated `model-download` — the default build has no fetch surface and
+/// returns an explicit unavailable error rather than silently doing nothing.
+#[tauri::command]
+fn first_run_model_download(
+    app: tauri::AppHandle,
+    model_id: String,
+) -> Result<FirstRunModelDownloadResult, String> {
+    #[cfg(all(desktop, feature = "model-download"))]
+    {
+        use tauri::Manager;
+
+        let app_data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|err| format!("App data directory unavailable: {err}"))?;
+        let registry = models::ModelRegistry::load(&models::source_tree_registry_path())
+            .map_err(|err| err.to_string())?;
+        let entry = registry
+            .require(model_id.trim())
+            .map_err(|err| err.to_string())?;
+        let outcome = models::download::download_and_install(entry, &app_data_dir.join("models"))
+            .map_err(|err| err.to_string())?;
+        Ok(FirstRunModelDownloadResult {
+            model_id: outcome.id,
+            path: outcome.path.display().to_string(),
+            size_bytes: outcome.size_bytes,
+        })
+    }
+
+    #[cfg(not(all(desktop, feature = "model-download")))]
+    {
+        let _ = (app, model_id);
+        Err("Model download is unavailable in this build; enable the `model-download` feature (ADR-0015).".to_string())
+    }
+}
+
 #[tauri::command]
 fn first_run_permission_action(
     requirement_id: String,
@@ -2899,6 +2945,7 @@ pub fn run() {
             refresh_model_readiness,
             install_model_artifact,
             first_run_model_download_preflight,
+            first_run_model_download,
             first_run_permission_action,
             open_first_run_permission_settings,
             refresh_first_run_runtime_proofs,
