@@ -506,6 +506,9 @@ mod tests {
         let _ = std::fs::remove_dir_all(app_data);
     }
 
+    // Gated: with `asr-onnx` the onnxruntime artifact routes to the real adapter
+    // (ADR-0016); this asserts the DEFAULT build's honest pending boundary.
+    #[cfg(not(feature = "asr-onnx"))]
     #[test]
     fn default_runtime_pipeline_reports_verified_artifact_adapter_boundary() {
         let (summary, app_data) = summary_for_samples(&[0.0, 0.0, 0.5, 0.5]);

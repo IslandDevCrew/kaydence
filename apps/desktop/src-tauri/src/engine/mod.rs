@@ -11,6 +11,9 @@ use std::path::PathBuf;
 #[cfg(feature = "asr-whisper")]
 mod whisper;
 
+#[cfg(feature = "asr-onnx")]
+mod onnx;
+
 pub const DEFAULT_NO_SPEECH_REJECT_THRESHOLD: f32 = 0.80;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -313,6 +316,18 @@ pub fn local_asr_stack(state: LocalAsrAdapterState) -> EngineStack {
                     .map(whisper::WhisperCppEngine::boxed)
                     .collect();
                 return EngineStack::new(engines);
+            }
+        }
+    }
+    // ONNX CTC lane (ADR-0016), the ADR-0002 hedge. Single CPU engine — do NOT
+    // reuse whisper_adapter_specs (its GPU->(GPU,CPU) pairing would fabricate a
+    // GPU engine this build cannot honor). Lane honesty: a requested GPU lane
+    // stays LocalCpu until an accel EP is compiled + selected here.
+    #[cfg(feature = "asr-onnx")]
+    {
+        if let LocalAsrAdapterState::VerifiedArtifact { spec } = &state {
+            if spec.runtime == "onnxruntime" {
+                return EngineStack::new(vec![onnx::OnnxCtcEngine::boxed(spec.clone())]);
             }
         }
     }
@@ -757,6 +772,10 @@ mod tests {
         );
     }
 
+    // With `asr-onnx` compiled, a verified onnxruntime artifact routes to the real
+    // OnnxCtcEngine (ADR-0016), so the "not implemented yet" boundary no longer
+    // applies. This test asserts the honest pending boundary of the DEFAULT build.
+    #[cfg(not(feature = "asr-onnx"))]
     #[test]
     fn artifact_aware_local_asr_reports_verified_adapter_boundary_without_fake_output() {
         let id = session_id();

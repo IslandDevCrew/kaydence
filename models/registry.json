@@ -27,14 +27,14 @@
       "file": "onnx-ctc-asr-int8.onnx",
       "sha256": "TODO",
       "size_mb": 120,
-      "license": "CC-BY-4.0",
+      "license": "Apache-2.0",
       "min_hw": "any",
       "recommended": true,
       "sources": [
         "TODO_primary",
         "TODO_mirror"
       ],
-      "note": "ADR-0016 CTC-first ONNX ASR lane (the ADR-0002 supply-chain hedge alongside whisper.cpp). Runs a bundled mel preprocessor + encoder ONNX graph via `ort` and decodes greedy CTC (argmax -> collapse dups -> strip blank -> vocab) — no TDT loop. Candidate model: Parakeet-CTC-110M ONNX (OpenVoiceOS/nvidia-parakeet-tdt_ctc-110m-onnx) or a Conformer/Zipformer-CTC export; ~110M params, plausibly within the <=250MB resident budget (to be MEASURED per platform before any default_for promotion, invariant 9). OPERATOR DECISIONS PENDING (ADR-0016): exact model + pinned HTTPS sources + real per-file sha256, CC-BY-4.0 attribution in app notices, and the vendored libonnxruntime binary provenance. sha256/sources stay TODO -> fail-closed (models cannot auto-select or download until real hashes land)."
+      "note": "ADR-0016 CTC ONNX ASR lane — the ADR-0002 supply-chain hedge alongside whisper.cpp. LANE PROVEN LIVE 2026-07-10: OnnxCtcEngine (raw-audio char-CTC: normalize -> ort -> greedy argmax+collapse+strip-blank -> vocab) transcribed real speech through the production local_asr_stack dispatch (wav2vec2-base-960h int8, Apache-2.0). Recommendation UPDATED: a raw-audio char-CTC model (wav2vec2-class, Apache-2.0) is the preferred CTC hedge over CC-BY Parakeet-CTC — no attribution obligation, no external mel DSP, single-file model (Parakeet's export needs 80-dim fbank + is TDT/~590MB). OPERATOR DECISIONS PENDING (ADR-0016): the exact shipped model + its multi-file packaging (model.onnx + sidecar vocab.json = a follow-up to the single-file download surface) + pinned sha256/sources. Stays fail-closed (sha256 TODO) until then. whisper.cpp q5 remains every platform's default; this lane ships as a non-default hedge until per-platform <=250MB resident evidence exists (invariant 9)."
     },
     {
       "id": "whisper-base-en-q5_1",

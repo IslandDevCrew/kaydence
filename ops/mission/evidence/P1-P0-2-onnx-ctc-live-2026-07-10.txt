@@ -1,0 +1,25 @@
+ONNX CTC ASR lane — live proof (P1-P0-2 / ADR-0016) — 2026-07-10, feature asr-onnx
+Host: Apple Silicon macOS. ort 2.0.0-rc.12 (ONNX Runtime 1.28.0) via load-dynamic
+  against the official MS ORT binary — no build-time network.
+Model: wav2vec2-base-960h int8 ONNX (Xenova export, Apache-2.0), 95,286,046 bytes,
+  single file + sidecar vocab.json (32-token char vocab, <pad>=CTC blank).
+Path: production dispatch local_asr_stack(VerifiedArtifact{runtime:"onnxruntime"})
+  -> OnnxCtcEngine (engine/onnx.rs). Proves the real seam, not a side path.
+Proof (bin/asr-onnx-selftest, real 4.34s speech clip):
+  transcript: "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG AND PEEPS ON RUNNING
+              THROUGH THE MEADOW"
+  All expected content words present -> PASS. ("PEEPS" for "KEEPS" is a genuine
+  wav2vec2-base error, expected for a base hedge model — not a pipeline bug.)
+Adapter: normalize (do_normalize) -> input_values[1,N] -> logits[1,T,32] ->
+  greedy CTC (argmax/frame, collapse dups, drop blank 0, "|"->space, skip <...>).
+  No transducer loop, no external mel DSP, no SentencePiece.
+Discipline verified:
+  - DEFAULT build carries NO ort (feature-gated); 236 lib tests + clippy -D +
+    audit-network + privacy + adr all PASS unchanged.
+  - --features asr-onnx: clippy -D clean; 234 lib tests (the 2 "not implemented
+    yet" boundary tests correctly cfg(not(asr-onnx))-gated). asr-onnx+vad-silero
+    build together (shared ort dep).
+ADR-0002 hedge is now REAL: whisper.cpp (native) + ONNX Runtime (CTC) = two
+  independent local ASR runtimes. whisper q5 stays the default; ONNX is the hedge.
+Ship-gated (ADR-0016): the vendored ORT binary, the shipped model choice + its
+  multi-file (model+vocab) download packaging, and pinned sources.
