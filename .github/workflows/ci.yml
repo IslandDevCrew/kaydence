@@ -21,7 +21,10 @@ on:
         type: boolean
 
 jobs:
-  # Emits the OS matrix: Linux-only for pushes, all three otherwise.
+  # Emits the OS matrix. The repo is public, so Actions is unmetered — every push
+  # verifies all three OSes (non-negotiable #5 / ADR-0011). The Linux-only-on-push
+  # cost-saver from the private-repo billing crunch is retired. The one narrow
+  # exception is the manual windows_visual_proof dispatch (Windows-only, evidence).
   setup:
     runs-on: ubuntu-latest
     outputs:
@@ -32,8 +35,6 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.windows_visual_proof }}" = "true" ]; then
             echo 'matrix={"os":["windows-latest"]}' >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            echo 'matrix={"os":["ubuntu-latest"]}' >> "$GITHUB_OUTPUT"
           else
             echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"]}' >> "$GITHUB_OUTPUT"
           fi
