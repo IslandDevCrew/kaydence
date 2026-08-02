@@ -1,0 +1,21 @@
+Silero VAD live proof (ADR-0016) — 2026-07-10, feature vad-silero
+Host: Apple Silicon macOS. ort 2.0.0-rc.12 (ONNX Runtime 1.28.0) via load-dynamic
+  against the OFFICIAL Microsoft ORT binary (osx-arm64, sha256 dc19bbcb...), no
+  build-time network (default-features=false drops download-binaries).
+Model: silero_vad.onnx v5.1.2 (MIT), 2,327,524 bytes, sha256 2623a2953f6ff...
+  (official snakers4/silero-vad v5.1.2), loaded from a local verified path.
+Proof (bin/vad-selftest, SpeechGate<SileroVad>):
+  - Speech clip (4.34s): 122/136 frames speech; 1 segment (0..69400, 4.34s).
+  - Silence (1s of zeros): 0 speech frames.
+  - PASS.
+Discipline verified:
+  - DEFAULT build carries NO ort (`cargo tree -i ort` = no match); 236 lib tests,
+    clippy -D, audit-network/privacy/adr gates all PASS unchanged.
+  - clippy --features vad-silero clean.
+  - EnergyVad stays the always-compiled zero-dependency fallback; SileroVad is a
+    new `impl VadDetector` behind the existing SpeechGate contract (no contract change).
+ort build fix recorded: default-features=false stripped api-24 + std that ort needs;
+  restored features ["ndarray","load-dynamic","api-24"] (api-24 = ORT 1.28), and
+  matched ndarray to ort's 0.17 (two majors would be incompatible types).
+Note: the ORT native binary + the Silero source domain remain the operator's to
+  ratify for SHIPPING (ADR-0016 open decisions); this proof used them locally.

@@ -37,6 +37,20 @@ whisper-rs = { version = "0.16", optional = true }
 # network surface, OFF by default. ureq = minimal pure-Rust blocking client
 # (rustls). Fetches only registry-pinned HTTPS sources; verify-before-install.
 ureq = { version = "2", optional = true }
+# Second local ASR lane (CTC, ADR-0016) + real Silero VAD — ONE shared ort
+# (ONNX Runtime) dep. `default-features = false` is load-bearing: it drops ort's
+# default `download-binaries` CDN fetch + ureq/tls chain, so NO network-at-build
+# is even compiled. `load-dynamic` links the native libonnxruntime at RUNTIME
+# from a pinned+checksummed asset (ORT_DYLIB_PATH), resolved through the same
+# VerifiedArtifact seam as model weights — no build-time link, no CDN. OFF by
+# default. (ort rc.12 pins ONNX Runtime 1.28.0; needs rustc >= 1.88.)
+# `default-features = false` drops `download-binaries` (the build-time CDN fetch)
+# but also the API-level + std that ort needs; `api-24` matches ONNX Runtime 1.28
+# and `load-dynamic` pulls `std`. So: no build-time network, correct API surface.
+ort = { version = "=2.0.0-rc.12", default-features = false, features = ["ndarray", "load-dynamic", "api-24"], optional = true }
+# Match ort's ndarray (0.17) so our Array types satisfy ort's tensor traits
+# (two ndarray majors in the graph would be distinct, incompatible types).
+ndarray = { version = "0.17", optional = true }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"
@@ -93,3 +107,9 @@ asr-whisper-metal = ["asr-whisper", "whisper-rs/metal"]
 # Model download-on-demand (ADR-0015). OFF by default — opts the ureq client +
 # the single models/download call site in. Default build stays zero-egress.
 model-download = ["dep:ureq"]
+# Real Silero VAD (ADR-0016) — an ONNX VadDetector behind the existing SpeechGate
+# contract; EnergyVad stays the always-compiled fallback. OFF by default.
+vad-silero = ["dep:ort", "dep:ndarray"]
+# Second local ASR lane: CTC-decode ONNX adapter (ADR-0016), the ADR-0002 hedge
+# alongside whisper.cpp. OFF by default. Shares the ort/ndarray deps with VAD.
+asr-onnx = ["dep:ort", "dep:ndarray"]

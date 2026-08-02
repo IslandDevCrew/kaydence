@@ -88,6 +88,106 @@ impl VadDetector for EnergyVad {
     }
 }
 
+/// Real Silero VAD v5 detector (ADR-0016). ONNX-gated; loads a checksum-verified
+/// LOCAL model and threads the recurrent state frame-to-frame. Fits the existing
+/// [`VadDetector`] contract exactly — [`SpeechGate`] still owns pre-roll,
+/// end-silence, and segment assembly. [`EnergyVad`] stays the always-compiled,
+/// dependency-free fallback so the default build carries no ort/ndarray.
+#[cfg(feature = "vad-silero")]
+pub use silero::SileroVad;
+
+#[cfg(feature = "vad-silero")]
+mod silero {
+    use super::VadDetector;
+    use ndarray::{Array1, Array2, Array3};
+    use ort::session::Session;
+    use ort::value::Tensor;
+    use std::path::Path;
+
+    /// Silero v5 requires exactly 512 samples per frame at 16 kHz.
+    const FRAME: usize = 512;
+    const STATE_DIM: usize = 128;
+    /// Default speech probability threshold (Silero's recommended operating point).
+    pub const DEFAULT_THRESHOLD: f32 = 0.5;
+
+    pub struct SileroVad {
+        session: Session,
+        state: Array3<f32>,
+        sample_rate: i64,
+        threshold: f32,
+    }
+
+    impl SileroVad {
+        /// Load from a registry-verified local model file (never `include_bytes!` —
+        /// that would bypass the sha256 gate).
+        pub fn from_model_path(path: &Path, threshold: f32) -> Result<Self, String> {
+            let session = Session::builder()
+                .and_then(|mut b| b.commit_from_file(path))
+                .map_err(|e| format!("silero load {}: {e}", path.display()))?;
+            Ok(Self {
+                session,
+                state: Array3::zeros((2, 1, STATE_DIM)),
+                sample_rate: 16_000,
+                threshold,
+            })
+        }
+
+        /// Re-zero the recurrent state at the start of each independent stream —
+        /// reusing state across streams corrupts early-frame decisions.
+        pub fn reset(&mut self) {
+            self.state.fill(0.0);
+        }
+
+        fn probability(&mut self, frame: &[f32]) -> Result<f32, String> {
+            // Zero-pad/truncate to the fixed 512-sample window (also handles the
+            // partial final frame the SpeechGate flush emits).
+            let mut buf = vec![0f32; FRAME];
+            let n = frame.len().min(FRAME);
+            buf[..n].copy_from_slice(&frame[..n]);
+
+            let input = Array2::from_shape_vec((1, FRAME), buf).map_err(|e| e.to_string())?;
+            let sr = Array1::from_elem(1, self.sample_rate);
+
+            let outputs = self
+                .session
+                .run(ort::inputs![
+                    "input" => Tensor::from_array(input).map_err(|e| e.to_string())?,
+                    "state" => Tensor::from_array(self.state.clone()).map_err(|e| e.to_string())?,
+                    "sr" => Tensor::from_array(sr).map_err(|e| e.to_string())?,
+                ])
+                .map_err(|e| e.to_string())?;
+
+            let (_, prob) = outputs["output"]
+                .try_extract_tensor::<f32>()
+                .map_err(|e| e.to_string())?;
+            let p = prob.first().copied().unwrap_or(0.0);
+
+            let (shape, new_state) = outputs["stateN"]
+                .try_extract_tensor::<f32>()
+                .map_err(|e| e.to_string())?;
+            self.state = Array3::from_shape_vec(
+                (shape[0] as usize, shape[1] as usize, shape[2] as usize),
+                new_state.to_vec(),
+            )
+            .map_err(|e| e.to_string())?;
+            Ok(p)
+        }
+    }
+
+    impl VadDetector for SileroVad {
+        fn is_speech(&mut self, frame: &[f32]) -> bool {
+            if frame.is_empty() {
+                return false;
+            }
+            // Fail-safe: on any inference error, report NO speech (never fabricate
+            // a segment). The WAL already holds every sample (non-negotiable #2).
+            self.probability(frame)
+                .map(|p| p >= self.threshold)
+                .unwrap_or(false)
+        }
+    }
+}
+
 pub struct SpeechGate<D> {
     detector: D,
     config: SpeechGateConfig,
