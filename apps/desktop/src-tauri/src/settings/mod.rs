@@ -689,12 +689,12 @@ impl FirstRunNextStep {
                 target_id: Some(model.id.clone()),
                 title: "Install reviewed model".to_string(),
                 detail: format!(
-                    "{} needs a verified local artifact before first dictation.",
+                    "{} needs a verified artifact before first dictation.",
                     model.id
                 ),
-                action_label: "Install artifact".to_string(),
+                action_label: "Review model".to_string(),
                 proof_requirement:
-                    "Import a reviewed artifact and verify its sha256 under app-data models/."
+                    "Review the pinned download metadata, then download or import an artifact and verify its sha256 under app-data models/."
                         .to_string(),
             };
         }
@@ -1844,7 +1844,7 @@ mod tests {
 
         assert_eq!(status.next_step.kind, FirstRunNextStepKind::ModelInstall);
         assert_eq!(status.next_step.target_id.as_deref(), Some("silero-vad"));
-        assert_eq!(status.next_step.action_label, "Install artifact");
+        assert_eq!(status.next_step.action_label, "Review model");
     }
 
     #[test]

@@ -137,6 +137,12 @@ export interface FirstRunModelDownloadPreflight {
   proof_requirement: string;
 }
 
+export interface FirstRunModelDownloadResult {
+  model_id: string;
+  path: string;
+  size_bytes: number;
+}
+
 export interface FirstRunAsrRuntimeStatus {
   state: FirstRunAsrRuntimeState;
   selected_model_id: string | null;
@@ -189,12 +195,15 @@ interface FirstRunViewProps {
   hotkeyMode: "push_to_talk" | "toggle";
   hotkeyModeIssue: string | null;
   hotkeyModePending: "push_to_talk" | "toggle" | null;
+  downloadingModelId: string | null;
   installingModelId: string | null;
   lane: FirstRunLaneSpec;
   lanes: FirstRunLaneSpec[];
   markUrl: string;
   modelDownloadPreflight: FirstRunModelDownloadPreflight | null;
   modelDownloadPreflightIssue: string | null;
+  modelDownloadIssue: string | null;
+  modelDownloadResult: FirstRunModelDownloadResult | null;
   modelInstallIssue: string | null;
   modelPreflightPendingId: string | null;
   modelRefreshPending: boolean;
@@ -202,6 +211,7 @@ interface FirstRunViewProps {
   onExportProof: () => void;
   onHotkeyBindingChange: (binding: string) => void;
   onHotkeyModeChange: (mode: "push_to_talk" | "toggle") => void;
+  onDownloadModel: (modelId: string) => void;
   onInstallModel: (modelId: string) => void;
   onLaneChange: (lane: OsLane) => void;
   onModelChange: (modelId: string) => void;
@@ -485,11 +495,30 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
               <div className="first-run-evidence-body">
                 <section className="first-run-evidence-summary"><span>Selected runtime</span><strong>{runtimeLabel(props.firstRun.asr_runtime)}</strong><p>{props.firstRun.asr_runtime.detail}</p><small>Proof: {props.firstRun.asr_runtime.proof_requirement}</small></section>
                 {props.firstRun.asr_candidates.map((model) => <button aria-pressed={model.selected} className={`first-run-model-option state-${model.state}`} key={model.id} onClick={() => props.onModelChange(model.id)} type="button"><span><strong>{model.id}</strong><small>{model.recommendation ?? `${model.runtime} / ${model.min_hw}`}</small></span><em>{model.state}</em></button>)}
-                {props.firstRun.required_models.map((model) => (
-                  <div className={`first-run-model-row state-${model.state}`} key={model.id}><div><strong>{model.id}</strong><small>{model.task}{model.lane ? ` / ${model.lane}` : ""} - {model.detail}</small></div><em>{model.state}</em>{model.state !== "ready" ? <><button disabled={props.modelPreflightPendingId !== null} onClick={() => props.onReviewModel(model.id)} type="button">{props.modelPreflightPendingId === model.id ? "Reviewing" : "Review"}</button><button disabled={!model.download_available || props.installingModelId !== null} onClick={() => props.onInstallModel(model.id)} type="button">{props.installingModelId === model.id ? "Installing" : "Install"}</button></> : null}</div>
-                ))}
+                {props.firstRun.required_models.map((model) => {
+                  const reviewed =
+                    props.modelDownloadPreflight?.model_id === model.id &&
+                    props.modelDownloadPreflight.available;
+                  const modelOperationPending =
+                    props.downloadingModelId !== null || props.installingModelId !== null;
+                  return (
+                    <div className={`first-run-model-row state-${model.state}`} key={model.id}>
+                      <div><strong>{model.id}</strong><small>{model.task}{model.lane ? ` / ${model.lane}` : ""} - {model.detail}</small></div>
+                      <em>{model.state}</em>
+                      {model.state !== "ready" ? (
+                        <span className="first-run-model-actions">
+                          <button disabled={props.modelPreflightPendingId !== null || modelOperationPending} onClick={() => props.onReviewModel(model.id)} type="button">{props.modelPreflightPendingId === model.id ? "Reviewing" : "Review"}</button>
+                          <button disabled={!model.download_available || !reviewed || modelOperationPending} onClick={() => props.onDownloadModel(model.id)} type="button">{props.downloadingModelId === model.id ? "Verifying" : "Download"}</button>
+                          <button disabled={modelOperationPending} onClick={() => props.onInstallModel(model.id)} type="button">{props.installingModelId === model.id ? "Installing" : "Local file"}</button>
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
                 {props.modelDownloadPreflight ? <section className={`first-run-preflight state-${props.modelDownloadPreflight.state}`}><strong>{props.modelDownloadPreflight.model_id}: {props.modelDownloadPreflight.available ? "Reviewed source available" : "Blocked"}</strong><p>{props.modelDownloadPreflight.detail}</p><small>{props.modelDownloadPreflight.blocked_reason ?? props.modelDownloadPreflight.operator_action}</small><code>{props.modelDownloadPreflight.expected_sha256 ?? "No reviewed sha256"}</code></section> : null}
-                {props.modelDownloadPreflightIssue || props.modelInstallIssue ? <p className="first-run-evidence-issue">{props.modelDownloadPreflightIssue ?? props.modelInstallIssue}</p> : null}
+                {props.downloadingModelId ? <p aria-live="polite" className="first-run-evidence-note" role="status">Downloading and verifying {props.downloadingModelId}. The current verified fetch cannot be cancelled safely.</p> : null}
+                {props.modelDownloadResult ? <p aria-live="polite" className="first-run-evidence-note" role="status">{props.modelDownloadResult.model_id} was verified and installed locally ({Math.max(1, Math.round(props.modelDownloadResult.size_bytes / 1_048_576))} MB).</p> : null}
+                {props.modelDownloadPreflightIssue || props.modelDownloadIssue || props.modelInstallIssue ? <p className="first-run-evidence-issue" role="alert">{props.modelDownloadPreflightIssue ?? props.modelDownloadIssue ?? props.modelInstallIssue}</p> : null}
                 <button disabled={props.modelRefreshPending} onClick={props.onRefreshModels} type="button">{props.modelRefreshPending ? "Checking models" : "Recheck models"}</button>
               </div>
             ) : null}

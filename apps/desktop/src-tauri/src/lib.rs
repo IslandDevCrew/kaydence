@@ -290,6 +290,7 @@ pub struct FirstRunModelDownloadResult {
     pub model_id: String,
     pub path: String,
     pub size_bytes: u64,
+    pub snapshot: settings::AppSnapshot,
 }
 
 /// Perform the first-run "model download" step: fetch a registry-pinned model
@@ -297,14 +298,19 @@ pub struct FirstRunModelDownloadResult {
 /// Feature-gated `model-download` — the default build has no fetch surface and
 /// returns an explicit unavailable error rather than silently doing nothing.
 #[tauri::command]
-fn first_run_model_download(
+async fn first_run_model_download(
     app: tauri::AppHandle,
+    state: tauri::State<'_, RuntimeSnapshot>,
+    runtime: tauri::State<'_, HotkeyRuntimeHandle>,
     model_id: String,
 ) -> Result<FirstRunModelDownloadResult, String> {
     #[cfg(all(desktop, feature = "model-download"))]
     {
         use tauri::Manager;
 
+        runtime
+            .ensure_idle_for_asr_update()
+            .map_err(|err| err.to_string())?;
         let app_data_dir = app
             .path()
             .app_data_dir()
@@ -313,19 +319,33 @@ fn first_run_model_download(
             .map_err(|err| err.to_string())?;
         let entry = registry
             .require(model_id.trim())
+            .map_err(|err| err.to_string())?
+            .clone();
+        let models_dir = app_data_dir.join("models");
+        let outcome = tauri::async_runtime::spawn_blocking(move || {
+            models::download::download_and_install(&entry, &models_dir)
+        })
+        .await
+        .map_err(|err| format!("Model download task failed: {err}"))?
+        .map_err(|err| err.to_string())?;
+        let snapshot = state
+            .refresh_models_from_app_data(&app_data_dir)
             .map_err(|err| err.to_string())?;
-        let outcome = models::download::download_and_install(entry, &app_data_dir.join("models"))
-            .map_err(|err| err.to_string())?;
+        let snapshot = complete_asr_runtime_update(
+            &state,
+            apply_selected_asr_to_runtime(&snapshot, &app_data_dir, &runtime),
+        )?;
         Ok(FirstRunModelDownloadResult {
             model_id: outcome.id,
             path: outcome.path.display().to_string(),
             size_bytes: outcome.size_bytes,
+            snapshot,
         })
     }
 
     #[cfg(not(all(desktop, feature = "model-download")))]
     {
-        let _ = (app, model_id);
+        let _ = (app, state, runtime, model_id);
         Err("Model download is unavailable in this build; enable the `model-download` feature (ADR-0017).".to_string())
     }
 }
