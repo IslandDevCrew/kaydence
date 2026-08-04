@@ -232,6 +232,13 @@ interface AppSnapshot {
   };
 }
 
+interface FirstRunModelDownloadResult {
+  model_id: string;
+  path: string;
+  size_bytes: number;
+  snapshot: AppSnapshot;
+}
+
 type HistoryStage = "capture" | "vad" | "recognize" | "clean" | "inject" | "history";
 type InjectMethod = "native" | "keystroke" | "clipboard_restore";
 type HoldReason = "focus_changed" | "secure_field" | "no_target";
@@ -617,6 +624,10 @@ export function App(): JSX.Element {
   const [setupRefreshPending, setSetupRefreshPending] = useState(false);
   const [setupRefreshIssue, setSetupRefreshIssue] = useState<string | null>(null);
   const [modelRefreshPending, setModelRefreshPending] = useState(false);
+  const [downloadingModelId, setDownloadingModelId] = useState<string | null>(null);
+  const [modelDownloadResult, setModelDownloadResult] =
+    useState<FirstRunModelDownloadResult | null>(null);
+  const [modelDownloadIssue, setModelDownloadIssue] = useState<string | null>(null);
   const [installingModelId, setInstallingModelId] = useState<string | null>(null);
   const [modelInstallIssue, setModelInstallIssue] = useState<string | null>(null);
   const [modelPreflightPendingId, setModelPreflightPendingId] = useState<string | null>(null);
@@ -672,6 +683,7 @@ export function App(): JSX.Element {
     nextStep.kind === "setup" ||
     ((nextStep.kind === "model_install" || nextStep.kind === "permission") &&
       nextStep.target_id === null) ||
+    downloadingModelId !== null ||
     installingModelId !== null ||
     permissionActionPendingId !== null ||
     setupRefreshPending ||
@@ -918,6 +930,7 @@ export function App(): JSX.Element {
 
   function refreshModelReadiness() {
     setModelRefreshPending(true);
+    setModelDownloadIssue(null);
     setModelInstallIssue(null);
     setModelDownloadPreflightIssue(null);
     void invoke<AppSnapshot>("refresh_model_readiness")
@@ -937,6 +950,7 @@ export function App(): JSX.Element {
     setModelPreflightPendingId(modelId);
     setModelDownloadPreflight(null);
     setModelDownloadPreflightIssue(null);
+    setModelDownloadIssue(null);
 
     if (snapshotSource === "preview") {
       setModelDownloadPreflightIssue("Open the desktop runtime to review model download metadata.");
@@ -1045,6 +1059,39 @@ export function App(): JSX.Element {
     }
   }
 
+  async function downloadModelArtifact(modelId: string) {
+    if (
+      modelDownloadPreflight?.model_id !== modelId ||
+      !modelDownloadPreflight.available
+    ) {
+      setModelDownloadIssue("Review the pinned source and checksum before downloading.");
+      return;
+    }
+
+    setDownloadingModelId(modelId);
+    setModelDownloadIssue(null);
+    setModelDownloadResult(null);
+    setModelInstallIssue(null);
+    try {
+      const outcome = await invoke<FirstRunModelDownloadResult>("first_run_model_download", {
+        modelId,
+      });
+      setSnapshot(outcome.snapshot);
+      setSnapshotSource("backend");
+      setModelDownloadResult(outcome);
+    } catch (error) {
+      console.error("Kaydence model download failed", error);
+      const unavailable = String(error).includes("unavailable in this build");
+      setModelDownloadIssue(
+        unavailable
+          ? "Automatic download is off in this build. Install the reviewed local artifact instead."
+          : "The model could not be downloaded and verified. Retry or install the reviewed local artifact.",
+      );
+    } finally {
+      setDownloadingModelId(null);
+    }
+  }
+
   async function handleFirstRunAction() {
     setFirstRunActionNote(null);
 
@@ -1070,7 +1117,7 @@ export function App(): JSX.Element {
     }
 
     if (nextStep.kind === "model_install" && nextStep.target_id) {
-      await installModelArtifact(nextStep.target_id);
+      reviewModelDownload(nextStep.target_id);
       return;
     }
 
@@ -1380,12 +1427,15 @@ export function App(): JSX.Element {
           hotkeyMode={snapshot.settings.hotkey.mode}
           hotkeyModeIssue={hotkeyModeIssue}
           hotkeyModePending={hotkeyModePending}
+          downloadingModelId={downloadingModelId}
           installingModelId={installingModelId}
           lane={lane}
           lanes={lanes}
           markUrl={appIconUrl}
           modelDownloadPreflight={modelDownloadPreflight}
           modelDownloadPreflightIssue={modelDownloadPreflightIssue}
+          modelDownloadIssue={modelDownloadIssue}
+          modelDownloadResult={modelDownloadResult}
           modelInstallIssue={modelInstallIssue}
           modelPreflightPendingId={modelPreflightPendingId}
           modelRefreshPending={modelRefreshPending}
@@ -1393,6 +1443,7 @@ export function App(): JSX.Element {
           onExportProof={exportFirstRunProofPlan}
           onHotkeyBindingChange={setHotkeyBinding}
           onHotkeyModeChange={setHotkeyMode}
+          onDownloadModel={(modelId) => void downloadModelArtifact(modelId)}
           onInstallModel={(modelId) => void installModelArtifact(modelId)}
           onLaneChange={setActiveLane}
           onModelChange={selectAsrModel}

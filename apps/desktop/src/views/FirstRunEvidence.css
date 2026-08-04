@@ -133,6 +133,13 @@
   text-align: left;
 }
 
+.first-run-model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
 .first-run-model-option {
   grid-template-columns: minmax(0, 1fr) auto;
   width: 100%;

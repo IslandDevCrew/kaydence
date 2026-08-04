@@ -1,0 +1,71 @@
+P1-P0-8 — First Run reviewed model-download UI
+Date: 2026-08-04T15:23:24Z
+Branch: mission/P1-first-run-model-download-ui
+Base: 1ab9edb
+Classification: routine implementation under Accepted ADR-0017
+
+JUDGE — PASS
+- First Run now requires a successful metadata review before enabling Download.
+- The explicit Download action invokes the single allowlisted, feature-gated
+  downloader; the default shipped build remains download-free and reports an
+  honest local-file fallback.
+- The verified fetch runs off the UI thread, refuses runtime adapter mutation
+  during capture, refreshes backend-owned readiness, and returns that snapshot.
+- Progress is indeterminate because the backend exposes no byte progress.
+  No percentage or cancel button is invented; the UI states that an active
+  verified fetch cannot be cancelled safely in this build.
+- Local-file installation remains available as an explicit fallback.
+- Scope is 196 changed lines including this evidence (133 implementation
+  lines), below the 400-line work-unit ceiling.
+- Findings: none.
+
+AUDIT — LOCAL PASS; exact-head three-OS CI required before merge
+
+Claim: default and explicit-download feature postures compile and pass tests.
+Artifacts:
+- cargo fmt --all -- --check
+- cargo clippy --workspace --all-targets -- -D warnings
+- cargo test --workspace --all-targets
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  --features model-download -- -D warnings
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
+  --features model-download
+Result: PASS — both Clippy modes clean; each mode passes 236 library tests,
+5 reference tests, 2 crash-recovery tests, 5 event-sequence tests, and
+5 short-utterance tests. Feature mode additionally passes the pinned model
+download-and-sha256 integration test; default mode executes zero download tests.
+
+Claim: frontend contracts, production build, privacy, and governance are clean.
+Artifacts:
+- npm run check (apps/desktop)
+- npm run build (apps/desktop)
+- bash scripts/check-frontend.sh
+- bash scripts/audit-network.sh
+- bash scripts/check-privacy-posture.sh
+- bash scripts/check-adr-status.sh
+- bash scripts/bench.sh
+Result: PASS — TypeScript/ESLint/build clean; exactly one reviewed network call
+site remains allowlisted; privacy posture and ADR gate pass. Bench remains
+explicitly PARTIAL for GPU, prediction, idle RAM/CPU, real ASR, and reference p95.
+
+Claim: slice-level Screen Family 10 and accessibility review passed.
+Artifact: local Vite preview at the missing-model evidence state, reviewed in
+the in-app browser against assets/brand/screens/kaydence-screen-family-10.png.
+Result: PASS for this slice — Option 1 identity, macOS aqua accent, locked setup
+structure, local-only copy, evidence modal, native button semantics, disabled
+pre-review Download, and Local file fallback remained intact. Browser console
+reported no errors or warnings. This is not the phase-wide human/device signoff.
+
+Remote evidence
+- Source-code and local-evidence head 65cdf19: Actions run 30923967953 PASS.
+  - macOS: PASS in 6m41s.
+  - Ubuntu: PASS in 6m52s.
+  - Windows: PASS in 11m56s.
+- This remote-evidence amendment changes the PR head. Merge remains prohibited
+  until its exact head passes a fresh Ubuntu, Windows, and macOS matrix.
+
+Boundaries
+- This work does not enable model-download in the default shipped build.
+- It does not claim cancellation support, live production model bytes, or a
+  physical-device first-run completion.
+- It does not approve ADR-0016 or close P1-G3, P1-G4, or P1.
