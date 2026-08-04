@@ -14,7 +14,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
-// The one model-fetch network surface (ADR-0015), off by default. Every other
+// The one model-fetch network surface (ADR-0017), off by default. Every other
 // path in this module stays download-free.
 #[cfg(feature = "model-download")]
 pub mod download;

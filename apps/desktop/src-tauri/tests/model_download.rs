@@ -1,10 +1,10 @@
-//! Model download proof (P1-P0-2 / P1-P0-8, ADR-0015).
+//! Model download proof (P1-P0-2 / P1-P0-8, ADR-0017).
 //!
 //! Compiles only under `--features model-download`. Performs a REAL network
 //! fetch of the registry-pinned default whisper model into a temp dir and
 //! asserts it installs (sha256-verified). Opt-in only: without KAYDENCE_DOWNLOAD_TEST
 //! it SKIPS loudly rather than hitting the network in a normal `cargo test`, so
-//! the surface stays dormant unless a human asks for the proof (ADR-0015 §4).
+//! the surface stays dormant unless a human asks for the proof (ADR-0017 §4).
 //!
 //!   KAYDENCE_DOWNLOAD_TEST=1 cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml \
 //!     --features model-download --test model_download -- --nocapture
@@ -18,7 +18,7 @@ const MODEL_ID: &str = "whisper-base-en-q5_1";
 #[test]
 fn downloads_and_verifies_the_pinned_default_model() {
     if std::env::var(OPT_IN).is_err() {
-        eprintln!("SKIP: set {OPT_IN}=1 to run the real network download proof (ADR-0015).");
+        eprintln!("SKIP: set {OPT_IN}=1 to run the real network download proof (ADR-0017).");
         return;
     }
 

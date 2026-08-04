@@ -18,8 +18,8 @@
     },
     {
       "file": "models/download",
-      "reason": "On-demand model downloads from registry-pinned HTTPS mirrors, sha256 verify-before-install. ureq client behind the off-by-default `model-download` feature; explicit user action only, no telemetry/background fetch (ADR-0015).",
-      "adr": "ADR-0015",
+      "reason": "On-demand model downloads from registry-pinned HTTPS mirrors, sha256 verify-before-install. ureq client behind the off-by-default `model-download` feature; explicit user action only, no telemetry/background fetch (ADR-0017).",
+      "adr": "ADR-0017",
       "toggle": "cargo feature `model-download` (off by default) + explicit first-run/CLI action; mirrors pinned in models/registry.json",
       "status": "active"
     },

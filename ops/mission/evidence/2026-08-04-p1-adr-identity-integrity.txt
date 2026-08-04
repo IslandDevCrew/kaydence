@@ -1,0 +1,70 @@
+P1 governance repair — ADR identity integrity
+Date: 2026-08-04T14:44:39Z
+Branch: mission/P1-adr-identity-integrity
+Base: 15a2360
+Classification: routine administrative repair; no product behavior change
+
+JUDGE — PASS
+- ADR-0015 remains the authority for the quantized P1 ASR default.
+- The accepted model-download decision is preserved byte-for-byte under
+  docs/decisions/archive/ and superseded administratively by ADR-0017.
+- No dependency, network call, allowlisted surface, model default, feature
+  posture, platform path, event contract, or locked visual invariant changed.
+- Live download-specific references cite ADR-0017. Historical journal/evidence
+  remains immutable and may retain the former ambiguous number.
+- The implementation is Bash 3.2-compatible and remains below the 400-line
+  work-unit ceiling.
+- Findings: none.
+
+AUDIT — LOCAL PASS; exact-head three-OS CI required before merge
+
+Claim: the original accepted record is preserved.
+Artifact: shasum -a 256 docs/decisions/archive/0015-model-download-surface.md
+Result: PASS — fedf8e8f4f26fddde8202ad94889b3852ff7d65bb78b142d988952ca87b92cec,
+matching the pre-move file.
+
+Claim: active ADR numbers are unique and accepted-status policy still passes.
+Artifact: bash scripts/check-adr-status.sh
+Result: PASS — ADR-0015 and ADR-0017 each appear once; only ADR-0009 and
+ADR-0016 remain explicit Proposed exceptions.
+
+Claim: duplicate authority IDs now fail closed.
+Artifact: two-file isolated KAYDENCE_ADR_DIR fixture using duplicate 0015 names.
+Result: PASS — gate printed duplicate ADR number and exited 1.
+
+Claim: active model-download references are unambiguous.
+Artifact: targeted rg across apps/desktop/src-tauri, scripts, and active ADRs.
+Result: PASS — remaining ADR-0015 uses describe the quantized default, the
+administrative repair, or archived history; live download policy cites ADR-0017.
+
+Claim: Rust/default and dormant download-feature builds remain healthy.
+Artifacts:
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets --features model-download -- -D warnings
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets --features model-download
+Result: PASS — default and feature Clippy clean; 236 library tests, 5 reference
+tests, 2 crash-recovery tests, 5 event-sequence tests, and 5 short-utterance
+tests pass in both modes. The feature test harness passes with live-download
+opt-in unset; no fresh network download is claimed.
+
+Claim: standing product gates did not regress.
+Artifacts:
+- bash scripts/check-frontend.sh
+- pnpm --filter kaydence-desktop build
+- bash scripts/audit-network.sh --check
+- bash scripts/check-privacy-posture.sh --check
+- bash scripts/bench.sh --check
+Result: PASS — frontend check/build clean; one reviewed call site remains
+allowlisted; privacy posture clean. Bench passes four synthetic measurements
+and remains explicitly PARTIAL for GPU, prediction, idle RAM, and idle CPU.
+
+Remote evidence
+- Pending: pull-request exact-head Ubuntu, Windows, and macOS matrix.
+- Merge is prohibited until all three jobs pass.
+
+Boundaries
+- This repair does not enable model-download in the shipped build.
+- It does not approve ADR-0016 or close P1-G3/P1-G4.
+- It does not claim a live network fetch, physical device proof, or phase exit.

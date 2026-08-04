@@ -14,7 +14,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DIR="$ROOT/docs/decisions"
+DIR="${KAYDENCE_ADR_DIR:-$ROOT/docs/decisions}"
 
 # ADR numbers allowed to be non-Accepted (space-separated), + reasons in one place.
 PROPOSED_OK=" 0009 0016 "
@@ -27,11 +27,20 @@ esac; }
 is_exception() { case "$PROPOSED_OK" in *" $1 "*) return 0;; *) return 1;; esac; }
 
 fail=0
+seen_numbers=" "
 echo "== ADR status check =="
 for f in "$DIR"/0[0-9][0-9][0-9]-*.md; do
   base="$(basename "$f")"
   num="${base%%-*}"
   [ "$num" = "0000" ] && continue   # template
+
+  case "$seen_numbers" in
+    *" $num "*)
+      printf '  %-6s FAIL  (duplicate ADR number: %s)\n' "$num" "$base" >&2
+      fail=1
+      ;;
+    *) seen_numbers="${seen_numbers}${num} " ;;
+  esac
 
   # Status token = text after '**Status:**' and BEFORE any '<!--' comment.
   # (ADR-0009's comment literally contains the word "Accepted" — must not match it.)
