@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#0b0e12"/>
+  <g font-family="Avenir Next,Segoe UI,sans-serif">
+    <text x="110" y="120" font-size="34" font-weight="700" fill="#f4f2ed">ACT 03 / OPEN GATES</text>
+    <text x="110" y="200" font-size="60" font-weight="700" fill="#f4f2ed">Green CI is permission to move.</text>
+    <text x="110" y="270" font-size="60" font-weight="700" fill="#f4f2ed">It is not proof of launch.</text>
+    <rect x="110" y="340" width="790" height="410" rx="16" fill="#151a21" stroke="#df6b61" stroke-width="4"/>
+    <rect x="1020" y="340" width="790" height="410" rx="16" fill="#151a21" stroke="#d7a84a" stroke-width="4"/>
+    <text x="170" y="435" font-size="32" font-weight="700" fill="#df6b61">P1-G3 / PHYSICAL PROOF</text>
+    <text x="170" y="520" font-size="34" fill="#f4f2ed">84.954 MB visible idle</text>
+    <text x="170" y="590" font-size="34" fill="#f4f2ed">No packaged q5 measurement</text>
+    <text x="170" y="660" font-size="34" fill="#f4f2ed">Windows and Linux lifecycle open</text>
+    <text x="1080" y="435" font-size="32" font-weight="700" fill="#d7a84a">P1-G4 / HUMAN PROOF</text>
+    <text x="1080" y="520" font-size="34" fill="#f4f2ed">Five Windows captures retained</text>
+    <text x="1080" y="590" font-size="34" fill="#f4f2ed">Automated checks passed</text>
+    <text x="1080" y="660" font-size="34" fill="#f4f2ed">Operator signoff not recorded</text>
+    <text x="110" y="930" font-size="30" fill="#aab1ba">10 of 23 gates passed / 11 of 34 tasks complete / P1 remains active</text>
+  </g>
+</svg>

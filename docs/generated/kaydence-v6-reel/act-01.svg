@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#0b0e12"/>
+  <g fill="none" stroke-width="12" stroke-linecap="round">
+    <path d="M110 300 H760 Q900 300 1010 540 Q1120 780 1310 780 H1810" stroke="#48c9c2"/>
+    <path d="M110 540 H760 Q900 540 1010 540 Q1120 540 1310 540 H1810" stroke="#4f7fe8"/>
+    <path d="M110 780 H760 Q900 780 1010 540 Q1120 300 1310 300 H1810" stroke="#4dbb7b"/>
+  </g>
+  <g fill="#0b0e12" stroke="#d7a84a" stroke-width="8"><rect x="910" y="440" width="200" height="200" rx="18"/></g>
+  <path d="M956 570 984 518 1010 566 1038 494 1064 548" fill="none" stroke="#d7a84a" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#f4f2ed" font-family="Avenir Next,Segoe UI,sans-serif">
+    <text x="110" y="120" font-size="34" font-weight="700">ACT 01 / LIVE REPOSITORY</text>
+    <text x="110" y="210" font-size="76" font-weight="700">The runway is live.</text>
+    <text x="110" y="930" font-size="34" fill="#aab1ba">Ubuntu, macOS, and Windows passed on current main.</text>
+    <text x="110" y="995" font-size="28" fill="#707984">Actions 30755723029 / SHA 8b47521 / August 2, 2026</text>
+  </g>
+</svg>

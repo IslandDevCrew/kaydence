@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#0b0e12"/>
+  <g fill="none" stroke-linecap="round">
+    <path d="M150 520 C260 380 350 670 470 510 S690 340 820 530 S1050 710 1180 500 S1400 340 1540 520 S1690 610 1780 470" stroke="#d7a84a" stroke-width="12"/>
+    <path d="M150 610 C280 480 370 720 500 590 S720 420 860 610 S1090 760 1230 570 S1450 420 1590 600 S1710 680 1780 560" stroke="#48c9c2" stroke-width="5" opacity=".7"/>
+  </g>
+  <g fill="#f4f2ed" font-family="Avenir Next,Segoe UI,sans-serif">
+    <text x="110" y="120" font-size="34" font-weight="700">ACT 02 / CORE ENGINE</text>
+    <text x="110" y="220" font-size="76" font-weight="700">The core now has two voices.</text>
+    <text x="110" y="840" font-size="34" fill="#aab1ba">whisper.cpp q5 remains the proven default.</text>
+    <text x="110" y="900" font-size="34" fill="#aab1ba">ONNX CTC plus Silero VAD supplies independent runtime diversity.</text>
+    <text x="110" y="980" font-size="28" fill="#707984">236 library tests / ADR-0016 implementation proven, shipping approval still open</text>
+  </g>
+</svg>

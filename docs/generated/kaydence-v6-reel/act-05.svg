@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#0b0e12"/>
+  <path d="M140 820 C420 760 520 630 760 620 S1160 480 1340 360 S1600 250 1810 190" fill="none" stroke="#d7a84a" stroke-width="12" stroke-linecap="round"/>
+  <g fill="#151a21" stroke-width="5"><circle cx="360" cy="750" r="48" stroke="#48c9c2"/><circle cx="760" cy="620" r="48" stroke="#4f7fe8"/><circle cx="1220" cy="430" r="48" stroke="#4dbb7b"/><circle cx="1660" cy="240" r="48" stroke="#d7a84a"/></g>
+  <g fill="#f4f2ed" font-family="Avenir Next,Segoe UI,sans-serif">
+    <text x="110" y="120" font-size="34" font-weight="700">ACT 05 / THE RUNWAY</text>
+    <text x="110" y="220" font-size="76" font-weight="700">Close P1, then accelerate the differentiators.</text>
+    <text x="250" y="680" font-size="30">P1 / DAILY-DRIVABLE RAW</text>
+    <text x="650" y="550" font-size="30">P2 / CLEANUP</text>
+    <text x="1110" y="360" font-size="30">P3 / WHISPER-AHEAD</text>
+    <text x="1510" y="160" font-size="30">P4 / FLAGSHIP TRIO</text>
+    <text x="110" y="960" font-size="32" fill="#aab1ba">The pipeline can carry the work. The next constraint is disciplined product proof.</text>
+  </g>
+</svg>
