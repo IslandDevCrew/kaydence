@@ -56,6 +56,14 @@ structure, local-only copy, evidence modal, native button semantics, disabled
 pre-review Download, and Local file fallback remained intact. Browser console
 reported no errors or warnings. This is not the phase-wide human/device signoff.
 
+Remote evidence
+- Source-code and local-evidence head 65cdf19: Actions run 30923967953 PASS.
+  - macOS: PASS in 6m41s.
+  - Ubuntu: PASS in 6m52s.
+  - Windows: PASS in 11m56s.
+- This remote-evidence amendment changes the PR head. Merge remains prohibited
+  until its exact head passes a fresh Ubuntu, Windows, and macOS matrix.
+
 Boundaries
 - This work does not enable model-download in the default shipped build.
 - It does not claim cancellation support, live production model bytes, or a
