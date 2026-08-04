@@ -7,7 +7,7 @@
 - **Date:** 2026-07-10
 - **PRD items affected:** P1-P0-2 (≥2 local ASR engines), P1-G2 (golden finals); refines
   ADR-0002 (AsrEngine trait / ≥2-engine hedge); builds on ADR-0014 (whisper adapter) and
-  ADR-0015 (gated model download).
+  ADR-0017 (gated model download).
 
 ## Context
 ADR-0002 mandates ≥2 viable local ASR engines for supply-chain resilience. Today only
@@ -71,7 +71,7 @@ pre-1.0). The lowest-effort genuinely-correct ONNX ASR unit is a **CTC** lane.
    nor dep `build.rs`). **No new `network-allowlist.json` entry** — the build-time binary
    is a pinned/vendored supply-chain artifact, not runtime egress; adding it there would
    mischaracterize it. A later weight fetch reuses the existing `models/download` entry
-   (ADR-0015) once registry sha256+sources are real. **Owed hardening (tracked, not
+   (ADR-0017) once registry sha256+sources are real. **Owed hardening (tracked, not
    claimed done):** extend `audit-network`'s TODO deep pass (cargo-tree/geiger +
    cargo-deny + a `.cargo/config` offline pin) so an `ort`-style build-time binary fetch
    can't silently reopen egress and CI can build `--offline`.

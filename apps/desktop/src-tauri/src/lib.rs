@@ -284,7 +284,7 @@ fn first_run_model_download_preflight(
     }
 }
 
-/// Result of an actual first-run model fetch (P1-P0-8, ADR-0015).
+/// Result of an actual first-run model fetch (P1-P0-8, ADR-0017).
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct FirstRunModelDownloadResult {
     pub model_id: String,
@@ -293,7 +293,7 @@ pub struct FirstRunModelDownloadResult {
 }
 
 /// Perform the first-run "model download" step: fetch a registry-pinned model
-/// through the reviewed downloader (ADR-0015) and verify sha256 before install.
+/// through the reviewed downloader (ADR-0017) and verify sha256 before install.
 /// Feature-gated `model-download` — the default build has no fetch surface and
 /// returns an explicit unavailable error rather than silently doing nothing.
 #[tauri::command]
@@ -326,7 +326,7 @@ fn first_run_model_download(
     #[cfg(not(all(desktop, feature = "model-download")))]
     {
         let _ = (app, model_id);
-        Err("Model download is unavailable in this build; enable the `model-download` feature (ADR-0015).".to_string())
+        Err("Model download is unavailable in this build; enable the `model-download` feature (ADR-0017).".to_string())
     }
 }
 

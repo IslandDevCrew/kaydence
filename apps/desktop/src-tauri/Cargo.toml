@@ -33,7 +33,7 @@ audioadapter-buffers = "2"
 # Loads a checksum-verified LOCAL ggml model — adds NO network surface (model
 # download is a separate still-gated decision, ADR-0014 §4). audit-network stays green.
 whisper-rs = { version = "0.16", optional = true }
-# Model download-on-demand (P1-P0-2/P1-P0-8, ADR-0015). The ONE model-fetch
+# Model download-on-demand (P1-P0-2/P1-P0-8, ADR-0017). The ONE model-fetch
 # network surface, OFF by default. ureq = minimal pure-Rust blocking client
 # (rustls). Fetches only registry-pinned HTTPS sources; verify-before-install.
 ureq = { version = "2", optional = true }
@@ -104,7 +104,7 @@ asr-whisper = ["dep:whisper-rs"]
 # macOS-only acceleration proof lane. Keep separate from `asr-whisper` so
 # Windows/Linux CPU builds never inherit Metal linkage through feature unification.
 asr-whisper-metal = ["asr-whisper", "whisper-rs/metal"]
-# Model download-on-demand (ADR-0015). OFF by default — opts the ureq client +
+# Model download-on-demand (ADR-0017). OFF by default — opts the ureq client +
 # the single models/download call site in. Default build stays zero-egress.
 model-download = ["dep:ureq"]
 # Real Silero VAD (ADR-0016) — an ONNX VadDetector behind the existing SpeechGate

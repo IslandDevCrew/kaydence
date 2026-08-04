@@ -1,4 +1,4 @@
-//! Model download-on-demand (P1-P0-2 / P1-P0-8, ADR-0015) — feature `model-download`.
+//! Model download-on-demand (P1-P0-2 / P1-P0-8, ADR-0017) — feature `model-download`.
 //!
 //! The ONE network surface behind model acquisition. Everything else in `models/`
 //! stays download-free. This module consumes the registry's validated
@@ -6,7 +6,7 @@
 //! the existing verify-before-install path, so a corrupt or wrong file is hashed
 //! and rejected, never loaded. Off by default; compiled only under
 //! `--features model-download`. No telemetry, no implicit/background fetch — the
-//! caller invokes this on an explicit user action only (ADR-0015 §4).
+//! caller invokes this on an explicit user action only (ADR-0017 §4).
 
 use super::{ModelEntry, ModelInstallOutcome, ModelRegistryError};
 use std::fs;
