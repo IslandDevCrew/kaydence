@@ -61,8 +61,12 @@ allowlisted; privacy posture clean. Bench passes four synthetic measurements
 and remains explicitly PARTIAL for GPU, prediction, idle RAM, and idle CPU.
 
 Remote evidence
-- Pending: pull-request exact-head Ubuntu, Windows, and macOS matrix.
-- Merge is prohibited until all three jobs pass.
+- Source-code head 70377cb: Actions run 30920602636 PASS.
+  - macOS: PASS in 6m47s.
+  - Ubuntu: PASS in 6m55s.
+  - Windows: PASS in 12m50s.
+- This evidence-only amendment changes the PR head. Merge remains prohibited
+  until the final exact-head Ubuntu, Windows, and macOS matrix also passes.
 
 Boundaries
 - This repair does not enable model-download in the shipped build.
