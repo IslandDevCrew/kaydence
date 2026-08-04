@@ -67,6 +67,13 @@ Remote evidence
   - Windows: PASS in 12m50s.
 - This evidence-only amendment changes the PR head. Merge remains prohibited
   until the final exact-head Ubuntu, Windows, and macOS matrix also passes.
+- Final exact head 2f74f65: Actions run 30921789739 PASS.
+  - macOS: PASS in 5m20s.
+  - Ubuntu: PASS in 6m56s.
+  - Windows: PASS in 12m43s.
+- PR #30 merged under policy auto at 2026-08-04T15:12:51Z as 1904cde.
+  The exact tested head and merge commit share tree
+  31cbbfbcaa8104ac90431499c39125865a37448e.
 
 Boundaries
 - This repair does not enable model-download in the shipped build.
