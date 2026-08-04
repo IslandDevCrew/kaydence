@@ -139,14 +139,14 @@
     "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
     "status": "active",
     "started": "2026-07-07",
-    "updated": "2026-08-02T20:56Z",
-    "sessionCount": 27
+    "updated": "2026-08-04T14:40Z",
+    "sessionCount": 28
   },
   "policies": {
     "merge": "auto",
     "branchPrefix": "mission/",
     "maxPrLines": 400,
-    "notes": "auto = merge a mission branch when the relevant standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence is PUBLIC. Every normal push and PR now emits the full ubuntu-latest/windows-latest/macos-latest matrix; only the manual windows_visual_proof dispatch narrows to Windows. Current-main proof: Actions run 30755723029 at 8b47521 passed setup plus all three OS jobs on 2026-08-02. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test, frontend check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths still HALT for operator go + ADR. Resume one-branch/one-PR discipline for the next product change; the July 27/August 2 direct-main work is recorded, not normalized away."
+    "notes": "auto = merge a mission branch when the relevant standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence is PUBLIC. Every normal push and PR now emits the full ubuntu-latest/windows-latest/macos-latest matrix; only the manual windows_visual_proof dispatch narrows to Windows. Current product-code proof: PR #29 Actions run 30767158828 passed setup plus all three OS jobs at 237396b; its tree is byte-identical to merge b5971b2. Fresh local reconciliation is ops/mission/evidence/2026-08-04-p1-live-reconciliation.txt. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test, frontend check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths still HALT for operator go + ADR. Resume one-branch/one-PR discipline for the next product change; the July 27/August 2 direct-main work is recorded, not normalized away."
   },
   "phases": [
     {
@@ -1583,11 +1583,19 @@
       "url": "https://github.com/IslandDevCrew/kaydence/actions/runs/30755723029",
       "phase": "P0",
       "mergedAt": "2026-08-02"
+    },
+    {
+      "number": 29,
+      "title": "docs(mission): enhanced v6 state and plan",
+      "url": "https://github.com/IslandDevCrew/kaydence/pull/29",
+      "phase": "P1",
+      "mergedAt": "2026-08-04"
     }
   ],
   "resume": {
     "activePhase": "P1",
     "nextActions": [
+      "P1 GOVERNANCE REPAIR: on mission/P1-adr-identity-integrity, give the model-download decision a unique ADR number, update unambiguous live references, and make check-adr-status.sh fail on duplicate IDs. This routine authority-integrity repair must land before download UI work resumes.",
       "P1-G4 HUMAN GATE: review and explicitly sign off or reject the five retained native Windows captures for Boards 01/03/07/10 plus the permissions modal. Repo evidence passes; the operator response is still not recorded.",
       "ADR-0016 HUMAN GATE: approve or revise ORT 1.28 binary provenance, the shipped CTC model/license and source pins, and the non-default hedge posture before treating the new ONNX/Silero lane as ship-authorized.",
       "P1-P0-8 FIRST RUN: wire first_run_model_download into the React flow with truthful progress/error/cancel behavior, decide the shipped model-download feature posture, complete live permission proof, and record a real <=60-second first dictation.",
@@ -1596,6 +1604,7 @@
       "PROCESS: restore one branch = one PR = one merge for product changes. Current main is green and has zero open PRs; do not return to direct-main feature accumulation."
     ],
     "blockers": [
+      "Two distinct accepted decisions currently share ADR-0015 (quantized ASR default and model-download surface), while check-adr-status.sh passes duplicate IDs. The ambiguity blocks further model-download UI authority until a unique-ID repair and duplicate-ID gate land.",
       "P1-G4 is evidence-complete but still requires explicit operator visual signoff on five Windows captures.",
       "ADR-0016 is Proposed. The ONNX CTC + Silero implementation is live-proven but not ship-authorized until the operator approves binary/model/license/source posture.",
       "P1-G3 still lacks physical release-to-focused-field timing, packaged q5 ASR-resident measurement, a sub-80 MB visible no-model cockpit, a Windows tray lifecycle fix, and Linux tray/reopen proof.",

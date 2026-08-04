@@ -1,0 +1,46 @@
+Kaydence P1 live reconciliation — 2026-08-04
+
+Authority and checkout
+- Mission state read first from ops/mission/state.json.
+- Initial checkout: codex/enhanced-sotu-poa-v6 at 237396b.
+- Initial origin/main: 8b47521.
+- PR #29 was OPEN/DRAFT, mergeable CLEAN, with exact-head three-OS Actions run
+  30767158828 successful on Ubuntu, macOS, and Windows.
+- PR #29 merged under policy auto at 2026-08-04T14:39:50Z as b5971b2.
+- The tested PR head and merge commit have the same tree:
+  a05a8fa475461de49164d3b425bcc0b14553f1d0.
+
+Fresh active-phase commands on the tested tree
+- P1-G1 crash_recovery: PASS, 2 tests executed.
+- P1-G2 short_utterance: PASS, 1 library test plus 5 integration tests executed.
+- P1-G3 scripts/bench.sh --check: command exit 0, but RESULT is explicitly
+  PARTIAL. Four synthetic metrics pass; GPU, prediction, idle RAM, idle CPU,
+  real ASR, and reference-machine p95 remain unmeasured. Gate remains pending.
+- P1-G4: no shell command exists. This is the retained human visual-signoff
+  gate and remains pending; no self-approval is claimed.
+- P1-G5 event_sequences: PASS, 5 integration tests executed.
+
+Fresh standing local commands on the tested tree
+- cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check: PASS.
+- cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings: PASS.
+- cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all: PASS;
+  236 library, 5 reference-bench, 2 crash-recovery, 5 event-sequence, and
+  5 short-utterance tests passed.
+- bash scripts/check-frontend.sh: PASS (TypeScript and ESLint).
+- bash scripts/check-privacy-posture.sh --check: PASS; one reviewed network
+  call site is allowlisted and no banned screen-capture primitive was found.
+- bash scripts/check-adr-status.sh: PASS as currently implemented, with ADR-0009
+  and ADR-0016 retained as explicit Proposed exceptions.
+
+Audit finding — blocking governance repair
+- docs/decisions contains two distinct accepted decisions named ADR-0015:
+  0015-quantized-p1-asr-default.md and 0015-model-download-surface.md.
+- check-adr-status.sh printed 0015 twice but returned PASS; it does not enforce
+  unique ADR numbers.
+- The ambiguity must be repaired on its own <=400-line mission/P1 work unit
+  before any first-run download UI is allowed to cite or activate that authority.
+
+Boundaries
+- This evidence does not close P1-G3 or P1-G4.
+- It does not approve ADR-0016, enable model-download in a shipped build, or
+  provide physical Windows/Linux/macOS product proof.
