@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "1.0",
+  "ideaLock": "idea-kaydence-design-language-relock",
+  "frozenAt": "2026-08-09T23:10:00Z",
+  "planDoc": "scratchpad/kaydence-consolidation/02_DESIGN_GAUNTLET_MISSION.md",
+  "verdict": {
+    "nbcli": "ready",
+    "adversarialFindingsResolved": true
+  },
+  "phases": [
+    {
+      "id": "P1",
+      "title": "D1 — Token lock in the real codebase",
+      "goal": "Establish apps/desktop/src/tokens.css as Kaydence's sole design-token source (color, type, space, radius, motion, reserved --blue/--gold, per-OS --accent), ported from the gauntlet-locked winner-locked-v1.html. Supersedes the forked per-view token declarations the design audit found in DictateView.css, CleanupView.css, PrivacyView.css, and FirstRunView.css.",
+      "lane": "design",
+      "gates": [
+        { "id": "P1-G1", "title": "No view file re-declares a core token", "command": "bash scripts/check-design-tokens.sh --no-view-token-redeclare" },
+        { "id": "P1-G2", "title": "No hardcoded hex outside tokens.css", "command": "bash scripts/check-design-tokens.sh --no-hardcoded-hex" }
+      ],
+      "evidenceRequired": ["static", "runtime-journey"]
+    },
+    {
+      "id": "P2",
+      "title": "D2+D3 — Gauntlet-lite and Claude Design lock (COMPLETE, recorded for audit)",
+      "goal": "COMPLETE 2026-08-09. Three independent directions (Calm Utility, Editorial Precision, Warm Focus) rendered families 01+07 from one token system, each blind-critiqued against R1-R8 plus competitor cohesion (Wispr Flow, Aqua Voice, Superwhisper, Glaido, native macOS/Windows). Editorial Precision judged the winner — the only candidate clearing all 8 rubric dimensions. Judge fixes and runner-up grafts applied and blind-reverified (all pass; overall 9/10, estimated operator score 9/10). Operator reviewed the locked artifact and accepted at 8.5/10, explicitly waiving the idea.lock's literal >=9 threshold, with two deferred nuances (see hitl.conditions).",
+      "gates": [
+        { "id": "P2-G1", "title": "Locked winner clears R1-R8", "command": "bash scripts/check-design-tokens.sh --file ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html" }
+      ],
+      "evidenceRequired": ["static", "visual"]
+    },
+    {
+      "id": "P3",
+      "title": "D4 — Rebuild the P1 screen families from the lock",
+      "goal": "Rebuild apps/desktop/src/views/DictateView (01), CleanupView (03), PrivacyView (07), and FirstRunView (10) — plus the shared nav/chrome — to consume tokens.css exclusively and render the locked Editorial Precision system, while preserving every existing React behavior, state hook, and IPC/event contract byte-for-byte. This is a reskin, not a rewrite of app logic. Also resolves the board-vs-invariant nav conflict the audit found by adopting the single 10-item order (Dictate, Whisper-Ahead, Cleanup, Relay, Voiceprint, Conductor, Privacy, Dictionary, Analytics, Setup) as the one NAV constant.",
+      "lane": "design",
+      "gates": [
+        { "id": "P3-G1", "title": "Frontend typecheck + lint clean", "command": "bash scripts/check-frontend.sh" },
+        { "id": "P3-G2", "title": "Design-token rubric clean on rebuilt views", "command": "bash scripts/check-design-tokens.sh --dir apps/desktop/src/views" },
+        { "id": "P3-G3", "title": "No regression in existing frontend/backend test suites", "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all" }
+      ],
+      "evidenceRequired": ["static", "runtime-journey"]
+    },
+    {
+      "id": "P4",
+      "title": "D5 — Fresh capture and hybridized P1-G4 signoff",
+      "goal": "Capture Boards 01/03/07/10 plus the First Run permissions modal at the D4 rebuild's closeout SHA, with ADR-0017 model-download rendering gated/off. Independent reviewer compares against the locked winner system (not the old Visual System v1 boards). Operator issues the final hybridized P1-G4 signoff. This is the only step that may flip P1-G4 in ops/mission/state.json.",
+      "lane": "design",
+      "gates": [
+        { "id": "P4-G1", "title": "Fresh capture binds to closeout SHA", "command": "bash scripts/windows-webview-proof.ps1 -ExecutablePath target/release/kaydence.exe -OutputDirectory ops/mission/evidence/p1-g4-closeout" }
+      ],
+      "evidenceRequired": ["static", "runtime-journey", "visual", "recording"]
+    }
+  ],
+  "budget": {
+    "costCapUsd": 50,
+    "wallClockCapHours": 8,
+    "notes": "Soft engineering-time proxy for this sub-mission, not a literal third-party bill — work runs inside the operator's existing session/agent budget. Re-scope if D4's real-codebase rebuild proves larger than the mockup work that preceded it."
+  },
+  "hitl": {
+    "approvedBy": "Jon (operator)",
+    "approvedAt": "2026-08-09T23:00:00Z",
+    "conditions": [
+      "Operator accepted the locked design language at 8.5/10, explicitly waiving idea.lock's literal >=9/10 threshold — recorded honestly as a waiver, not laundered into a passing score.",
+      "Known deferred issue: the Cool/Warm palette toggle has no effect in dark mode (winner-locked-v1.html only overrides light-mode neutrals). Fix during D4 or immediately after; not a blocker to proceeding.",
+      "Operator flagged unspecified 'other nuances' verbally without itemizing them — surface and log these explicitly during D4 review rather than assuming they are resolved.",
+      "D4 must not regress existing React/Tauri behavior. Any gate failure in P3-G3 (test suite) routes back to the build (family G4 in archipelago's protocol-gate routing), not forward.",
+      "No push, PR, merge, or ops/mission/state.json gate flip is authorized by this plan alone — P1-G4 remains PENDING until P4 (D5) evidence lands and the operator signs off explicitly."
+    ]
+  }
+}
