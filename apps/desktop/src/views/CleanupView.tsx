@@ -215,6 +215,12 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
                 <small>{gateStates[index] ? "OK" : "Pending"}</small>
               </div>
             ))}
+            <div className="cleanup-status-legend" aria-label="Status legend">
+              <span><span className="dot dot--good" aria-hidden="true" />Good</span>
+              <span><span className="dot dot--accent" aria-hidden="true" />Available</span>
+              <span><span className="dot dot--idle" aria-hidden="true" />Idle</span>
+              <span><span className="dot dot--danger" aria-hidden="true" />Issue</span>
+            </div>
           </section>
         </aside>
       </div>
