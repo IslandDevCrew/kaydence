@@ -1,4 +1,6 @@
-/* Screen family 07: privacy constitution, context posture, permissions, and local audit. */
+/* Screen family 07: privacy constitution, context posture, permissions, and local audit.
+   Tokens (--bg/--surface/--ink/--muted/--line/etc.) come from the single
+   source in styles.css — no local overrides (docs/design/DESIGN_LANGUAGE_V2_LOCK.md). */
 .app-shell.privacy-shell {
   display: grid;
   grid-template-columns: 126px minmax(0, 1fr);
@@ -7,13 +9,6 @@
   min-height: 100vh;
   height: 100vh;
   overflow: hidden;
-  color-scheme: light;
-  --bg: #eef2f4;
-  --surface: #ffffff;
-  --surface-soft: #f6f8f9;
-  --ink: #1b2226;
-  --muted: #69767c;
-  --line: #dce3e6;
   background: var(--bg);
 }
 

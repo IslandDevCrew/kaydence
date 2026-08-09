@@ -1,15 +1,121 @@
-/* Screen family 01: the locked light cockpit composition. */
+/* Screen family 01: the locked light cockpit composition.
+   Tokens (--bg/--surface/--ink/--muted/--line/etc.) come from the single
+   source in styles.css — no local overrides (docs/design/DESIGN_LANGUAGE_V2_LOCK.md). */
 .app-shell.dictate-shell {
-  display: block;
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
   min-height: 100vh;
-  color-scheme: light;
-  --bg: #eef2f4;
-  --surface: #ffffff;
-  --surface-soft: #f7f9fa;
-  --ink: #171d20;
-  --muted: #68757b;
-  --line: #dce3e6;
+  height: 100vh;
+  overflow: hidden;
   background: var(--bg);
+}
+
+.dictate-shell .compact-sidebar {
+  gap: 7px;
+  min-height: 0;
+  overflow: hidden;
+  border-right-color: var(--line);
+  background: var(--surface-soft);
+  color: var(--ink);
+  padding: 9px 7px;
+}
+
+.dictate-shell .compact-sidebar .brand-lockup {
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  min-height: 68px;
+}
+
+.dictate-shell .compact-sidebar .brand-mark {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+}
+
+.dictate-shell .compact-sidebar .brand-lockup > div {
+  display: none;
+}
+
+.dictate-shell .compact-sidebar .nav-list {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 2px;
+  min-height: 0;
+}
+
+.dictate-shell .compact-sidebar .nav-item {
+  min-height: 27px;
+  border-radius: 6px;
+  color: var(--muted);
+  padding: 0 5px;
+}
+
+.dictate-shell .compact-sidebar .nav-item-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  font-size: .61rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.dictate-shell .compact-sidebar .nav-item-label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dictate-shell .compact-sidebar .nav-item .cockpit-glyph {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+}
+
+.dictate-shell .compact-sidebar .nav-item small {
+  font-size: .51rem;
+}
+
+.dictate-shell .compact-sidebar .nav-item.active,
+.dictate-shell .compact-sidebar .nav-item:hover {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  color: color-mix(in srgb, var(--accent) 78%, var(--ink));
+}
+
+.dictate-shell .compact-sidebar .nav-item:disabled {
+  color: var(--muted);
+  opacity: .64;
+}
+
+.dictate-shell .compact-sidebar .sidebar-card {
+  grid-template-columns: 7px minmax(0, 1fr);
+  gap: 6px;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 7px;
+}
+
+.dictate-shell .compact-sidebar .sidebar-card strong,
+.dictate-shell .compact-sidebar .sidebar-card p {
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  font-size: .56rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dictate-shell .compact-sidebar .sidebar-card p {
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+.dictate-shell .compact-sidebar .status-dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 3px;
 }
 
 .dictate-board {
@@ -118,7 +224,7 @@
   min-width: 0;
   min-height: 0;
 }
-.cockpit-status-column { display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)) 42px; gap: 6px; min-height: 0; }
+.cockpit-status-column { display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 6px; min-height: 0; }
 .cockpit-status-card { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; min-width: 0; min-height: 0; overflow: hidden; padding: 7px 8px; }
 .cockpit-status-card > div { display: grid; align-content: center; min-width: 0; }
 .cockpit-status-card span,
@@ -213,10 +319,12 @@
 }
 
 @media (max-width: 500px) {
+  .app-shell.dictate-shell { display: block; height: auto; overflow: visible; }
+  .dictate-shell .compact-sidebar { display: none; }
   .dictate-board { grid-template-rows: auto auto auto auto; height: auto; overflow: visible; }
   .cockpit-record-strip { grid-template-columns: 70px minmax(0, 1fr); }
   .cockpit-waveform { grid-column: 1 / -1; }
   .cockpit-main-grid { grid-template-columns: minmax(0, 1fr); }
-  .cockpit-status-column { grid-template-rows: repeat(5, 58px) 44px; }
+  .cockpit-status-column { grid-template-rows: repeat(5, 58px); }
   .cockpit-center-column { grid-template-rows: auto auto; }
 }

@@ -4,10 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   type AppView,
   type CleanupDial,
-  NavRail,
-  type NavRailItem,
   type OsLane,
 } from "./components/CockpitChrome";
+import { NavRail } from "./components/NavRail";
 import {
   type CockpitStatusItem,
   type DictateHistoryItem,
@@ -470,7 +469,10 @@ const lanes: LaneSpec[] = [
   {
     id: "windows",
     label: "Windows",
-    accent: "#2f72f2",
+    // Cobalt (Windows 11 system-accent family). Was #2f72f2, which collided
+    // byte-for-byte with the reserved --blue (Whisper-Ahead prediction text
+    // only, never a per-OS accent) — see docs/design/DESIGN_LANGUAGE_V2_LOCK.md.
+    accent: "#0067c0",
     injection: "UI Automation + SendInput",
     primaryMethod: "UI Automation (ValuePattern)",
     primaryDetail: "ValuePattern insertion when the focused control exposes a writable value.",
@@ -489,21 +491,6 @@ const lanes: LaneSpec[] = [
     fallbackDetail: "Runtime capabilities select the safest available Wayland or X11 delivery path.",
     gates: ["AT-SPI / X11", "Secure Input", "Latest Delivery", "Round Trip"],
   },
-];
-
-const cleanupNavItems: NavRailItem[] = [
-  { icon: "settings", label: "General", view: "Setup" },
-  { icon: "waveform", label: "Dictation", view: "Dictate" },
-  { icon: "waveform", label: "Whisper-Ahead", phase: "P3" },
-  { icon: "cleanup", label: "Cleanup & Inject", view: "Cleanup" },
-  { icon: "square", label: "Relay", phase: "P4" },
-  { icon: "waveform", label: "Voiceprint", phase: "P4" },
-  { icon: "cpu", label: "Conductor", phase: "P4" },
-  { icon: "privacy", label: "Privacy", view: "Privacy" },
-  { icon: "database", label: "Dictionary", phase: "P2" },
-  { icon: "target", label: "Profiles", phase: "P2" },
-  { icon: "history", label: "Analytics", phase: "P3" },
-  { icon: "settings", label: "License", phase: "P3" },
 ];
 
 function detectOsLane(): OsLane {
@@ -1282,6 +1269,14 @@ export function App(): JSX.Element {
         className="app-shell dictate-shell"
         style={{ "--accent": lane.accent } as React.CSSProperties}
       >
+        <NavRail
+          activeView="Dictate"
+          appName={snapshot.app_name}
+          footerTitle="Engine: Local"
+          markUrl={appIconUrl}
+          onNavigate={setActiveView}
+          privacySummary={`Model: ${engineLabel}`}
+        />
         <DictateView
           activeLane={activeLane}
           appName={snapshot.app_name}
@@ -1335,13 +1330,11 @@ export function App(): JSX.Element {
         style={{ "--accent": lane.accent } as React.CSSProperties}
       >
         <NavRail
-          compact
           activeView="Cleanup"
           appName={snapshot.app_name}
           footerTitle="Engine: Local"
-          items={cleanupNavItems}
           markUrl={appIconUrl}
-          onSelect={setActiveView}
+          onNavigate={setActiveView}
           privacySummary={`Model: ${engineLabel}`}
         />
         <CleanupView
@@ -1375,13 +1368,11 @@ export function App(): JSX.Element {
         style={{ "--accent": lane.accent } as React.CSSProperties}
       >
         <NavRail
-          compact
           activeView="Privacy"
           appName={snapshot.app_name}
           footerTitle="Private by design"
-          items={cleanupNavItems}
           markUrl={appIconUrl}
-          onSelect={setActiveView}
+          onNavigate={setActiveView}
           privacySummary={`${snapshot.settings.privacy.history_retention_days}-day local history`}
         />
         <PrivacyView

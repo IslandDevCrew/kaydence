@@ -1,5 +1,4 @@
 import {
-  BottomNav,
   CockpitGlyph,
   type AppView,
   type CleanupDial,
@@ -117,7 +116,6 @@ export function DictateView(props: DictateViewProps): JSX.Element {
       <div className="cockpit-main-grid">
         <div className="cockpit-status-column">
           {props.statusItems.map((item) => <StatusCard key={item.label} {...item} />)}
-          <BottomNav activeView="Dictate" onSelect={props.onNavigate} />
         </div>
 
         <div className="cockpit-center-column">
