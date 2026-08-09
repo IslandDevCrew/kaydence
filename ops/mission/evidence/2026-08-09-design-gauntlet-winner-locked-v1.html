@@ -100,7 +100,9 @@
   --fs-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
 }
 
-/* ---- WARM PALETTE (graft G4) — LIGHT only overrides for neutrals ---- */
+/* ---- WARM PALETTE (graft G4) — neutrals only, both themes. Fix 2026-08-09:
+   the original only overrode --l-*, so Warm was indistinguishable from Cool
+   in dark mode (operator-caught). Now overrides --d-* too. ---- */
 :root[data-palette="warm"]{
   --l-bg:#f3ece1;
   --l-surface:#fdfaf4;
@@ -108,6 +110,12 @@
   --l-ink:#221d18;
   --l-muted:#7a6f60;
   --l-line:#e6dccc;
+  --d-bg:#17130f;
+  --d-surface:#201a14;
+  --d-surface-soft:#291f17;
+  --d-ink:#f0e9df;
+  --d-muted:#a89a85;
+  --d-line:#3a2e22;
 }
 
 /* ---- Theme scopes: var() re-points ONLY (zero raw values) ---- */
