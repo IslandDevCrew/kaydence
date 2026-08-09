@@ -564,10 +564,10 @@
 .meter i.on{background:var(--accent)}
 .meter i.pk{background:var(--warn)}
 .sb-ok{display:inline-flex;align-items:center;gap:var(--space-15);color:var(--success);font-weight:700}
-.sb-ver{margin-left:auto;font-family:var(--fs-mono)}
+.sb-ver{font-family:var(--fs-mono)}
 .sb-sep{width:1px;height:14px;background:var(--line)}
 
-.sb-pills{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.sb-pills{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-left:auto}
 .sb-pill{
   position:relative;display:inline-flex;align-items:center;gap:var(--space-1);
   padding:var(--space-05) var(--space-2);border-radius:var(--radius-pill);
@@ -887,7 +887,10 @@
          Hotkey / Privacy / WAL Recovery are now clickable popover pills. -->
     <footer class="statusbar">
       <span class="sb-brand">Kaydence Free</span>
-      <span class="sb-sep"></span>
+      <span class="meter" aria-label="Mic level" title="Mic level">
+        <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
+      </span>
+      <span class="sb-ok"><span class="dot dot--good"></span>All systems operational</span>
 
       <div class="sb-pills">
         <div class="sb-pill" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
@@ -947,11 +950,6 @@
       </div>
 
       <span class="sb-sep"></span>
-      <span class="meter" aria-label="Mic level" title="Mic level">
-        <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
-      </span>
-      <span class="sb-sep"></span>
-      <span class="sb-ok"><span class="dot dot--good"></span>All systems operational</span>
       <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
     </footer>
   </section>

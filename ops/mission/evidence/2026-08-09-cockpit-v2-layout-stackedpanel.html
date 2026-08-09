@@ -1,0 +1,1473 @@
+<title>Kaydence — Cockpit v2 · Candidate 3 (Stacked Flank + Panel HUD)</title>
+<style>
+/* ============================================================================
+   KAYDENCE — DESIGN LANGUAGE v1 (Editorial Precision + locked grafts)
+   TOKEN BLOCK COPIED VERBATIM FROM THE LOCKED REFERENCE. Do not edit hexes,
+   mechanism, or fencing here — layout changes only happen below this block.
+   ========================================================================== */
+:root{
+  color-scheme:light dark;
+
+  /* ---- RAW PALETTE · LIGHT (cool, the default) ---- */
+  --l-bg:#eceae4;
+  --l-surface:#ffffff;
+  --l-surface-soft:#f4f2ec;
+  --l-ink:#14161b;
+  --l-muted:#5f646c;                 /* nudged darker for 4.5:1 on --surface-soft */
+  --l-line:#d8d5cc;
+  --l-success:#1f9d5b;
+  --l-warn:#c1861a;
+  --l-danger:#cf4436;
+  --l-shadow-1:0 1px 1px rgba(20,22,27,.03);
+  --l-shadow-2:0 22px 48px -24px rgba(20,22,27,.30), 0 4px 12px -6px rgba(20,22,27,.10);
+
+  /* ---- RAW PALETTE · DARK ---- */
+  --d-bg:#0c0d10;
+  --d-surface:#15171c;
+  --d-surface-soft:#1c1f26;
+  --d-ink:#eef0f4;
+  --d-muted:#98a0ab;
+  --d-line:#2a2e36;
+  --d-success:#37c47c;
+  --d-warn:#dda23a;
+  --d-danger:#ec6a5c;
+  --d-shadow-1:0 1px 1px rgba(0,0,0,.4);
+  --d-shadow-2:0 26px 56px -22px rgba(0,0,0,.72), 0 4px 14px -6px rgba(0,0,0,.5);
+
+  /* ---- RESERVED — never decorative ---- */
+  --blue:#2f72f2;   /* Whisper-Ahead PREDICTION TEXT only */
+  --gold:#d99b18;   /* accepted-prediction MERGE PULSE only */
+
+  /* ---- Per-OS accent (macOS lane = teal). Never == --blue or --gold. ---- */
+  --accent:#14a7a1;
+  /* Constant across both themes — text ON --accent surfaces */
+  --on-accent:#ffffff;
+
+  /* ---- SEMANTIC (default LIGHT via var re-points; theme scopes swap raws) ---- */
+  --bg:var(--l-bg);
+  --surface:var(--l-surface);
+  --surface-soft:var(--l-surface-soft);
+  --ink:var(--l-ink);
+  --muted:var(--l-muted);
+  --line:var(--l-line);
+  --success:var(--l-success);
+  --warn:var(--l-warn);
+  --danger:var(--l-danger);
+  --shadow-card:var(--l-shadow-1);
+  --shadow-elev:var(--l-shadow-2);
+
+  /* ---- type scale (smallest = 11px) ---- */
+  --text-2xs:0.6875rem;
+  --text-xs:0.75rem;
+  --text-sm:0.8125rem;
+  --text-base:0.875rem;
+  --text-md:0.9375rem;
+  --text-lg:1.0625rem;
+  --text-xl:1.375rem;
+  --text-2xl:1.75rem;
+  --text-3xl:2.25rem;
+  --text-4xl:2.875rem;
+
+  /* ---- space scale (100% of spacing flows from here) ---- */
+  --space-025:1px;
+  --space-05:2px;
+  --space-075:3px;
+  --space-1:4px;
+  --space-125:5px;
+  --space-15:6px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-7:32px;
+  --space-8:40px;
+  --space-9:48px;
+  --space-10:64px;
+
+  /* ---- radius ---- */
+  --radius-card:8px;
+  --radius-sm:5px;
+  --radius-pill:999px;
+
+  /* ---- motion ---- */
+  --dur-fast:120ms; --dur-normal:220ms; --dur-slow:520ms;
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-inout:cubic-bezier(.4,0,.2,1);
+
+  --fs-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --fs-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+}
+
+/* ---- WARM PALETTE (graft G4) — neutrals only, both themes. ---- */
+:root[data-palette="warm"]{
+  --l-bg:#f3ece1;
+  --l-surface:#fdfaf4;
+  --l-surface-soft:#ece3d5;
+  --l-ink:#221d18;
+  --l-muted:#7a6f60;
+  --l-line:#e6dccc;
+  --d-bg:#17130f;
+  --d-surface:#201a14;
+  --d-surface-soft:#291f17;
+  --d-ink:#f0e9df;
+  --d-muted:#a89a85;
+  --d-line:#3a2e22;
+}
+
+/* ---- Theme scopes: var() re-points ONLY (zero raw values) ---- */
+:root[data-theme="dark"]{
+  --bg:var(--d-bg);
+  --surface:var(--d-surface);
+  --surface-soft:var(--d-surface-soft);
+  --ink:var(--d-ink);
+  --muted:var(--d-muted);
+  --line:var(--d-line);
+  --success:var(--d-success);
+  --warn:var(--d-warn);
+  --danger:var(--d-danger);
+  --shadow-card:var(--d-shadow-1);
+  --shadow-elev:var(--d-shadow-2);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:var(--d-bg);
+    --surface:var(--d-surface);
+    --surface-soft:var(--d-surface-soft);
+    --ink:var(--d-ink);
+    --muted:var(--d-muted);
+    --line:var(--d-line);
+    --success:var(--d-success);
+    --warn:var(--d-warn);
+    --danger:var(--d-danger);
+    --shadow-card:var(--d-shadow-1);
+    --shadow-elev:var(--d-shadow-2);
+  }
+}
+:root[data-theme="light"]{
+  --bg:var(--l-bg);
+  --surface:var(--l-surface);
+  --surface-soft:var(--l-surface-soft);
+  --ink:var(--l-ink);
+  --muted:var(--l-muted);
+  --line:var(--l-line);
+  --success:var(--l-success);
+  --warn:var(--l-warn);
+  --danger:var(--l-danger);
+  --shadow-card:var(--l-shadow-1);
+  --shadow-elev:var(--l-shadow-2);
+}
+
+/* ============================================================================
+   BASE / STAGE
+   ========================================================================== */
+.stage,.stage *{box-sizing:border-box}
+.stage{
+  font-family:var(--fs-sans);
+  font-size:var(--text-base);
+  line-height:1.5;
+  color:var(--ink);
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb,var(--ink) 4%, transparent), transparent 60%),
+    var(--bg);
+  min-height:100%;
+  padding:var(--space-6);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:auto;
+}
+.stage button{font-family:inherit;cursor:pointer;color:inherit}
+.stage svg{display:block}
+.viewport{max-width:1340px;min-width:1024px;margin:0 auto}
+
+.lbl{
+  font-size:var(--text-2xs);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:700;
+}
+.mono{font-family:var(--fs-mono);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.stage a{color:var(--accent);text-decoration:none}
+.stage a:hover{text-decoration:underline}
+
+*:focus-visible{outline:2px solid var(--accent);outline-offset:var(--space-05)}
+
+/* ============================================================================
+   PAGE-LEVEL: gauntlet view switcher (Full Cockpit / Compact HUD)
+   This chrome is scaffolding for the comparison exercise, not part of the
+   locked component grammar — built from the same tokens so it doesn't clash.
+   ========================================================================== */
+.gauntlet-head{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:var(--space-3);margin-bottom:var(--space-5);
+}
+.gauntlet-title{font-size:var(--text-sm);color:var(--muted);font-weight:600}
+.gauntlet-title b{color:var(--ink);font-weight:800}
+.view-panel{display:none}
+.view-panel.is-active{display:block}
+
+/* ============================================================================
+   WINDOW CHROME
+   ========================================================================== */
+.window{
+  display:none;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius-card);
+  box-shadow:var(--shadow-elev);
+  overflow:hidden;
+  position:relative;
+}
+.window.is-active{display:block}
+.window::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(115deg,
+      color-mix(in srgb,var(--ink) 1.6%,transparent) 0 1px,
+      transparent 1px 3px),
+    repeating-linear-gradient(25deg,
+      color-mix(in srgb,var(--ink) 1.2%,transparent) 0 1px,
+      transparent 1px 4px);
+  mix-blend-mode:soft-light;
+  opacity:.55;
+}
+.titlebar{
+  display:flex;align-items:center;gap:var(--space-4);
+  height:44px;padding:0 var(--space-4);
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(var(--surface),var(--surface-soft));
+  position:relative;z-index:1;
+}
+.tl-dots{display:flex;gap:var(--space-2)}
+.tl-dots i{width:11px;height:11px;border-radius:var(--radius-pill);display:block}
+.tl-dots i:nth-child(1){background:var(--danger)}
+.tl-dots i:nth-child(2){background:var(--warn)}
+.tl-dots i:nth-child(3){background:var(--success)}
+.tl-title{
+  font-size:var(--text-xs);color:var(--muted);font-weight:600;
+  letter-spacing:.02em;
+}
+.tl-title b{color:var(--ink);font-weight:700}
+.tl-right{margin-left:auto;display:flex;align-items:center;gap:var(--space-3)}
+
+.switch{display:flex;background:var(--surface-soft);border:1px solid var(--line);border-radius:var(--radius-pill);padding:var(--space-05)}
+.switch button{
+  border:0;background:transparent;color:var(--muted);
+  font-size:var(--text-2xs);font-weight:700;letter-spacing:.04em;
+  padding:var(--space-125) var(--space-3);border-radius:var(--radius-pill);
+  transition:color var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out);
+}
+.switch button:hover{color:var(--ink)}
+.switch button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-card)}
+.icon-btn{
+  width:30px;height:30px;display:grid;place-items:center;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--muted);
+  transition:color var(--dur-fast),border-color var(--dur-fast),transform var(--dur-fast);
+}
+.icon-btn:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+.icon-btn:active{transform:translateY(1px)}
+.theme-toggle .i-sun{display:none}
+:root[data-theme="dark"] .theme-toggle .i-sun{display:block}
+:root[data-theme="dark"] .theme-toggle .i-moon{display:none}
+:root[data-theme="light"] .theme-toggle .i-sun{display:none}
+:root[data-theme="light"] .theme-toggle .i-moon{display:block}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .theme-toggle .i-sun{display:block}
+  :root:not([data-theme="light"]) .theme-toggle .i-moon{display:none}
+}
+
+/* ============================================================================
+   APP SHELL — nav rail + content
+   ========================================================================== */
+.app{display:grid;grid-template-columns:236px 1fr;position:relative;z-index:1}
+.rail{
+  border-right:1px solid var(--line);
+  background:var(--surface-soft);
+  padding:var(--space-5) var(--space-4);
+  display:flex;flex-direction:column;gap:var(--space-5);
+}
+.brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-2)}
+.brand .mark{width:30px;height:30px;flex:none}
+.brand .stem{fill:var(--ink)}
+.brand .bar{fill:var(--accent)}
+.brand-name{font-size:var(--text-md);font-weight:800;letter-spacing:-.01em}
+.chip{
+  display:inline-flex;align-items:center;gap:var(--space-15);
+  font-size:var(--text-2xs);font-weight:700;letter-spacing:.03em;
+  padding:var(--space-075) var(--space-2);border-radius:var(--radius-pill);
+  background:color-mix(in srgb,var(--success) 14%, transparent);
+  color:var(--success);
+}
+.chip .d{width:6px;height:6px;border-radius:var(--radius-pill);background:var(--success)}
+.chip-local{margin-left:var(--space-05)}
+
+.nav{display:flex;flex-direction:column;gap:var(--space-05)}
+.nav-item{
+  display:flex;align-items:center;gap:var(--space-3);
+  padding:var(--space-2) var(--space-3);
+  border-radius:var(--radius-sm);
+  color:var(--muted);font-size:var(--text-sm);font-weight:500;
+  position:relative;border:1px solid transparent;
+  transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast);
+}
+.nav-item .nav-ic{width:17px;height:17px;flex:none;color:currentColor}
+.nav-item:hover{background:color-mix(in srgb,var(--ink) 5%, transparent);color:var(--ink)}
+.nav-item.is-active{
+  background:color-mix(in srgb,var(--accent) 12%, transparent);
+  color:var(--ink);font-weight:700;
+}
+.nav-item.is-active::before{
+  content:"";position:absolute;left:calc(-1 * var(--space-4));
+  top:var(--space-15);bottom:var(--space-15);width:3px;border-radius:var(--radius-pill);background:var(--accent);
+}
+.nav-item.is-active .nav-ic{color:var(--accent)}
+.nav-foot{margin-top:auto;padding:0 var(--space-2);font-size:var(--text-2xs);color:var(--muted);line-height:1.6}
+
+.kbd{
+  font-family:var(--fs-mono);font-size:var(--text-2xs);
+  border:1px solid var(--line);border-bottom-width:2px;
+  border-radius:var(--radius-sm);
+  padding:var(--space-05) var(--space-15);color:var(--ink);background:var(--surface);
+  box-shadow:var(--shadow-card);
+  font-weight:700;
+}
+
+.content{padding:var(--space-6)}
+
+/* generic card */
+.card{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius-card);padding:var(--space-5);
+  box-shadow:var(--shadow-card);
+}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4)}
+.card-head .lbl{margin:0}
+
+/* ============================================================================
+   SCREEN 01 — COCKPIT (RESTRUCTURED — L1/L2/L3/L4 + S1/W1/W2)
+   Composition, top → bottom:
+     [ Capture (wide, left)  |  Cleanup + History (stacked, right) ]  <- top band
+     Recent Clean Transcript — full width, dominant, scrolls          <- bottom half
+     Status bar — content pills replace the old status column         <- footer
+   ========================================================================== */
+.cockpit{display:flex;flex-direction:column;gap:var(--space-5)}
+
+.top-band{display:flex;gap:var(--space-5);align-items:stretch}
+
+/* --- flank hedge: Capture takes the wide left zone, Cleanup+History stack
+   as one compact column on the right. This is the deliberate hedge against
+   the ambiguous L3 left/right read — two zones, not three. --- */
+.top-band .capture{flex:1.7 1 460px;display:flex;flex-direction:column;justify-content:center}
+.flank-stack{flex:1 1 272px;max-width:300px;display:flex;flex-direction:column;gap:var(--space-5)}
+.flank-stack .card{padding:var(--space-4)}
+
+/* capture panel */
+.capture{padding:var(--space-6) var(--space-5);text-align:center;position:relative;overflow:hidden}
+.capture::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(52% 40% at 50% 42%,
+    color-mix(in srgb,var(--accent) 10%,transparent),
+    transparent 70%);
+  z-index:0;
+}
+.capture > *{position:relative;z-index:1}
+.capture-inner{max-width:220px;margin:0 auto}
+
+.rec{
+  width:150px;height:150px;margin:var(--space-4) auto var(--space-3);
+  border-radius:var(--radius-pill);position:relative;
+  display:grid;place-items:center;
+  border:1px solid var(--line);
+  background:radial-gradient(circle at 50% 38%, color-mix(in srgb,var(--accent) 10%,var(--surface)), var(--surface));
+  transition:transform var(--dur-normal) var(--ease-out),box-shadow var(--dur-normal);
+  cursor:pointer;
+}
+/* S1 fix — idle ring is a static faint outline, NOT animated */
+.rec::before{
+  content:"";position:absolute;inset:-7px;border-radius:var(--radius-pill);
+  border:2px solid color-mix(in srgb,var(--accent) 35%, transparent);
+  opacity:.5;
+}
+/* only this animates at idle: the soft ready-pulse */
+.rec::after{
+  content:"";position:absolute;inset:0;border-radius:var(--radius-pill);
+  border:2px solid color-mix(in srgb,var(--accent) 55%,transparent);
+  animation:ready 2.6s var(--ease-out) infinite;
+  pointer-events:none;
+}
+/* recording: ready-pulse stops, outer ring takes over in danger */
+.rec.is-recording::after{animation:none;opacity:0}
+.rec.is-recording::before{
+  border-color:color-mix(in srgb,var(--danger) 55%, transparent);
+  animation:ring 3.4s var(--ease-inout) infinite;
+  opacity:.85;
+}
+.rec-core{
+  width:64px;height:64px;border-radius:var(--radius-pill);
+  background:var(--accent);display:grid;place-items:center;
+  box-shadow:0 6px 18px -6px color-mix(in srgb,var(--accent) 70%, transparent);
+  transition:transform var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out);
+}
+.rec-core svg{width:26px;height:26px;color:var(--on-accent)}
+.rec .ic-stop{display:none}
+.rec.is-recording .rec-core{background:var(--danger);box-shadow:0 6px 20px -6px color-mix(in srgb,var(--danger) 70%,transparent)}
+.rec.is-recording .ic-mic{display:none}
+.rec.is-recording .ic-stop{display:block}
+.rec:hover{box-shadow:var(--shadow-elev)}
+.rec:hover .rec-core{transform:scale(1.05)}
+.rec:active .rec-core{transform:scale(.96)}
+.rec-state{font-size:var(--text-xs);color:var(--muted);font-weight:600;letter-spacing:.03em}
+.rec-state b{color:var(--accent);font-weight:700}
+.rec.is-recording .rec-state b{color:var(--danger)}
+.timer{font-size:var(--text-4xl);font-weight:800;letter-spacing:-.02em;margin:var(--space-2) 0 var(--space-1)}
+
+/* S1 fix — idle waveform: flat, silent, uniform, NO animation */
+.wave{display:flex;align-items:center;justify-content:center;gap:var(--space-075);height:44px;margin:var(--space-3) 0}
+.wave i{
+  width:3px;height:3px;border-radius:var(--radius-pill);
+  background:color-mix(in srgb,var(--muted) 45%,transparent);
+  animation:none;transform-origin:center;
+}
+/* only once recording starts does the waveform move — reactive to the same
+   .is-recording class the mic and timer already key off of */
+.rec.is-recording ~ .wave i,
+.card:has(.rec.is-recording) .wave i{
+  background:var(--accent);
+  animation:wv .7s var(--ease-inout) infinite;
+}
+
+/* status content — now lives in the status BAR as pills, see .sb-pill below */
+
+/* transcript — full-width dominant surface (L4) */
+.transcript{box-shadow:var(--shadow-elev);border-color:color-mix(in srgb,var(--accent) 22%,var(--line));width:100%}
+.tag{
+  font-size:var(--text-2xs);font-weight:700;letter-spacing:.03em;
+  padding:var(--space-075) var(--space-2);border-radius:var(--radius-pill);
+  background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);
+}
+/* W2 — the transcript body scrolls; auto-follows newest, scrolls back to review */
+.transcript-scroll{max-height:378px;overflow-y:auto;padding-right:var(--space-2)}
+.transcript-scroll::-webkit-scrollbar{width:8px}
+.transcript-scroll::-webkit-scrollbar-track{background:transparent}
+.transcript-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:var(--radius-pill)}
+.transcript-scroll::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* Whisper-Ahead live block — UNCHANGED from locked reference (K2) */
+.wa{
+  background:var(--surface-soft);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:var(--space-4);
+}
+.wa-line{font-size:var(--text-md);line-height:1.65}
+.wa-committed{color:var(--ink)}
+.wa-merged{
+  animation:merge 5s var(--ease-out) infinite;
+  font-weight:600;border-radius:var(--radius-sm);padding:0 var(--space-05);
+  display:inline-block;
+}
+.caret{
+  display:inline-block;width:2px;height:1.05em;background:var(--accent);
+  vertical-align:-2px;margin-left:var(--space-025);
+  animation:blink 1.05s steps(1) infinite;
+}
+.wa-ghost{color:var(--blue);font-size:var(--text-md);line-height:1.65;font-style:italic}
+.wa-ghost .g-caret{
+  display:inline-block;width:2px;height:1em;background:var(--blue);
+  vertical-align:-1px;margin-left:var(--space-025);
+  animation:blink 1.05s steps(1) infinite;
+}
+.wa-tab{
+  font-family:var(--fs-mono);font-size:var(--text-2xs);font-style:normal;
+  border:1px solid var(--line);border-bottom-width:2px;background:var(--surface);
+  color:var(--ink);border-radius:var(--radius-sm);
+  padding:var(--space-025) var(--space-15);margin-left:var(--space-15);
+  box-shadow:var(--shadow-card);
+  animation:tabPulse 2.6s var(--ease-inout) infinite;
+  font-weight:700;
+}
+.wa-cap{font-size:var(--text-2xs);color:var(--muted);margin-top:var(--space-3);letter-spacing:.02em}
+.wa-cap b{color:var(--ink)}
+.clean{
+  font-size:var(--text-md);line-height:1.72;color:var(--ink);
+  margin:var(--space-4) 0;
+}
+.clean .em{color:var(--muted)}
+.transcript-foot{
+  display:flex;align-items:center;gap:var(--space-3);
+  border-top:1px solid var(--line);padding-top:var(--space-4);margin-top:var(--space-4);
+}
+.btn{
+  display:inline-flex;align-items:center;gap:var(--space-2);
+  border:1px solid var(--line);background:var(--surface);
+  border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3);
+  font-size:var(--text-xs);font-weight:600;color:var(--ink);
+  transition:border-color var(--dur-fast),background var(--dur-fast),transform var(--dur-fast);
+}
+.btn svg{width:14px;height:14px}
+.btn:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.btn:active{transform:translateY(1px)}
+.btn--accent{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn--accent:hover{background:color-mix(in srgb,var(--accent) 88%,var(--ink));color:var(--on-accent)}
+.count{margin-left:auto;font-family:var(--fs-mono);font-size:var(--text-2xs);color:var(--muted);padding:var(--space-025) var(--space-15)}
+
+/* K1 — Output insert-mode controls, relocated into the transcript foot so the
+   flank column stays exactly Cleanup+History as specified */
+.transcript-output{
+  display:flex;align-items:center;gap:var(--space-5);flex-wrap:wrap;
+  border-top:1px solid var(--line);padding-top:var(--space-3);margin-top:var(--space-3);
+  font-size:var(--text-2xs);color:var(--muted);
+}
+.out-mini{display:inline-flex;align-items:center;gap:var(--space-2)}
+
+/* history */
+.hist-row{
+  display:grid;grid-template-columns:auto 1fr auto;gap:var(--space-3);align-items:center;
+  padding:var(--space-3) 0;border-top:1px solid var(--line);
+}
+.hist-row:first-of-type{border-top:0}
+.hist-t{font-family:var(--fs-mono);font-size:var(--text-2xs);color:var(--muted);white-space:nowrap}
+.hist-s{font-size:var(--text-sm);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-w{font-family:var(--fs-mono);font-size:var(--text-2xs);color:var(--muted)}
+
+/* cleanup dial */
+.dial{display:flex;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;margin:var(--space-2) 0 var(--space-3)}
+.dial button{
+  flex:1;border:0;background:var(--surface);color:var(--muted);
+  font-size:var(--text-xs);font-weight:700;letter-spacing:.03em;
+  padding:var(--space-3) 0;border-left:1px solid var(--line);
+  position:relative;transition:color var(--dur-fast),background var(--dur-fast);
+}
+.dial button:first-child{border-left:0}
+.dial button:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.dial button[aria-pressed="true"]{color:var(--on-accent);background:var(--accent)}
+.dial-note{font-size:var(--text-2xs);color:var(--muted);line-height:1.6}
+.dial-note b{color:var(--ink)}
+.dial-scale{display:flex;justify-content:space-between;font-size:var(--text-2xs);color:var(--muted);font-family:var(--fs-mono);margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--line)}
+
+.seg-mini{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.seg-mini button{border:0;background:var(--surface);color:var(--muted);font-size:var(--text-2xs);font-weight:700;padding:var(--space-125) var(--space-2);border-left:1px solid var(--line)}
+.seg-mini button:first-child{border-left:0}
+.seg-mini button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+
+.toggle{
+  width:34px;height:20px;border-radius:var(--radius-pill);border:1px solid var(--line);
+  background:var(--surface-soft);position:relative;padding:0;flex:none;
+  transition:background var(--dur-normal) var(--ease-out),border-color var(--dur-normal);
+}
+.toggle::after{content:"";position:absolute;top:var(--space-05);left:var(--space-05);width:14px;height:14px;border-radius:var(--radius-pill);background:var(--surface);box-shadow:var(--shadow-card);transition:transform var(--dur-normal) var(--ease-out)}
+.toggle[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
+.toggle[aria-pressed="true"]::after{transform:translateX(14px)}
+
+/* ============================================================================
+   STATUS BAR (footer) — L1: Engine / Target App / Hotkey / Privacy / WAL
+   moved here as clickable pill/popover controls, replacing the old left
+   status COLUMN entirely.
+   ========================================================================== */
+.statusbar{
+  display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;
+  min-height:38px;padding:var(--space-1) var(--space-5);
+  border-top:1px solid var(--line);background:var(--surface-soft);
+  font-size:var(--text-2xs);color:var(--muted);
+  position:relative;z-index:5;
+}
+.sb-brand{font-weight:700;color:var(--ink);letter-spacing:.02em}
+.meter{display:flex;align-items:center;gap:var(--space-05);height:14px}
+.meter i{width:3px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--muted) 40%,transparent)}
+.meter i.on{background:var(--accent)}
+.meter i.pk{background:var(--warn)}
+.sb-ok{display:inline-flex;align-items:center;gap:var(--space-15);color:var(--success);font-weight:700}
+.sb-ver{font-family:var(--fs-mono)}
+.sb-sep{width:1px;height:14px;background:var(--line);flex:none}
+
+.sb-pillgroup{display:flex;align-items:center;gap:var(--space-1);flex-wrap:wrap;margin-left:auto}
+.sb-pop-wrap{position:relative;display:inline-flex}
+.sb-pill{
+  display:inline-flex;align-items:center;gap:var(--space-15);
+  border:1px solid transparent;background:transparent;color:var(--muted);
+  font-size:var(--text-2xs);font-weight:700;letter-spacing:.02em;
+  padding:var(--space-05) var(--space-2);border-radius:var(--radius-pill);
+  transition:background var(--dur-fast),border-color var(--dur-fast),color var(--dur-fast);
+}
+.sb-pill:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink);border-color:var(--line)}
+.sb-pop-wrap.is-open .sb-pill{background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow-card)}
+.sb-pill .car{transition:transform var(--dur-fast)}
+.sb-pop-wrap.is-open .sb-pill .car{transform:rotate(180deg)}
+.sb-popover{
+  position:absolute;bottom:calc(100% + 8px);left:0;min-width:212px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-elev);padding:var(--space-3);display:none;z-index:30;
+}
+.sb-pop-wrap.is-open .sb-popover{display:block}
+.sb-pop-k{font-size:var(--text-2xs);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.sb-pop-v{font-size:var(--text-sm);color:var(--ink);font-weight:700;margin:var(--space-1) 0 var(--space-2)}
+.sb-pop-link{font-size:var(--text-2xs);color:var(--accent);font-weight:700}
+.sb-pop-link:hover{text-decoration:underline}
+
+/* ============================================================================
+   SCREEN 07 — PRIVACY (K3 — untouched; copied verbatim from locked reference)
+   ========================================================================== */
+.privacy-head{margin-bottom:var(--space-5)}
+.privacy-head h1{font-size:var(--text-2xl);font-weight:800;letter-spacing:-.02em;margin:0}
+.privacy-head p{font-size:var(--text-sm);color:var(--muted);margin:var(--space-1) 0 0}
+.const-head{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)}
+.const{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4);margin-bottom:var(--space-6)}
+.const .card{padding:var(--space-4)}
+.const-ic{width:30px;height:30px;border-radius:var(--radius-sm);display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);margin-bottom:var(--space-3)}
+.const-ic svg{width:17px;height:17px}
+.const h3{font-size:var(--text-sm);font-weight:700;margin:0 0 var(--space-1)}
+.const p{font-size:var(--text-2xs);color:var(--muted);line-height:1.55;margin:0 0 var(--space-3)}
+.enf{display:inline-flex;align-items:center;gap:var(--space-15);font-size:var(--text-2xs);font-weight:700;color:var(--success);letter-spacing:.03em}
+
+.priv-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:var(--space-5);align-items:start}
+
+.ctx-row{
+  display:grid;grid-template-columns:auto 1fr auto;gap:var(--space-3);align-items:start;
+  padding:var(--space-4) 0;border-top:1px solid var(--line);
+}
+.ctx-row:first-of-type{border-top:0}
+.ctx-main{min-width:0}
+.ctx-k{font-size:var(--text-sm);font-weight:600;color:var(--ink)}
+.ctx-tier{font-family:var(--fs-mono);font-size:var(--text-2xs);color:var(--muted);margin-right:var(--space-15)}
+.ctx-note{font-size:var(--text-2xs);color:var(--muted);line-height:1.55;margin-top:var(--space-1)}
+.pill-state{
+  display:inline-flex;align-items:center;gap:var(--space-15);
+  font-size:var(--text-2xs);font-weight:700;letter-spacing:.03em;
+  padding:var(--space-075) var(--space-2);border-radius:var(--radius-pill);white-space:nowrap;
+}
+.pill-on{background:color-mix(in srgb,var(--success) 14%,transparent);color:var(--success)}
+.pill-off{background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)}
+.buffer{grid-column:1/-1;background:var(--surface-soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:var(--space-3) var(--space-4);margin-top:var(--space-2)}
+.buffer-top{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-2)}
+.buffer-txt{font-family:var(--fs-mono);font-size:var(--text-xs);color:var(--ink);letter-spacing:.02em}
+.buffer.is-redacted .buffer-txt{color:var(--muted);letter-spacing:.18em}
+.reveal{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius-sm);font-size:var(--text-2xs);font-weight:700;padding:var(--space-1) var(--space-3);color:var(--ink);transition:border-color var(--dur-fast),background var(--dur-fast)}
+.reveal:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+
+.perm-row{display:grid;grid-template-columns:auto 1fr auto;gap:var(--space-3);align-items:center;padding:var(--space-4) 0;border-top:1px solid var(--line)}
+.perm-row:first-of-type{border-top:0}
+.perm-k{font-size:var(--text-sm);font-weight:600;color:var(--ink)}
+.perm-s{font-size:var(--text-2xs);color:var(--muted);margin-top:var(--space-025)}
+.repair{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius-sm);font-size:var(--text-2xs);font-weight:700;padding:var(--space-1) var(--space-3);color:var(--muted);transition:color var(--dur-fast),border-color var(--dur-fast)}
+.repair:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-4);margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--line)}
+.legend span{display:inline-flex;align-items:center;gap:var(--space-15);font-size:var(--text-2xs);color:var(--muted)}
+
+.net{
+  background:linear-gradient(160deg,color-mix(in srgb,var(--success) 8%,var(--surface)),var(--surface));
+  position:relative;overflow:hidden;text-align:center;
+}
+.net::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(58% 60% at 50% 26%,
+    color-mix(in srgb,var(--success) 16%,transparent),
+    transparent 70%);
+}
+.net > *{position:relative}
+.net .card-head{text-align:left}
+.shield-ring{
+  width:64px;height:64px;margin:0 auto var(--space-3);
+  display:grid;place-items:center;border-radius:var(--radius-pill);
+  background:color-mix(in srgb,var(--success) 14%,var(--surface));
+  border:1px solid color-mix(in srgb,var(--success) 34%,var(--line));
+  color:var(--success);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 10%,transparent),
+             0 12px 28px -14px color-mix(in srgb,var(--success) 60%,transparent);
+}
+.shield-ring svg{width:30px;height:30px}
+.net-big{display:flex;align-items:baseline;gap:var(--space-3);margin:var(--space-2) 0;justify-content:center}
+.net-num{font-size:var(--text-4xl);font-weight:800;color:var(--success);letter-spacing:-.02em;line-height:1}
+.net-lab{font-size:var(--text-sm);color:var(--ink);font-weight:600}
+.net-sub{font-size:var(--text-2xs);color:var(--muted)}
+.net-rows{margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--line);display:grid;gap:var(--space-2);text-align:left}
+.net-r{display:flex;align-items:center;justify-content:space-between;font-size:var(--text-2xs)}
+.net-r span:first-child{color:var(--muted);font-family:var(--fs-mono)}
+.net-r span:last-child{color:var(--ink);font-weight:600;font-family:var(--fs-mono)}
+.privacy-dot-top{margin-top:var(--space-15)}
+.dot{width:8px;height:8px;border-radius:var(--radius-pill);flex:none}
+.dot--good{background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 22%,transparent)}
+.dot--accent{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.dot--idle{background:var(--muted)}
+.dot--error{background:var(--danger);box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 22%,transparent)}
+
+/* ============================================================================
+   COMPACT HUD — candidate treatment: a compact vertical PANEL
+   (Superwhisper mini-recorder / Glaido hotkey-overlay lineage)
+   ========================================================================== */
+.hud-demo{display:flex;flex-direction:column;align-items:center;gap:var(--space-5)}
+.hud-stage{
+  width:100%;max-width:900px;background:var(--surface-soft);border:1px dashed var(--line);
+  border-radius:var(--radius-card);padding:var(--space-7) var(--space-6);
+  display:flex;flex-direction:column;align-items:center;gap:var(--space-4);
+}
+.hud-stage-lbl{font-size:var(--text-2xs);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+
+.hud-panel{
+  width:300px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius-card);box-shadow:var(--shadow-elev);
+  padding:var(--space-4);
+  display:flex;flex-direction:column;gap:var(--space-3);
+  position:relative;overflow:hidden;
+}
+.hud-panel::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(80% 60% at 20% 0%,color-mix(in srgb,var(--accent) 8%,transparent),transparent 70%);
+}
+.hud-panel > *{position:relative;z-index:1}
+.hud-row-top{display:flex;align-items:center;gap:var(--space-3)}
+.hud-mic{
+  width:40px;height:40px;flex:none;border:0;border-radius:var(--radius-pill);
+  background:var(--accent);display:grid;place-items:center;position:relative;
+  box-shadow:0 6px 14px -6px color-mix(in srgb,var(--accent) 70%,transparent);
+  transition:background var(--dur-fast),transform var(--dur-fast);
+}
+.hud-mic:hover{transform:scale(1.05)}
+.hud-mic svg{width:17px;height:17px;color:var(--on-accent)}
+.hud-mic .ic-stop{display:none}
+.hud-mic::before{
+  content:"";position:absolute;inset:-4px;border-radius:var(--radius-pill);
+  border:2px solid color-mix(in srgb,var(--accent) 55%,transparent);
+  animation:ready 2.6s var(--ease-out) infinite;pointer-events:none;
+}
+.hud-mic.is-recording{background:var(--danger);box-shadow:0 6px 16px -6px color-mix(in srgb,var(--danger) 70%,transparent)}
+.hud-mic.is-recording::before{animation:none;opacity:0}
+.hud-mic.is-recording .ic-mic{display:none}
+.hud-mic.is-recording .ic-stop{display:block}
+.hud-meta{flex:1;min-width:0}
+.hud-state{font-size:var(--text-xs);font-weight:600;color:var(--muted);letter-spacing:.02em}
+.hud-state b{color:var(--accent);font-weight:700}
+.hud-row-top:has(.hud-mic.is-recording) .hud-state b{color:var(--danger)}
+.hud-timer{font-size:var(--text-lg);font-weight:800;letter-spacing:-.01em;margin-top:1px}
+.hud-hotkey{display:flex;gap:var(--space-1);flex:none}
+.hud-hotkey .kbd{font-size:9px;padding:var(--space-025) var(--space-1)}
+
+.hud-wave{display:flex;align-items:center;justify-content:center;gap:var(--space-05);height:24px}
+.hud-wave i{width:2px;height:3px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--muted) 45%,transparent);animation:none}
+.hud-panel:has(.hud-mic.is-recording) .hud-wave i{background:var(--accent);animation:wv .7s var(--ease-inout) infinite}
+
+.hud-ghost-row{border-top:1px solid var(--line);padding-top:var(--space-3);display:flex;flex-direction:column;gap:var(--space-1)}
+.hud-ghost-label{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.hud-ghost-line{font-size:var(--text-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.hud-caption{font-size:var(--text-sm);color:var(--muted);max-width:640px;text-align:center;line-height:1.6}
+.hud-caption b{color:var(--ink)}
+.hud-scalewrap{display:flex;flex-direction:column;align-items:center;gap:var(--space-2)}
+.hud-scale-note{font-size:var(--text-2xs);color:var(--muted);text-align:center;max-width:520px;line-height:1.6}
+
+/* ============================================================================
+   ANIMATION
+   ========================================================================== */
+@keyframes ring{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.05);opacity:.35}}
+@keyframes ready{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.22);opacity:0}}
+@keyframes wv{0%,100%{height:8px}50%{height:34px}}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+@keyframes merge{
+  0%{
+    color:var(--gold);
+    background:color-mix(in srgb,var(--gold) 26%,transparent);
+    transform:translateY(0);
+  }
+  18%{
+    color:var(--gold);
+    background:color-mix(in srgb,var(--gold) 22%,transparent);
+    transform:translateY(-3px);
+  }
+  46%{
+    color:color-mix(in srgb,var(--gold) 45%,var(--ink));
+    background:color-mix(in srgb,var(--gold) 8%,transparent);
+    transform:translateY(-1px);
+  }
+  70%,100%{
+    color:var(--ink);
+    background:color-mix(in srgb,var(--gold) 0%,transparent);
+    transform:translateY(0);
+  }
+}
+@keyframes tabPulse{
+  0%,100%{box-shadow:var(--shadow-card), 0 0 0 0 color-mix(in srgb,var(--accent) 0%,transparent)}
+  50%{box-shadow:var(--shadow-card), 0 0 0 5px color-mix(in srgb,var(--accent) 18%,transparent)}
+}
+@media (prefers-reduced-motion:reduce){
+  .rec::before,.rec::after,.wave i,.caret,.wa-ghost .g-caret,.wa-merged,.wa-tab,.hud-mic::before,.hud-wave i{animation:none}
+  .wa-merged{color:var(--ink);background:transparent;transform:none}
+  .wa-tab{box-shadow:var(--shadow-card)}
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width:1180px){
+  .top-band{flex-direction:column}
+  .flank-stack{max-width:none;flex-direction:row;flex-wrap:wrap}
+  .flank-stack>*{flex:1 1 300px}
+}
+</style>
+
+<div class="stage">
+<div class="viewport">
+
+  <div class="gauntlet-head">
+    <span class="gauntlet-title">Kaydence Cockpit v2 — <b>Candidate 3</b> · stacked flank + panel HUD</span>
+    <div class="switch view-switch" role="tablist" aria-label="Demo view">
+      <button role="tab" data-view="full" aria-selected="true">Full Cockpit</button>
+      <button role="tab" data-view="hud" aria-selected="false">Compact HUD</button>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: FULL COCKPIT ==================== -->
+  <section class="view-panel is-active" id="view-full">
+
+  <!-- ==================== SCREEN 01 — COCKPIT ==================== -->
+  <section class="window is-active" id="screen-cockpit" aria-label="Kaydence — Dictate">
+    <div class="titlebar">
+      <div class="tl-dots"><i></i><i></i><i></i></div>
+      <div class="tl-title">Kaydence — <b>Dictate</b></div>
+      <div class="tl-right">
+        <div class="switch" role="tablist" aria-label="Screen">
+          <button role="tab" data-target="screen-cockpit" aria-selected="true">Cockpit</button>
+          <button role="tab" data-target="screen-privacy" aria-selected="false">Privacy</button>
+        </div>
+        <div class="switch palette-switch" role="tablist" aria-label="Palette">
+          <button role="tab" data-palette="cool" aria-selected="true">Cool</button>
+          <button role="tab" data-palette="warm" aria-selected="false">Warm</button>
+        </div>
+        <button class="icon-btn theme-toggle" aria-label="Toggle light or dark theme">
+          <svg class="i-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5Z"/></svg>
+          <svg class="i-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="app">
+      <!-- NAV RAIL -->
+      <nav class="rail" aria-label="Primary">
+        <div class="brand">
+          <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+            <rect class="stem" x="6" y="6" width="4.4" height="28" rx="2.2"/>
+            <rect class="bar" x="14.5" y="17" width="3.4" height="7" rx="1.7" fill-opacity="0.9"/>
+            <rect class="bar" x="19.6" y="12.5" width="3.4" height="9" rx="1.7" fill-opacity="0.78"/>
+            <rect class="bar" x="24.7" y="7" width="3.4" height="10.5" rx="1.7" fill-opacity="0.62"/>
+            <rect class="bar" x="19.6" y="19.5" width="3.4" height="8.5" rx="1.7" fill-opacity="0.78"/>
+            <rect class="bar" x="24.7" y="23" width="3.4" height="10" rx="1.7" fill-opacity="0.62"/>
+          </svg>
+          <span class="brand-name">Kaydence</span>
+        </div>
+        <span class="chip chip-local"><span class="d"></span>Local-only</span>
+
+        <div class="nav">
+          <a class="nav-item is-active" aria-current="page" href="#" tabindex="0">
+            <span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg></span>
+            <span>Dictate</span>
+          </a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l7 6-7 6M13 6l7 6-7 6"/></svg></span><span>Whisper-Ahead</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M4 16h3M17 16h3"/><circle cx="16" cy="8" r="2.2"/><circle cx="10" cy="16" r="2.2"/></svg></span><span>Cleanup</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14V4M8 8l4-4 4 4"/><path d="M5 14v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"/></svg></span><span>Relay</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 0 1 14 0"/><path d="M8 13a4 4 0 0 1 8 0"/><path d="M11 15v4M13.5 15v3"/></svg></span><span>Voiceprint</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M8.2 6H12a4 4 0 0 1 4 4M8.2 18H12a4 4 0 0 0 4-4"/></svg></span><span>Conductor</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 7.9-7 9.6-4-1.7-7-5.2-7-9.6V6z"/><path d="M9 11.8l2.2 2.2L15 10"/></svg></span><span>Privacy</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h8.5A2.5 2.5 0 0 1 16 7v13a2 2 0 0 0-2-2H5z"/><path d="M19 6v13a2 2 0 0 0-2-1.9"/></svg></span><span>Dictionary</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4M4 20h16"/><rect x="7.5" y="12" width="3" height="5"/><rect x="12.5" y="8" width="3" height="9"/><rect x="17.5" y="5" width="3" height="12"/></svg></span><span>Analytics</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></span><span>Setup</span></a>
+        </div>
+
+        <div class="nav-foot">
+          Hold <span class="kbd">Opt</span> <span class="kbd">Space</span> to dictate anywhere.<br>Models run on this Mac.
+        </div>
+      </nav>
+
+      <!-- COCKPIT CONTENT (restructured) -->
+      <main class="content cockpit">
+
+        <!-- TOP BAND: Capture (wide) + Cleanup/History stacked flank (L2/L3 hedge) -->
+        <div class="top-band">
+          <section class="card capture" aria-label="Capture">
+            <div class="capture-inner">
+              <div class="lbl">Capture</div>
+              <button class="rec" id="rec-btn" aria-label="Start dictating" aria-pressed="false">
+                <span class="rec-core">
+                  <svg class="ic-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>
+                  <svg class="ic-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+                </span>
+              </button>
+              <div class="rec-state" id="rec-state"><b>Ready</b> · click or <span class="kbd">Opt</span> <span class="kbd">Space</span></div>
+              <div class="timer num" id="rec-timer">00:00</div>
+              <div class="wave" id="rec-wave" aria-hidden="true"></div>
+            </div>
+          </section>
+
+          <div class="flank-stack">
+            <section class="card" aria-label="Cleanup">
+              <div class="lbl" style="margin-bottom:var(--space-2)">Cleanup</div>
+              <div class="dial" id="cleanup-dial" role="group" aria-label="Cleanup level">
+                <button aria-pressed="false" data-level="raw">Raw</button>
+                <button aria-pressed="true" data-level="light">Light</button>
+                <button aria-pressed="false" data-level="full">Full</button>
+              </div>
+              <p class="dial-note" id="dial-note"><b>Light</b> — fixes filler words, punctuation, and casing. Keeps your phrasing intact.</p>
+              <div class="dial-scale"><span>verbatim</span><span>rewritten</span></div>
+            </section>
+
+            <section class="card" aria-label="History">
+              <div class="card-head">
+                <span class="lbl">History</span>
+                <a href="#" class="lbl" style="color:var(--accent)">View all</a>
+              </div>
+              <div class="hist-row"><span class="hist-t">09:41</span><span class="hist-s">Ship the changelog to the release channel.</span><span class="hist-w">18w</span></div>
+              <div class="hist-row"><span class="hist-t">09:36</span><span class="hist-s">Reply to Priya: migration is safe tonight.</span><span class="hist-w">11w</span></div>
+              <div class="hist-row"><span class="hist-t">09:22</span><span class="hist-s">Draft standup — blockers cleared.</span><span class="hist-w">9w</span></div>
+            </section>
+          </div>
+        </div>
+
+        <!-- BOTTOM HALF: Recent Clean Transcript — full width, dominant, scrolls (L4/W2) -->
+        <section class="card transcript" aria-label="Recent clean transcript">
+          <div class="card-head">
+            <span class="lbl">Recent Clean Transcript</span>
+            <span class="tag" id="cleanup-tag">Light cleanup</span>
+          </div>
+
+          <div class="transcript-scroll" id="transcript-scroll">
+            <div class="wa">
+              <div class="wa-line">
+                <span class="wa-committed">…let's lock the </span><span class="wa-merged">roadmap</span><span class="wa-committed"> and I'll send</span><span class="caret" aria-hidden="true"></span>
+              </div>
+              <div class="wa-ghost">the quarterly numbers by Friday<span class="g-caret" aria-hidden="true"></span><span class="wa-tab">Tab</span></div>
+              <div class="wa-cap"><b>Whisper-Ahead</b> · Tab to accept · Shift+Tab for phrase</div>
+            </div>
+
+            <p class="clean">Thanks for jumping on this so quickly. I reviewed the deployment notes and everything looks solid for the Friday release. Let's lock the roadmap, keep the rollout behind a flag, and I'll circle back once the staging checks pass.</p>
+
+            <p class="clean"><span class="em">09:36</span> — Priya, the migration script is safe to run tonight. I tested it twice against a staging snapshot and the rollback path works cleanly if anything looks off after the cutover.</p>
+
+            <p class="clean"><span class="em">09:22</span> — Standup notes: blockers from last week are cleared, the review queue is empty, and QA signed off on the auth changes. Only open item is confirming the CDN cache purge before we tag the release.</p>
+
+            <p class="clean"><span class="em">09:08</span> — Draft reply to the vendor: we can accommodate the new SLA terms provided the response-time clause is measured during business hours only. Sending the redline back for their legal team today.</p>
+
+            <p class="clean"><span class="em">08:55</span> — Note to self: revisit the onboarding flow copy once the new empty-state illustrations land. Current wording undersells the local-only privacy story.</p>
+          </div>
+
+          <div class="transcript-foot">
+            <button class="btn btn--accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy</button>
+            <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M20 10a8 8 0 0 0-14-4M4 14a8 8 0 0 0 14 4"/></svg>Redo cleanup</button>
+            <span class="count">42 words · 231 chars</span>
+          </div>
+
+          <div class="transcript-output">
+            <span class="lbl" style="margin:0">Output</span>
+            <span class="out-mini">
+              <span class="lbl" style="letter-spacing:.02em;text-transform:none;font-weight:600;color:var(--ink)">Insert mode</span>
+              <span class="seg-mini" role="group" aria-label="Insert mode">
+                <button aria-pressed="true">At cursor</button>
+                <button aria-pressed="false">Clipboard</button>
+              </span>
+            </span>
+            <span class="out-mini"><button class="toggle" aria-pressed="true" aria-label="Auto-paste"></button><span>Auto-paste into VS Code</span></span>
+            <span class="out-mini"><button class="toggle" aria-pressed="false" aria-label="Play cue"></button><span>Play cue on insert</span></span>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- STATUS BAR — L1: Engine/Target App/Hotkey/Privacy/WAL as pill/popovers -->
+    <footer class="statusbar">
+      <span class="sb-brand">Kaydence Free</span>
+      <span class="meter" aria-label="Mic level" title="Mic level">
+        <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
+      </span>
+      <span class="sb-ok"><span class="dot dot--good"></span>All systems operational</span>
+
+      <div class="sb-pillgroup">
+        <div class="sb-pop-wrap">
+          <button class="sb-pill" aria-expanded="false"><span class="dot dot--accent"></span>Engine<span class="car">▾</span></button>
+          <div class="sb-popover" role="dialog" aria-label="Engine">
+            <div class="sb-pop-k">Engine</div>
+            <div class="sb-pop-v mono">whisper-base-en · q5 · Metal</div>
+            <a href="#" class="sb-pop-link">Change in Setup →</a>
+          </div>
+        </div>
+        <div class="sb-pop-wrap">
+          <button class="sb-pill" aria-expanded="false"><span class="dot dot--good"></span>Target App<span class="car">▾</span></button>
+          <div class="sb-popover" role="dialog" aria-label="Target App">
+            <div class="sb-pop-k">Target App</div>
+            <div class="sb-pop-v">VS Code</div>
+            <a href="#" class="sb-pop-link">Change in Setup →</a>
+          </div>
+        </div>
+        <div class="sb-pop-wrap">
+          <button class="sb-pill" aria-expanded="false"><span class="dot dot--good"></span>Hotkey<span class="car">▾</span></button>
+          <div class="sb-popover" role="dialog" aria-label="Global Hotkey">
+            <div class="sb-pop-k">Global Hotkey</div>
+            <div class="sb-pop-v"><span class="kbd">Opt</span> <span class="kbd">Space</span></div>
+            <a href="#" class="sb-pop-link">Change in Setup →</a>
+          </div>
+        </div>
+        <div class="sb-pop-wrap">
+          <button class="sb-pill" aria-expanded="false"><span class="dot dot--good"></span>Privacy<span class="car">▾</span></button>
+          <div class="sb-popover" role="dialog" aria-label="Privacy">
+            <div class="sb-pop-k">Privacy</div>
+            <div class="sb-pop-v">Local-only · no telemetry</div>
+            <a href="#" class="sb-pop-link">Change in Setup →</a>
+          </div>
+        </div>
+        <div class="sb-pop-wrap">
+          <button class="sb-pill" aria-expanded="false"><span class="dot dot--good"></span>WAL<span class="car">▾</span></button>
+          <div class="sb-popover" role="dialog" aria-label="WAL Recovery">
+            <div class="sb-pop-k">WAL Recovery</div>
+            <div class="sb-pop-v">Armed</div>
+            <a href="#" class="sb-pop-link">Change in Setup →</a>
+          </div>
+        </div>
+      </div>
+
+      <span class="sb-sep"></span>
+      <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
+    </footer>
+  </section>
+
+  <!-- ==================== SCREEN 07 — PRIVACY (K3 — unchanged) ==================== -->
+  <section class="window" id="screen-privacy" aria-label="Kaydence — Privacy & Context">
+    <div class="titlebar">
+      <div class="tl-dots"><i></i><i></i><i></i></div>
+      <div class="tl-title">Kaydence — <b>Privacy</b></div>
+      <div class="tl-right">
+        <div class="switch" role="tablist" aria-label="Screen">
+          <button role="tab" data-target="screen-cockpit" aria-selected="false">Cockpit</button>
+          <button role="tab" data-target="screen-privacy" aria-selected="true">Privacy</button>
+        </div>
+        <div class="switch palette-switch" role="tablist" aria-label="Palette">
+          <button role="tab" data-palette="cool" aria-selected="true">Cool</button>
+          <button role="tab" data-palette="warm" aria-selected="false">Warm</button>
+        </div>
+        <button class="icon-btn theme-toggle" aria-label="Toggle light or dark theme">
+          <svg class="i-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5Z"/></svg>
+          <svg class="i-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="app">
+      <nav class="rail" aria-label="Primary">
+        <div class="brand">
+          <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+            <rect class="stem" x="6" y="6" width="4.4" height="28" rx="2.2"/>
+            <rect class="bar" x="14.5" y="17" width="3.4" height="7" rx="1.7" fill-opacity="0.9"/>
+            <rect class="bar" x="19.6" y="12.5" width="3.4" height="9" rx="1.7" fill-opacity="0.78"/>
+            <rect class="bar" x="24.7" y="7" width="3.4" height="10.5" rx="1.7" fill-opacity="0.62"/>
+            <rect class="bar" x="19.6" y="19.5" width="3.4" height="8.5" rx="1.7" fill-opacity="0.78"/>
+            <rect class="bar" x="24.7" y="23" width="3.4" height="10" rx="1.7" fill-opacity="0.62"/>
+          </svg>
+          <span class="brand-name">Kaydence</span>
+        </div>
+        <span class="chip chip-local"><span class="d"></span>Local-only</span>
+
+        <div class="nav">
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg></span><span>Dictate</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l7 6-7 6M13 6l7 6-7 6"/></svg></span><span>Whisper-Ahead</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M4 16h3M17 16h3"/><circle cx="16" cy="8" r="2.2"/><circle cx="10" cy="16" r="2.2"/></svg></span><span>Cleanup</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14V4M8 8l4-4 4 4"/><path d="M5 14v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"/></svg></span><span>Relay</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 0 1 14 0"/><path d="M8 13a4 4 0 0 1 8 0"/><path d="M11 15v4M13.5 15v3"/></svg></span><span>Voiceprint</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M8.2 6H12a4 4 0 0 1 4 4M8.2 18H12a4 4 0 0 0 4-4"/></svg></span><span>Conductor</span></a>
+          <a class="nav-item is-active" aria-current="page" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 7.9-7 9.6-4-1.7-7-5.2-7-9.6V6z"/><path d="M9 11.8l2.2 2.2L15 10"/></svg></span><span>Privacy</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h8.5A2.5 2.5 0 0 1 16 7v13a2 2 0 0 0-2-2H5z"/><path d="M19 6v13a2 2 0 0 0-2-1.9"/></svg></span><span>Dictionary</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4M4 20h16"/><rect x="7.5" y="12" width="3" height="5"/><rect x="12.5" y="8" width="3" height="9"/><rect x="17.5" y="5" width="3" height="12"/></svg></span><span>Analytics</span></a>
+          <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></span><span>Setup</span></a>
+        </div>
+
+        <div class="nav-foot">This device holds every model, transcript, and setting. Nothing syncs.</div>
+      </nav>
+
+      <main class="content privacy">
+        <div class="privacy-head">
+          <h1>Privacy &amp; Context</h1>
+          <p>What Kaydence is allowed to read, and proof it never leaves this Mac.</p>
+        </div>
+
+        <div class="const-head">
+          <span class="lbl">Privacy Constitution</span>
+          <span class="chip"><span class="d"></span>Always On</span>
+        </div>
+        <div class="const">
+          <article class="card">
+            <div class="const-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16M12 3a9 9 0 0 1 9 9M3 12a9 9 0 0 0 9 9"/></svg></div>
+            <h3>No Transmission</h3>
+            <p>Nothing ever leaves this device — no cloud, no analytics, no phone-home.</p>
+            <span class="enf"><span class="dot dot--good"></span>Enforced</span>
+          </article>
+          <article class="card">
+            <div class="const-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/><path d="M21 3v5h-5"/></svg></div>
+            <h3>Local History Only</h3>
+            <p>Audio never persists past transcription. Transcripts kept <b>14 days</b>, then purged.</p>
+            <span class="enf"><span class="dot dot--good"></span>Enforced</span>
+          </article>
+          <article class="card">
+            <div class="const-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg></div>
+            <h3>Secure-Field Blocks</h3>
+            <p>Password &amp; secure fields are never read, even with Accessibility on.</p>
+            <span class="enf"><span class="dot dot--good"></span>Enforced</span>
+          </article>
+          <article class="card">
+            <div class="const-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 7V5h10v2M8 21h8"/></svg></div>
+            <h3>Local Models Only</h3>
+            <p>All inference runs on-device with the models you downloaded — no remote calls.</p>
+            <span class="enf"><span class="dot dot--good"></span>Enforced</span>
+          </article>
+        </div>
+
+        <div class="priv-grid">
+          <section class="card" aria-label="Context Reader">
+            <div class="card-head"><span class="lbl">Context Reader</span><span class="net-sub">6 sources · 3 active</span></div>
+
+            <div class="ctx-row">
+              <span class="dot dot--good privacy-dot-top"></span>
+              <span class="ctx-main"><div class="ctx-k"><span class="ctx-tier">TIER 1</span>Accessibility Read</div><div class="ctx-note">Reads visible text near your cursor to sharpen predictions.</div></span>
+              <span class="pill-state pill-on">On</span>
+            </div>
+
+            <div class="ctx-row">
+              <span class="dot dot--idle privacy-dot-top"></span>
+              <span class="ctx-main"><div class="ctx-k"><span class="ctx-tier">TIER 2</span>Local OCR</div><div class="ctx-note">Off by default. Enabling shows the macOS Screen-Recording indicator; nothing leaves your device.</div></span>
+              <span class="pill-state pill-off">Off</span>
+            </div>
+
+            <div class="ctx-row">
+              <span class="dot dot--good privacy-dot-top"></span>
+              <span class="ctx-main"><div class="ctx-k"><span class="ctx-tier">TIER 1</span>Active-App Title</div><div class="ctx-note">Uses the focused window title to pick tone (chat vs. code).</div></span>
+              <span class="pill-state pill-on">On</span>
+            </div>
+
+            <div class="ctx-row">
+              <span class="dot dot--good privacy-dot-top"></span>
+              <span class="ctx-main"><div class="ctx-k"><span class="ctx-tier">TIER 1</span>Selected Text Capture</div><div class="ctx-note">Reads your current selection so edits replace it cleanly.</div></span>
+              <span class="pill-state pill-on">On</span>
+            </div>
+
+            <div class="ctx-row">
+              <span class="dot dot--idle privacy-dot-top"></span>
+              <span class="ctx-main"><div class="ctx-k"><span class="ctx-tier">TIER 2</span>Clipboard Peek</div><div class="ctx-note">Would read clipboard for reference. Disabled.</div></span>
+              <span class="pill-state pill-off">Off</span>
+            </div>
+
+            <div class="ctx-row" style="border-top:1px solid var(--line)">
+              <span class="dot dot--accent privacy-dot-top"></span>
+              <span class="ctx-main"><div class="ctx-k">In-Memory Buffer Preview</div><div class="ctx-note">The only context Kaydence currently holds. Cleared the moment you stop.</div>
+                <div class="buffer is-redacted" id="buffer">
+                  <div class="buffer-top"><span class="lbl">Live buffer</span><button class="reveal" id="reveal-btn">Reveal</button></div>
+                  <div class="buffer-txt" id="buffer-txt">•••••• •••• ••• •••••••• ••••• •• ••• •••••• ••••••</div>
+                </div>
+              </span>
+              <span class="pill-state pill-on">Held</span>
+            </div>
+          </section>
+
+          <div class="col">
+            <section class="card" aria-label="Permissions">
+              <div class="card-head"><span class="lbl">Permissions</span></div>
+              <div class="perm-row">
+                <span class="dot dot--good"></span>
+                <span><span class="perm-k">Microphone</span><div class="perm-s">Required for capture</div></span>
+                <button class="repair">Repair</button>
+              </div>
+              <div class="perm-row">
+                <span class="dot dot--good"></span>
+                <span><span class="perm-k">Accessibility</span><div class="perm-s">Insert text at cursor</div></span>
+                <button class="repair">Repair</button>
+              </div>
+              <div class="perm-row">
+                <span class="dot dot--good"></span>
+                <span><span class="perm-k">Input Monitoring</span><div class="perm-s">Global Opt+Space hotkey</div></span>
+                <button class="repair">Repair</button>
+              </div>
+              <div class="perm-row">
+                <span class="dot dot--idle"></span>
+                <span><span class="perm-k">Screen Capture</span><div class="perm-s">Not needed unless Tier-2 OCR</div></span>
+                <button class="repair">Enable</button>
+              </div>
+              <div class="legend">
+                <span><span class="dot dot--good"></span>Granted</span>
+                <span><span class="dot dot--idle"></span>Not configured</span>
+                <span><span class="dot dot--error"></span>Needs attention</span>
+                <span class="net-sub">Standby uses the reserved prediction blue while re-authorizing.</span>
+              </div>
+            </section>
+
+            <section class="card net" aria-label="Network Audit">
+              <div class="card-head"><span class="lbl">Network Audit</span><span class="pill-state pill-on"><span class="dot dot--good"></span>Verified</span></div>
+              <span class="shield-ring" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+              <div class="net-big"><span class="net-num num">0</span><span class="net-lab">outbound connections</span></div>
+              <div class="net-sub">Since launch · monitored locally by Kaydence's own socket guard.</div>
+              <div class="net-rows">
+                <div class="net-r"><span>sockets.open</span><span>0</span></div>
+                <div class="net-r"><span>dns.queries</span><span>0</span></div>
+                <div class="net-r"><span>last.check</span><span>just now</span></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <footer class="statusbar">
+      <span class="sb-brand">Kaydence Free</span>
+      <span class="sb-sep"></span>
+      <span class="sb-ok"><span class="dot dot--good"></span>Local-only · 0 outbound</span>
+      <span class="sb-sep"></span>
+      <span>Models &amp; transcripts stored on this Mac</span>
+      <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
+    </footer>
+  </section>
+
+  </section>
+  <!-- ============= /VIEW: FULL COCKPIT ============= -->
+
+  <!-- ==================== VIEW: COMPACT HUD ==================== -->
+  <section class="view-panel" id="view-hud">
+    <div class="hud-demo">
+
+      <div class="hud-stage">
+        <span class="hud-stage-lbl">Kaydence running in the background</span>
+        <div class="hud-panel" id="hud-panel">
+          <div class="hud-row-top">
+            <button class="hud-mic" id="hud-mic" aria-label="Start dictating">
+              <svg class="ic-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>
+              <svg class="ic-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+            </button>
+            <div class="hud-meta">
+              <div class="hud-state" id="hud-state"><b>Ready</b></div>
+              <div class="hud-timer num" id="hud-timer">00:00</div>
+            </div>
+            <div class="hud-hotkey"><span class="kbd">Opt</span><span class="kbd">Space</span></div>
+          </div>
+
+          <div class="hud-wave" id="hud-wave" aria-hidden="true"></div>
+
+          <div class="hud-ghost-row">
+            <span class="hud-ghost-label">Whisper-Ahead</span>
+            <div class="hud-ghost-line">
+              <span class="wa-ghost">the quarterly numbers by Friday<span class="g-caret" aria-hidden="true"></span><span class="wa-tab">Tab</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="hud-caption">Modeled on <b>Superwhisper's mini-recorder</b> and <b>Glaido's native hotkey overlay</b> — a compact vertical panel instead of a floating bar, sized to still carry mic state, timer, waveform, <em>and</em> one live Whisper-Ahead prediction line without becoming a second window on your screen.</p>
+
+      <div class="hud-scalewrap">
+        <svg viewBox="0 0 1920 1080" width="640" height="360" role="img" aria-label="Scale comparison of the HUD panel against a 1920 by 1080 display">
+          <rect x="0" y="0" width="1920" height="1080" rx="18" fill="var(--surface-soft)" stroke="var(--line)" stroke-width="10"/>
+          <rect x="90" y="90" width="900" height="60" rx="8" fill="color-mix(in srgb, var(--ink) 6%, transparent)"/>
+          <rect x="90" y="180" width="1400" height="26" rx="6" fill="color-mix(in srgb, var(--ink) 5%, transparent)"/>
+          <rect x="90" y="224" width="1180" height="26" rx="6" fill="color-mix(in srgb, var(--ink) 5%, transparent)"/>
+          <rect x="90" y="268" width="1320" height="26" rx="6" fill="color-mix(in srgb, var(--ink) 5%, transparent)"/>
+          <rect x="1560" y="850" width="300" height="170" rx="12" fill="color-mix(in srgb, var(--accent) 20%, transparent)" stroke="var(--accent)" stroke-width="6" stroke-dasharray="18 12"/>
+          <text x="1710" y="815" text-anchor="middle" font-size="34" font-weight="700" fill="var(--ink)" font-family="var(--fs-sans)">HUD panel — true size</text>
+        </svg>
+        <p class="hud-scale-note">Drawn at true 1:1 pixel scale inside a 1920×1080 outline: the 300×170px panel occupies roughly <b>16% of the width</b> and <b>16% of the height</b> of a full display — small enough to park in a corner without covering the app underneath.</p>
+      </div>
+
+    </div>
+  </section>
+  <!-- ============= /VIEW: COMPACT HUD ============= -->
+
+</div>
+</div>
+
+<script>
+(function(){
+  // ----- gauntlet view switcher (Full Cockpit / Compact HUD) -----
+  document.querySelectorAll('.view-switch button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.view-switch button').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+      b.setAttribute('aria-selected','true');
+      document.querySelectorAll('.view-panel').forEach(function(p){
+        p.classList.toggle('is-active', p.id === 'view-' + b.dataset.view);
+      });
+    });
+  });
+
+  // ----- screen switch (Cockpit / Privacy) -----
+  function show(id){
+    document.querySelectorAll('.window').forEach(function(w){ w.classList.toggle('is-active', w.id===id); });
+    document.querySelectorAll('.switch[role="tablist"][aria-label="Screen"] button').forEach(function(b){
+      b.setAttribute('aria-selected', b.dataset.target===id ? 'true':'false');
+    });
+  }
+  document.querySelectorAll('.switch[role="tablist"][aria-label="Screen"] button').forEach(function(b){
+    b.addEventListener('click', function(){ show(b.dataset.target); });
+  });
+
+  // ----- theme toggle -----
+  document.querySelectorAll('.theme-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var root = document.documentElement;
+      var cur = root.getAttribute('data-theme');
+      if(!cur){
+        cur = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      root.setAttribute('data-theme', cur==='dark' ? 'light' : 'dark');
+    });
+  });
+
+  // ----- palette toggle (Cool | Warm) -----
+  function setPalette(p){
+    var root = document.documentElement;
+    if(p==='warm'){ root.setAttribute('data-palette','warm'); }
+    else { root.removeAttribute('data-palette'); }
+    document.querySelectorAll('.palette-switch button').forEach(function(b){
+      b.setAttribute('aria-selected', b.dataset.palette===p ? 'true':'false');
+    });
+  }
+  document.querySelectorAll('.palette-switch button').forEach(function(b){
+    b.addEventListener('click', function(){ setPalette(b.dataset.palette); });
+  });
+
+  // ----- generic single-select groups (dial / seg-mini) -----
+  document.querySelectorAll('.dial, .seg-mini').forEach(function(grp){
+    grp.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click', function(){
+        grp.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+        b.setAttribute('aria-pressed','true');
+      });
+    });
+  });
+
+  // ----- W1: cleanup dial drives the transcript's cleanup tag + note live -----
+  var cleanupMeta = {
+    raw:   { tag:'Raw',           note:'<b>Raw</b> — nothing changed. Exactly what you said, filler words and all.' },
+    light: { tag:'Light cleanup', note:'<b>Light</b> — fixes filler words, punctuation, and casing. Keeps your phrasing intact.' },
+    full:  { tag:'Full cleanup',  note:'<b>Full</b> — rewritten for clarity: filler removed, grammar tightened, phrasing smoothed.' }
+  };
+  var cleanupDial = document.getElementById('cleanup-dial');
+  if(cleanupDial){
+    cleanupDial.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click', function(){
+        var meta = cleanupMeta[b.dataset.level];
+        if(!meta) return;
+        var tagEl = document.getElementById('cleanup-tag');
+        var noteEl = document.getElementById('dial-note');
+        if(tagEl) tagEl.textContent = meta.tag;
+        if(noteEl) noteEl.innerHTML = meta.note;
+      });
+    });
+  }
+
+  // ----- toggles -----
+  document.querySelectorAll('.toggle').forEach(function(t){
+    t.addEventListener('click', function(){ t.setAttribute('aria-pressed', t.getAttribute('aria-pressed')==='true' ? 'false':'true'); });
+  });
+
+  // ----- buffer reveal (Privacy — untouched behavior) -----
+  var rv = document.getElementById('reveal-btn');
+  if(rv){
+    rv.addEventListener('click', function(){
+      var buf = document.getElementById('buffer');
+      var txt = document.getElementById('buffer-txt');
+      var hidden = buf.classList.toggle('is-redacted');
+      if(hidden){ txt.textContent = '•••••• •••• ••• •••••••• ••••• •• ••• •••••• ••••••'; rv.textContent = 'Reveal'; }
+      else { txt.textContent = "Let's lock the roadmap and I'll send the quarterly"; rv.textContent = 'Redact'; }
+    });
+  }
+
+  // ----- S1: idle waveform is flat + silent; build bars once with a stagger
+  // delay reserved for when recording starts (no idle height variation) -----
+  document.querySelectorAll('.wave, .hud-wave').forEach(function(w){
+    var n = w.classList.contains('hud-wave') ? 26 : 42;
+    var html = '';
+    for(var i=0;i<n;i++){
+      var d = (i*0.045).toFixed(2);
+      html += '<i style="animation-delay:'+d+'s"></i>';
+    }
+    w.innerHTML = html;
+  });
+
+  // ----- Fix 7 / S1: wire the main cockpit record button -----
+  var rec = document.getElementById('rec-btn');
+  var recState = document.getElementById('rec-state');
+  var recTimer = document.getElementById('rec-timer');
+  var timerHandle = null;
+  var startedAt = 0;
+  function fmt(sec){
+    var m = Math.floor(sec/60), s = sec%60;
+    return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  }
+  function startRec(){
+    // order per S1: mic turns solid/red -> label flips -> timer counts ->
+    // waveform animates (the wave reacts to .is-recording via CSS, so it
+    // follows the same class toggle that drives the first three steps)
+    rec.classList.add('is-recording');
+    rec.setAttribute('aria-pressed','true');
+    rec.setAttribute('aria-label','Stop dictating');
+    recState.innerHTML = '<b>Recording</b> · click to stop';
+    startedAt = Date.now();
+    recTimer.textContent = '00:00';
+    timerHandle = setInterval(function(){
+      var sec = Math.floor((Date.now()-startedAt)/1000);
+      recTimer.textContent = fmt(sec);
+    }, 250);
+  }
+  function stopRec(){
+    rec.classList.remove('is-recording');
+    rec.setAttribute('aria-pressed','false');
+    rec.setAttribute('aria-label','Start dictating');
+    recState.innerHTML = '<b>Ready</b> · click or <span class="kbd">Opt</span> <span class="kbd">Space</span>';
+    recTimer.textContent = '00:00';
+    if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+  }
+  if(rec){
+    rec.addEventListener('click', function(){
+      if(rec.classList.contains('is-recording')) stopRec(); else startRec();
+    });
+  }
+
+  // ----- Compact HUD mic — same Ready/Recording/timer pattern, smaller scale -----
+  var hudMic = document.getElementById('hud-mic');
+  var hudState = document.getElementById('hud-state');
+  var hudTimer = document.getElementById('hud-timer');
+  var hudTimerHandle = null;
+  var hudStartedAt = 0;
+  function startHud(){
+    hudMic.classList.add('is-recording');
+    hudMic.setAttribute('aria-label','Stop dictating');
+    hudState.innerHTML = '<b>Recording</b>';
+    hudStartedAt = Date.now();
+    hudTimer.textContent = '00:00';
+    hudTimerHandle = setInterval(function(){
+      var sec = Math.floor((Date.now()-hudStartedAt)/1000);
+      hudTimer.textContent = fmt(sec);
+    }, 250);
+  }
+  function stopHud(){
+    hudMic.classList.remove('is-recording');
+    hudMic.setAttribute('aria-label','Start dictating');
+    hudState.innerHTML = '<b>Ready</b>';
+    hudTimer.textContent = '00:00';
+    if(hudTimerHandle){ clearInterval(hudTimerHandle); hudTimerHandle = null; }
+  }
+  if(hudMic){
+    hudMic.addEventListener('click', function(){
+      if(hudMic.classList.contains('is-recording')) stopHud(); else startHud();
+    });
+  }
+
+  // ----- L1: status bar pill popovers -----
+  document.querySelectorAll('.sb-pop-wrap').forEach(function(wrap){
+    var btn = wrap.querySelector('.sb-pill');
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var wasOpen = wrap.classList.contains('is-open');
+      document.querySelectorAll('.sb-pop-wrap').forEach(function(w){
+        w.classList.remove('is-open');
+        w.querySelector('.sb-pill').setAttribute('aria-expanded','false');
+      });
+      if(!wasOpen){ wrap.classList.add('is-open'); btn.setAttribute('aria-expanded','true'); }
+    });
+  });
+  document.addEventListener('click', function(){
+    document.querySelectorAll('.sb-pop-wrap.is-open').forEach(function(w){
+      w.classList.remove('is-open');
+      w.querySelector('.sb-pill').setAttribute('aria-expanded','false');
+    });
+  });
+})();
+</script>

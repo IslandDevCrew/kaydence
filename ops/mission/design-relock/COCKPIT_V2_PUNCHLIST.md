@@ -1,5 +1,29 @@
 # Kaydence Cockpit v2 — Operator Walkthrough Punch List (2026-08-09)
 
+## Round 2 resolution (2026-08-09, evening) — READ THIS FIRST
+
+**Decision 1 — the flank question is resolved by not resolving it.** Rather than pick one
+winner, all three round-2 candidates ship as **selectable Cockpit layouts in Setup** (like an
+IDE's layout presets): `Pill Bar`, `Mic Capsule`, `Stacked Panel`. Default = the mic-capsule
+layout (candidate 2 — Jon: "definitely looks like candidate number two, which is kind of how I
+laid it out"). L3's left/right ambiguity is moot once switching is free.
+
+**Decision 2 — status-bar left cluster fixed.** Applied identically to all three candidates:
+- **Left cluster** (brand-adjacent, ambient/non-interactive): `Kaydence Free` → mic-level meter
+  (no flanking separator lines — just floats there) → `All systems operational` (green). Nothing
+  selectable sits left of "All systems operational" except the brand and the meter.
+- **Right cluster** (interactive, pushed via `margin-left:auto` on the pill group): the five
+  status pills (Engine, Target App, Hotkey, Privacy, WAL Recovery) now cluster near the version
+  string on the far right, not immediately after the brand.
+- Verified structurally on all 3 files: braces balanced, `:root` token block byte-identical to
+  the locked reference (this was chrome-reorder only, no new tokens), reserved `--blue`/`--gold`
+  markers present.
+
+Candidates archived: `ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html` (mic-capsule,
+default) plus the pill-bar and stacked-panel siblings in the same gauntlet-round2 output —
+promote all three into the D4 rebuild as real layout options, not just the default.
+
+
 Captured verbatim-in-intent from Jon's click-through of the locked artifact
 (`2026-08-09-design-gauntlet-winner-locked-v1.html`). Grouped by type. The **L** and **H**
 items are the "gauntlet the actual look" work he explicitly asked for; **P/S/W** fold into that
