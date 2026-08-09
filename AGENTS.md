@@ -185,6 +185,34 @@ launched by a single command (`/kickoff`). Core rules every agent obeys:
    `context/`, and `inject/` are frontier-model work. Mechanical refactors, docs,
    and test boilerplate may run smaller — charter review still applies.
 
+### 7.1 Archipelago + multi-agent interop (all agents: Buzz, Codex, Claude)
+
+Trigger phrases — "**arch build**", "**run this through archipelago**", "**my
+arch skill**" — mean: run the work through the archipelago methodology
+(`github.com/Navigata1/archipelago`): lock the goal as **falsifiable** claims,
+lock a plan of phases+gates, then walk an evidence-gated build loop where
+**nothing crosses a gate on claims alone**. A falsified claim caps the audit at
+band 1; an unverified claim at band 3; a UI claim with no runtime evidence at
+band 4. Mark unverified work `unverified` — never launder it into `verified`.
+
+Three planes govern collaboration (full spec:
+[`docs/protocol/AGENT_INTEROP_PROTOCOL.md`](docs/protocol/AGENT_INTEROP_PROTOCOL.md)):
+**git = durable truth**, **chat/Buzz = dispatch (no authority)**, **CI = the
+merge authority**. An agent's chat report is a *pointer*, never a *proof*: the
+proof is the committed evidence file + the gate result at a named SHA. Each
+assignment is a **work packet**; each completion returns a **handoff manifest**.
+
+**Hard boundaries — no agent (or bridge) does these automatically:** push/merge
+to `main`; edit `ops/mission/state.json` or shared evidence outside its packet;
+close a human gate; change an ADR status; flip repo visibility. Physical-device
+measurement runs single-owner (one `OWNER_LOCK`; no concurrent `pkill`).
+
+The merge is automated the archipelago way — see
+[`docs/protocol/GATE_MERGE_FUSION.md`](docs/protocol/GATE_MERGE_FUSION.md): CI is
+made a required check, PRs opt into auto-merge, and a PR lands *because a check
+that could have failed didn't* — so "an agent never merges on claims" still holds
+and the human is never the merge bottleneck.
+
 ## 8. Definition of Done (every PR)
 
 - [ ] Builds and tests pass on **macOS, Windows, and Linux** (Win/Linux via CI once infra lands; see mission blockers)

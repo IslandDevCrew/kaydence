@@ -1,0 +1,34 @@
+# Archipelago phase-evidence gate — TEMPLATE (not active).
+#
+# Move to .github/workflows/ and add its check to branch protection ONLY once a
+# real evidence bundle exists (see GATE_MERGE_FUSION.md). Until then it would
+# fail for lack of a bundle, so it lives here inert.
+#
+# It complements ci.yml (which proves the code): this proves the phase's
+# definition-of-done via the archipelago band-5 scorer. Requires Python 3.10+
+# and `pip install jsonschema`; the protocol scripts vendored under archipelago/.
+name: archipelago-gates
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  phase-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: install validator dep
+        run: pip install jsonschema
+      - name: validate contracts (idea + plan locks)
+        run: |
+          python3 archipelago/scripts/validate_contracts.py ops/mission/idea.lock.json
+          python3 archipelago/scripts/validate_contracts.py ops/mission/plan.lock.json
+      - name: gate commands are shell-agnostic
+        run: python3 archipelago/scripts/test_shell_agnostic.py
+      - name: dogfood the phase evidence bundle (passes only at band 5)
+        run: python3 archipelago/scripts/dogfood_lanes.py ops/mission/evidence/bundle.json
+      - name: secret scan
+        run: |
+          git grep -nIE '(BUZZ_PRIVATE_KEY|BEGIN [A-Z]*PRIVATE KEY|sk-[A-Za-z0-9]{20,})' -- . && exit 1 || true
