@@ -1,19 +1,18 @@
+/* Screen family 10: the locked wizard composition. Tokens (--bg/--surface/
+   --surface-soft/--ink/--muted/--line/etc.) come from the single source in
+   styles.css — no local overrides (docs/design/DESIGN_LANGUAGE_V2_LOCK.md).
+   This screen keeps its own step-rail wizard nav rather than the shared
+   NavRail — First Run is a standalone wizard, per the design audit. */
 .app-shell.first-run-shell {
   grid-template-columns: minmax(0, 1fr);
   width: 100vw;
   height: 100vh;
   min-height: 0;
   overflow: hidden;
-  background: #edf2f4;
+  background: var(--bg);
 }
 
 .first-run-board {
-  --setup-bg: #edf2f4;
-  --setup-surface: #ffffff;
-  --setup-soft: #f6f8f9;
-  --setup-ink: #1b2327;
-  --setup-muted: #68767c;
-  --setup-line: #dce3e6;
   display: grid;
   grid-template-rows: 36px minmax(0, 1fr);
   width: 100%;
@@ -21,8 +20,8 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: var(--setup-bg);
-  color: var(--setup-ink);
+  background: var(--bg);
+  color: var(--ink);
   font-size: 12px;
 }
 
@@ -45,8 +44,8 @@
   justify-content: space-between;
   gap: 10px;
   min-width: 0;
-  border-bottom: 1px solid var(--setup-line);
-  background: #f9fbfb;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
   padding: 4px 10px;
 }
 
@@ -61,7 +60,7 @@
 .first-run-titlebar img {
   width: 22px;
   height: 22px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   object-fit: cover;
 }
 
@@ -73,9 +72,9 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  border: 1px solid var(--setup-line);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--setup-surface);
+  background: var(--surface);
   padding: 2px;
 }
 
@@ -84,13 +83,13 @@
   border: 0;
   border-radius: 4px;
   background: transparent;
-  color: var(--setup-muted);
+  color: var(--muted);
   padding: 3px 9px;
 }
 
 .first-run-lanes button[aria-pressed="true"] {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   font-weight: 800;
 }
 
@@ -108,8 +107,8 @@
   gap: 12px;
   min-width: 0;
   min-height: 0;
-  border-right: 1px solid var(--setup-line);
-  background: #f8fafb;
+  border-right: 1px solid var(--line);
+  background: var(--surface-soft);
   padding: 14px 12px;
 }
 
@@ -146,7 +145,7 @@
   min-width: 0;
   min-height: 30px;
   border-radius: 6px;
-  color: var(--setup-muted);
+  color: var(--muted);
   padding: 3px 6px;
 }
 
@@ -155,9 +154,9 @@
   place-items: center;
   width: 21px;
   height: 21px;
-  border: 1px solid var(--setup-line);
-  border-radius: 999px;
-  background: var(--setup-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
   font-size: 9px;
   font-weight: 800;
 }
@@ -178,19 +177,19 @@
 }
 
 .first-run-step-rail li.done > span {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--setup-line));
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   color: var(--accent);
 }
 
 .first-run-step-rail li.active {
   background: color-mix(in srgb, var(--accent) 12%, #ffffff);
-  color: var(--setup-ink);
+  color: var(--ink);
 }
 
 .first-run-step-rail li.active > span {
   border-color: var(--accent);
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 .first-run-step-rail li.later {
@@ -202,9 +201,9 @@
   grid-template-columns: 22px minmax(0, 1fr);
   gap: 3px 7px;
   min-width: 0;
-  border: 1px solid var(--setup-line);
-  border-radius: 8px;
-  background: var(--setup-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
   padding: 9px;
 }
 
@@ -219,7 +218,7 @@
 }
 
 .first-run-local-note small {
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
   line-height: 1.25;
 }
@@ -231,7 +230,7 @@
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  background: var(--setup-surface);
+  background: var(--surface);
   padding: 12px 14px 10px;
   scrollbar-width: thin;
 }
@@ -265,7 +264,7 @@
 
 .first-run-heading p {
   margin: 2px 0 0;
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 9px;
 }
 
@@ -275,10 +274,10 @@
 .first-run-footer > button,
 .first-run-next button,
 .first-run-status-button {
-  border: 1px solid var(--setup-line);
-  border-radius: 5px;
-  background: var(--setup-surface);
-  color: var(--setup-ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .first-run-heading > button {
@@ -308,7 +307,7 @@
   position: absolute;
   top: 50%;
   height: 1px;
-  background: var(--setup-line);
+  background: var(--line);
   content: "";
 }
 
@@ -323,23 +322,23 @@
   place-items: center;
   width: 19px;
   height: 19px;
-  border: 1px solid var(--setup-line);
-  border-radius: 999px;
-  background: var(--setup-surface);
-  color: var(--setup-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--muted);
   font-size: 8px;
   font-weight: 800;
 }
 
 .first-run-progress li.done span {
-  border-color: color-mix(in srgb, var(--accent) 58%, var(--setup-line));
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--line));
   color: var(--accent);
 }
 
 .first-run-progress li.active span {
   border-color: var(--accent);
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 .first-run-next {
@@ -348,14 +347,14 @@
   align-items: center;
   gap: 7px;
   min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--setup-line));
-  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+  border-radius: var(--radius-card);
   background: color-mix(in srgb, var(--accent) 7%, #ffffff);
   padding: 5px 7px;
 }
 
 .first-run-next > span {
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
@@ -368,7 +367,7 @@
 .first-run-next p {
   min-width: 0;
   margin: 0;
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -384,7 +383,7 @@
 .first-run-controls {
   display: grid;
   min-width: 0;
-  border-top: 1px solid var(--setup-line);
+  border-top: 1px solid var(--line);
 }
 
 .first-run-control-row {
@@ -394,7 +393,7 @@
   gap: 7px;
   min-width: 0;
   min-height: 35px;
-  border-bottom: 1px solid var(--setup-line);
+  border-bottom: 1px solid var(--line);
   padding: 3px 4px;
 }
 
@@ -414,7 +413,7 @@
 
 .first-run-control-row > div:nth-child(2) small {
   margin-top: 1px;
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
   overflow-wrap: anywhere;
 }
@@ -424,7 +423,7 @@
   place-items: center;
   width: 24px;
   height: 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--accent) 11%, #ffffff);
   color: var(--accent);
 }
@@ -438,10 +437,10 @@
 .first-run-hotkey-control select {
   min-width: 0;
   min-height: 25px;
-  border: 1px solid var(--setup-line);
-  border-radius: 5px;
-  background: var(--setup-surface);
-  color: var(--setup-ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
   font-size: 9px;
   padding: 2px 22px 2px 7px;
 }
@@ -472,7 +471,7 @@
 }
 
 .first-run-confirmed {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--setup-line));
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
   background: color-mix(in srgb, var(--accent) 9%, #ffffff);
   color: color-mix(in srgb, var(--accent) 80%, #20544d);
   opacity: 1;
@@ -487,7 +486,7 @@
 }
 
 .first-run-state.future {
-  color: #8b979c;
+  color: var(--muted);
 }
 
 .first-run-hotkey-control {
@@ -503,8 +502,8 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  border: 1px solid var(--setup-line);
-  border-radius: 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
   padding: 2px;
 }
 
@@ -514,7 +513,7 @@
   border: 0;
   border-radius: 3px;
   background: transparent;
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
   padding: 2px 5px;
   text-transform: capitalize;
@@ -523,7 +522,7 @@
 .first-run-hotkey-control button[aria-pressed="true"],
 .first-run-cleanup-control button[aria-pressed="true"] {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 .first-run-switch {
@@ -539,9 +538,9 @@
   display: block;
   width: 31px;
   height: 17px;
-  border: 1px solid var(--setup-line);
-  border-radius: 999px;
-  background: #e7ecee;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface-soft);
 }
 
 .first-run-switch span::after {
@@ -549,13 +548,13 @@
   width: 11px;
   height: 11px;
   margin: 2px;
-  border-radius: 999px;
-  background: #9ca8ad;
+  border-radius: var(--radius-pill);
+  background: var(--muted);
   content: "";
 }
 
 .first-run-control-row.is-future {
-  color: #66747a;
+  color: var(--muted);
 }
 
 .first-run-free-label {
@@ -577,9 +576,9 @@
   gap: 5px;
   min-width: 0;
   min-height: 94px;
-  border: 1px solid var(--setup-line);
-  border-radius: 7px;
-  background: var(--setup-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
   padding: 7px;
 }
 
@@ -606,7 +605,7 @@
 
 .first-run-license-card > span small,
 .first-run-license-card li {
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 7px;
   line-height: 1.3;
 }
@@ -631,7 +630,7 @@
   justify-content: center;
   gap: 5px;
   margin: 0;
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
   text-align: center;
 }
@@ -648,7 +647,7 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  border-top: 1px solid var(--setup-line);
+  border-top: 1px solid var(--line);
   padding-top: 6px;
 }
 
@@ -661,7 +660,7 @@
 .first-run-footer > button.primary {
   border-color: var(--accent);
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   font-weight: 800;
 }
 
@@ -682,7 +681,7 @@
 }
 
 .first-run-footer small {
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 7px;
 }
 

@@ -15,9 +15,9 @@
   max-height: min(520px, 90vh);
   min-height: 360px;
   overflow: hidden;
-  border: 1px solid var(--setup-line);
-  border-radius: 8px;
-  background: var(--setup-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
   box-shadow: 0 20px 52px rgba(20, 33, 38, .2);
 }
 
@@ -26,7 +26,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-bottom: 1px solid var(--setup-line);
+  border-bottom: 1px solid var(--line);
   padding: 10px 12px;
 }
 
@@ -43,8 +43,8 @@
 .first-run-dialog > nav {
   display: flex;
   gap: 3px;
-  border-bottom: 1px solid var(--setup-line);
-  background: var(--setup-soft);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-soft);
   padding: 5px 10px;
 }
 
@@ -59,8 +59,8 @@
 }
 
 .first-run-dialog > nav button[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--setup-line));
-  background: var(--setup-surface);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+  background: var(--surface);
   color: color-mix(in srgb, var(--accent) 80%, #203037);
 }
 
@@ -87,9 +87,9 @@
   display: grid;
   gap: 3px;
   min-width: 0;
-  border: 1px solid var(--setup-line);
-  border-radius: 7px;
-  background: var(--setup-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface-soft);
   padding: 9px;
 }
 
@@ -114,7 +114,7 @@
 .first-run-evidence-summary small,
 .first-run-preflight small,
 .first-run-permission-proof small {
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
 }
 
@@ -126,9 +126,9 @@
   align-items: center;
   gap: 7px;
   min-width: 0;
-  border: 1px solid var(--setup-line);
-  border-radius: 6px;
-  background: var(--setup-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
   padding: 7px 8px;
   text-align: left;
 }
@@ -169,7 +169,7 @@
 .first-run-model-row small,
 .first-run-permission-row small {
   margin-top: 2px;
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
   overflow-wrap: anywhere;
 }
@@ -198,26 +198,37 @@
   padding: 3px 7px;
 }
 
+/* Gated controls (model download per ADR-0017, pending permission/action
+   requests) must stay visibly disabled — chrome only, the gating itself is
+   the existing `disabled` prop wired in FirstRunView.tsx. */
+.first-run-evidence-body > button:disabled,
+.first-run-model-row button:disabled,
+.first-run-permission-row button:disabled,
+.first-run-permission-proof button:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
 .first-run-preflight code,
 .first-run-permission-proof code {
   display: block;
   min-width: 0;
   overflow: auto;
   border-radius: 4px;
-  background: #ffffff;
-  color: #445258;
+  background: var(--surface);
+  color: var(--muted);
   font-size: 8px;
   padding: 5px;
   white-space: nowrap;
 }
 
 .first-run-evidence-issue {
-  color: #a14646;
+  color: var(--danger);
   font-weight: 750;
 }
 
 .first-run-evidence-note {
-  color: var(--setup-muted);
+  color: var(--muted);
 }
 
 .first-run-proof-grid {
@@ -231,8 +242,8 @@
   align-content: start;
   gap: 3px;
   min-width: 0;
-  border: 1px solid var(--setup-line);
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
   padding: 8px;
 }
 
@@ -242,6 +253,6 @@
 }
 
 .first-run-proof-grid small {
-  color: var(--setup-muted);
+  color: var(--muted);
   font-size: 8px;
 }
