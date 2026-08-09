@@ -9,6 +9,7 @@ import {
   StatusCard,
   StatusFooter,
 } from "../components/CockpitChrome";
+import { APP_VERSION } from "../version";
 import "./DictateView.css";
 
 export interface CockpitStatusItem {
@@ -78,7 +79,7 @@ const waveformHeights = Array.from(
 export function DictateView(props: DictateViewProps): JSX.Element {
   const words = props.transcript.trim() ? props.transcript.trim().split(/\s+/).length : 0;
   return (
-    <section className="dictate-board" aria-label={`${props.appName} dictation cockpit`}>
+    <section className="dictate-board" aria-label={`${props.appName} Dictate cockpit`}>
       <header className="cockpit-titlebar">
         <div><img src={props.markUrl} alt="" /><strong>{props.appName}</strong></div>
         <div className="cockpit-lane-switcher" aria-label="Operating system lane">
@@ -183,7 +184,7 @@ export function DictateView(props: DictateViewProps): JSX.Element {
         </aside>
       </div>
 
-      <StatusFooter appName={props.appName} microphone={props.microphone} operational={props.operational} version="v0.1.0" />
+      <StatusFooter appName={props.appName} microphone={props.microphone} operational={props.operational} version={APP_VERSION} />
     </section>
   );
 }

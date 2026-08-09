@@ -135,8 +135,6 @@
 .cockpit-transcript-panel,
 .cockpit-history-panel,
 .cockpit-control-panel,
-.cockpit-status-card,
-.cockpit-bottom-nav,
 .cockpit-footer {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -178,7 +176,7 @@
   text-transform: capitalize;
 }
 .cockpit-lane-switcher button[aria-pressed="true"],
-.cockpit-dial button[aria-pressed="true"] { background: var(--accent); color: #ffffff; }
+.cockpit-dial button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 
 .cockpit-record-strip {
   display: grid;
@@ -195,8 +193,8 @@
   height: 68px;
   border: 3px solid var(--accent);
   border-radius: 50%;
-  background: #ffffff;
-  color: color-mix(in srgb, var(--accent) 78%, #0d4f53);
+  background: var(--surface);
+  color: color-mix(in srgb, var(--accent) 78%, var(--ink));
   box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .record-control:disabled { cursor: not-allowed; opacity: .74; }
@@ -224,37 +222,63 @@
   min-width: 0;
   min-height: 0;
 }
-.cockpit-status-column { display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 6px; min-height: 0; }
-.cockpit-status-card { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; min-width: 0; min-height: 0; overflow: hidden; padding: 7px 8px; }
+.cockpit-status-column {
+  display: grid;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.cockpit-status-card { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; min-width: 0; min-height: 0; overflow: hidden; padding: 7px 8px; border-top: 1px solid var(--line); }
+.cockpit-status-card:first-child { border-top: 0; }
 .cockpit-status-card > div { display: grid; align-content: center; min-width: 0; }
 .cockpit-status-card span,
 .cockpit-status-card small { color: var(--muted); font-size: .65rem; }
-.cockpit-status-card strong { overflow: hidden; font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-status-card span { letter-spacing: .05em; text-transform: uppercase; }
+.cockpit-status-card strong { overflow: hidden; font-size: .75rem; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
 .cockpit-status-card small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cockpit-status-card i { position: absolute; top: 8px; right: 8px; color: var(--muted); font-size: .58rem; font-style: normal; text-transform: uppercase; }
-.cockpit-status-card.state-ready i { width: 6px; height: 6px; border-radius: 50%; background: #14a464; }
+.cockpit-status-card.state-ready i { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
 .cockpit-status-card.state-issue i { color: var(--danger); }
-.cockpit-status-icon { display: grid; place-items: center; width: 30px; height: 30px; align-self: center; border-radius: 6px; background: color-mix(in srgb, var(--accent) 12%, #ffffff); color: var(--accent); }
+.cockpit-status-icon { display: grid; place-items: center; width: 30px; height: 30px; align-self: center; border-radius: 6px; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent); }
 
 .cockpit-glyph { width: 18px; height: 18px; color: inherit; }
-.cockpit-bottom-nav { display: grid; grid-template-columns: repeat(5, 1fr); padding: 4px; }
-.cockpit-bottom-nav button { display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #465156; }
-.cockpit-bottom-nav button[aria-current="page"] { background: var(--accent); color: #ffffff; }
-.cockpit-bottom-nav button:disabled { opacity: .38; }
 
 .cockpit-center-column { display: grid; grid-template-rows: minmax(0, 1.35fr) minmax(0, 1fr); gap: 8px; min-width: 0; min-height: 0; }
 .cockpit-transcript-panel,
 .cockpit-history-panel,
 .cockpit-control-panel { min-width: 0; padding: 10px; }
-.cockpit-transcript-panel { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; }
-.cockpit-panel-heading { margin: 0; font-size: .76rem; }
-.cockpit-transcript-panel > p { margin: 0; overflow: auto; color: #2d373b; font-size: .78rem; line-height: 1.65; }
+.cockpit-transcript-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  /* Editorial Precision "elevated active surface" — the transcript is the
+     one panel the user is actively reading/editing, so it reads a step
+     above the other cards (docs/design/DESIGN_LANGUAGE_V2_LOCK.md). */
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+  box-shadow:
+    0 20px 40px -26px color-mix(in srgb, var(--ink) 30%, transparent),
+    0 3px 10px -6px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.cockpit-panel-heading {
+  margin: 0;
+  color: var(--muted);
+  font-size: .62rem;
+  font-weight: 750;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.cockpit-transcript-panel > p { margin: 0; overflow: auto; color: var(--ink); font-size: .78rem; line-height: 1.65; }
 .cockpit-transcript-panel > div { justify-content: space-between; gap: 8px; color: var(--muted); font-size: .64rem; }
+.cockpit-transcript-panel > div span { font-variant-numeric: tabular-nums; }
 .cockpit-transcript-panel button,
 .cockpit-panel-header button,
 .cockpit-history-row button,
 .cockpit-purge,
-.cockpit-control-panel > button { border: 1px solid var(--line); border-radius: 6px; background: #ffffff; color: var(--ink); font-size: .65rem; padding: 5px 7px; }
+.cockpit-control-panel > button { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: .65rem; padding: 5px 7px; }
 
 .cockpit-history-panel { display: grid; align-content: start; gap: 4px; overflow: auto; }
 .cockpit-panel-header { justify-content: space-between; }
@@ -266,6 +290,7 @@
 .cockpit-history-row strong { font-size: .69rem; }
 .cockpit-history-row small,
 .cockpit-history-row time { color: var(--muted); font-size: .59rem; }
+.cockpit-history-row time { font-variant-numeric: tabular-nums; }
 .cockpit-history-row p { margin: 3px 0 6px; color: var(--muted); font-size: .64rem; }
 .cockpit-history-row audio { width: 100%; height: 28px; }
 .cockpit-history-row > div { display: flex; gap: 4px; padding-bottom: 6px; }
@@ -292,20 +317,21 @@
   margin: 0;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #c8d1d5;
+  background: var(--line);
 }
-.cockpit-output-panel input::after { position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; content: ""; }
+.cockpit-output-panel input::after { position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); content: ""; }
 .cockpit-output-panel input:checked { border-color: var(--accent); background: var(--accent); opacity: 1; }
 .cockpit-output-panel input:checked::after { left: 14px; }
 
 .cockpit-footer { display: grid; grid-template-rows: 1fr 1fr; overflow: hidden; }
 .cockpit-footer > div { justify-content: space-between; gap: 10px; padding: 3px 10px; font-size: .62rem; }
 .cockpit-footer > div + div { border-top: 1px solid var(--line); }
+.cockpit-footer > div:first-child span { font-variant-numeric: tabular-nums; }
 .cockpit-footer strong { font-size: .64rem; }
 .cockpit-footer .operational::before,
-.cockpit-footer .attention::before { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #14a464; content: ""; }
-.cockpit-footer .attention { color: #9b6310; }
-.cockpit-footer .attention::before { background: #d99826; }
+.cockpit-footer .attention::before { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--success); content: ""; }
+.cockpit-footer .attention { color: var(--warn); }
+.cockpit-footer .attention::before { background: var(--warn); }
 .mic-meter { display: flex; align-items: end; gap: 2px; width: 66px; height: 9px; margin-right: auto; }
 .mic-meter i { width: 3px; height: 4px; border-radius: 2px; background: var(--accent); }
 .mic-meter i:nth-child(3n + 1) { height: 8px; }
