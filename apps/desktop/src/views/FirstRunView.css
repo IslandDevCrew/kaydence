@@ -34,7 +34,7 @@
 .first-run-board button:focus-visible,
 .first-run-board select:focus-visible,
 .first-run-board input:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 72%, #ffffff);
+  outline: 2px solid color-mix(in srgb, var(--accent) 72%, var(--surface));
   outline-offset: 1px;
 }
 
@@ -182,7 +182,7 @@
 }
 
 .first-run-step-rail li.active {
-  background: color-mix(in srgb, var(--accent) 12%, #ffffff);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
   color: var(--ink);
 }
 
@@ -250,7 +250,7 @@
 .first-run-heading span,
 .first-run-dialog header span {
   display: block;
-  color: color-mix(in srgb, var(--accent) 80%, #203037);
+  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
   font-size: 8px;
   font-weight: 850;
   text-transform: uppercase;
@@ -282,7 +282,7 @@
 
 .first-run-heading > button {
   min-height: 28px;
-  color: color-mix(in srgb, var(--accent) 78%, #203037);
+  color: color-mix(in srgb, var(--accent) 78%, var(--ink));
   font-size: 9px;
   font-weight: 800;
   padding: 4px 9px;
@@ -349,7 +349,7 @@
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
   border-radius: var(--radius-card);
-  background: color-mix(in srgb, var(--accent) 7%, #ffffff);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
   padding: 5px 7px;
 }
 
@@ -424,7 +424,7 @@
   width: 24px;
   height: 24px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--accent) 11%, #ffffff);
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface));
   color: var(--accent);
 }
 
@@ -455,12 +455,12 @@
 
 .first-run-status-button .ready,
 .first-run-state.ready {
-  color: color-mix(in srgb, var(--accent) 82%, #20544d);
+  color: color-mix(in srgb, var(--success) 82%, var(--ink));
 }
 
 .first-run-status-button .issue,
 .first-run-state.pending {
-  color: #8c651d;
+  color: var(--warn);
 }
 
 .first-run-inline-action,
@@ -472,8 +472,8 @@
 
 .first-run-confirmed {
   border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
-  background: color-mix(in srgb, var(--accent) 9%, #ffffff);
-  color: color-mix(in srgb, var(--accent) 80%, #20544d);
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  color: color-mix(in srgb, var(--success) 80%, var(--ink));
   opacity: 1;
 }
 
@@ -559,7 +559,7 @@
 
 .first-run-free-label {
   justify-self: end;
-  color: color-mix(in srgb, var(--accent) 80%, #20544d);
+  color: color-mix(in srgb, var(--success) 80%, var(--ink));
   font-size: 9px;
 }
 
@@ -584,7 +584,7 @@
 
 .first-run-license-card.selected {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 5%, #ffffff);
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
 }
 
 .first-run-license-card > span strong,
@@ -594,7 +594,7 @@
 }
 
 .first-run-license-card > span strong {
-  color: color-mix(in srgb, var(--accent) 82%, #203037);
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
   font-size: 10px;
 }
 

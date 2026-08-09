@@ -14,8 +14,8 @@
       "goal": "Establish apps/desktop/src/tokens.css as Kaydence's sole design-token source (color, type, space, radius, motion, reserved --blue/--gold, per-OS --accent), ported from the gauntlet-locked winner-locked-v1.html. Supersedes the forked per-view token declarations the design audit found in DictateView.css, CleanupView.css, PrivacyView.css, and FirstRunView.css.",
       "lane": "design",
       "gates": [
-        { "id": "P1-G1", "title": "No view file re-declares a core token", "command": "bash scripts/check-design-tokens.sh --no-view-token-redeclare" },
-        { "id": "P1-G2", "title": "No hardcoded hex outside tokens.css", "command": "bash scripts/check-design-tokens.sh --no-hardcoded-hex" }
+        { "id": "P1-G1", "title": "No view file re-declares a core token", "command": "bash scripts/check-design-tokens.sh --no-view-token-redeclare --dir apps/desktop/src/views" },
+        { "id": "P1-G2", "title": "No hardcoded hex outside tokens.css", "command": "bash scripts/check-design-tokens.sh --no-hardcoded-hex --dir apps/desktop/src/views" }
       ],
       "evidenceRequired": ["static", "runtime-journey"]
     },
@@ -24,7 +24,7 @@
       "title": "D2+D3 — Gauntlet-lite and Claude Design lock (COMPLETE, recorded for audit)",
       "goal": "COMPLETE 2026-08-09. Three independent directions (Calm Utility, Editorial Precision, Warm Focus) rendered families 01+07 from one token system, each blind-critiqued against R1-R8 plus competitor cohesion (Wispr Flow, Aqua Voice, Superwhisper, Glaido, native macOS/Windows). Editorial Precision judged the winner — the only candidate clearing all 8 rubric dimensions. Judge fixes and runner-up grafts applied and blind-reverified (all pass; overall 9/10, estimated operator score 9/10). Operator reviewed the locked artifact and accepted at 8.5/10, explicitly waiving the idea.lock's literal >=9 threshold, with two deferred nuances (see hitl.conditions).",
       "gates": [
-        { "id": "P2-G1", "title": "Locked winner clears R1-R8", "command": "bash scripts/check-design-tokens.sh --file ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html" }
+        { "id": "P2-G1", "title": "Locked winner clears R1-R8", "command": "bash scripts/check-design-tokens.sh --no-view-token-redeclare --no-hardcoded-hex --file ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html" }
       ],
       "evidenceRequired": ["static", "visual"]
     },
@@ -35,7 +35,7 @@
       "lane": "design",
       "gates": [
         { "id": "P3-G1", "title": "Frontend typecheck + lint clean", "command": "bash scripts/check-frontend.sh" },
-        { "id": "P3-G2", "title": "Design-token rubric clean on rebuilt views", "command": "bash scripts/check-design-tokens.sh --dir apps/desktop/src/views" },
+        { "id": "P3-G2", "title": "Design-token rubric clean on rebuilt views", "command": "bash scripts/check-design-tokens.sh --no-view-token-redeclare --no-hardcoded-hex --dir apps/desktop/src/views" },
         { "id": "P3-G3", "title": "No regression in existing frontend/backend test suites", "command": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --all" }
       ],
       "evidenceRequired": ["static", "runtime-journey"]

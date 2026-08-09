@@ -61,7 +61,7 @@
 .first-run-dialog > nav button[aria-pressed="true"] {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
   background: var(--surface);
-  color: color-mix(in srgb, var(--accent) 80%, #203037);
+  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
 }
 
 .first-run-evidence-body {
@@ -95,7 +95,7 @@
 
 .first-run-evidence-summary span,
 .first-run-proof-grid span {
-  color: color-mix(in srgb, var(--accent) 80%, #203037);
+  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
   font-size: 8px;
   font-weight: 850;
   text-transform: uppercase;
@@ -147,7 +147,7 @@
 
 .first-run-model-option[aria-pressed="true"] {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, #ffffff);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
 }
 
 .first-run-model-option span,
@@ -177,7 +177,7 @@
 .first-run-model-option em,
 .first-run-model-row em,
 .first-run-permission-row em {
-  color: #8c651d;
+  color: var(--warn);
   font-size: 8px;
   font-style: normal;
   font-weight: 850;
@@ -187,7 +187,7 @@
 .first-run-model-option.state-ready em,
 .first-run-model-row.state-ready em,
 .first-run-permission-row.state-ready em {
-  color: color-mix(in srgb, var(--accent) 82%, #20544d);
+  color: color-mix(in srgb, var(--success) 82%, var(--ink));
 }
 
 .first-run-model-row button,
