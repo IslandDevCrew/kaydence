@@ -23,6 +23,22 @@ Candidates archived: `ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html
 default) plus the pill-bar and stacked-panel siblings in the same gauntlet-round2 output —
 promote all three into the D4 rebuild as real layout options, not just the default.
 
+**Decision 3 — status bar grid-aligned to the rail boundary.** Jon: the "All systems operational"
+indicator should land exactly where the nav rail's vertical edge meets the workspace (the
+90° intersection continuing down into the footer), with the mic-level meter pushed toward that
+same boundary (more separated from "Kaydence Free", ending up adjacent to "All systems
+operational" instead). Implemented structurally, not by hand-tuned margins: the footer is now a
+CSS Grid mirroring `.app`'s `236px 1fr` columns — a `.sb-left` cell (Kaydence Free + meter,
+meter pushed to the cell's far edge via `margin-left:auto`) sized to exactly match the rail
+width, and a `.sb-right` cell (All systems operational, then the pills + version pushed further
+right as already set) starting flush at the same x-coordinate as the content area. `.sb-left`
+carries a `border-right` that continues the rail's own divider line straight down, making the
+alignment visually explicit rather than just coincidental. This holds correctly on resize
+(grid-based, not pixel-guessed) and was applied identically to all three layout candidates —
+verified structurally on each (braces/divs balanced, reserved tokens intact, `.sb-left`/`.sb-right`
+present exactly once). Candidate 3's fix is scoped to `#screen-cockpit` specifically since that
+file's `.statusbar` class is shared with its (unchanged, per K3) Privacy screen footer.
+
 
 Captured verbatim-in-intent from Jon's click-through of the locked artifact
 (`2026-08-09-design-gauntlet-winner-locked-v1.html`). Grouped by type. The **L** and **H**

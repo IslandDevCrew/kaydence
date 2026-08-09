@@ -571,6 +571,13 @@
   font-size:var(--text-2xs);color:var(--muted);
   position:relative;z-index:5;
 }
+/* Cockpit-only refinement: mirrors .app's 236px/1fr grid so "All systems
+   operational" lands exactly on the rail/content boundary. Scoped to
+   #screen-cockpit so the simpler Privacy footer is untouched. */
+#screen-cockpit .statusbar{display:grid;grid-template-columns:236px 1fr;align-items:stretch;padding:0;gap:0}
+#screen-cockpit .sb-left{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-1) var(--space-5);border-right:1px solid var(--line);min-width:0}
+#screen-cockpit .sb-right{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-1) var(--space-5);min-width:0}
+#screen-cockpit .meter{margin-left:auto}
 .sb-brand{font-weight:700;color:var(--ink);letter-spacing:.02em}
 .meter{display:flex;align-items:center;gap:var(--space-05);height:14px}
 .meter i{width:3px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--muted) 40%,transparent)}
@@ -972,10 +979,14 @@
 
     <!-- STATUS BAR — L1: Engine/Target App/Hotkey/Privacy/WAL as pill/popovers -->
     <footer class="statusbar">
-      <span class="sb-brand">Kaydence Free</span>
-      <span class="meter" aria-label="Mic level" title="Mic level">
-        <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
-      </span>
+      <div class="sb-left">
+        <span class="sb-brand">Kaydence Free</span>
+        <span class="meter" aria-label="Mic level" title="Mic level">
+          <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
+        </span>
+      </div>
+
+      <div class="sb-right">
       <span class="sb-ok"><span class="dot dot--good"></span>All systems operational</span>
 
       <div class="sb-pillgroup">
@@ -1023,6 +1034,7 @@
 
       <span class="sb-sep"></span>
       <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
+      </div>
     </footer>
   </section>
 

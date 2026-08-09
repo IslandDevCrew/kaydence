@@ -335,10 +335,15 @@
 .btn--accent:hover{background:color-mix(in srgb,var(--accent) 88%,var(--ink));color:var(--on-accent)}
 .count{margin-left:auto;font-family:var(--fs-mono);font-size:var(--text-2xs);color:var(--muted);padding:var(--space-025) var(--space-15)}
 
-/* ---- L1: status bar replaces the status column — pill/popover controls ---- */
-.statusbar{display:flex;align-items:center;gap:var(--space-2);height:auto;min-height:40px;padding:var(--space-15) var(--space-5);border-top:1px solid var(--line);background:var(--surface-soft);font-size:var(--text-2xs);color:var(--muted);position:relative;z-index:5;flex-wrap:wrap}
+/* ---- L1: status bar replaces the status column — pill/popover controls ----
+   Refinement: mirrors .app's 236px/1fr grid so "All systems operational"
+   lands exactly on the rail/content boundary, and .sb-left's border-right
+   continues the rail's own border straight down. ---- */
+.statusbar{display:grid;grid-template-columns:236px 1fr;align-items:stretch;height:auto;min-height:40px;padding:0;border-top:1px solid var(--line);background:var(--surface-soft);font-size:var(--text-2xs);color:var(--muted);position:relative;z-index:5}
+.sb-left{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-15) var(--space-5);border-right:1px solid var(--line);min-width:0}
+.sb-right{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;padding:var(--space-15) var(--space-5);min-width:0}
 .sb-brand{font-weight:700;color:var(--ink);letter-spacing:.02em}
-.meter{display:flex;align-items:center;gap:var(--space-05);height:14px}
+.meter{display:flex;align-items:center;gap:var(--space-05);height:14px;margin-left:auto}
 .meter i{width:3px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--muted) 40%,transparent)}
 .meter i.on{background:var(--accent)}
 .meter i.pk{background:var(--warn)}
@@ -712,10 +717,14 @@
 
     <!-- L1: status bar — Engine / Target App / Global Hotkey / Privacy / WAL Recovery live here now -->
     <footer class="statusbar">
-      <span class="sb-brand">Kaydence Free</span>
-      <span class="meter" aria-label="Mic level" title="Mic level">
-        <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
-      </span>
+      <div class="sb-left">
+        <span class="sb-brand">Kaydence Free</span>
+        <span class="meter" aria-label="Mic level" title="Mic level">
+          <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
+        </span>
+      </div>
+
+      <div class="sb-right">
       <span class="sb-ok"><span class="dot dot--good"></span>All systems operational</span>
 
       <div class="sb-pills">
@@ -782,6 +791,7 @@
 
       <span class="sb-sep"></span>
       <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
+      </div>
     </footer>
   </section>
 
