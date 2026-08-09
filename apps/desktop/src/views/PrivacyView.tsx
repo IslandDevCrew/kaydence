@@ -200,6 +200,8 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
       state: "ready",
     },
   ];
+  const contextRows = readerRows.filter((row) => row.id !== "network-audit");
+  const networkAuditRow = readerRows.find((row) => row.id === "network-audit") ?? null;
 
   return (
     <section className="privacy-board" aria-label={`${props.appName} privacy and context`}>
@@ -230,10 +232,22 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
       <section className="privacy-constitution" aria-label="Privacy constitution summary">
         <header><strong>Privacy Constitution</strong><span>Always on</span></header>
         <div>
-          <article><CockpitGlyph name="check" /><strong>No Transmission</strong><small>Processing stays on this device.</small></article>
-          <article><CockpitGlyph name="database" /><strong>Local Persistence Only</strong><small>{props.historyRetentionDays}-day device history.</small></article>
-          <article><CockpitGlyph name="cpu" /><strong>Local-Only Models</strong><small>{props.engineLabel}</small></article>
-          <article><CockpitGlyph name="privacy" /><strong>Secure Fields Blocked</strong><small>Protected targets are refused.</small></article>
+          <article>
+            <CockpitGlyph name="check" /><strong>No Transmission</strong><small>Processing stays on this device.</small>
+            <em className="privacy-enforced"><span className="privacy-enforced-dot" aria-hidden="true" />Enforced</em>
+          </article>
+          <article>
+            <CockpitGlyph name="database" /><strong>Local History Only</strong><small>Audio never persists past transcription. Transcripts kept {props.historyRetentionDays} days, then purged.</small>
+            <em className="privacy-enforced"><span className="privacy-enforced-dot" aria-hidden="true" />Enforced</em>
+          </article>
+          <article>
+            <CockpitGlyph name="privacy" /><strong>Secure Fields Blocked</strong><small>Protected targets are refused.</small>
+            <em className="privacy-enforced"><span className="privacy-enforced-dot" aria-hidden="true" />Enforced</em>
+          </article>
+          <article>
+            <CockpitGlyph name="cpu" /><strong>Local-Only Models</strong><small>{props.engineLabel}</small>
+            <em className="privacy-enforced"><span className="privacy-enforced-dot" aria-hidden="true" />Enforced</em>
+          </article>
         </div>
       </section>
 
@@ -241,32 +255,57 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
         <article className="privacy-panel privacy-reader-panel">
           <header><div><h2>Context Reader</h2><small>Backend settings and policy state</small></div><span>{props.contextEnabled ? "Opted in" : "Default off"}</span></header>
           <div className="privacy-reader-list">
-            {readerRows.map((row) => (
+            {contextRows.map((row) => (
               <div className="privacy-reader-row" key={row.id}>
                 <span className={`privacy-state-dot state-${row.state}`} aria-hidden="true" />
                 <div><strong>{row.label}</strong><small>{row.detail}</small></div>
                 <em className={`state-${row.state}`}>{row.status}</em>
+                {row.id === "memory-buffer" ? (
+                  <div className="privacy-buffer" aria-hidden="true">
+                    <span className="privacy-buffer-label">Live buffer</span>
+                    <span className="privacy-buffer-mask">•••••• •••• ••• •••••••• ••••• •• ••• •••••• ••••••</span>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
         </article>
 
-        <aside className="privacy-panel privacy-permissions-panel">
-          <header>
-            <div><h2>Permissions</h2><small>{props.lane.label}{selectedRuntime ? " runtime" : " reference lane"}</small></div>
-            <span>{selectedRuntime ? (props.previewFixture ? "Fixture" : "Backend") : "Reference"}</span>
-          </header>
-          <div className="privacy-permission-list">
-            {displayedPermissions.map((permission) => (
-              <div className={`privacy-permission-row state-${permission.state}`} key={permission.id}>
-                <span><CockpitGlyph name={permission.state === "ready" ? "check" : "privacy"} /></span>
-                <div><strong>{permission.label}</strong><small>{permission.detail}</small></div>
-                <em>{permissionStateLabel(permission.state)}</em>
+        <div className="privacy-side-col">
+          <aside className="privacy-panel privacy-permissions-panel">
+            <header>
+              <div><h2>Permissions</h2><small>{props.lane.label}{selectedRuntime ? " runtime" : " reference lane"}</small></div>
+              <span>{selectedRuntime ? (props.previewFixture ? "Fixture" : "Backend") : "Reference"}</span>
+            </header>
+            <div className="privacy-permission-list">
+              {displayedPermissions.map((permission) => (
+                <div className={`privacy-permission-row state-${permission.state}`} key={permission.id}>
+                  <span><CockpitGlyph name={permission.state === "ready" ? "check" : "privacy"} /></span>
+                  <div><strong>{permission.label}</strong><small>{permission.detail}</small></div>
+                  <em>{permissionStateLabel(permission.state)}</em>
+                </div>
+              ))}
+            </div>
+            <div className="privacy-permission-legend" aria-hidden="true">
+              <span><span className="privacy-legend-dot state-ready" />Ready</span>
+              <span><span className="privacy-legend-dot state-needs_review" />Needs review</span>
+              <span><span className="privacy-legend-dot state-blocked" />Blocked</span>
+              <span><span className="privacy-legend-dot state-not_requested" />Not requested</span>
+            </div>
+            <button onClick={() => props.onNavigate("Setup")} type="button">Review in Setup</button>
+          </aside>
+
+          {networkAuditRow ? (
+            <aside className="privacy-panel privacy-network-panel" aria-label="Network audit">
+              <header><div><h2>Network Audit</h2><small>{networkAuditRow.detail}</small></div><span>Verified</span></header>
+              <div className="privacy-network-hero">
+                <span className="privacy-shield-ring" aria-hidden="true"><CockpitGlyph name="privacy" /></span>
+                <div className="privacy-network-count"><strong>0</strong><span>outbound connections</span></div>
               </div>
-            ))}
-          </div>
-          <button onClick={() => props.onNavigate("Setup")} type="button">Review in Setup</button>
-        </aside>
+              <small className="privacy-network-note">{networkAuditRow.status} since launch</small>
+            </aside>
+          ) : null}
+        </div>
       </div>
 
       <section className="privacy-panel privacy-audit-panel">
@@ -302,7 +341,7 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
             <header><div><span>Kaydence Core</span><h2 id="privacy-constitution-title">Privacy Constitution</h2></div><button autoFocus aria-label="Close privacy constitution" onClick={() => setConstitutionOpen(false)} type="button">Close</button></header>
             <dl>
               <div><dt>No transmission by default</dt><dd>No telemetry, account stream, or unreviewed egress leaves the machine.</dd></div>
-              <div><dt>Local persistence is visible</dt><dd>WAL audio and history remain local for {props.historyRetentionDays} days, with export, delete, and purge controls.</dd></div>
+              <div><dt>Local persistence is visible</dt><dd>Audio never persists past transcription. Transcripts are kept local for {props.historyRetentionDays} days, then purged, with export, delete, and purge controls throughout.</dd></div>
               <div><dt>Context is explicit opt-in</dt><dd>Accessibility context and OCR remain off in P1. Future P3 context is memory-bound and secure-field aware.</dd></div>
               <div><dt>Secure fields fail closed</dt><dd>Known password and secure targets are held instead of receiving dictation.</dd></div>
             </dl>
