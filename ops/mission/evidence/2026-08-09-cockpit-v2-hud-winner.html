@@ -573,7 +573,7 @@
   padding:var(--space-2) var(--space-5);min-width:0;
 }
 .sb-brand{font-weight:700;color:var(--ink);letter-spacing:.02em}
-.meter{display:flex;align-items:center;gap:var(--space-05);height:14px;margin-left:auto}
+.meter{display:flex;align-items:center;gap:var(--space-05);height:14px;margin-left:auto;margin-right:auto}
 .meter i{width:3px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--muted) 40%,transparent)}
 .meter i.on{background:var(--accent)}
 .meter i.pk{background:var(--warn)}
@@ -581,7 +581,7 @@
 .sb-ver{font-family:var(--fs-mono);white-space:nowrap}
 .sb-sep{width:1px;height:14px;background:var(--line)}
 
-.sb-pills{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-left:auto}
+.sb-pills{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
 .sb-pill{
   position:relative;display:inline-flex;align-items:center;gap:var(--space-1);
   padding:var(--space-05) var(--space-2);border-radius:var(--radius-pill);
@@ -903,15 +903,16 @@
       <div class="sb-left">
         <div class="sb-left-top">
           <span class="sb-brand">Kaydence Free</span>
-          <span class="meter" aria-label="Mic level" title="Mic level">
-            <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
-          </span>
         </div>
         <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
       </div>
 
       <div class="sb-right">
       <span class="sb-ok"><span class="dot dot--good"></span>All systems operational</span>
+
+      <span class="meter" aria-label="Mic level" title="Mic level">
+        <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
+      </span>
 
       <div class="sb-pills">
         <div class="sb-pill" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">

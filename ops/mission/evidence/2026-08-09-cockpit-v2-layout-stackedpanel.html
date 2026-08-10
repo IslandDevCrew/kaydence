@@ -578,7 +578,7 @@
 #screen-cockpit .sb-left{display:flex;flex-direction:column;justify-content:center;gap:var(--space-025);padding:var(--space-1) var(--space-5);border-right:1px solid var(--line);min-width:0}
 #screen-cockpit .sb-left-top{display:flex;align-items:center;gap:var(--space-3);width:100%}
 #screen-cockpit .sb-right{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-1) var(--space-5);min-width:0}
-#screen-cockpit .meter{margin-left:auto}
+#screen-cockpit .meter{margin-left:auto;margin-right:auto}
 .sb-brand{font-weight:700;color:var(--ink);letter-spacing:.02em}
 .meter{display:flex;align-items:center;gap:var(--space-05);height:14px}
 .meter i{width:3px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--muted) 40%,transparent)}
@@ -588,7 +588,7 @@
 .sb-ver{font-family:var(--fs-mono);white-space:nowrap}
 .sb-sep{width:1px;height:14px;background:var(--line);flex:none}
 
-.sb-pillgroup{display:flex;align-items:center;gap:var(--space-1);flex-wrap:wrap;margin-left:auto}
+.sb-pillgroup{display:flex;align-items:center;gap:var(--space-1);flex-wrap:wrap}
 .sb-pop-wrap{position:relative;display:inline-flex}
 .sb-pill{
   display:inline-flex;align-items:center;gap:var(--space-15);
@@ -983,15 +983,16 @@
       <div class="sb-left">
         <div class="sb-left-top">
           <span class="sb-brand">Kaydence Free</span>
-          <span class="meter" aria-label="Mic level" title="Mic level">
-            <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
-          </span>
         </div>
         <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
       </div>
 
       <div class="sb-right">
       <span class="sb-ok"><span class="dot dot--good"></span>All systems operational</span>
+
+      <span class="meter" aria-label="Mic level" title="Mic level">
+        <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
+      </span>
 
       <div class="sb-pillgroup">
         <div class="sb-pop-wrap">

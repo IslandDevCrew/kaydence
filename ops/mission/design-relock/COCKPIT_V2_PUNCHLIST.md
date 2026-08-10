@@ -58,6 +58,19 @@ to all three candidates; candidate 3's Privacy-screen footer keeps its own unrel
 (now just picking up the shared `white-space:nowrap` addition, harmlessly). The now-unused
 `.sb-brand-block` rule was removed from all three.
 
+**Decision 6 (FINAL status-bar edit, operator confirmed) — mic-level meter moves to center,
+genuinely equidistant.** The meter leaves `.sb-left` entirely (Kaydence Free + version now stand
+alone there, stacked) and moves into `.sb-right`, positioned between "All systems operational"
+and the status pills. Centered by giving `.meter` `margin-left:auto` AND `margin-right:auto`
+(removing the `margin-left:auto` that used to live on `.sb-pills`/`.sb-pillgroup`) — CSS flexbox
+splits all remaining free space equally between an element's two auto margins, so the meter lands
+truly equidistant from "All systems operational" and "Engine," not eyeballed. Applied identically
+to all three layout candidates, verified structurally (braces/divs balanced, reserved tokens
+intact, exactly one `.meter` per file, confirmed relocated out of `.sb-left-top`).
+
+**Operator: "that would be the final edit to that status bar that I will make on today."
+Cockpit v2 status bar is CLOSED. Proceeding to DictateView rebuild -> D5 -> P1-G4 signoff.**
+
 
 Captured verbatim-in-intent from Jon's click-through of the locked artifact
 (`2026-08-09-design-gauntlet-winner-locked-v1.html`). Grouped by type. The **L** and **H**
