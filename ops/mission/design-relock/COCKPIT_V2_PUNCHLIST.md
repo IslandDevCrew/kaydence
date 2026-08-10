@@ -71,6 +71,62 @@ intact, exactly one `.meter` per file, confirmed relocated out of `.sb-left-top`
 **Operator: "that would be the final edit to that status bar that I will make on today."
 Cockpit v2 status bar is CLOSED. Proceeding to DictateView rebuild -> D5 -> P1-G4 signoff.**
 
+**Decision 7 (post-signoff, pre-merge polish) — real logo replaces the placeholder mark; real
+Cleanup/Voiceprint icons replace the candidates' own; compact rail shows logo+"Kaydence" as a row;
+redundant Dictate titlebar chrome removed.** After P1-G4 signoff, operator reviewed localhost:1420
+side-by-side against the published Candidate 2 artifact (two screenshots) and flagged four real-app
+issues plus one candidate-mockup-fidelity issue:
+
+1. **Candidates' placeholder inline-SVG brand mark → real logo asset.** All three gauntlet-round-2
+   mockups used a generic inline-SVG waveform glyph as a stand-in brand mark. Cropped the real
+   `assets/brand/logos/kaydence-logo-option-1.png` (discovered via inspection to be a full
+   icon+wordmark+background lockup, not an isolated icon — isolated the icon programmatically via
+   PIL dark-pixel bounding-box detection on the rounded-square mark, verified clean via visual
+   read) down to a 120x120 icon-only PNG, base64-embedded, and swapped in for every in-app nav-rail
+   brand-mark instance: candidate 1 (1 instance), candidate 2 (1 instance), candidate 3 (2
+   instances — it embeds both a Cockpit and a Privacy nav rail). Each candidate's own separate
+   outer meta-heading label (e.g. "Cockpit v2 · Candidate 2," a gauntlet-process artifact, not part
+   of the designed app UI) intentionally kept its original placeholder mark — that heading isn't
+   something Kaydence itself renders.
+2. **Real Cleanup/Voiceprint icon paths pulled into all three candidates (operator preference:
+   "I like the cleanup logo better... the voice print logo from local host more").** Extracted the
+   real wand+sparkles path (Cleanup) and vertical-bars waveform path (Voiceprint) from
+   `CockpitChrome.tsx`'s `glyphContents`, substituted into all three candidate files. Relay kept
+   unchanged (operator preference: "I like the relay logo in candidate two better"). The
+   candidates' own original Cleanup icon (now freed up) was reused as the new Setup icon, per
+   operator's own reasoning ("if I'm using the cleanup logo from local host, the cleanup logo in
+   candidate two actually would be a better setup icon"). Sequenced as Cleanup-swap, then
+   Voiceprint-swap, then Setup-reuse (in that order) to avoid a double-transform hazard, verified
+   by path-string grep counts in all three files afterward.
+3. **Real app: compact nav rail now shows logo + "Kaydence" as a row, not logo-alone-centered.**
+   `NavRail.tsx` already rendered the app-name text in the DOM; only the CSS was hiding it in
+   compact mode. `.compact-sidebar .brand-lockup` in `DictateView.css`/`CleanupView.css`/
+   `PrivacyView.css` changed from a single-column, centered, 50px-logo/text-hidden layout to a
+   26px-logo + ellipsis-truncated-name row, matching Candidate 2's rail treatment and the existing
+   `.compact-sidebar .nav-item-label` pattern already used for icon+label rows elsewhere in the
+   same rail.
+4. **Real app: Dictate's redundant titlebar chrome removed.** The titlebar's second logo+"Kaydence"
+   block (duplicating the rail's own brand lockup) and the macOS/Windows/Linux lane-switcher
+   buttons (operator: "doesn't need to show all three, only the one that is loaded... the bottom
+   right version/OS string is sufficient") are gone from `DictateView.tsx`'s titlebar, replaced by
+   a plain "Dictate" screen-name label. The version string in the status footer now includes a
+   real runtime-derived OS label (`v0.1.0 · macOS`, via a new `osLabel` prop sourced from the
+   existing `detectOsLane()` detection) instead of the bare version.
+   **Scope-check finding (worth recording):** `activeLane`/`setActiveLane`/`onLaneChange` were
+   *not* dead code once removed from Dictate — Cleanup, Privacy, and Setup (FirstRunView) each have
+   their own independent, real OS-lane switcher UI (a genuine reference-lane preview feature, for
+   inspecting another OS's injection method/permissions without actually running that OS). Only
+   Dictate's own copy of this switcher was removed; the shared `activeLane` state, and the other
+   three screens' switchers, were left intact and untouched.
+
+Verified independently against the real gate (`bash scripts/check-frontend.sh` — PASS, run directly,
+not just trusted from the workflow's own report) and via direct diff review of every changed file
+(`App.tsx`, `DictateView.tsx`, `DictateView.css`, `CleanupView.css`, `PrivacyView.css`) against the
+operator's actual four asks before proceeding. Landed as commit `8a34fae`.
+
+**Operator: "solid I lock that in and then let's push this as a PR." Proceeding to branch push,
+PR open, and merge.**
+
 
 Captured verbatim-in-intent from Jon's click-through of the locked artifact
 (`2026-08-09-design-gauntlet-winner-locked-v1.html`). Grouped by type. The **L** and **H**
