@@ -124,28 +124,6 @@ export function NavRail({
   );
 }
 
-export function StatusCard({
-  detail,
-  icon,
-  label,
-  state = "ready",
-  value,
-}: {
-  detail: string;
-  icon: CockpitIcon;
-  label: string;
-  state?: "ready" | "pending" | "issue";
-  value: string;
-}): JSX.Element {
-  return (
-    <article className={`cockpit-status-card state-${state}`}>
-      <span className="cockpit-status-icon"><CockpitGlyph name={icon} /></span>
-      <div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div>
-      <i aria-label={state}>{state === "ready" ? "" : state}</i>
-    </article>
-  );
-}
-
 export function SegmentedDial({
   disabled,
   onChange,
@@ -200,26 +178,74 @@ export function BottomNav({
   );
 }
 
+/**
+ * Status-bar pill datum. Structurally identical to (but declared without
+ * importing, to avoid a views -> components -> views cycle) DictateView's
+ * `CockpitStatusItem` — Engine / Target App / Global Hotkey / Privacy / WAL
+ * Recovery, per design-relock Decision 1 (L1: status demoted from a column
+ * card into clickable footer pills, common to all three Cockpit layouts).
+ */
+export interface StatusPillItem {
+  detail: string;
+  icon: CockpitIcon;
+  label: string;
+  state: "ready" | "pending" | "issue";
+  value: string;
+}
+
+/**
+ * Common Cockpit status bar (design-relock Decision 2-4, applied identically
+ * across Pill Bar / Mic Capsule / Stacked Panel): a brand block with the
+ * version underneath, a decorative mic-level meter, an "all systems
+ * operational" indicator, and the five status items as clickable pill
+ * popovers (native <details>/<summary> — no extra UI state needed).
+ */
 export function StatusFooter({
   appName,
   microphone,
+  onNavigateSetup,
   operational,
+  statusItems,
   version,
 }: {
   appName: string;
   microphone: string;
+  onNavigateSetup: () => void;
   operational: boolean;
+  statusItems: StatusPillItem[];
   version: string;
 }): JSX.Element {
   return (
-    <footer className="cockpit-footer">
-      <div><strong>{appName} Free</strong><span>{version}</span></div>
-      <div><span>{microphone}</span><span className="mic-meter" aria-hidden="true">
-        {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
-      </span>
+    <footer className="cockpit-statusbar">
+      <div className="cockpit-sb-left">
+        <div className="cockpit-sb-brand">
+          <strong>{appName} Free</strong>
+          <span>{version}</span>
+        </div>
+        <span className="cockpit-sb-mic">{microphone}</span>
+        <span className="cockpit-mic-meter" aria-hidden="true">
+          {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
+        </span>
+      </div>
+      <div className="cockpit-sb-right">
         <strong className={operational ? "operational" : "attention"}>
           {operational ? "All systems operational" : "Setup action required"}
         </strong>
+        <div className="cockpit-sb-pills">
+          {statusItems.map((item) => (
+            <details className="cockpit-sb-pill" key={item.label}>
+              <summary>
+                <i className={`cockpit-sb-pill-dot state-${item.state}`} aria-hidden="true" />
+                {item.label}
+              </summary>
+              <div className="cockpit-sb-pop">
+                <strong>{item.value}</strong>
+                <small>{item.detail}</small>
+                <button onClick={onNavigateSetup} type="button">Change in Setup</button>
+              </div>
+            </details>
+          ))}
+        </div>
       </div>
     </footer>
   );

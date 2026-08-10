@@ -120,7 +120,7 @@
 
 .dictate-board {
   display: grid;
-  grid-template-rows: 44px 102px minmax(0, 1fr) 50px;
+  grid-template-rows: 44px minmax(0, 250px) minmax(0, 1fr) auto;
   gap: 8px;
   min-width: 0;
   min-height: 100vh;
@@ -131,11 +131,11 @@
 }
 
 .cockpit-titlebar,
-.cockpit-record-strip,
+.cockpit-capture-panel,
 .cockpit-transcript-panel,
 .cockpit-history-panel,
 .cockpit-control-panel,
-.cockpit-footer {
+.cockpit-statusbar {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
@@ -143,11 +143,10 @@
 
 .cockpit-titlebar,
 .cockpit-titlebar > div,
-.cockpit-record-strip,
-.cockpit-status-card,
 .cockpit-panel-header,
 .cockpit-transcript-panel > div,
-.cockpit-footer > div,
+.cockpit-sb-left,
+.cockpit-sb-right,
 .cockpit-history-row summary,
 .cockpit-output-panel label {
   display: flex;
@@ -178,76 +177,80 @@
 .cockpit-lane-switcher button[aria-pressed="true"],
 .cockpit-dial button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 
-.cockpit-record-strip {
+/* L2/L3 — Capture is always centered/primary; Cleanup+Output and History are
+   its flanks. Only the arrangement below (which flank sits where, or whether
+   Capture widens instead of a third column) changes per layout preset — the
+   panels themselves render the same recording/cleanup/history data always. */
+.cockpit-topband {
   display: grid;
-  grid-template-columns: 76px 116px minmax(0, 1fr);
+  grid-template-columns: 190px minmax(0, 1fr) 190px;
+  align-items: stretch;
+  gap: 8px;
+  min-height: 0;
+}
+[data-cockpit-layout="stackedpanel"] .cockpit-topband {
+  grid-template-columns: minmax(0, 1.6fr) minmax(200px, 1fr);
+}
+
+.cockpit-flank {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+/* Stacked Panel's flank holds Cleanup + History (not Cleanup + Output) —
+   History is the one with variable-length, user-expandable content, so it
+   gets the flexible/scrollable row instead of Cleanup. */
+.cockpit-flank.cockpit-flank-stack { grid-template-rows: auto minmax(0, 1fr); }
+
+.cockpit-capture-panel {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 12px;
+  text-align: center;
 }
 
 .record-control {
   display: grid;
   place-items: center;
-  width: 68px;
-  height: 68px;
+  width: 60px;
+  height: 60px;
   border: 3px solid var(--accent);
   border-radius: 50%;
   background: var(--surface);
   color: color-mix(in srgb, var(--accent) 78%, var(--ink));
-  box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .record-control:disabled { cursor: not-allowed; opacity: .74; }
-.record-control .cockpit-glyph { width: 25px; height: 25px; }
+.record-control .cockpit-glyph { width: 23px; height: 23px; }
 
-.record-state { display: grid; gap: 5px; }
-.record-state strong { font-size: 1.04rem; }
+.record-state { display: grid; justify-items: center; gap: 3px; }
+.record-state strong { font-size: 1rem; }
 .record-state span { color: var(--muted); font-variant-numeric: tabular-nums; }
 
 .cockpit-waveform {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 3px;
+  width: 100%;
   min-width: 0;
-  height: 58px;
+  height: 32px;
   overflow: hidden;
 }
 .cockpit-waveform span { flex: 1 1 1px; max-width: 3px; min-width: 1px; border-radius: 2px; background: var(--accent); opacity: .42; }
 .is-recording .cockpit-waveform span { opacity: 1; }
 
-.cockpit-main-grid {
-  display: grid;
-  grid-template-columns: 184px minmax(0, 1fr) 210px;
-  gap: 8px;
-  min-width: 0;
-  min-height: 0;
-}
-.cockpit-status-column {
-  display: grid;
-  grid-template-rows: repeat(5, minmax(0, 1fr));
-  gap: 0;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-}
-.cockpit-status-card { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; min-width: 0; min-height: 0; overflow: hidden; padding: 7px 8px; border-top: 1px solid var(--line); }
-.cockpit-status-card:first-child { border-top: 0; }
-.cockpit-status-card > div { display: grid; align-content: center; min-width: 0; }
-.cockpit-status-card span,
-.cockpit-status-card small { color: var(--muted); font-size: .65rem; }
-.cockpit-status-card span { letter-spacing: .05em; text-transform: uppercase; }
-.cockpit-status-card strong { overflow: hidden; font-size: .75rem; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
-.cockpit-status-card small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cockpit-status-card i { position: absolute; top: 8px; right: 8px; color: var(--muted); font-size: .58rem; font-style: normal; text-transform: uppercase; }
-.cockpit-status-card.state-ready i { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
-.cockpit-status-card.state-issue i { color: var(--danger); }
-.cockpit-status-icon { display: grid; place-items: center; width: 30px; height: 30px; align-self: center; border-radius: 6px; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent); }
-
 .cockpit-glyph { width: 18px; height: 18px; color: inherit; }
 
-.cockpit-center-column { display: grid; grid-template-rows: minmax(0, 1.35fr) minmax(0, 1fr); gap: 8px; min-width: 0; min-height: 0; }
 .cockpit-transcript-panel,
 .cockpit-history-panel,
 .cockpit-control-panel { min-width: 0; padding: 10px; }
@@ -255,6 +258,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 8px;
+  min-height: 0;
   /* Editorial Precision "elevated active surface" — the transcript is the
      one panel the user is actively reading/editing, so it reads a step
      above the other cards (docs/design/DESIGN_LANGUAGE_V2_LOCK.md). */
@@ -263,6 +267,8 @@
     0 20px 40px -26px color-mix(in srgb, var(--ink) 30%, transparent),
     0 3px 10px -6px color-mix(in srgb, var(--ink) 12%, transparent);
 }
+/* L4 — full width, bottom half, the dominant surface in every layout. */
+.cockpit-transcript-full { width: 100%; }
 .cockpit-panel-heading {
   margin: 0;
   color: var(--muted);
@@ -299,11 +305,10 @@
 .cockpit-note.issue { color: var(--danger); }
 .cockpit-purge { justify-self: start; color: var(--danger); }
 
-.cockpit-control-column { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 8px; min-height: 0; }
-.cockpit-control-panel { display: grid; align-content: start; gap: 8px; overflow: auto; }
+.cockpit-control-panel { display: grid; align-content: start; gap: 8px; min-height: 0; overflow: auto; }
 .cockpit-dial { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; border: 1px solid var(--line); border-radius: 8px; padding: 3px; }
 .cockpit-control-panel > p { margin: 0; color: var(--muted); font-size: .67rem; line-height: 1.45; }
-.cockpit-control-panel ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.cockpit-control-panel ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 8px; margin: 0; padding: 0; list-style: none; }
 .cockpit-control-panel li { display: flex; align-items: center; gap: 6px; font-size: .65rem; }
 .cockpit-control-panel li .cockpit-glyph { width: 13px; height: 13px; color: var(--accent); }
 .cockpit-output-panel > button { display: grid; justify-items: start; gap: 2px; text-align: left; }
@@ -323,22 +328,91 @@
 .cockpit-output-panel input:checked { border-color: var(--accent); background: var(--accent); opacity: 1; }
 .cockpit-output-panel input:checked::after { left: 14px; }
 
-.cockpit-footer { display: grid; grid-template-rows: 1fr 1fr; overflow: hidden; }
-.cockpit-footer > div { justify-content: space-between; gap: 10px; padding: 3px 10px; font-size: .62rem; }
-.cockpit-footer > div + div { border-top: 1px solid var(--line); }
-.cockpit-footer > div:first-child span { font-variant-numeric: tabular-nums; }
-.cockpit-footer strong { font-size: .64rem; }
-.cockpit-footer .operational::before,
-.cockpit-footer .attention::before { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--success); content: ""; }
-.cockpit-footer .attention { color: var(--warn); }
-.cockpit-footer .attention::before { background: var(--warn); }
-.mic-meter { display: flex; align-items: end; gap: 2px; width: 66px; height: 9px; margin-right: auto; }
-.mic-meter i { width: 3px; height: 4px; border-radius: 2px; background: var(--accent); }
-.mic-meter i:nth-child(3n + 1) { height: 8px; }
-.mic-meter i:nth-child(4n + 2) { height: 6px; }
+/* L1 — Engine / Target App / Global Hotkey / Privacy / WAL Recovery live here
+   as clickable pill popovers instead of a left status column, common to all
+   three layouts (design-relock Decisions 1-4). The 126px left cell mirrors
+   the compact NavRail's own width (.app-shell.dictate-shell above) so the
+   divider reads as one continuous line even though the rail itself renders
+   outside this component. */
+.cockpit-statusbar {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  align-items: stretch;
+  overflow: hidden;
+  padding: 0;
+}
+.cockpit-sb-left {
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-right: 1px solid var(--line);
+}
+.cockpit-sb-right {
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 10px;
+}
+.cockpit-sb-brand { display: flex; flex-direction: column; gap: 1px; min-width: 0; line-height: 1.25; }
+.cockpit-sb-brand strong { overflow: hidden; font-size: .66rem; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-sb-brand span { overflow: hidden; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .54rem; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-sb-mic { overflow: hidden; color: var(--muted); font-size: .58rem; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-mic-meter { display: flex; align-items: end; gap: 2px; width: 30px; height: 9px; margin-left: auto; flex: none; }
+.cockpit-mic-meter i { width: 3px; height: 4px; border-radius: 2px; background: var(--accent); }
+.cockpit-mic-meter i:nth-child(3n + 1) { height: 8px; }
+.cockpit-mic-meter i:nth-child(4n + 2) { height: 6px; }
+
+.cockpit-sb-right > strong { flex: none; font-size: .64rem; white-space: nowrap; }
+.cockpit-sb-right > strong.operational::before,
+.cockpit-sb-right > strong.attention::before { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--success); content: ""; }
+.cockpit-sb-right > strong.attention { color: var(--warn); }
+.cockpit-sb-right > strong.attention::before { background: var(--warn); }
+
+.cockpit-sb-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.cockpit-sb-pill { position: relative; }
+.cockpit-sb-pill summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: .6rem;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.cockpit-sb-pill summary::-webkit-details-marker { display: none; }
+.cockpit-sb-pill:hover summary,
+.cockpit-sb-pill[open] summary { border-color: var(--line); background: var(--surface-soft); color: var(--ink); }
+.cockpit-sb-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex: none; }
+.cockpit-sb-pill-dot.state-ready { background: var(--success); }
+.cockpit-sb-pill-dot.state-pending { background: var(--accent); }
+.cockpit-sb-pill-dot.state-issue { background: var(--danger); }
+.cockpit-sb-pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  display: grid;
+  gap: 3px;
+  min-width: 160px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 12px 26px -14px color-mix(in srgb, var(--ink) 35%, transparent);
+  text-align: left;
+}
+.cockpit-sb-pop strong { font-size: .68rem; }
+.cockpit-sb-pop small { color: var(--muted); font-size: .58rem; }
+.cockpit-sb-pop button { justify-self: start; margin-top: 2px; border: 0; background: none; padding: 0; color: var(--accent); font-size: .58rem; font-weight: 700; }
 
 @media (max-width: 760px) and (min-width: 501px) {
-  .cockpit-main-grid { grid-template-columns: 180px minmax(190px, 1fr) 116px; }
+  .cockpit-topband,
+  [data-cockpit-layout="stackedpanel"] .cockpit-topband { grid-template-columns: minmax(0, 1fr); }
+  .cockpit-flank { grid-template-rows: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
   .cockpit-control-panel { padding: 7px; }
   .cockpit-dial button { padding-inline: 3px; }
   .cockpit-output-panel > button { overflow-wrap: anywhere; }
@@ -348,9 +422,9 @@
   .app-shell.dictate-shell { display: block; height: auto; overflow: visible; }
   .dictate-shell .compact-sidebar { display: none; }
   .dictate-board { grid-template-rows: auto auto auto auto; height: auto; overflow: visible; }
-  .cockpit-record-strip { grid-template-columns: 70px minmax(0, 1fr); }
-  .cockpit-waveform { grid-column: 1 / -1; }
-  .cockpit-main-grid { grid-template-columns: minmax(0, 1fr); }
-  .cockpit-status-column { grid-template-rows: repeat(5, 58px); }
-  .cockpit-center-column { grid-template-rows: auto auto; }
+  .cockpit-topband,
+  [data-cockpit-layout="stackedpanel"] .cockpit-topband { grid-template-columns: minmax(0, 1fr); }
+  .cockpit-flank { grid-template-rows: auto auto; }
+  .cockpit-statusbar { grid-template-columns: minmax(0, 1fr); }
+  .cockpit-sb-left { border-right: 0; border-bottom: 1px solid var(--line); }
 }
