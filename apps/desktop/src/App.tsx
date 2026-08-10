@@ -649,6 +649,10 @@ export function App(): JSX.Element {
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
   );
+  const runtimeLaneLabel = useMemo(
+    () => lanes.find((candidate) => candidate.id === runtimeLane)?.label ?? runtimeLane,
+    [runtimeLane],
+  );
   const hotkeyMode =
     snapshot.settings.hotkey.mode === "push_to_talk" ? "Push-to-talk" : "Toggle";
   const hotkeyBindingOptions = snapshot.settings.hotkey.primary_binding_options;
@@ -1280,7 +1284,6 @@ export function App(): JSX.Element {
           privacySummary={`Model: ${engineLabel}`}
         />
         <DictateView
-          activeLane={activeLane}
           appName={snapshot.app_name}
           autoPasteReady={permissionsReady}
           cleanupDial={cleanupDefault}
@@ -1292,7 +1295,6 @@ export function App(): JSX.Element {
           historyPlaybackIssue={historyPlaybackIssue}
           historyPurgeNote={historyPurgeNote}
           historyRefreshPending={historyRefreshPending}
-          laneOptions={lanes.map(({ id, label }) => ({ id, label }))}
           layoutPreset={layoutPreset}
           markUrl={markUrl}
           microphone={
@@ -1304,7 +1306,6 @@ export function App(): JSX.Element {
           onClearLatest={deleteHistorySession}
           onDeleteHistory={deleteHistorySession}
           onExportHistory={exportHistorySession}
-          onLaneChange={setActiveLane}
           onNavigate={setActiveView}
           onPlayHistory={playHistoryAudio}
           onPurgeHistory={purgeHistory}
@@ -1315,6 +1316,7 @@ export function App(): JSX.Element {
           }
           onRefreshHistory={refreshHistory}
           operational={cockpitOperational}
+          osLabel={runtimeLaneLabel}
           outputDestination={latestTarget ? `Insert at ${latestTarget.name}` : "Insert at cursor"}
           outputMethod={lane.injection}
           pendingHistoryAction={pendingHistoryAction}

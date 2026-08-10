@@ -4,7 +4,6 @@ import {
   type CleanupDial,
   type CockpitIcon,
   type CockpitLayoutPreset,
-  type OsLane,
   PanelHeading,
   SegmentedDial,
   StatusFooter,
@@ -31,7 +30,6 @@ export interface DictateHistoryItem {
 }
 
 interface DictateViewProps {
-  activeLane: OsLane;
   appName: string;
   autoPasteReady: boolean;
   cleanupDial: CleanupDial;
@@ -43,7 +41,6 @@ interface DictateViewProps {
   historyPlaybackIssue: string | null;
   historyPurgeNote: string | null;
   historyRefreshPending: boolean;
-  laneOptions: Array<{ id: OsLane; label: string }>;
   /**
    * Which Cockpit chrome/composition to render (design-relock 2026-08-09,
    * Decision 1: Pill Bar / Mic Capsule / Stacked Panel, selectable in Setup).
@@ -60,13 +57,15 @@ interface DictateViewProps {
   onClearLatest: (id: string) => void;
   onDeleteHistory: (id: string) => void;
   onExportHistory: (id: string) => void;
-  onLaneChange: (lane: OsLane) => void;
   onNavigate: (view: AppView) => void;
   onPlayHistory: (id: string) => void;
   onPurgeHistory: () => void;
   onRecordToggle?: () => void;
   onRefreshHistory: () => void;
   operational: boolean;
+  /** Human-readable runtime OS label ("macOS"/"Windows"/"Linux"), appended
+   * to the version string in the status footer. */
+  osLabel: string;
   outputDestination: string;
   outputMethod: string;
   pendingHistoryAction: boolean;
@@ -229,17 +228,7 @@ export function DictateView(props: DictateViewProps): JSX.Element {
       data-cockpit-layout={props.layoutPreset}
     >
       <header className="cockpit-titlebar">
-        <div><img src={props.markUrl} alt="" /><strong>{props.appName}</strong></div>
-        <div className="cockpit-lane-switcher" aria-label="Operating system lane">
-          {props.laneOptions.map((lane) => (
-            <button
-              aria-pressed={lane.id === props.activeLane}
-              key={lane.id}
-              onClick={() => props.onLaneChange(lane.id)}
-              type="button"
-            >{lane.label}</button>
-          ))}
-        </div>
+        <strong>Dictate</strong>
       </header>
 
       {topband}
@@ -251,7 +240,7 @@ export function DictateView(props: DictateViewProps): JSX.Element {
         onNavigateSetup={() => props.onNavigate("Setup")}
         operational={props.operational}
         statusItems={props.statusItems}
-        version={APP_VERSION}
+        version={`${APP_VERSION} · ${props.osLabel}`}
       />
     </section>
   );

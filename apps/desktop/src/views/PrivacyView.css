@@ -23,18 +23,33 @@
 }
 
 .privacy-shell .compact-sidebar .brand-lockup {
-  grid-template-columns: minmax(0, 1fr);
-  place-items: center;
-  min-height: 68px;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 5px;
 }
 
 .privacy-shell .compact-sidebar .brand-mark {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
 }
 
 .privacy-shell .compact-sidebar .brand-lockup > div {
+  overflow: hidden;
+  min-width: 0;
+}
+
+.privacy-shell .compact-sidebar .brand-lockup > div > strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .61rem;
+  font-weight: 750;
+}
+
+.privacy-shell .compact-sidebar .brand-lockup > div > span {
   display: none;
 }
 
