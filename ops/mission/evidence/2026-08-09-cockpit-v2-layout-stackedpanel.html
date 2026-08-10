@@ -584,6 +584,7 @@
 .meter i.on{background:var(--accent)}
 .meter i.pk{background:var(--warn)}
 .sb-ok{display:inline-flex;align-items:center;gap:var(--space-15);color:var(--success);font-weight:700}
+.sb-brand-block{display:flex;flex-direction:column;gap:var(--space-025);line-height:1.3}
 .sb-ver{font-family:var(--fs-mono)}
 .sb-sep{width:1px;height:14px;background:var(--line);flex:none}
 
@@ -980,7 +981,10 @@
     <!-- STATUS BAR — L1: Engine/Target App/Hotkey/Privacy/WAL as pill/popovers -->
     <footer class="statusbar">
       <div class="sb-left">
-        <span class="sb-brand">Kaydence Free</span>
+        <div class="sb-brand-block">
+          <span class="sb-brand">Kaydence Free</span>
+          <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
+        </div>
         <span class="meter" aria-label="Mic level" title="Mic level">
           <i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i class="on" style="height:11px"></i><i class="on" style="height:7px"></i><i class="pk" style="height:13px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:4px"></i>
         </span>
@@ -1031,9 +1035,6 @@
           </div>
         </div>
       </div>
-
-      <span class="sb-sep"></span>
-      <span class="sb-ver">v0.9.4 · build 2317 · macOS</span>
       </div>
     </footer>
   </section>

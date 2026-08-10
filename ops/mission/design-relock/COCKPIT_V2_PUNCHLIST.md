@@ -39,6 +39,15 @@ verified structurally on each (braces/divs balanced, reserved tokens intact, `.s
 present exactly once). Candidate 3's fix is scoped to `#screen-cockpit` specifically since that
 file's `.statusbar` class is shared with its (unchanged, per K3) Privacy screen footer.
 
+**Decision 4 (final polish, operator-approved as "perfect" otherwise) — version moves under the
+brand.** The `v0.9.4 · build 2317 · macOS` string no longer lives in the status bar's right
+cluster; it now sits as a second, smaller line directly under "Kaydence Free" in `.sb-left`, via
+a small `.sb-brand-block` (flex column). This freed the status bar's right side to hold only the
+interactive content (pills + the boundary-aligned "All systems operational"). Applied identically
+to all three candidates; candidate 3's Privacy-screen footer (its own separate, unrelated
+`sb-ver`) was left untouched. **This closes the Cockpit v2 punch list — operator confirmed
+"perfect" pending this one change.**
+
 
 Captured verbatim-in-intent from Jon's click-through of the locked artifact
 (`2026-08-09-design-gauntlet-winner-locked-v1.html`). Grouped by type. The **L** and **H**
