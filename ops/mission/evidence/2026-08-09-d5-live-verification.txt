@@ -146,3 +146,29 @@ session, including one genuinely new finding this exact process surfaced.
 This is NOT: a set of hashed PNG files matching the historical Windows
 capture format. That gap is stated plainly above, with the specific technical
 reasons, so no one downstream mistakes this for something it isn't.
+
+AMENDMENT — 2026-08-10: CAPTURE GAP CLOSED
+
+The missing on-disk visual evidence now exists under:
+
+  ops/mission/evidence/2026-08-10-d5-playwright-captures/
+
+Browser Playwright drove the real Vite-served frontend through Dictate,
+Cleanup, Privacy, and Setup in a verified 900x600 same-origin browsing context.
+Dictate was captured in Mic Capsule, Pill Bar, and Stacked Panel layouts. Each
+PNG is exactly 900x600; the responsive follow-up is additionally captured at
+700x600. Every file has a SHA-256 entry in manifest.sha256, and
+verification.txt records the capture method, per-screen adherence result,
+geometry, keyboard/a11y scope, and VM boundary.
+
+The finding above is also closed in product code. Below 760px the footer uses
+an explicit two-row grid: operational state and the meter occupy the first row,
+with the meter intentionally docked right, and all five status pills occupy a
+bounded second row. The pre-existing narrow top-band rule that collapsed panels
+to header-only strips was removed. At 900x600 the media rule is inactive and
+fresh Playwright geometry remains 17.80px / 17.78px, preserving Decision 6.
+
+The same sweep found and fixed one additional Decision S1 drift: Ready/idle now
+shows a silent flat line, while animated bars remain scoped to recording state.
+No locked invariant, backend/Rust file, final logo asset, or native injection
+lane was changed.

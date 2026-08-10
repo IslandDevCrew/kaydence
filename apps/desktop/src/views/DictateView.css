@@ -256,6 +256,13 @@
   overflow: hidden;
 }
 .cockpit-waveform span { flex: 1 1 1px; max-width: 3px; min-width: 1px; border-radius: 2px; background: var(--accent); opacity: .42; }
+.cockpit-capture-panel:not(.is-recording) .cockpit-waveform::before {
+  width: 100%;
+  height: 1px;
+  background: color-mix(in srgb, var(--accent) 58%, transparent);
+  content: "";
+}
+.cockpit-capture-panel:not(.is-recording) .cockpit-waveform span { display: none; }
 .is-recording .cockpit-waveform span { opacity: 1; }
 
 .cockpit-glyph { width: 18px; height: 18px; color: inherit; }
@@ -425,10 +432,31 @@
 .cockpit-sb-pop small { color: var(--muted); font-size: .58rem; }
 .cockpit-sb-pop button { justify-self: start; margin-top: 2px; border: 0; background: none; padding: 0; color: var(--accent); font-size: .58rem; font-weight: 700; }
 
+@media (max-width: 760px) {
+  .cockpit-sb-right {
+    display: grid;
+    grid-template-areas: "status meter" "pills pills";
+    grid-template-columns: minmax(0, 1fr) 30px;
+    gap: 4px 8px;
+  }
+  .cockpit-sb-right > strong { grid-area: status; }
+  .cockpit-mic-meter { grid-area: meter; justify-self: end; margin: 0; }
+  .cockpit-sb-pills {
+    display: grid;
+    grid-area: pills;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: 100%;
+  }
+  .cockpit-sb-pill summary {
+    justify-content: center;
+    overflow: hidden;
+    padding-inline: 4px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 760px) and (min-width: 501px) {
-  .cockpit-topband,
-  [data-cockpit-layout="stackedpanel"] .cockpit-topband { grid-template-columns: minmax(0, 1fr); }
-  .cockpit-flank { grid-template-rows: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
   .cockpit-control-panel { padding: 7px; }
   .cockpit-dial button { padding-inline: 3px; }
   .cockpit-output-panel > button { overflow-wrap: anywhere; }
