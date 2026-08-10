@@ -1,0 +1,126 @@
+KAYDENCE D5 PLAYWRIGHT CAPTURE + DESIGN v2 ADHERENCE SWEEP
+Date: 2026-08-10
+Branch point: 74f98e35c85c581244b3be048b0ec12588e38faa (PR #33)
+Work unit: mission/p1-d5-design-verification
+
+CAPTURE METHOD
+- Served the real apps/desktop Vite bundle from the isolated worktree.
+- Drove every state with Browser Playwright locators against the rendered app.
+- Used a temporary, same-origin iframe harness so the app browsing context was
+  exactly 900x600 (window.innerWidth=900, window.innerHeight=600, DPR=1).
+- The Browser screenshot endpoint returns JPEG bytes only. Those exact capture
+  bytes were converted to PNG containers with macOS sips; no crop, resize,
+  retouch, or product-code substitution was applied. `file` and `sips` verify
+  six 900x600 PNGs and one 700x600 responsive PNG.
+- SHA-256 values are recorded in manifest.sha256.
+
+CAPTURE SET
+- PASS: Dictate / Mic Capsule (approved default), 900x600.
+- PASS: Dictate / Pill Bar, 900x600.
+- PASS: Dictate / Stacked Panel, 900x600.
+- PASS: Cleanup & Injection, 900x600.
+- PASS: Privacy & Context, 900x600.
+- PASS: First Run Setup & License, 900x600.
+- PASS: Dictate / Mic Capsule responsive footer proof, 700x600.
+
+METER-WRAP CHECK
+900x600 default:
+- Operational indicator right: 407.84375px.
+- Meter: 425.640625px..455.640625px.
+- Status pills left: 473.421875px.
+- Indicator-to-meter gap: 17.80px.
+- Meter-to-pills gap: 17.78px.
+- Result: PASS; Decision 6 remains numerically centered.
+
+700x600 narrow:
+- Footer reflows to an explicit two-row grid.
+- Status stays at top-left; meter docks at top-right (649px..679px).
+- Five pills stay on one row below (273px..679px).
+- Pills remain within the footer and do not overlap status or meter.
+- The top band retains three readable columns; no prior header-only collapse.
+- Result: PASS; meter degrades intentionally, not accidentally.
+
+DESIGN v2 ADHERENCE SWEEP
+Board 01 / Dictate:
+- PASS: Candidate 2 / Mic Capsule remains the default; the two alternate
+  compositions are real and visibly distinct.
+- PASS: real mark + Kaydence compact-rail lockup, left-nav order, 8px cards,
+  aqua selection accent, full-width transcript, and footer status grammar.
+- FIXED: idle Ready state now renders a silent flat line; recording waveform
+  bars remain available only under .is-recording.
+- FIXED: responsive top band no longer collapses its panels into header-only
+  rows at 700px.
+- FIXED: footer meter docks and pills reflow below 760px without changing the
+  approved 900px geometry.
+
+Board 03 / Cleanup:
+- PASS, no product diff: real Cleanup wand+sparkles, persisted dial and output
+  controls, injection ladder, latency budget, test gates, and save footer.
+
+Board 07 / Privacy:
+- PASS, no product diff: Constitution, honest 30-day local-history wording,
+  Context Reader, permissions, zero-egress audit, and local event metadata.
+
+Board 10 / Setup:
+- PASS, no product diff: nine-step rail, runtime proof strip, local ASR,
+  permissions/hotkey/cleanup controls, live three-layout selector, pay-once
+  tiers, and optional/self-hostable Harbor copy.
+
+Shared identity and icon invariants:
+- PASS: Option 1 mark is the sole in-app mark; no Option 4 serif wordmark is
+  used in the app UI and there is no second logo.
+- PASS: Cleanup uses the real wand+sparkles, Voiceprint the real waveform,
+  Relay is unchanged, and Setup uses the displaced sliders icon.
+- PASS: selected lane colors measured from rendered buttons:
+  macOS rgb(20,167,161), Windows rgb(0,103,192), Linux rgb(31,157,99).
+- PASS: lane-specific injection copy changed with the selector.
+- PASS: no cloud-sync copy was found on the inspected core screens.
+- PASS: the recorded logo-asset redesign remains a FUTURE carve-out; the
+  asset was not redesigned or replaced.
+
+KEYBOARD / A11Y CHECKLIST
+- PASS: Browser DOM snapshots expose named landmarks, headings, navigation,
+  buttons, groups, comboboxes, radios, and disabled future controls.
+- PASS: no enabled interactive element has a negative tabIndex.
+- PASS: Privacy Constitution and Setup Evidence dialogs auto-focus their
+  Close buttons and close on Escape.
+- PASS: the Free tier radio has an implicit accessible label (confirmed by
+  its Playwright role/name), despite not carrying a redundant aria-label.
+- LIMIT: the Browser bridge repeated the focused control when synthesizing a
+  sequential Tab loop inside the capture iframe. Sequential Tab-order proof
+  is therefore not claimed here; existing native keyboard evidence remains
+  the authority for that separate assertion.
+
+VM / OS LANE
+- Computer inspection confirmed the local UTM matrix contains Debian 12,
+  Windows-App Dev/Testing, and Windows-Kaydence-Proof guests. Each exposed a
+  Run action, indicating it was stopped at inspection time.
+- No native-VM rendering claim was needed for this frontend-only responsive
+  fix, so guests were not started and no VM evidence is relied upon.
+- The PR's GitHub Actions run is the required three-OS code gate; its URL is
+  recorded in the PR/mission heartbeat after completion.
+
+LOCAL GATES (fresh after the product/evidence diff)
+- PASS: bash scripts/check-frontend.sh (tsc --noEmit + eslint, 0 warnings).
+- PASS: apps/desktop/node_modules/.bin/vite build (47 modules).
+- PASS: bash scripts/audit-network.sh (one allowlisted call site).
+- PASS: bash scripts/check-privacy-posture.sh --check.
+- PASS: bash scripts/check-adr-status.sh (declared 0009/0016 waivers only).
+- PASS/PARTIAL: bash scripts/bench.sh --check; four implemented metrics are
+  within budget, while the script continues to report its pre-existing four
+  unmeasured runtime metrics. No closure is claimed for those measurements.
+- PASS: cargo fmt --all -- --check.
+- PASS: cargo clippy --all-targets -- -D warnings.
+- PASS: cargo test --all (236 library tests plus integration/binary suites;
+  zero failures).
+- PASS: shasum -a 256 -c manifest.sha256 from this directory.
+
+LOOP VERDICT
+- JUDGE: GREEN. The seven-file evidence set, idle-state repair, responsive
+  footer/top-band behavior, and default geometry meet the scoped objectives.
+- AUDIT: GREEN. The diff touches frontend CSS, the punch list, and mission
+  evidence only; no Rust/backend lane, locked invariant, logo asset, or
+  critical-decision path changed. The declared benchmark and synthetic-Tab
+  limits remain visible rather than being weakened or relabeled.
+- GATE: ready for PR, contingent on fresh three-OS GitHub Actions and
+  mergeStateStatus CLEAN before merge.

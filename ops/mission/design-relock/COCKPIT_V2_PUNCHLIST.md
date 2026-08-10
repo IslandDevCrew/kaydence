@@ -127,6 +127,16 @@ operator's actual four asks before proceeding. Landed as commit `8a34fae`.
 **Operator: "solid I lock that in and then let's push this as a PR." Proceeding to branch push,
 PR open, and merge.**
 
+## 2026-08-10 D5 amendment and responsive closeout
+
+The D5 capture gap and its one responsive finding are closed by the hashed
+Playwright evidence set in
+`ops/mission/evidence/2026-08-10-d5-playwright-captures/`. The approved
+900x600 footer remains 17.80px / 17.78px equidistant. Below 760px, status and
+meter occupy a deliberate first row and the five pills a bounded second row;
+the meter docks right instead of losing an anchor. Decision S1 is also enforced
+in the real app: idle is a silent flat line and waveform bars are recording-only.
+
 
 Captured verbatim-in-intent from Jon's click-through of the locked artifact
 (`2026-08-09-design-gauntlet-winner-locked-v1.html`). Grouped by type. The **L** and **H**
