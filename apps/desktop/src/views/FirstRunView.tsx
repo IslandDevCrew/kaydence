@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import {
   CockpitGlyph,
+  COCKPIT_LAYOUT_PRESET_OPTIONS,
   type AppView,
   type CleanupDial,
+  type CockpitLayoutPreset,
   type OsLane,
 } from "../components/CockpitChrome";
 import "./FirstRunView.css";
@@ -199,6 +201,8 @@ interface FirstRunViewProps {
   installingModelId: string | null;
   lane: FirstRunLaneSpec;
   lanes: FirstRunLaneSpec[];
+  /** Selected Cockpit chrome/composition; persisted client-side (localStorage). */
+  layoutPreset: CockpitLayoutPreset;
   markUrl: string;
   modelDownloadPreflight: FirstRunModelDownloadPreflight | null;
   modelDownloadPreflightIssue: string | null;
@@ -211,6 +215,7 @@ interface FirstRunViewProps {
   onExportProof: () => void;
   onHotkeyBindingChange: (binding: string) => void;
   onHotkeyModeChange: (mode: "push_to_talk" | "toggle") => void;
+  onLayoutPresetChange: (preset: CockpitLayoutPreset) => void;
   onDownloadModel: (modelId: string) => void;
   onInstallModel: (modelId: string) => void;
   onLaneChange: (lane: OsLane) => void;
@@ -437,6 +442,22 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
               <div><strong>Cleanup Default</strong><small>Raw, Light, or explicit Full</small></div>
               <div className="first-run-cleanup-control" role="group" aria-label="Cleanup default">
                 {(["raw", "light", "full"] as const).map((dial) => <button aria-pressed={props.cleanupDial === dial} disabled={props.cleanupDialPending !== null} key={dial} onClick={() => props.onCleanupDialChange(dial)} type="button">{dial}</button>)}
+              </div>
+              <span className="first-run-state ready">Ready</span>
+            </div>
+
+            <div className="first-run-control-row">
+              <span className="first-run-control-icon"><CockpitGlyph name="settings" /></span>
+              <div><strong>Cockpit Layout</strong><small>Pill Bar, Mic Capsule, or Stacked Panel chrome</small></div>
+              <div className="first-run-cleanup-control" role="group" aria-label="Cockpit layout">
+                {COCKPIT_LAYOUT_PRESET_OPTIONS.map((option) => (
+                  <button
+                    aria-pressed={props.layoutPreset === option.id}
+                    key={option.id}
+                    onClick={() => props.onLayoutPresetChange(option.id)}
+                    type="button"
+                  >{option.label}</button>
+                ))}
               </div>
               <span className="first-run-state ready">Ready</span>
             </div>

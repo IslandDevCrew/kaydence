@@ -3,6 +3,25 @@ import type { ReactNode } from "react";
 export type AppView = "Dictate" | "Cleanup" | "Privacy" | "Setup";
 export type CleanupDial = "raw" | "light" | "full";
 export type OsLane = "mac" | "windows" | "linux";
+
+/**
+ * Cockpit layout preset (design-relock 2026-08-09, Decision 1): the three
+ * gauntlet-round-2 compositions ship as selectable Setup options instead of
+ * picking one winner. `miccapsule` is the confirmed operator default.
+ * Chrome/composition differs per preset; underlying data/state does not.
+ */
+export type CockpitLayoutPreset = "pillbar" | "miccapsule" | "stackedpanel";
+
+export const DEFAULT_COCKPIT_LAYOUT_PRESET: CockpitLayoutPreset = "miccapsule";
+
+export const COCKPIT_LAYOUT_PRESET_OPTIONS: ReadonlyArray<{
+  id: CockpitLayoutPreset;
+  label: string;
+}> = [
+  { id: "pillbar", label: "Pill Bar" },
+  { id: "miccapsule", label: "Mic Capsule" },
+  { id: "stackedpanel", label: "Stacked Panel" },
+];
 export type CockpitIcon =
   | "waveform"
   | "history"

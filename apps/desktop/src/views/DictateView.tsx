@@ -3,6 +3,7 @@ import {
   type AppView,
   type CleanupDial,
   type CockpitIcon,
+  type CockpitLayoutPreset,
   type OsLane,
   PanelHeading,
   SegmentedDial,
@@ -44,6 +45,15 @@ interface DictateViewProps {
   historyPurgeNote: string | null;
   historyRefreshPending: boolean;
   laneOptions: Array<{ id: OsLane; label: string }>;
+  /**
+   * Which Cockpit chrome/composition to render (design-relock 2026-08-09,
+   * Decision 1: Pill Bar / Mic Capsule / Stacked Panel, selectable in Setup).
+   * Plumbing only for now — the composition branch itself lands with the
+   * three-layout rebuild; today every preset renders the same markup below,
+   * distinguished only by the `data-cockpit-layout` attribute on the root
+   * section so the Build stage has a stable hook to branch or style from.
+   */
+  layoutPreset: CockpitLayoutPreset;
   markUrl: string;
   microphone: string;
   onCleanupChange: (dial: CleanupDial) => void;
@@ -79,7 +89,11 @@ const waveformHeights = Array.from(
 export function DictateView(props: DictateViewProps): JSX.Element {
   const words = props.transcript.trim() ? props.transcript.trim().split(/\s+/).length : 0;
   return (
-    <section className="dictate-board" aria-label={`${props.appName} Dictate cockpit`}>
+    <section
+      aria-label={`${props.appName} Dictate cockpit`}
+      className="dictate-board"
+      data-cockpit-layout={props.layoutPreset}
+    >
       <header className="cockpit-titlebar">
         <div><img src={props.markUrl} alt="" /><strong>{props.appName}</strong></div>
         <div className="cockpit-lane-switcher" aria-label="Operating system lane">

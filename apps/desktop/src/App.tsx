@@ -18,6 +18,7 @@ import {
   PrivacyView,
 } from "./views/PrivacyView";
 import { FirstRunView } from "./views/FirstRunView";
+import { useLayoutPreset } from "./hooks/useLayoutPreset";
 
 const markUrl = new URL(
   "../../../assets/brand/logos/kaydence-logo-option-1.png",
@@ -590,6 +591,7 @@ function privacyAuditItem(session: HistorySession): PrivacyAuditItem {
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
   const runtimeLane = useMemo(detectOsLane, []);
+  const [layoutPreset, setLayoutPreset] = useLayoutPreset();
   const [activeLane, setActiveLane] = useState<OsLane>(runtimeLane);
   const [activeView, setActiveView] = useState<AppView>("Dictate");
   const [previewRecording, setPreviewRecording] = useState(true);
@@ -1291,6 +1293,7 @@ export function App(): JSX.Element {
           historyPurgeNote={historyPurgeNote}
           historyRefreshPending={historyRefreshPending}
           laneOptions={lanes.map(({ id, label }) => ({ id, label }))}
+          layoutPreset={layoutPreset}
           markUrl={markUrl}
           microphone={
             snapshot.settings.first_run.microphone_permission_ready
@@ -1422,6 +1425,7 @@ export function App(): JSX.Element {
           installingModelId={installingModelId}
           lane={lane}
           lanes={lanes}
+          layoutPreset={layoutPreset}
           markUrl={appIconUrl}
           modelDownloadPreflight={modelDownloadPreflight}
           modelDownloadPreflightIssue={modelDownloadPreflightIssue}
@@ -1434,6 +1438,7 @@ export function App(): JSX.Element {
           onExportProof={exportFirstRunProofPlan}
           onHotkeyBindingChange={setHotkeyBinding}
           onHotkeyModeChange={setHotkeyMode}
+          onLayoutPresetChange={setLayoutPreset}
           onDownloadModel={(modelId) => void downloadModelArtifact(modelId)}
           onInstallModel={(modelId) => void installModelArtifact(modelId)}
           onLaneChange={setActiveLane}
