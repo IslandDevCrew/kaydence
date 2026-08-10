@@ -48,6 +48,16 @@ to all three candidates; candidate 3's Privacy-screen footer (its own separate, 
 `sb-ver`) was left untouched. **This closes the Cockpit v2 punch list — operator confirmed
 "perfect" pending this one change.**
 
+**Decision 5 (superseding decision 4's stacking) — brand and meter share the top row; version
+gets its own unwrapped line.** Correction to decision 4: rather than stacking `Kaydence Free`
+directly over the version string, `.sb-left` is now a column with two rows — row 1
+(`.sb-left-top`) holds `Kaydence Free` + the mic-level meter side by side (meter still pushed to
+the row's far end via `margin-left:auto`, keeping it near the rail boundary per decision 2); row 2
+is the version/build/OS string alone, `white-space:nowrap` so it never wraps. Applied identically
+to all three candidates; candidate 3's Privacy-screen footer keeps its own unrelated `.sb-ver`
+(now just picking up the shared `white-space:nowrap` addition, harmlessly). The now-unused
+`.sb-brand-block` rule was removed from all three.
+
 
 Captured verbatim-in-intent from Jon's click-through of the locked artifact
 (`2026-08-09-design-gauntlet-winner-locked-v1.html`). Grouped by type. The **L** and **H**
