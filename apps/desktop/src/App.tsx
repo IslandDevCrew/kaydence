@@ -4,10 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   type AppView,
   type CleanupDial,
-  NavRail,
-  type NavRailItem,
   type OsLane,
 } from "./components/CockpitChrome";
+import { NavRail } from "./components/NavRail";
 import {
   type CockpitStatusItem,
   type DictateHistoryItem,
@@ -19,6 +18,7 @@ import {
   PrivacyView,
 } from "./views/PrivacyView";
 import { FirstRunView } from "./views/FirstRunView";
+import { useLayoutPreset } from "./hooks/useLayoutPreset";
 
 const markUrl = new URL(
   "../../../assets/brand/logos/kaydence-logo-option-1.png",
@@ -470,7 +470,10 @@ const lanes: LaneSpec[] = [
   {
     id: "windows",
     label: "Windows",
-    accent: "#2f72f2",
+    // Cobalt (Windows 11 system-accent family). Was #2f72f2, which collided
+    // byte-for-byte with the reserved --blue (Whisper-Ahead prediction text
+    // only, never a per-OS accent) — see docs/design/DESIGN_LANGUAGE_V2_LOCK.md.
+    accent: "#0067c0",
     injection: "UI Automation + SendInput",
     primaryMethod: "UI Automation (ValuePattern)",
     primaryDetail: "ValuePattern insertion when the focused control exposes a writable value.",
@@ -489,21 +492,6 @@ const lanes: LaneSpec[] = [
     fallbackDetail: "Runtime capabilities select the safest available Wayland or X11 delivery path.",
     gates: ["AT-SPI / X11", "Secure Input", "Latest Delivery", "Round Trip"],
   },
-];
-
-const cleanupNavItems: NavRailItem[] = [
-  { icon: "settings", label: "General", view: "Setup" },
-  { icon: "waveform", label: "Dictation", view: "Dictate" },
-  { icon: "waveform", label: "Whisper-Ahead", phase: "P3" },
-  { icon: "cleanup", label: "Cleanup & Inject", view: "Cleanup" },
-  { icon: "square", label: "Relay", phase: "P4" },
-  { icon: "waveform", label: "Voiceprint", phase: "P4" },
-  { icon: "cpu", label: "Conductor", phase: "P4" },
-  { icon: "privacy", label: "Privacy", view: "Privacy" },
-  { icon: "database", label: "Dictionary", phase: "P2" },
-  { icon: "target", label: "Profiles", phase: "P2" },
-  { icon: "history", label: "Analytics", phase: "P3" },
-  { icon: "settings", label: "License", phase: "P3" },
 ];
 
 function detectOsLane(): OsLane {
@@ -603,6 +591,7 @@ function privacyAuditItem(session: HistorySession): PrivacyAuditItem {
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
   const runtimeLane = useMemo(detectOsLane, []);
+  const [layoutPreset, setLayoutPreset] = useLayoutPreset();
   const [activeLane, setActiveLane] = useState<OsLane>(runtimeLane);
   const [activeView, setActiveView] = useState<AppView>("Dictate");
   const [previewRecording, setPreviewRecording] = useState(true);
@@ -659,6 +648,10 @@ export function App(): JSX.Element {
   const lane = useMemo(
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
+  );
+  const runtimeLaneLabel = useMemo(
+    () => lanes.find((candidate) => candidate.id === runtimeLane)?.label ?? runtimeLane,
+    [runtimeLane],
   );
   const hotkeyMode =
     snapshot.settings.hotkey.mode === "push_to_talk" ? "Push-to-talk" : "Toggle";
@@ -1282,8 +1275,15 @@ export function App(): JSX.Element {
         className="app-shell dictate-shell"
         style={{ "--accent": lane.accent } as React.CSSProperties}
       >
+        <NavRail
+          activeView="Dictate"
+          appName={snapshot.app_name}
+          footerTitle="Engine: Local"
+          markUrl={appIconUrl}
+          onNavigate={setActiveView}
+          privacySummary={`Model: ${engineLabel}`}
+        />
         <DictateView
-          activeLane={activeLane}
           appName={snapshot.app_name}
           autoPasteReady={permissionsReady}
           cleanupDial={cleanupDefault}
@@ -1295,7 +1295,7 @@ export function App(): JSX.Element {
           historyPlaybackIssue={historyPlaybackIssue}
           historyPurgeNote={historyPurgeNote}
           historyRefreshPending={historyRefreshPending}
-          laneOptions={lanes.map(({ id, label }) => ({ id, label }))}
+          layoutPreset={layoutPreset}
           markUrl={markUrl}
           microphone={
             snapshot.settings.first_run.microphone_permission_ready
@@ -1306,7 +1306,6 @@ export function App(): JSX.Element {
           onClearLatest={deleteHistorySession}
           onDeleteHistory={deleteHistorySession}
           onExportHistory={exportHistorySession}
-          onLaneChange={setActiveLane}
           onNavigate={setActiveView}
           onPlayHistory={playHistoryAudio}
           onPurgeHistory={purgeHistory}
@@ -1317,6 +1316,7 @@ export function App(): JSX.Element {
           }
           onRefreshHistory={refreshHistory}
           operational={cockpitOperational}
+          osLabel={runtimeLaneLabel}
           outputDestination={latestTarget ? `Insert at ${latestTarget.name}` : "Insert at cursor"}
           outputMethod={lane.injection}
           pendingHistoryAction={pendingHistoryAction}
@@ -1335,13 +1335,11 @@ export function App(): JSX.Element {
         style={{ "--accent": lane.accent } as React.CSSProperties}
       >
         <NavRail
-          compact
           activeView="Cleanup"
           appName={snapshot.app_name}
           footerTitle="Engine: Local"
-          items={cleanupNavItems}
           markUrl={appIconUrl}
-          onSelect={setActiveView}
+          onNavigate={setActiveView}
           privacySummary={`Model: ${engineLabel}`}
         />
         <CleanupView
@@ -1375,13 +1373,11 @@ export function App(): JSX.Element {
         style={{ "--accent": lane.accent } as React.CSSProperties}
       >
         <NavRail
-          compact
           activeView="Privacy"
           appName={snapshot.app_name}
           footerTitle="Private by design"
-          items={cleanupNavItems}
           markUrl={appIconUrl}
-          onSelect={setActiveView}
+          onNavigate={setActiveView}
           privacySummary={`${snapshot.settings.privacy.history_retention_days}-day local history`}
         />
         <PrivacyView
@@ -1431,6 +1427,7 @@ export function App(): JSX.Element {
           installingModelId={installingModelId}
           lane={lane}
           lanes={lanes}
+          layoutPreset={layoutPreset}
           markUrl={appIconUrl}
           modelDownloadPreflight={modelDownloadPreflight}
           modelDownloadPreflightIssue={modelDownloadPreflightIssue}
@@ -1443,6 +1440,7 @@ export function App(): JSX.Element {
           onExportProof={exportFirstRunProofPlan}
           onHotkeyBindingChange={setHotkeyBinding}
           onHotkeyModeChange={setHotkeyMode}
+          onLayoutPresetChange={setLayoutPreset}
           onDownloadModel={(modelId) => void downloadModelArtifact(modelId)}
           onInstallModel={(modelId) => void installModelArtifact(modelId)}
           onLaneChange={setActiveLane}

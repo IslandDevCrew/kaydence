@@ -1,0 +1,58 @@
+KAYDENCE D4 DESIGN REBUILD — GATE EVIDENCE
+captured: 2026-08-09T19:41:59Z
+branch: mission/p1-design-language-v2
+head: 3dc42d95b4c86daf8aec7d5dbca0e62b2d4e95b0
+base: main @ 67425a06dfc49c0b4493d856f586f81ae4f8043c
+
+== ENVIRONMENT REPAIR (precondition) ==
+Repo-wide frontend toolchain was broken before this run: apps/desktop/node_modules
+package symlinks (typescript/eslint/react/...) dated Aug 8 pointed into the frozen
+worktree kaydence-wt-p1-g3-q5-footprint's .pnpm store, which no longer exists.
+Operator-authorized fix: CI=true pnpm install --frozen-lockfile in the canonical
+checkout. Result: 187 packages restored from local store; symlinks now resolve to
+../../../node_modules/.pnpm/typescript@5.9.3/... ; canonical git tree stayed clean.
+
+== P3-G1: bash scripts/check-frontend.sh ==
+== tsc --noEmit ==
+== eslint (max-warnings 0) ==
+RESULT: PASS (frontend typechecks + lints clean)
+P3-G1 exit: 0
+
+== P3-G2: bash scripts/check-design-tokens.sh --no-view-token-redeclare --no-hardcoded-hex --dir apps/desktop/src/views ==
+== Kaydence design-token gate ==
+root: /Users/IDC2.5/Kaydence/kaydence-wt-design-language-v2
+scanning: 9 file(s)
+-- --no-view-token-redeclare --
+RESULT (--no-view-token-redeclare): PASS
+-- --no-hardcoded-hex --
+RESULT (--no-hardcoded-hex): PASS
+RESULT: PASS
+P3-G2 exit: 0
+
+== P3-G3 basis: Rust tree unchanged; green CI stands for identical tree ==
+git diff main...HEAD -- '*.rs' 'Cargo.toml' 'Cargo.lock' apps/desktop/src-tauri :
+(empty = zero Rust/Cargo changes on this branch)
+The Rust tree at 3dc42d95b4c86daf8aec7d5dbca0e62b2d4e95b0 is byte-identical to main @ 67425a0, whose 3-OS CI
+run 31310405700 (setup+ubuntu+windows+macos) completed green 2026-08-09T11:17Z.
+cargo test was NOT re-run locally in this session; this gate's standing is the
+identical-tree + green-CI evidence pair, stated honestly, not a fresh local run.
+
+== BRANCH DIFFSTAT ==
+ apps/desktop/src/App.tsx                           |   39 +-
+ apps/desktop/src/components/NavRail.tsx            |   89 ++
+ apps/desktop/src/styles.css                        |  149 ++-
+ apps/desktop/src/version.ts                        |    7 +
+ apps/desktop/src/views/CleanupView.css             |   97 +-
+ apps/desktop/src/views/CleanupView.tsx             |    6 +
+ apps/desktop/src/views/DictateView.css             |  200 +++-
+ apps/desktop/src/views/DictateView.tsx             |    7 +-
+ apps/desktop/src/views/FirstRunEvidence.css        |   67 +-
+ apps/desktop/src/views/FirstRunView.css            |  173 ++-
+ apps/desktop/src/views/PrivacyView.css             |  244 +++-
+ apps/desktop/src/views/PrivacyView.tsx             |   81 +-
+ docs/design/DESIGN_LANGUAGE_V2_LOCK.md             |   67 ++
+ ops/mission/design-relock/idea.lock.json           |   59 +
+ ops/mission/design-relock/plan.lock.json           |   70 ++
+ ...026-08-09-design-gauntlet-winner-locked-v1.html | 1230 ++++++++++++++++++++
+ scripts/check-design-tokens.sh                     |  181 +++
+ 17 files changed, 2491 insertions(+), 275 deletions(-)

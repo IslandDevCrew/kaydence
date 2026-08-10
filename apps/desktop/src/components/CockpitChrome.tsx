@@ -3,6 +3,25 @@ import type { ReactNode } from "react";
 export type AppView = "Dictate" | "Cleanup" | "Privacy" | "Setup";
 export type CleanupDial = "raw" | "light" | "full";
 export type OsLane = "mac" | "windows" | "linux";
+
+/**
+ * Cockpit layout preset (design-relock 2026-08-09, Decision 1): the three
+ * gauntlet-round-2 compositions ship as selectable Setup options instead of
+ * picking one winner. `miccapsule` is the confirmed operator default.
+ * Chrome/composition differs per preset; underlying data/state does not.
+ */
+export type CockpitLayoutPreset = "pillbar" | "miccapsule" | "stackedpanel";
+
+export const DEFAULT_COCKPIT_LAYOUT_PRESET: CockpitLayoutPreset = "miccapsule";
+
+export const COCKPIT_LAYOUT_PRESET_OPTIONS: ReadonlyArray<{
+  id: CockpitLayoutPreset;
+  label: string;
+}> = [
+  { id: "pillbar", label: "Pill Bar" },
+  { id: "miccapsule", label: "Mic Capsule" },
+  { id: "stackedpanel", label: "Stacked Panel" },
+];
 export type CockpitIcon =
   | "waveform"
   | "history"
@@ -105,28 +124,6 @@ export function NavRail({
   );
 }
 
-export function StatusCard({
-  detail,
-  icon,
-  label,
-  state = "ready",
-  value,
-}: {
-  detail: string;
-  icon: CockpitIcon;
-  label: string;
-  state?: "ready" | "pending" | "issue";
-  value: string;
-}): JSX.Element {
-  return (
-    <article className={`cockpit-status-card state-${state}`}>
-      <span className="cockpit-status-icon"><CockpitGlyph name={icon} /></span>
-      <div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div>
-      <i aria-label={state}>{state === "ready" ? "" : state}</i>
-    </article>
-  );
-}
-
 export function SegmentedDial({
   disabled,
   onChange,
@@ -181,26 +178,72 @@ export function BottomNav({
   );
 }
 
+/**
+ * Status-bar pill datum. Structurally identical to (but declared without
+ * importing, to avoid a views -> components -> views cycle) DictateView's
+ * `CockpitStatusItem` — Engine / Target App / Global Hotkey / Privacy / WAL
+ * Recovery, per design-relock Decision 1 (L1: status demoted from a column
+ * card into clickable footer pills, common to all three Cockpit layouts).
+ */
+export interface StatusPillItem {
+  detail: string;
+  icon: CockpitIcon;
+  label: string;
+  state: "ready" | "pending" | "issue";
+  value: string;
+}
+
+/**
+ * Common Cockpit status bar (design-relock Decisions 2-6, applied identically
+ * across Pill Bar / Mic Capsule / Stacked Panel): a brand block with the
+ * version underneath on the left; an "all systems operational" indicator, a
+ * decorative mic-level meter centered in the negative space, and the five
+ * status items as clickable pill popovers (native <details>/<summary> — no
+ * extra UI state needed) on the right.
+ */
 export function StatusFooter({
   appName,
   microphone,
+  onNavigateSetup,
   operational,
+  statusItems,
   version,
 }: {
   appName: string;
   microphone: string;
+  onNavigateSetup: () => void;
   operational: boolean;
+  statusItems: StatusPillItem[];
   version: string;
 }): JSX.Element {
   return (
-    <footer className="cockpit-footer">
-      <div><strong>{appName} Free</strong><span>{version}</span></div>
-      <div><span>{microphone}</span><span className="mic-meter" aria-hidden="true">
-        {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
-      </span>
+    <footer className="cockpit-statusbar">
+      <div className="cockpit-sb-left">
+        <strong>{appName} Free</strong>
+        <span>{version}</span>
+      </div>
+      <div className="cockpit-sb-right">
         <strong className={operational ? "operational" : "attention"}>
           {operational ? "All systems operational" : "Setup action required"}
         </strong>
+        <span aria-label={`Mic level — ${microphone}`} className="cockpit-mic-meter" title={`Mic level — ${microphone}`}>
+          {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
+        </span>
+        <div className="cockpit-sb-pills">
+          {statusItems.map((item) => (
+            <details className="cockpit-sb-pill" key={item.label}>
+              <summary>
+                <i className={`cockpit-sb-pill-dot state-${item.state}`} aria-hidden="true" />
+                {item.label}
+              </summary>
+              <div className="cockpit-sb-pop">
+                <strong>{item.value}</strong>
+                <small>{item.detail}</small>
+                <button onClick={onNavigateSetup} type="button">Change in Setup</button>
+              </div>
+            </details>
+          ))}
+        </div>
       </div>
     </footer>
   );

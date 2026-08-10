@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0",
+  "id": "idea-kaydence-design-language-relock",
+  "frozenAt": "2026-08-09T18:30:00Z",
+  "frozenBy": "Claude (Opus 5) — proposed for operator (Jon) ratification",
+  "problem": {
+    "statement": "Kaydence's ten screen boards and its built P1 screens carry drift across theme, layout, and text; selecting screens from an inconsistent set guarantees repeated rework and reads as unfinished, undermining the cohesion a privacy-first dictation utility needs to feel indispensable.",
+    "successCriteria": [
+      "Every built screen realizes ONE locked design language from a single token source, with no hardcoded visual values.",
+      "A blind critic cannot identify a screen's OS lane except by the single allowed accent color.",
+      "The operator rates the locked visualization at least 9 out of 10, replacing the ad-hoc P1-G4 screen-selection path."
+    ]
+  },
+  "domain": {
+    "id": 37,
+    "name": "Desktop Productivity — on-device dictation UX / HCI"
+  },
+  "definitionOfDone": [
+    {
+      "claim": "Every built screen resolves 100% of color, type, spacing, radius, and motion from one tokens source of truth.",
+      "falsifiedBy": "A grep of the screen source finds any hardcoded hex, ad-hoc px, or inline color outside the token layer."
+    },
+    {
+      "claim": "Screens are OS-blind except for the single free-tier accent (macOS aqua / Windows cobalt / Linux emerald).",
+      "falsifiedBy": "A blind critic correctly names a screen's OS lane from any cue other than the accent (layout, type, spacing, component style)."
+    },
+    {
+      "claim": "Each built screen matches its locked board composition and hierarchy.",
+      "falsifiedBy": "A per-family blind critic marks a composition or hierarchy deviation from the locked board."
+    },
+    {
+      "claim": "Default, light, and dark themes render intentionally on every screen and pass AA contrast.",
+      "falsifiedBy": "Any theme is missing on any screen, or any screen fails AA contrast in any theme."
+    },
+    {
+      "claim": "The locked visual direction reads as cohesive and premium as the confirmed competitor peg set on a blind side-by-side.",
+      "falsifiedBy": "A blind panel ranks Kaydence below the peg set on cohesion or finish."
+    },
+    {
+      "claim": "The operator accepts the locked visualization as the design language for all screens (hybridized P1-G4).",
+      "falsifiedBy": "Operator rates the locked visualization below 9/10 (human gate — only the operator closes it)."
+    }
+  ],
+  "confidence": {
+    "score": 9,
+    "biggestRisk": "The D4 rebuild must port the locked visual system into real production TSX/CSS without regressing existing React behavior (state, IPC, hooks) — a reskin that silently breaks functionality would be worse than the drift it replaces.",
+    "nextAction": "Run D4: rebuild families 01/03/07/10 from the locked tokens/nav/lexicon in an isolated worktree, verified against R1-R8 plus a real typecheck/build gate, before the fresh Board-10 capture (D5)."
+  },
+  "rejectedAlternatives": [
+    {
+      "idea": "Continue the current P1-G4 board-selection path",
+      "reason": "Selecting from an inconsistent set locks the drift in; operator wants to improve beyond it. Kept as fallback, not chosen."
+    },
+    {
+      "idea": "Run a gauntlet-lite wow prototype and skip the token/arch discipline",
+      "reason": "Produces a wowed prototype that can't pass a real gate; the design lock must be a proof (archipelago), since it graduates the P1-G4 gate."
+    }
+  ]
+}
