@@ -194,11 +194,12 @@ export interface StatusPillItem {
 }
 
 /**
- * Common Cockpit status bar (design-relock Decision 2-4, applied identically
+ * Common Cockpit status bar (design-relock Decisions 2-6, applied identically
  * across Pill Bar / Mic Capsule / Stacked Panel): a brand block with the
- * version underneath, a decorative mic-level meter, an "all systems
- * operational" indicator, and the five status items as clickable pill
- * popovers (native <details>/<summary> — no extra UI state needed).
+ * version underneath on the left; an "all systems operational" indicator, a
+ * decorative mic-level meter centered in the negative space, and the five
+ * status items as clickable pill popovers (native <details>/<summary> — no
+ * extra UI state needed) on the right.
  */
 export function StatusFooter({
   appName,
@@ -218,19 +219,16 @@ export function StatusFooter({
   return (
     <footer className="cockpit-statusbar">
       <div className="cockpit-sb-left">
-        <div className="cockpit-sb-brand">
-          <strong>{appName} Free</strong>
-          <span>{version}</span>
-        </div>
-        <span className="cockpit-sb-mic">{microphone}</span>
-        <span className="cockpit-mic-meter" aria-hidden="true">
-          {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
-        </span>
+        <strong>{appName} Free</strong>
+        <span>{version}</span>
       </div>
       <div className="cockpit-sb-right">
         <strong className={operational ? "operational" : "attention"}>
           {operational ? "All systems operational" : "Setup action required"}
         </strong>
+        <span aria-label={`Mic level — ${microphone}`} className="cockpit-mic-meter" title={`Mic level — ${microphone}`}>
+          {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
+        </span>
         <div className="cockpit-sb-pills">
           {statusItems.map((item) => (
             <details className="cockpit-sb-pill" key={item.label}>

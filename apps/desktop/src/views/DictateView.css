@@ -342,22 +342,29 @@
   padding: 0;
 }
 .cockpit-sb-left {
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
   min-width: 0;
   padding: 6px 8px;
   border-right: 1px solid var(--line);
+  line-height: 1.25;
 }
+.cockpit-sb-left strong { overflow: hidden; font-size: .66rem; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-sb-left > span { overflow: hidden; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .54rem; text-overflow: ellipsis; white-space: nowrap; }
 .cockpit-sb-right {
   flex-wrap: wrap;
   gap: 8px;
   min-width: 0;
   padding: 6px 10px;
 }
-.cockpit-sb-brand { display: flex; flex-direction: column; gap: 1px; min-width: 0; line-height: 1.25; }
-.cockpit-sb-brand strong { overflow: hidden; font-size: .66rem; text-overflow: ellipsis; white-space: nowrap; }
-.cockpit-sb-brand span { overflow: hidden; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .54rem; text-overflow: ellipsis; white-space: nowrap; }
-.cockpit-sb-mic { overflow: hidden; color: var(--muted); font-size: .58rem; text-overflow: ellipsis; white-space: nowrap; }
-.cockpit-mic-meter { display: flex; align-items: end; gap: 2px; width: 30px; height: 9px; margin-left: auto; flex: none; }
+/* Decision 6: the mic-level meter sits centered in the negative space between
+   "All systems operational" and the status pills — margin-left + margin-right
+   auto splits all remaining free space equally, so it lands genuinely
+   equidistant, not eyeballed. */
+.cockpit-mic-meter { display: flex; align-items: end; gap: 2px; width: 30px; height: 9px; margin-left: auto; margin-right: auto; flex: none; }
 .cockpit-mic-meter i { width: 3px; height: 4px; border-radius: 2px; background: var(--accent); }
 .cockpit-mic-meter i:nth-child(3n + 1) { height: 8px; }
 .cockpit-mic-meter i:nth-child(4n + 2) { height: 6px; }
@@ -368,7 +375,7 @@
 .cockpit-sb-right > strong.attention { color: var(--warn); }
 .cockpit-sb-right > strong.attention::before { background: var(--warn); }
 
-.cockpit-sb-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.cockpit-sb-pills { display: flex; flex-wrap: wrap; gap: 4px; }
 .cockpit-sb-pill { position: relative; }
 .cockpit-sb-pill summary {
   display: flex;
