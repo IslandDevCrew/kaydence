@@ -1,0 +1,31 @@
+Gate-Merge Fusion activation + PR #35 merge heartbeat
+Operator approval: 2026-09-07, explicitly approved activation, merge commit,
+and auto-merge; requested continuation of P1-G4 and OSS directional research.
+Acting gh account verified: IslandDevCrew. Repository remains public.
+Before: allow_auto_merge=false; main protection 404; effective branch rules=[].
+Applied approved docs/protocol/GATE_MERGE_FUSION.md settings via GitHub API:
+required_status_checks.strict=true; three required contexts, all GitHub Actions
+app_id=15368: build-test (ubuntu-latest), build-test (macos-latest),
+build-test (windows-latest). allow_auto_merge=true; allow_merge_commit=true.
+Force pushes/deletion remain disabled; linear history not required.
+enforce_admins.enabled=false matches the approved protocol; no admin bypass used.
+No other repository settings, visibility, ADR statuses, or shipping defaults changed.
+Use gh pr merge --auto --merge --match-head-commit <reviewed-head>.
+The user's merge-commit instruction supersedes the old document's squash example.
+
+PR: https://github.com/IslandDevCrew/kaydence/pull/35
+Final tested head: 4b6bc462394108ccec7a4752c92a2770d74536b8
+CI: https://github.com/IslandDevCrew/kaydence/actions/runs/34095530493
+Ubuntu: job 101658258260 SUCCESS, completed 2026-09-07T07:34:00Z
+macOS: job 101658258343 SUCCESS, completed 2026-09-07T07:35:23Z
+Windows: job 101658258249 SUCCESS, completed 2026-09-07T07:39:48Z
+Pre-merge API recheck: OPEN, CLEAN, all required contexts SUCCESS at that head.
+Merge command used --auto --merge and exact head match; no --admin.
+Merged: 2026-09-07T08:42:09Z as f6c647ab85745e6d61ccefe48c19f9e680514ffb.
+git rev-parse verifies tested and merged tree both:
+aac4e01e47abdc0af4eb053a5c02117806d8f18f
+Local resumed gates: crash_recovery, short_utterance, event_sequences and
+frontend check PASS; synthetic bench PASS/PARTIAL, not P1-G3 closure.
+Original modal Judge, screenshots and gate log remain in the PR #35 evidence.
+P1-G4 remains pending; narrow nav, truthful status/preview, and live feedback
+still need bounded fixes and proofs. Physical P1/ADR gates remain unchanged.

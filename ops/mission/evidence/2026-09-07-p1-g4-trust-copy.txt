@@ -1,0 +1,41 @@
+P1-G4 / PRD P0-7 — Privacy truth-copy restoration
+Base: f6c647a (PR #35). Routine correction of presentation, not policy change.
+PLAN: PrivacyView.tsx only for product copy. Preserve layout, tokens, icon,
+navigation and all backend behavior. Add a rendered red-before-green check.
+Expected: audio retention is acknowledged in both summary and Constitution;
+the configured days are shown without promising an automatic timed purge;
+network panel describes the source audit and does not invent live counters.
+Reference facts: history/mod.rs::audio_playback and sweep_retention_before;
+src-tauri/src/lib.rs::recent_history applies retention on history refresh;
+scripts/audit-network.sh explicitly identifies itself as SOURCE-LEVEL.
+No new dependency, network surface, persisted state, or Rust change.
+All existing physical, ADR and P1-G4 findings outside this copy remain open.
+
+RED: running 2026-09-07-p1-privacy-copy-check.cjs on the pre-fix frontend
+failed with AssertionError: Acknowledge retained audio. The initial server was
+not running; it was started and the semantic red was reproduced before edits.
+GREEN: the same check passes for light and dark at 900x600: retained-audio copy,
+configured 30-day fixture, source-audit boundary, no invented live proof,
+Constitution open/Escape close, no horizontal overflow/page/console errors.
+Existing modal regression passes all four cases at 900x600 and 450x300.
+Environment: real Vite frontend on 127.0.0.1:1427; browser-preview fixtures;
+Browser skill/plugin absent, existing bundled Playwright Chromium used.
+Source-level badge is visually uppercased by existing CSS; check is case-insensitive.
+Direct tsc/eslint and Vite production build PASS; dist output kept outside repo.
+Independent Judge /root/polish_review PASS after checking implementation facts,
+both screenshots, the copy check and four prior modal cases. No policy drift.
+Reviewed PrivacyView.tsx SHA256:
+6b77c7e27dca44aea28f0d9a0de4a517d6d6dced3478ebdfca33b5ca8f6cdd2a
+First Rust gate attempt failed because relocated Tauri build metadata referenced
+an old absolute permission-file path. Failure log retained in local-cache-failure.log.gz.
+A fresh stable external target directory is used for the clean rerun; canonical
+target is untouched. Full gate result is recorded before push below.
+Native OS/WebView, screen reader, and actual network traffic remain unverified.
+The OSS research note is directional only; no external implementation was adopted.
+
+CLEAN GATES: fresh target /tmp/kaydence-p1-gates.X9BATu passed fmt, strict
+clippy, all 253 Rust tests, tsc/eslint, privacy/source-network audit, ADR status.
+Synthetic bench passed 4 measured metrics; unmeasured physical fields remain
+PARTIAL. Complete clean output is local-gates.log.gz beside the PNGs.
+Judge PASS is bounded to these copy changes. Three-OS CI is required before
+merge and is not claimed by this pre-push record; its URL belongs to the PR.
