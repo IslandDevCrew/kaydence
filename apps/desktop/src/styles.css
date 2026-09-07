@@ -762,3 +762,47 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* Keep the existing rail reachable in short windows, including 200% scaling. */
+.app-shell .compact-sidebar { overflow-y: auto; }
+.app-shell .compact-sidebar .nav-list { flex-shrink: 0; }
+/* Native focus scrolling may align a button with the scrollport edge.
+   Keep the full 3px keyboard indicator inside that button's visible bounds. */
+.app-shell .compact-sidebar .nav-item:focus-visible {
+  outline-offset: calc(-1 * var(--space-075));
+}
+
+@media (max-width: 500px) {
+  .app-shell .compact-sidebar {
+    display: flex;
+    overflow: visible;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: var(--space-3);
+  }
+  .app-shell .compact-sidebar .nav-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-1);
+  }
+  .app-shell .compact-sidebar .nav-item {
+    min-height: 32px;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-card);
+  }
+  .app-shell .compact-sidebar .nav-item-label {
+    overflow: visible;
+    white-space: normal;
+    font-size: var(--text-xs);
+  }
+  .app-shell .compact-sidebar .nav-item-label > span {
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .app-shell .compact-sidebar .nav-item small,
+  .app-shell .compact-sidebar .sidebar-card strong,
+  .app-shell .compact-sidebar .sidebar-card p { font-size: var(--text-2xs); }
+  .app-shell .compact-sidebar .sidebar-card strong,
+  .app-shell .compact-sidebar .sidebar-card p { white-space: normal; }
+  .app-shell .compact-sidebar .brand-lockup > div > strong { font-size: var(--text-base); }
+}

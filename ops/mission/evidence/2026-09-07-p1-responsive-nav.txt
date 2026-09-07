@@ -1,0 +1,36 @@
+P1-G4 responsive navigation — routine frontend presentation correction
+Base: PR #36 merge 8974148. Preserve Design v2 and its single ten-item NAV.
+PLAN: remove the three <=500px rail-hide rules; apply one shared responsive
+rail treatment, keeping all labels/order/icons/disabled phases. Make the
+existing vertical rail scrollable in short windows. No new menu architecture.
+Acceptance: keyboard access to Dictate/Cleanup/Privacy/Setup, visible focus,
+no horizontal overflow at 375/450/500/501/900px in both themes; default
+900x600 rail geometry and pixels unchanged. Narrow nav uses >=11px tokens.
+P1-G4 remains pending for other recorded UI and native/physical evidence gaps.
+No Rust, dependencies, event/network/model/permission policy, logo or nav-order change.
+
+RED: actual pre-fix frontend failed: light 450 navigation must remain available.
+First green implementation was rejected by independent Judge: Setup's focus
+outline clipped at 501x300. Added whole-outline bounds check and reproduced
+RED. scroll-padding did not fix native focus scrolling; inset the existing
+3px indicator instead. Second Judge found the shrinking nav box let the
+footer overlap disabled entries. Added nonoverlap assertion (RED), then
+prevented that flex child from shrinking. No acceptance predicate weakened.
+FINAL GREEN: all 10 light/dark width cases pass, including full focus ring,
+ten-item order, six disabled phase entries, four-route keyboard round trip,
+nonoverlap and no horizontal overflow or console/page errors. Four existing
+dialog tests also pass. Real Vite frontend + installed Playwright Chromium;
+browser fixture data, NOT native permission/injection or actual OS scaling.
+18 baseline/screen PNGs plus 2 focused short-window captures are SHA256-bound.
+Six default 126x600 rails are PNG byte-identical to pre-fix base 8974148.
+Default footer meter margins remain 17.796875 / 17.78125px.
+Independent /root/polish_review final Judge PASS: all three short rails have
+7px separation between final nav button and footer, full inset focus visible.
+Reviewed styles.css SHA256:
+70230c32dcbea1454c483dff9ab223fb0ee150b1c078515654342c6819771f27
+AUDIT: final fmt, strict Clippy, all 253 default Rust tests, tsc/eslint,
+network/privacy, ADR and Vite production build PASS. Full local log archived.
+Synthetic bench passes 4 measured metrics; physical fields remain PARTIAL.
+Stable external cargo target used; canonical cache and dist stay untouched.
+CI remains required before merge; the PR records its final exact-head run.
+This is targeted nav acceptance, not full screen/typography/WebView approval.
