@@ -733,3 +733,9 @@
 - Final local gates pass; synthetic physical fields remain PARTIAL. Source bindings, 20 hashed PNGs and raw gate log are in the responsive-nav evidence packet. No native WebView or actual OS scaling claim is added.
 - The current in-app browser now supports fresh 900x600 screenshots. A four-screen dark-theme readability audit confirms sub-11px text and crowded secondary chrome; saved pre-correction screenshots supplement, not replace, native gates.
 - Next bounded unit fixes Cleanup runtime/reference proof and Dictate OS identity. Native hydration/error truth, typography/reflow, live capture bridge ownership and physical/ADR gates remain open. Heartbeat is committed before product edits on the next mission branch.
+
+## 2026-09-07T09:56Z — session 34 (Runtime/reference truth merged)
+- PR #38 merged `7c898ee` after exact head `1446122` passed all three OS legs of Actions `34107560559`. Tested and merged trees match `faf1c63a72bf483be6f229649a56b50571260841`; required-check MERGE auto-merge, no bypass.
+- Independent Judge caught an empty-error failure incorrectly marked delivered; the strengthened16-case suite now passes. Seven hashed reference screenshots and local/browser logs accompany the record. Four pre-correction screen-audit captures document readability work still needed.
+- Hydration frontend work was prepared locally while CI ran, not pushed; the branch fast-forwarded to the identical merged tree without overwriting its uncommitted edits. State/journal/rendered heartbeat is committed separately before product publication.
+- Next: submit reviewed loading/error/retry and stale-history correction; then shared rail11px typography and per-screen reflow. Live capture projection still requires backend ownership/ADR coordination; no Rust, model/download default or native-proof authority changed.
