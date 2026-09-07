@@ -72,3 +72,12 @@ Reviewed Modal.tsx SHA256:
 WebKit check blocked: cached webkit-2336/pw_run.sh is missing; no install attempted.
 Not tested: native OS scaling/WebViews, screen reader, async download states.
 PASS applies only to the modal delta. Privacy truth defects remain unfixed.
+
+PUBLICATION / RESUME
+Product commit c42c81d5099584c58cec77df39acda914cc4a004; PR #35:
+https://github.com/IslandDevCrew/kaydence/pull/35
+Initial CI: https://github.com/IslandDevCrew/kaydence/actions/runs/34095356852
+CI was in progress when this record was committed; query final-head checks.
+P1-G4 is reopened, not falsely left green after finding production defects.
+State/journal/generated HTML record the pending PR and next bounded packets.
+No main merge, phase closure, or operator-gate approval is claimed.
