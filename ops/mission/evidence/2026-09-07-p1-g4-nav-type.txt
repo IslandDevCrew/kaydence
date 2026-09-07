@@ -49,3 +49,20 @@ Only rail presentation is claimed; surrounding pre-hydration fixture status copy
 is not runtime authority or proof of the parent's forthcoming hydration changes.
 No backend runtime, Windows/Linux WebView or native 200% scaling proof obtained.
 Independent Judge/Audit, rebased exact-head gates and 3-OS CI remain with parent.
+
+PARENT RECONCILIATION: rebased onto reviewed hydration697de42; all12 GREEN
+captures refreshed from the integrated frontend. Two RED comparators retain
+their original pre-hydration base. Independent Judge PASS: rail10/nav10 and
+actual wheel input at501x300 reaches all3route footers (overflow:auto,
+scrollHeight427/474/474), no horizontal clipping/overlap; full inset focus.
+Reviewed source hashes (these supersede the original-base bindings):
+styles.css:b93faf92684af864c2f05767ae92f0b7d75461823ad2a925f287dda405dfc49d
+DictateView.css:ffea3e188180b87ef3cc7aedc04b2fce9f740d4b3177dc9c0b4b1786dd1719be
+CleanupView.css:12750d554fc663d5594e9b2b34e9f4d34bdab6a0bab211ea9c3f103acee6e317
+PrivacyView.css:ce9c6487aed1572c7e23487c207fd0f8c47b4d488301beff07c16a77b0a40f5b
+Fresh default Rust253tests/fmt/clippy,tsc/eslint,privacy/network,ADR and Vite
+--outDir /tmp/kaydence-p1-nav-type-dist PASS; bench4metrics PASS/PARTIAL.
+Browser regressions: rail10/nav10/hydration7/reference16/modal4/privacy2 PASS.
+Compressed fresh local/browser logs added to the rebuilt hash manifest.
+AUDIT PASS for bounded typography correction: no design invariant, Rust,
+dependency, model/download or permission policy change. FullG4 stays pending.
