@@ -36,6 +36,7 @@ interface CleanupViewProps {
   permissionSummary: string;
   permissionsReady: boolean;
   previewFixture: boolean;
+  runtimeLane: OsLane;
   targetApp: string | null;
   unknownFocus: string;
 }
@@ -69,32 +70,44 @@ const examples = [
 ];
 
 function methodLabel(method: CleanupViewProps["deliveryMethod"]): string {
-  if (method === "native") return "Native insertion proved";
-  if (method === "keystroke") return "Keystroke fallback proved";
-  if (method === "clipboard_restore") return "Clipboard restore proved";
-  return "No delivery proof yet";
+  if (method === "native") return "Native delivery recorded";
+  if (method === "keystroke") return "Keystroke delivery recorded";
+  if (method === "clipboard_restore") return "Clipboard delivery recorded";
+  return "No delivery recorded";
 }
 
 export function CleanupView(props: CleanupViewProps): JSX.Element {
   const cleanupEnabled = props.cleanupDial !== "raw";
-  const healthState = props.injectionFailure
+  const referenceLane = props.lane.id !== props.runtimeLane;
+  const runtimeLabel = props.lanes.find((lane) => lane.id === props.runtimeLane)?.label;
+  const scopeLabel = referenceLane ? "Reference" : props.previewFixture ? "Fixture" : null;
+  const runtimeEvidence = scopeLabel === null;
+  const hasInjectionFailure = props.injectionFailure !== null;
+  const deliverySucceeded = runtimeEvidence && Boolean(props.deliveryMethod)
+    && !props.heldReason && !hasInjectionFailure;
+  const healthState = !runtimeEvidence
+    ? "pending"
+    : hasInjectionFailure
     ? "issue"
-    : props.deliveryMethod
+    : deliverySucceeded
       ? "ready"
       : "pending";
-  const healthLabel = props.injectionFailure
+  const healthLabel = scopeLabel ?? (hasInjectionFailure
     ? "Issue"
-    : props.deliveryMethod
-      ? "Good"
-      : props.heldReason
-        ? "Held safely"
-        : "Pending proof";
+    : props.heldReason
+      ? "Held"
+      : deliverySucceeded ? "Recorded" : "Pending");
   const gateStates = [
-    props.permissionsReady,
-    true,
-    Boolean(props.deliveryMethod || props.heldReason),
-    Boolean(props.deliveryMethod),
+    runtimeEvidence && props.permissionsReady, false, deliverySucceeded, false,
   ];
+  const gateLabels = [
+    props.permissionsReady ? "Reported" : "Pending", "Not measured",
+    healthLabel, "Not measured",
+  ];
+  const healthDetail = referenceLane ? "No measurements from this OS in this runtime."
+    : props.previewFixture ? "Sample data; not a native delivery measurement."
+    : hasInjectionFailure ? props.injectionFailure || "Delivery failed; no error detail recorded."
+    : props.heldReason ? `Delivery held: ${props.heldReason.replaceAll("_", " ")}.` : methodLabel(props.deliveryMethod);
 
   return (
     <section className="cleanup-board" aria-label={`${props.appName} cleanup and injection`}>
@@ -114,7 +127,7 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
 
       <div className="cleanup-heading">
         <div><span>Screen family 03</span><h1>Cleanup &amp; Injection</h1></div>
-        <span>{props.previewFixture ? "Preview fixture" : "Backend state"}</span>
+        <span>{referenceLane ? `${props.lane.label} reference · controls apply to ${runtimeLabel}` : props.previewFixture ? "Preview fixture" : "Backend state"}</span>
       </div>
 
       <div className="cleanup-main-grid">
@@ -166,10 +179,10 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
           </section>
 
           <section className="cleanup-destination-section">
-            <div><h3>Output Destination (Per App)</h3><small>{props.targetApp ? "Latest bound target" : "Awaiting first captured target"}</small></div>
+            <div><h3>Output Destination (Per App)</h3><small>{referenceLane ? "Runtime target not shown in reference" : props.targetApp ? "Latest bound target" : "Awaiting first captured target"}</small></div>
             <button disabled type="button" title="Per-app profile editing lands with the P2 profile unit">
               <CockpitGlyph name="target" />
-              <span>{props.targetApp ?? "No captured app yet"}</span>
+              <span>{referenceLane ? "Reference only" : props.targetApp ?? "No captured app yet"}</span>
             </button>
             <button disabled type="button" title="Per-app profile editing is not available in this build">Configure</button>
           </section>
@@ -177,11 +190,11 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
 
         <aside className="cleanup-panel cleanup-injection-panel">
           <section className="cleanup-method-section">
-            <div><h2>Injection Method &amp; Status</h2><span className={props.permissionsReady ? "ready" : "pending"}>{props.permissionsReady ? "Enabled" : "Setup required"}</span></div>
+            <div><h2>Injection Method &amp; Status</h2><span className={runtimeEvidence && props.permissionsReady ? "ready" : "pending"}>{scopeLabel ?? (props.permissionsReady ? "Reported" : "Pending")}</span></div>
             <strong>{props.lane.label} Injection</strong>
             <p>{props.lane.primaryMethod}</p>
             <small>{props.lane.primaryDetail}</small>
-            <dl><div><dt>Status</dt><dd>{props.permissionsReady ? "Active" : "Permission proof pending"}</dd></div><div><dt>Permissions</dt><dd>{props.permissionSummary}</dd></div></dl>
+            <dl><div><dt>Status</dt><dd>{scopeLabel ? `${scopeLabel} only` : props.permissionsReady ? "Permissions ready" : "Permission proof pending"}</dd></div><div><dt>Permissions</dt><dd>{runtimeEvidence ? props.permissionSummary : "Not measured here"}</dd></div></dl>
             <button onClick={() => props.onNavigate("Setup")} type="button">Check permissions</button>
           </section>
 
@@ -193,7 +206,7 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
 
           <section className="cleanup-health-section">
             <div><strong>Injection Health</strong><span className={healthState}>{healthLabel}</span></div>
-            <p>{props.injectionFailure ?? methodLabel(props.deliveryMethod)}</p>
+            <p>{healthDetail}</p>
           </section>
 
           <section className="cleanup-latency-section">
@@ -203,7 +216,7 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
               <div><span>Partial</span><strong>&le; 300ms</strong></div>
               <div><span>CPU inject</span><strong>&le; 1200ms</strong></div>
             </div>
-            <div className="cleanup-current-p95"><span>Reference p95</span><strong>{props.previewFixture ? "Fixture 7 / 120 / 5ms" : "Pending P1-G3"}</strong></div>
+            <div className="cleanup-current-p95"><span>Reference p95</span><strong>{referenceLane ? "Not measured here" : props.previewFixture ? "Fixture 7 / 120 / 5ms" : "Pending P1-G3"}</strong></div>
           </section>
 
           <section className="cleanup-gates-section">
@@ -212,7 +225,7 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
               <div key={gate}>
                 <span className={gateStates[index] ? "ready" : "pending"}>{gateStates[index] ? <CockpitGlyph name="check" /> : null}</span>
                 <strong>{gate}</strong>
-                <small>{gateStates[index] ? "OK" : "Pending"}</small>
+                <small>{scopeLabel ?? gateLabels[index]}</small>
               </div>
             ))}
             <div className="cleanup-status-legend" aria-label="Status legend">

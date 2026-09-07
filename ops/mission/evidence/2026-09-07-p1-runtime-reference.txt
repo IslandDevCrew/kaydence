@@ -1,0 +1,39 @@
+P1-G4 runtime/reference truth — routine presentation correction
+Base: PR #37 merge 42d7099. Product scope App.tsx + CleanupView.tsx.
+PLAN: derive Dictate accent/method from runtime, preserve reference selectors
+elsewhere; never inherit host proof on another OS reference. Label recorded
+delivery narrowly; secure-field/round-trip proof is absent and stays unmeasured.
+Hold/failure overrides any stale delivery method. No Rust or contract change.
+Red-before-green browser IPC fixtures cover ready/blocked/held/failed states
+and reference round trips through Cleanup/Privacy/Setup for three OS UAs.
+These mocks do not prove native permissions/injection or platform readiness.
+
+BUILD/JUDGE: App derives Dictate identity from runtime, not reference selection.
+Cleanup hides host target/p95/permission details in reference mode and marks
+all fixture/reference gates unmeasured. Recorded delivery is narrower than
+proof; hold/failure dominates stale method. Secure/round-trip stays unmeasured.
+RED: original secure/round-trip .ready assertion failed (1 != 0).
+Independent Judge found typed empty error string still reported success.
+Corrected presence check, generic failure detail; added failed-empty per OS.
+Final Judge PASS on 15 runtime cases + dark450 fixture, including independent
+empty-error reproduction. No new copy overflow at900x600/450x300.
+Reviewed App.tsx SHA256: 04bd5693ad1a0d0d6ed97833b35b3169583be79ecc28032b7d29883f3ee5ea3a
+Reviewed CleanupView.tsx SHA256: 596651fa24a9772d2c17776755f7b845f6e701c9da4ee6686996fdf526228158
+
+GATE: fresh fmt/clippy -Dwarnings,253 default Rust tests,tsc,eslint,privacy
+posture/network audit,ADR checker,direct Vite production build PASS.
+bench.sh --check PASS for4 synthetic metrics, explicitly PARTIAL; no claim
+for native ASR/GPU/idle footprint/reference hardware. Stable external target
+/tmp/kaydence-p1-gates.X9BATu; no canonical target or dist edits.
+Browser regressions:16 reference/fixture,10 nav,4 modal,2 privacy-copy PASS.
+Reproduce with PLAYWRIGHT_MODULE pointing at bundled Playwright and APP_URL
+at served frontend, node ops/mission/evidence/2026-09-07-p1-reference-check.cjs.
+Seven PNGs + compressed gate/browser logs in adjacent runtime-reference/;
+hashes in manifest.sha256. Read-only4-screen audit is separately archived
+in 2026-09-07-p1-readability-audit/ at pre-correction PR37 head31da593.
+
+AUDIT: routine presentation-only correction; no Rust,deps,model/network,
+identity,nav order,design tokens,permission or injection policy changes.
+P1-G4 remains pending: native hydration/demo fallback,live capture bridge,
+locked11px floor/legend,full fidelity/native proof. Backend lane remains Buzz.
+Merge only via required3OS CI + CLEAN + merge commit; no admin override.
