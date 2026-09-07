@@ -38,6 +38,7 @@ export interface PrivacyAuditItem {
 interface PrivacyViewProps {
   appName: string;
   auditItems: PrivacyAuditItem[];
+  historyNotice: string | null;
   contextEnabled: boolean;
   engineLabel: string;
   historyRetentionDays: number;
@@ -303,15 +304,16 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
       <section className="privacy-panel privacy-audit-panel">
         <header><div><h2>Audit Log</h2><small>Recent local event metadata</small></div><button onClick={() => props.onNavigate("Dictate")} type="button">View History</button></header>
         <div className="privacy-audit-list">
+          {props.historyNotice ? <p role="status">{props.historyNotice}</p> : null}
           {auditRows.length ? auditRows.map((item) => (
             <div className="privacy-audit-row" key={item.id}>
               <time>{item.timestamp}</time>
               <div><strong>{item.title}</strong><small>{item.detail}</small></div>
               <em>{item.outcome}</em>
             </div>
-          )) : (
+          )) : !props.historyNotice ? (
             <p>No local session metadata yet.</p>
-          )}
+          ) : null}
         </div>
       </section>
 

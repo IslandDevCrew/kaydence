@@ -206,6 +206,7 @@ export function StatusFooter({
   microphone,
   onNavigateSetup,
   operational,
+  statusLabel,
   statusItems,
   version,
 }: {
@@ -213,6 +214,7 @@ export function StatusFooter({
   microphone: string;
   onNavigateSetup: () => void;
   operational: boolean;
+  statusLabel?: string;
   statusItems: StatusPillItem[];
   version: string;
 }): JSX.Element {
@@ -224,7 +226,7 @@ export function StatusFooter({
       </div>
       <div className="cockpit-sb-right">
         <strong className={operational ? "operational" : "attention"}>
-          {operational ? "All systems operational" : "Setup action required"}
+          {statusLabel ?? (operational ? "All systems operational" : "Setup action required")}
         </strong>
         <span aria-label={`Mic level — ${microphone}`} className="cockpit-mic-meter" title={`Mic level — ${microphone}`}>
           {Array.from({ length: 10 }, (_, index) => <i key={index} />)}

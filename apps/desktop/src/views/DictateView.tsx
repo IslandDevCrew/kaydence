@@ -38,6 +38,7 @@ interface DictateViewProps {
   elapsed: string;
   historyExportNote: string | null;
   historyItems: DictateHistoryItem[];
+  historyNotice: string | null;
   historyPlaybackIssue: string | null;
   historyPurgeNote: string | null;
   historyRefreshPending: boolean;
@@ -69,6 +70,7 @@ interface DictateViewProps {
   outputDestination: string;
   outputMethod: string;
   pendingHistoryAction: boolean;
+  previewFixture: boolean;
   recording: boolean;
   statusItems: CockpitStatusItem[];
   transcript: string;
@@ -112,9 +114,9 @@ export function DictateView(props: DictateViewProps): JSX.Element {
         onClick={props.onRecordToggle}
         type="button"
       ><CockpitGlyph name="square" /></button>
-      <div className="record-state"><strong>{props.recording ? "Recording" : "Ready"}</strong><span>{props.elapsed}</span></div>
-      <div className="cockpit-waveform" aria-label={props.recording ? "Preview recording waveform" : "Microphone idle"}>
-        {waveformHeights.map((height, index) => <span key={index} style={{ height: `${height}px` }} />)}
+      <div className="record-state"><strong>{!props.previewFixture ? "Live status unavailable" : props.recording ? "Recording" : "Ready"}</strong><span>{props.elapsed}</span></div>
+      <div className="cockpit-waveform" data-unavailable={!props.previewFixture || undefined} aria-label={!props.previewFixture ? "Live waveform unavailable" : props.recording ? "Preview recording waveform" : "Microphone idle"}>
+        {props.previewFixture ? waveformHeights.map((height, index) => <span key={index} style={{ height: `${height}px` }} />) : null}
       </div>
     </section>
   );
@@ -155,6 +157,7 @@ export function DictateView(props: DictateViewProps): JSX.Element {
           {props.historyRefreshPending ? "Refreshing" : "Refresh"}
         </button>
       </div>
+      {props.historyNotice ? <p className="cockpit-note issue" role="status">{props.historyNotice}</p> : null}
       {props.historyItems.length ? props.historyItems.slice(0, 3).map((item) => (
         <details className="cockpit-history-row" key={item.id}>
           <summary><span><strong>{item.title}</strong><small>{item.status}</small></span><time>{item.timestamp}</time></summary>
@@ -166,7 +169,7 @@ export function DictateView(props: DictateViewProps): JSX.Element {
             <button disabled={props.pendingHistoryAction} onClick={() => props.onDeleteHistory(item.id)} type="button">Delete</button>
           </div>
         </details>
-      )) : <p className="cockpit-empty-state">No local sessions yet.</p>}
+      )) : !props.historyNotice ? <p className="cockpit-empty-state">No local sessions yet.</p> : null}
       {props.historyExportNote ? <small className="cockpit-note">{props.historyExportNote}</small> : null}
       {props.historyPurgeNote ? <small className="cockpit-note">{props.historyPurgeNote}</small> : null}
       {props.historyPlaybackIssue ? <small className="cockpit-note issue">{props.historyPlaybackIssue}</small> : null}
@@ -179,7 +182,7 @@ export function DictateView(props: DictateViewProps): JSX.Element {
   const transcriptNode = (
     <section aria-label="Recent clean transcript" className="cockpit-transcript-panel cockpit-transcript-full">
       <PanelHeading>Recent clean transcript</PanelHeading>
-      <p>{props.transcript || "No local transcript yet."}</p>
+      <p>{props.transcript || props.historyNotice || "No local transcript yet."}</p>
       <div><span>{words} words / {props.transcript.length} chars</span>
         <button
           disabled={props.historyItems.length === 0}
@@ -229,6 +232,7 @@ export function DictateView(props: DictateViewProps): JSX.Element {
     >
       <header className="cockpit-titlebar">
         <strong>Dictate</strong>
+        {props.previewFixture ? <span className="cockpit-preview-label">Preview fixture · not live</span> : null}
       </header>
 
       {topband}
@@ -238,7 +242,8 @@ export function DictateView(props: DictateViewProps): JSX.Element {
         appName={props.appName}
         microphone={props.microphone}
         onNavigateSetup={() => props.onNavigate("Setup")}
-        operational={props.operational}
+        operational={props.previewFixture && props.operational}
+        statusLabel={props.previewFixture ? undefined : "Live status unavailable"}
         statusItems={props.statusItems}
         version={`${APP_VERSION} · ${props.osLabel}`}
       />

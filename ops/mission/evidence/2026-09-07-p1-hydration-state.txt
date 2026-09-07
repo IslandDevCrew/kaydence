@@ -1,0 +1,43 @@
+P1-G4 PLAN: remove native-to-demo fallback; render explicit loading/error/retry,
+keep browser-only fixtures labeled, surface failed/stale history without
+inventing empty success, and mark capture live status unavailable until the
+owned backend projection exists. No new IPC,Rust,event,dependency or policy.
+Six source-literal IPC-fixture contracts are RED on PR37/38 frontend.
+Parallel local preparation only; no push/merge before PR38 finishes and its
+exact merged tree/heartbeat are recorded. Browser fixture checks are not
+native recording or physical OS proof. Full P1-G4 remains pending.
+
+BUILD: existing isTauri API distinguishes browser fixtures from native loading.
+Native snapshot rejection renders explicit error/retry, never demo data;
+failed history reads keep real data with stale warnings, including Privacy.
+Browser preview is visible; capture/footer/level do not invent live native
+state. No timer derived from Started.at_ms and no recent_history polling.
+JUDGE: independent PASS after correcting hardcoded connection branding and
+retry partial-success stale warning. Late prior-attempt IPC cannot overwrite
+retry results; error retry focus is visible at450x300. No new copy overflow.
+App.tsx:8665f8d097ebe32eb0143a018a045cb54e2e9705f07ae6edf2be14272a10d6eb
+DictateView.tsx:9b62f2339ff753340bced14735e70b1087d154363fd163414d6e6b13d880d0ba
+PrivacyView.tsx:ab6c8529019c062484c85d8880d15edceb9b59356018eff745fefc3c32eb3146
+CockpitChrome.tsx:8e431d4309b980f6e32c45f9b7e55d281224fd5abdcc86c28e101c0da5377bf1
+styles.css:31a14fea4cd329728ff1fb746173dba3dedd4cc3e0f4032c3c60bff999ad2439
+DictateView.css:9d50955549f57a2d9d35461ef5360ab902c50667b96efcf06941d13268b39f8a
+
+GATE:7 hydration contracts x3layouts x2themes x2viewports=84 checks PASS.
+900x600 and450x300 are CSS viewports, not native OS zoom certification.
+Two capture reruns add14 PASS;16 PNGs archived with hash manifest:
+step1=browser preview,2=pending,3=retry recovery,4=partial-retry stale,
+5=Privacy history error,6=manual-refresh stale,7=native status unavailable;
+connection-error is captured before retry. Both900-light and450-dark.
+Fresh16 reference,10 nav,4 modal,2 Privacy regressions PASS. Local fmt,
+clippy -Dwarnings,253 default Rust tests,tsc/eslint,privacy/network,ADR and
+direct Vite build PASS. Synthetic bench4 measured metrics PASS/PARTIAL;
+no native ASR/GPU/physical footprint certification. Compressed logs archived.
+Reproduce: PLAYWRIGHT_MODULE=bundled-playwright APP_URL=served-frontend node
+ops/mission/evidence/2026-09-07-p1-hydration-check.cjs; optional COCKPIT_LAYOUT,
+CHECK_THEME,CHECK_WIDTH,CHECK_HEIGHT,CAPTURE_DIR select the recorded matrix.
+
+AUDIT: frontend error presentation only, existing8px cards/tokens/real mark;
+no Rust,dependencies,download default,permission/injection policy or new IPC.
+Live capture projection still needs backend lane ownership/ADR coordination.
+11px-floor restoration,short-window content reflow,and physical P1-G3/G4
+proof remain open. Required3OS CI and CLEAN/merge-commit govern integration.
