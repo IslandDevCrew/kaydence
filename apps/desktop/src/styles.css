@@ -142,6 +142,14 @@ body {
   color: var(--ink);
 }
 
+.runtime-connection { min-height: 100vh; display: grid; place-items: center; padding: var(--space-4); }
+.runtime-connection section { width: min(100%, 36rem); padding: var(--space-6); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+.runtime-connection img { width: var(--space-8); vertical-align: middle; margin-right: var(--space-3); }
+.runtime-connection h1 { font-size: var(--text-xl); }
+.privacy-audit-list > p[role="status"] { font-size: var(--text-2xs); }
+.runtime-connection p { font-size: var(--text-base); line-height: 1.5; }
+.runtime-connection button { padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-soft); color: var(--ink); }
+
 button {
   font: inherit;
 }

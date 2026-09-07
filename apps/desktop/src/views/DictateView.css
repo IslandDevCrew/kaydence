@@ -319,6 +319,8 @@
 .cockpit-empty-state,
 .cockpit-note { margin: 0; color: var(--muted); font-size: .64rem; }
 .cockpit-note.issue { color: var(--danger); }
+.cockpit-preview-label, .cockpit-note[role="status"] { font-size: var(--text-2xs); }
+.cockpit-waveform[data-unavailable]::before { display: none; }
 .cockpit-purge { justify-self: start; color: var(--danger); }
 
 .cockpit-control-panel { display: grid; align-content: start; gap: 8px; min-height: 0; overflow: auto; }

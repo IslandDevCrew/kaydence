@@ -1,4 +1,4 @@
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke, isTauri } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -591,14 +591,17 @@ function privacyAuditItem(session: HistorySession): PrivacyAuditItem {
 // Presentation only. The Rust backend owns all logic (root AGENTS §9).
 export function App(): JSX.Element {
   const runtimeLane = useMemo(detectOsLane, []);
+  const [desktopRuntime] = useState(isTauri);
+  const [hydrationAttempt, setHydrationAttempt] = useState(0);
   const [layoutPreset, setLayoutPreset] = useLayoutPreset();
   const [activeLane, setActiveLane] = useState<OsLane>(runtimeLane);
   const [activeView, setActiveView] = useState<AppView>("Dictate");
   const [previewRecording, setPreviewRecording] = useState(true);
   const [snapshot, setSnapshot] = useState<AppSnapshot>(previewSnapshot);
-  const [snapshotSource, setSnapshotSource] = useState<"backend" | "preview">("preview");
-  const [historySessions, setHistorySessions] = useState<HistorySession[]>(previewHistory);
-  const [historyRefreshPending, setHistoryRefreshPending] = useState(false);
+  const [snapshotSource, setSnapshotSource] = useState<"backend" | "preview" | "loading" | "error">(desktopRuntime ? "loading" : "preview");
+  const [historySessions, setHistorySessions] = useState<HistorySession[]>(desktopRuntime ? [] : previewHistory);
+  const [historyRefreshPending, setHistoryRefreshPending] = useState(desktopRuntime);
+  const [historyIssue, setHistoryIssue] = useState<string | null>(null);
   const [deletingHistoryId, setDeletingHistoryId] = useState<string | null>(null);
   const [exportingHistoryId, setExportingHistoryId] = useState<string | null>(null);
   const [historyExportOutcome, setHistoryExportOutcome] =
@@ -732,10 +735,10 @@ export function App(): JSX.Element {
     },
     {
       label: "WAL Recovery",
-      value: captureFailure ? "Review needed" : historySessions.length ? "Healthy" : "Pending proof",
-      detail: captureFailure?.failure?.error ?? `${historySessions.length} local sessions tracked`,
+      value: historyIssue ? "Unavailable" : captureFailure ? "Review needed" : historySessions.length ? "Healthy" : "Pending proof",
+      detail: historyIssue ?? captureFailure?.failure?.error ?? `${historySessions.length} local sessions tracked`,
       icon: "database",
-      state: captureFailure ? "issue" : historySessions.length ? "ready" : "pending",
+      state: historyIssue || captureFailure ? "issue" : historySessions.length ? "ready" : "pending",
     },
   ];
   const cockpitHistory: DictateHistoryItem[] = historySessions.map((session) => ({
@@ -755,6 +758,7 @@ export function App(): JSX.Element {
         : undefined,
   }));
   const privacyAuditItems = historySessions.map(privacyAuditItem);
+  const historyNotice = historyIssue ?? (historyRefreshPending && !historySessions.length ? "Loading local history…" : null);
   const historyExportNote = historyExportOutcome
     ? historyExportOutcome.exported
       ? `Exported to ${historyExportOutcome.text_path ?? historyExportOutcome.json_path}`
@@ -770,6 +774,7 @@ export function App(): JSX.Element {
     purgingHistory;
 
   useEffect(() => {
+    if (!desktopRuntime) return;
     let active = true;
     void invoke<AppSnapshot>("app_snapshot")
       .then((nextSnapshot) => {
@@ -780,25 +785,28 @@ export function App(): JSX.Element {
       })
       .catch(() => {
         if (active) {
-          setSnapshot(previewSnapshot);
-          setSnapshotSource("preview");
+          setSnapshotSource("error");
         }
       });
     void invoke<HistorySession[]>("recent_history", { limit: 4 })
       .then((sessions) => {
         if (active) {
           setHistorySessions(sessions);
+          setHistoryIssue(null);
         }
       })
       .catch(() => {
         if (active) {
-          setHistorySessions(previewHistory);
+          setHistoryIssue("Local history unavailable. Any displayed sessions are last-loaded and may be stale.");
         }
+      })
+      .finally(() => {
+        if (active) setHistoryRefreshPending(false);
       });
     return () => {
       active = false;
     };
-  }, []);
+  }, [desktopRuntime, hydrationAttempt]);
 
   function refreshSetupSnapshot() {
     setSetupRefreshPending(true);
@@ -1153,10 +1161,15 @@ export function App(): JSX.Element {
   }
 
   function refreshHistory() {
+    if (!desktopRuntime) {
+      setHistoryIssue("Preview fixture: open the desktop app to load local history.");
+      return;
+    }
     setHistoryRefreshPending(true);
     void invoke<HistorySession[]>("recent_history", { limit: 4 })
       .then((sessions) => {
         setHistorySessions(sessions);
+        setHistoryIssue(null);
         setHistoryPurgeOutcome(null);
         setHistoryPlaybackIssue(null);
         setActiveHistoryAudio((current) =>
@@ -1167,6 +1180,9 @@ export function App(): JSX.Element {
       })
       .catch((error) => {
         console.error("Kaydence history refresh failed", error);
+        setHistoryIssue(historySessions.length
+          ? "History refresh failed. Showing last-loaded sessions; data may be stale."
+          : "Local history unavailable. Refresh to try again.");
       })
       .finally(() => {
         setHistoryRefreshPending(false);
@@ -1267,6 +1283,23 @@ export function App(): JSX.Element {
       });
   }
 
+  if (snapshotSource === "loading" || snapshotSource === "error") {
+    return (
+      <main className="runtime-connection">
+        <section role={snapshotSource === "error" ? "alert" : "status"}>
+          <img src={appIconUrl} alt="" /><strong>{snapshot.app_name}</strong>
+          <h1>{snapshotSource === "error" ? "Desktop state unavailable" : `Loading ${snapshot.app_name}`}</h1>
+          <p>{snapshotSource === "error" ? "Local desktop settings could not be loaded. No sample data is shown." : "Waiting for local desktop settings. No sample data is shown."}</p>
+          {snapshotSource === "error" ? <button type="button" onClick={() => {
+            setSnapshotSource("loading");
+            setHistoryRefreshPending(true);
+            setHydrationAttempt((attempt) => attempt + 1);
+          }}>Retry connection</button> : null}
+        </section>
+      </main>
+    );
+  }
+
   if (activeView === "Dictate") {
     return (
       <main
@@ -1290,13 +1323,14 @@ export function App(): JSX.Element {
           elapsed={snapshotSource === "preview" && previewRecording ? "00:01.24" : "--:--"}
           historyExportNote={historyExportNote}
           historyItems={cockpitHistory}
+          historyNotice={historyNotice}
           historyPlaybackIssue={historyPlaybackIssue}
           historyPurgeNote={historyPurgeNote}
           historyRefreshPending={historyRefreshPending}
           layoutPreset={layoutPreset}
           markUrl={markUrl}
           microphone={
-            snapshot.settings.first_run.microphone_permission_ready
+            desktopRuntime ? "Live level unavailable" : snapshot.settings.first_run.microphone_permission_ready
               ? "Microphone proof ready"
               : "Awaiting microphone proof"
           }
@@ -1318,6 +1352,7 @@ export function App(): JSX.Element {
           outputDestination={latestTarget ? `Insert at ${latestTarget.name}` : "Insert at cursor"}
           outputMethod={runtimeSpec.injection}
           pendingHistoryAction={pendingHistoryAction}
+          previewFixture={snapshotSource === "preview"}
           recording={snapshotSource === "preview" && previewRecording}
           statusItems={cockpitStatuses}
           transcript={cockpitTranscript}
@@ -1382,6 +1417,7 @@ export function App(): JSX.Element {
         <PrivacyView
           appName={snapshot.app_name}
           auditItems={privacyAuditItems}
+          historyNotice={historyNotice}
           contextEnabled={snapshot.settings.privacy.local_context_enabled}
           engineLabel={engineLabel}
           historyRetentionDays={snapshot.settings.privacy.history_retention_days}
