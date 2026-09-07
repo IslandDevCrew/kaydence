@@ -649,10 +649,8 @@ export function App(): JSX.Element {
     () => lanes.find((candidate) => candidate.id === activeLane) ?? lanes[0],
     [activeLane],
   );
-  const runtimeLaneLabel = useMemo(
-    () => lanes.find((candidate) => candidate.id === runtimeLane)?.label ?? runtimeLane,
-    [runtimeLane],
-  );
+  const runtimeSpec = lanes.find((candidate) => candidate.id === runtimeLane) ?? lanes[0];
+  const runtimeLaneLabel = runtimeSpec.label;
   const hotkeyMode =
     snapshot.settings.hotkey.mode === "push_to_talk" ? "Push-to-talk" : "Toggle";
   const hotkeyBindingOptions = snapshot.settings.hotkey.primary_binding_options;
@@ -1273,7 +1271,7 @@ export function App(): JSX.Element {
     return (
       <main
         className="app-shell dictate-shell"
-        style={{ "--accent": lane.accent } as React.CSSProperties}
+        style={{ "--accent": runtimeSpec.accent } as React.CSSProperties}
       >
         <NavRail
           activeView="Dictate"
@@ -1318,7 +1316,7 @@ export function App(): JSX.Element {
           operational={cockpitOperational}
           osLabel={runtimeLaneLabel}
           outputDestination={latestTarget ? `Insert at ${latestTarget.name}` : "Insert at cursor"}
-          outputMethod={lane.injection}
+          outputMethod={runtimeSpec.injection}
           pendingHistoryAction={pendingHistoryAction}
           recording={snapshotSource === "preview" && previewRecording}
           statusItems={cockpitStatuses}
@@ -1359,6 +1357,7 @@ export function App(): JSX.Element {
           permissionSummary={permissionSummaryText}
           permissionsReady={permissionsReady}
           previewFixture={snapshotSource === "preview"}
+          runtimeLane={runtimeLane}
           targetApp={latestTarget?.name ?? null}
           unknownFocus={unknownFocus}
         />

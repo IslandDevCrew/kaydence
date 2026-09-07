@@ -726,3 +726,10 @@
 - Reproduced missing <=500px navigation; prototyped the same ten-item rail with two columns and short-window scrolling. Next bounded branch will implement and prove this, preserving the 900x600 layout.
 - Further verified UI defects: native IPC failure becomes demo success, Cleanup reference lanes inherit host proof, and Dictate inherits a reference accent/method. The backend has no live capture-status bridge; that needs a separately owned integration contract. Typography-floor and physical-device gates remain open.
 - P1 remains active, P1-G4 pending. Heartbeat is committed on the next protected-main mission branch; no Rust, model, download-default, event-contract, or ADR authority changed.
+
+## 2026-09-07T09:30Z — session 33 (Responsive navigation merged)
+- PR #37 merged `42d7099` after final head `31da593` passed all three OS legs of Actions `34105203905`. Tested and merged trees match `97566717a6e52b1f992ffd59120b2761092e805c`.
+- The same ten-item nav now remains reachable at narrow widths and short heights. Independent Judge caught clipped focus and a footer overlap; both were reproduced, added as assertions, and fixed before push. Six 900x600 rail PNGs remain byte-identical to baseline; no board/token/identity re-lock occurred.
+- Final local gates pass; synthetic physical fields remain PARTIAL. Source bindings, 20 hashed PNGs and raw gate log are in the responsive-nav evidence packet. No native WebView or actual OS scaling claim is added.
+- The current in-app browser now supports fresh 900x600 screenshots. A four-screen dark-theme readability audit confirms sub-11px text and crowded secondary chrome; saved pre-correction screenshots supplement, not replace, native gates.
+- Next bounded unit fixes Cleanup runtime/reference proof and Dictate OS identity. Native hydration/error truth, typography/reflow, live capture bridge ownership and physical/ADR gates remain open. Heartbeat is committed before product edits on the next mission branch.
