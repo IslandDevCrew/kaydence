@@ -45,7 +45,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: .61rem;
   font-weight: 750;
 }
 
@@ -72,7 +71,6 @@
   align-items: center;
   gap: 5px;
   overflow: hidden;
-  font-size: .61rem;
   font-weight: 750;
   white-space: nowrap;
 }
@@ -86,10 +84,6 @@
   flex: 0 0 auto;
   width: 13px;
   height: 13px;
-}
-
-.cleanup-shell .compact-sidebar .nav-item small {
-  font-size: .51rem;
 }
 
 .cleanup-shell .compact-sidebar .nav-item.active,
@@ -117,7 +111,6 @@
   display: block;
   overflow: hidden;
   margin: 0;
-  font-size: .56rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -1,0 +1,51 @@
+P1-G4 shared navigation typography — isolated implementation packet
+Date: 2026-09-07
+Base: 1446122b42c924c306a70322dc7eb73fcdd93917 (PR #38 candidate)
+Branch: mission/p1-g4-nav-type
+Status: local checks PASS; awaiting parent rebase/review, not merged or phase complete.
+
+ORIENT / PLAN
+Trace: reopened P1-G4; DESIGN_LANGUAGE_V2_LOCK.md:56 requires an 11px floor.
+Routine repair of locked typography, not a design re-lock or invariant change.
+Scope: shared rail typography/wrapping in styles.css, obsolete rail font
+declarations in Dictate/Cleanup/Privacy CSS, this test/evidence packet only.
+Preserve 126px default rail, NAV order, disabled future phases, identity assets,
+token palette, and inset keyboard focus. No events, product behavior, or Rust.
+Body fonts, Privacy short-window layout, cockpit meter and popovers are excluded.
+Tests: tsc/eslint, existing navigation test, new rail floor/text-range/scroll test.
+No dependency change; install uses pnpm --offline --ignore-scripts.
+
+ENVIRONMENT / BOUNDARIES
+Chromium fixture frontend at http://127.0.0.1:1431; Browser skill unavailable.
+900x600 default and 375/450/500/501x300; light/dark, reduced-motion.
+450x300 is a CSS 200%-equivalent viewport, NOT native OS-scaling evidence.
+No backend/native calls or recording; source inspected but Rust/cache untouched.
+Parent owns rebase, independent Judge, exact-final-head standing gates/3-OS CI,
+PR, integration, heartbeat and final P1-G4 determination.
+
+BUILD / RED -> GREEN
+Before CSS: check-frontend.sh PASS; rail guard 6 PASS / 4 FAIL. At 501 and 900px
+in both themes, 19 rail text elements were below 11px (minimum 8.16px).
+RED screenshots retain the exact pre-change 900px defect and 450px comparator.
+Repair: shared floor tokens, complete-label wrapping, phase badges kept intact;
+removed obsolete font declarations from three view stylesheets (no TSX changes).
+After CSS: check-frontend.sh PASS (tsc + eslint); direct local vite build PASS.
+Rail guard 10/10 PASS: 3 rendered routes, 5 widths, 2 themes, loaded shared mark,
+11px floor, complete text-range geometry, nav/footer separation, 126px desktop
+rail, ten-item order/disabled phases, keyboard focus scrolling and Setup return.
+Existing navigation guard 10/10 PASS; git diff --check PASS.
+Reproduce from repository root (PLAYWRIGHT_MODULE points to installed module):
+  bash scripts/check-frontend.sh
+  APP_URL=http://127.0.0.1:1431 node ops/mission/evidence/2026-09-07-p1-rail-readability-check.cjs
+  APP_URL=http://127.0.0.1:1431 node ops/mission/evidence/2026-09-07-p1-nav-check.cjs
+  cd apps/desktop && ./node_modules/.bin/vite build
+Optional CAPTURE_DIR saves the 12 GREEN route/theme/width PNGs.
+SHA-256 source/test/PNG inventory: 2026-09-07-p1-nav-type/manifest.sha256.
+
+JUDGE / AUDIT / GATE HANDOFF
+Visual spot-review: RED/GREEN Dictate 900px and GREEN Privacy 450px confirm the
+full Whisper-Ahead label and rail footer wrap readably without widening the rail.
+Only rail presentation is claimed; surrounding pre-hydration fixture status copy
+is not runtime authority or proof of the parent's forthcoming hydration changes.
+No backend runtime, Windows/Linux WebView or native 200% scaling proof obtained.
+Independent Judge/Audit, rebased exact-head gates and 3-OS CI remain with parent.

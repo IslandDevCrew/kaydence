@@ -774,6 +774,34 @@ button {
 /* Keep the existing rail reachable in short windows, including 200% scaling. */
 .app-shell .compact-sidebar { overflow-y: auto; }
 .app-shell .compact-sidebar .nav-list { flex-shrink: 0; }
+/* The locked type floor applies at every width, not only the mobile reflow.
+   Wrap complete labels inside the existing rail instead of shrinking them. */
+.app-shell .compact-sidebar .brand-lockup > div > strong { font-size: var(--text-xs); }
+.app-shell .compact-sidebar .nav-item {
+  gap: var(--space-1);
+  padding-block: var(--space-1);
+}
+.app-shell .compact-sidebar .nav-item-label {
+  overflow: visible;
+  white-space: normal;
+  font-size: var(--text-2xs);
+  line-height: 1.35;
+}
+.app-shell .compact-sidebar .nav-item-label > span {
+  overflow: visible;
+  text-overflow: clip;
+}
+.app-shell .compact-sidebar .nav-item small {
+  flex: none;
+  white-space: nowrap;
+  font-size: var(--text-2xs);
+}
+.app-shell .compact-sidebar .sidebar-card strong,
+.app-shell .compact-sidebar .sidebar-card p {
+  font-size: var(--text-2xs);
+  white-space: normal;
+  line-height: 1.35;
+}
 /* Native focus scrolling may align a button with the scrollport edge.
    Keep the full 3px keyboard indicator inside that button's visible bounds. */
 .app-shell .compact-sidebar .nav-item:focus-visible {
