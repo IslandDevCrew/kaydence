@@ -768,10 +768,6 @@
     overflow: visible;
   }
 
-  .cleanup-shell .compact-sidebar {
-    display: none;
-  }
-
   .cleanup-board {
     grid-template-rows: auto auto auto auto;
     height: auto;

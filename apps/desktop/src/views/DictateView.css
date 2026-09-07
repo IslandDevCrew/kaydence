@@ -464,7 +464,6 @@
 
 @media (max-width: 500px) {
   .app-shell.dictate-shell { display: block; height: auto; overflow: visible; }
-  .dictate-shell .compact-sidebar { display: none; }
   .dictate-board { grid-template-rows: auto auto auto auto; height: auto; overflow: visible; }
   .cockpit-topband,
   [data-cockpit-layout="stackedpanel"] .cockpit-topband { grid-template-columns: minmax(0, 1fr); }

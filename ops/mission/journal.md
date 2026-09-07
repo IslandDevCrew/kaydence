@@ -719,3 +719,10 @@
 - PR #35 merged as `f6c647a` after final-head run `34095530493` passed all three OS legs and merge state was CLEAN. Tested and merged trees are identical. Evidence: `ops/mission/evidence/2026-09-07-gate-merge-activation.txt`.
 - Refreshed active named gates; they pass, while synthetic bench remains PARTIAL. P1-G4 remains open for the other verified defects. Next bounded unit is Privacy truth-copy restoration, followed by responsive nav and runtime/reference-state repairs.
 - Heartbeat committed on the next mission branch under protected-main workflow; no direct-main push. Mission-control Tier 2 separates implementation/review; parallel primary-source research examines Voxtype without importing code or changing dependencies.
+
+## 2026-09-07T09:07Z — session 32 (Privacy truth-copy merged; responsive nav next)
+- PR #36 merged as `8974148` after exact-head `9b069ec` passed all three legs of Actions `34103020341`. Tested and merged trees both equal `31801b3b41b8f1b6e5af8eab18a03c3afb5c7625`; required-check auto-merge used MERGE, no bypass.
+- Retained audio and source-only network auditing now have truthful copy. Independent review, red-before-green light/dark checks, hashed captures, and complete local gates are archived in the Privacy evidence packet. The pinned Voxtype/Handy note is directional research, not adopted code or new authority.
+- Reproduced missing <=500px navigation; prototyped the same ten-item rail with two columns and short-window scrolling. Next bounded branch will implement and prove this, preserving the 900x600 layout.
+- Further verified UI defects: native IPC failure becomes demo success, Cleanup reference lanes inherit host proof, and Dictate inherits a reference accent/method. The backend has no live capture-status bridge; that needs a separately owned integration contract. Typography-floor and physical-device gates remain open.
+- P1 remains active, P1-G4 pending. Heartbeat is committed on the next protected-main mission branch; no Rust, model, download-default, event-contract, or ADR authority changed.

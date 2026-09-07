@@ -901,10 +901,6 @@
     overflow: visible;
   }
 
-  .privacy-shell .compact-sidebar {
-    display: none;
-  }
-
   .privacy-board {
     grid-template-rows: auto;
     height: auto;
