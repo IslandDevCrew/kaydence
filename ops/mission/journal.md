@@ -739,3 +739,10 @@
 - Independent Judge caught an empty-error failure incorrectly marked delivered; the strengthened16-case suite now passes. Seven hashed reference screenshots and local/browser logs accompany the record. Four pre-correction screen-audit captures document readability work still needed.
 - Hydration frontend work was prepared locally while CI ran, not pushed; the branch fast-forwarded to the identical merged tree without overwriting its uncommitted edits. State/journal/rendered heartbeat is committed separately before product publication.
 - Next: submit reviewed loading/error/retry and stale-history correction; then shared rail11px typography and per-screen reflow. Live capture projection still requires backend ownership/ADR coordination; no Rust, model/download default or native-proof authority changed.
+
+## 2026-09-07T10:11Z — session 35 (Hydration truth merged)
+- PR #39 merged `494a0b2` after exact head `697de42` passed all three OS legs of Actions `34108964817`. Tested and merged trees match `c74d473080fcc3cec79630cf7147aa6b7ac69f4a`; required-check MERGE auto-merge, no bypass.
+- Explicit native loading/error/retry, stale-history warnings and unavailable live status replace misleading fixture/readiness states. Independent Judge and 84 browser-fixture combinations passed; 16 hashed PNGs and raw logs are archived. No native capture projection is claimed.
+- The shared rail typography packet was prepared and reviewed locally during CI, then rebased onto the identical merged tree. This protected-main heartbeat is committed separately before publication, not before those already-local edits.
+- Independent review additionally caught two Dictate popovers occluding one another. A new reverse-opening regression is RED; single-open/Escape behavior must pass before its PR. Cleanup, Privacy and Setup body reflow remain isolated local units.
+- P1-G4 remains pending. Next: rail packet, then independently reviewed screen corrections and combined fidelity checks; backend ownership, physical-device and ADR gates remain unchanged.
