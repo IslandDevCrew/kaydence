@@ -21,6 +21,9 @@ regex over transcript text here, you are in the wrong layer — move it to Rust.
   animation via CSS, target 60 fps on integrated graphics.
 - Accessibility: full keyboard nav, visible focus, respects OS reduced-motion,
   legible at 200% scaling.
+- Modal surfaces use `components/Modal`: native background inertness, bounded
+  Tab/Shift-Tab navigation, Escape dismissal, and focus restoration to the opener.
+  Keep Close reachable at the 450x300 effective viewport (900x600 at 200%).
 - Visual tone: calm, quiet, utilitarian. The product's personality is
   restraint — no gamification, no confetti, no upsell surfaces.
 

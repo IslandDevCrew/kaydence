@@ -139,8 +139,8 @@
     "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
     "status": "active",
     "started": "2026-07-07",
-    "updated": "2026-08-10T07:13Z",
-    "sessionCount": 29
+    "updated": "2026-09-07T07:26:11Z",
+    "sessionCount": 30
   },
   "policies": {
     "merge": "auto",
@@ -352,10 +352,10 @@
           "id": "P1-G4",
           "title": "Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup & Injection (injection paths + Raw), 07 Privacy & Context (no-transmission / secure-field posture), 10 First Run & License match the operator-approved design language",
           "command": "design-review: built screens vs the design-relock's locked Editorial Precision system (ops/mission/design-relock/) + keyboard/a11y checklist",
-          "status": "passed",
-          "evidence": "ops/mission/design-relock/idea.lock.json; ops/mission/design-relock/plan.lock.json; ops/mission/design-relock/COCKPIT_V2_PUNCHLIST.md; ops/mission/design-relock/P1_G4_OPERATOR_SIGNOFF.md; ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html; ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-pillbar.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-stackedpanel.html; ops/mission/evidence/2026-08-09-d4-design-rebuild-gates.txt; ops/mission/evidence/2026-08-09-d5-live-verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/manifest.sha256; superseded original evidence retained for history: ops/mission/evidence/2026-07-11-p1-g4-native-linux.txt; ops/mission/evidence/2026-07-11-p1-g4-windows-diagnostic.txt; ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png; ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt; ops/mission/evidence/2026-07-14-windows-webview-proof/manifest.json",
-          "lastRun": "2026-08-10T07:13:22Z",
-          "notes": "PASSED. Operator signoff is recorded in P1_G4_OPERATOR_SIGNOFF.md. Design Language v2 merged in PR #33 (74f98e3). PR #34 (d0c7d4d) closed the D5 capture gap with six exact 900x600 PNGs plus a 700x600 responsive proof and SHA-256 manifest; preserved Decision 6 at 17.80px/17.78px; fixed the narrow footer/top-band behavior and Decision S1 idle waveform. Fresh Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383. Sequential synthetic Tab traversal inside the Browser iframe remained bridge-limited and is not newly claimed; dialog focus/Escape and structural a11y checks pass, while retained native keyboard evidence remains authoritative. The final logo asset remains the recorded FUTURE carve-out and was not changed."
+          "status": "pending",
+          "evidence": "ops/mission/design-relock/idea.lock.json; ops/mission/design-relock/plan.lock.json; ops/mission/design-relock/COCKPIT_V2_PUNCHLIST.md; ops/mission/design-relock/P1_G4_OPERATOR_SIGNOFF.md; ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html; ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-pillbar.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-stackedpanel.html; ops/mission/evidence/2026-08-09-d4-design-rebuild-gates.txt; ops/mission/evidence/2026-08-09-d5-live-verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/manifest.sha256; superseded original evidence retained for history: ops/mission/evidence/2026-07-11-p1-g4-native-linux.txt; ops/mission/evidence/2026-07-11-p1-g4-windows-diagnostic.txt; ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png; ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt; ops/mission/evidence/2026-07-14-windows-webview-proof/manifest.json; ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt",
+          "lastRun": "2026-09-07T07:26:11Z",
+          "notes": "REOPENED 2026-09-07: fresh rendered keyboard checks falsified modal containment; narrow nav disappears and Privacy/preview/reference-lane truth defects remain. PR #35 restores only modal accessibility (independent targeted Judge and local checks PASS; remote CI/integration pending). This is not a design re-lock or a revocation of operator taste approval. Historical D5 record follows: PASSED. Operator signoff is recorded in P1_G4_OPERATOR_SIGNOFF.md. Design Language v2 merged in PR #33 (74f98e3). PR #34 (d0c7d4d) closed the D5 capture gap with six exact 900x600 PNGs plus a 700x600 responsive proof and SHA-256 manifest; preserved Decision 6 at 17.80px/17.78px; fixed the narrow footer/top-band behavior and Decision S1 idle waveform. Fresh Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383. Sequential synthetic Tab traversal inside the Browser iframe remained bridge-limited and is not newly claimed; dialog focus/Escape and structural a11y checks pass, while retained native keyboard evidence remains authoritative. The final logo asset remains the recorded FUTURE carve-out and was not changed."
         },
         {
           "id": "P1-G5",
@@ -1634,6 +1634,9 @@
   "resume": {
     "activePhase": "P1",
     "nextActions": [
+      "P1 ASTRA MODAL PR: review https://github.com/IslandDevCrew/kaydence/pull/35. Local modal checks and 253 Rust tests pass; three-OS CI must be checked at the final PR head. Do not merge automatically while main is unprotected and auto-merge is disabled; operator activation of Gate-Merge Fusion is still needed.",
+      "P1-G4 REOPENED: use ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt. Next bounded packets: restore the locked nav at <=500px; correct Privacy audio-retention and static network-count claims; distinguish IPC errors/fixtures from runtime; remove unproved Cleanup reference-lane OK badges. Preserve Design v2 and the final-logo carve-out.",
+      "P1 RECORDING INTEGRATION: coordinate a separately owned packet for live backend recording/elapsed feedback. The current cockpit renders recording state only for preview. Do not touch Buzz's Rust/inject lane or invent backend proof.",
       "ADR-0016 HUMAN GATE: approve or revise ORT 1.28 binary provenance, the shipped CTC model/license and source pins, and the non-default hedge posture before treating the new ONNX/Silero lane as ship-authorized.",
       "P1-P0-8 PHYSICAL PROOF: download UI wiring is merged and the default build remains network-off. On reference devices, complete live OS permission proof, one real first dictation, and <=60-second install-to-dictation evidence. Enabling model-download in the default shipped build remains a separate ADR-0017 operator gate.",
       "P1-G3 PHYSICAL PROOF: measure packaged q5 ASR-resident RAM and full release-to-focused-field timing; reduce visible no-model macOS idle below 80 MB; fix Windows close-to-tray behind a dedicated ADR/operator go; prove Linux tray/reopen.",
@@ -1641,6 +1644,8 @@
       "PROCESS: one branch = one PR = one merge for product changes. PR #34 is merged; its heartbeat reconciles state, journal, and generated HTML."
     ],
     "blockers": [
+      "PR #35 is pending integration. Gate-Merge Fusion is not active: allow_auto_merge=false; main branch protection returns 404 and effective branch rules are empty. Operator authority is needed to change these settings; no manual merge/main-push bypass.",
+      "P1-G4 reopened by the 2026-09-07 Astra repass: known navigation/accessibility and UI truth defects remain. Historical D5 captures/operator design acceptance are retained; the targeted modal fix does not establish production UI completion.",
       "ADR-0016 is Proposed. The ONNX CTC + Silero implementation is live-proven but not ship-authorized until the operator approves binary/model/license/source posture.",
       "P1-G3 still lacks physical release-to-focused-field timing, packaged q5 ASR-resident measurement, a sub-80 MB visible no-model cockpit, a Windows tray lifecycle fix, and Linux tray/reopen proof.",
       "P1-P0-8 still lacks complete live OS permission proof, a real first dictation, and <=60-second reference-device evidence. ADR-0017 separately requires operator go before model-download is enabled in the default shipped build; the merged UI does not claim cancellation support.",
