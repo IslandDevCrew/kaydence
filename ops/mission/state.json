@@ -139,8 +139,8 @@
     "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
     "status": "active",
     "started": "2026-07-07",
-    "updated": "2026-09-07T08:44:07Z",
-    "sessionCount": 31
+    "updated": "2026-09-07T09:07:34Z",
+    "sessionCount": 32
   },
   "policies": {
     "merge": "auto",
@@ -353,9 +353,9 @@
           "title": "Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup & Injection (injection paths + Raw), 07 Privacy & Context (no-transmission / secure-field posture), 10 First Run & License match the operator-approved design language",
           "command": "design-review: built screens vs the design-relock's locked Editorial Precision system (ops/mission/design-relock/) + keyboard/a11y checklist",
           "status": "pending",
-          "evidence": "ops/mission/design-relock/idea.lock.json; ops/mission/design-relock/plan.lock.json; ops/mission/design-relock/COCKPIT_V2_PUNCHLIST.md; ops/mission/design-relock/P1_G4_OPERATOR_SIGNOFF.md; ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html; ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-pillbar.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-stackedpanel.html; ops/mission/evidence/2026-08-09-d4-design-rebuild-gates.txt; ops/mission/evidence/2026-08-09-d5-live-verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/manifest.sha256; superseded original evidence retained for history: ops/mission/evidence/2026-07-11-p1-g4-native-linux.txt; ops/mission/evidence/2026-07-11-p1-g4-windows-diagnostic.txt; ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png; ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt; ops/mission/evidence/2026-07-14-windows-webview-proof/manifest.json; ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt",
+          "evidence": "ops/mission/design-relock/idea.lock.json; ops/mission/design-relock/plan.lock.json; ops/mission/design-relock/COCKPIT_V2_PUNCHLIST.md; ops/mission/design-relock/P1_G4_OPERATOR_SIGNOFF.md; ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html; ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-pillbar.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-stackedpanel.html; ops/mission/evidence/2026-08-09-d4-design-rebuild-gates.txt; ops/mission/evidence/2026-08-09-d5-live-verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/manifest.sha256; superseded original evidence retained for history: ops/mission/evidence/2026-07-11-p1-g4-native-linux.txt; ops/mission/evidence/2026-07-11-p1-g4-windows-diagnostic.txt; ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png; ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt; ops/mission/evidence/2026-07-14-windows-webview-proof/manifest.json; ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt; ops/mission/evidence/2026-09-07-p1-g4-trust-copy.txt",
           "lastRun": "2026-09-07T07:26:11Z",
-          "notes": "REOPENED 2026-09-07: fresh rendered keyboard checks falsified modal containment; narrow nav disappears and Privacy/preview/reference-lane truth defects remain. PR #35 merged as f6c647a with independent targeted Judge, local checks, and all three CI legs PASS; it restores only modal accessibility. This is not a design re-lock or a revocation of operator taste approval. Historical D5 record follows: PASSED. Operator signoff is recorded in P1_G4_OPERATOR_SIGNOFF.md. Design Language v2 merged in PR #33 (74f98e3). PR #34 (d0c7d4d) closed the D5 capture gap with six exact 900x600 PNGs plus a 700x600 responsive proof and SHA-256 manifest; preserved Decision 6 at 17.80px/17.78px; fixed the narrow footer/top-band behavior and Decision S1 idle waveform. Fresh Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383. Sequential synthetic Tab traversal inside the Browser iframe remained bridge-limited and is not newly claimed; dialog focus/Escape and structural a11y checks pass, while retained native keyboard evidence remains authoritative. The final logo asset remains the recorded FUTURE carve-out and was not changed."
+          "notes": "PR #36 merged 8974148: Privacy now acknowledges retained audio and distinguishes source audit from unmeasured live traffic. Remaining findings: narrow nav, native hydration/fixture truth, reference-lane proof/accent leakage, sub-11px text, and absent live capture bridge. REOPENED 2026-09-07: fresh rendered keyboard checks falsified modal containment; narrow nav disappears and Privacy/preview/reference-lane truth defects remain. PR #35 merged as f6c647a with independent targeted Judge, local checks, and all three CI legs PASS; it restores only modal accessibility. This is not a design re-lock or a revocation of operator taste approval. Historical D5 record follows: PASSED. Operator signoff is recorded in P1_G4_OPERATOR_SIGNOFF.md. Design Language v2 merged in PR #33 (74f98e3). PR #34 (d0c7d4d) closed the D5 capture gap with six exact 900x600 PNGs plus a 700x600 responsive proof and SHA-256 manifest; preserved Decision 6 at 17.80px/17.78px; fixed the narrow footer/top-band behavior and Decision S1 idle waveform. Fresh Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383. Sequential synthetic Tab traversal inside the Browser iframe remained bridge-limited and is not newly claimed; dialog focus/Escape and structural a11y checks pass, while retained native keyboard evidence remains authoritative. The final logo asset remains the recorded FUTURE carve-out and was not changed."
         },
         {
           "id": "P1-G5",
@@ -851,7 +851,7 @@
     {
       "label": "Platform parity (CI legs green)",
       "baseline": "0 / 3 (Mac-first field; Linux unserved)",
-      "current": "3 / 3 on tested and merged PR #35 tree: Actions 34095530493 at 4b6bc46, merge f6c647a. Native WebView/device proof remains separate.",
+      "current": "3 / 3 on tested and merged PR #36 tree: Actions 34103020341 at 9b069ec, merge 8974148. Native WebView/device proof remains separate.",
       "target": "3 / 3 incl. Wayland",
       "direction": "up"
     },
@@ -1636,14 +1636,21 @@
       "url": "https://github.com/IslandDevCrew/kaydence/pull/35",
       "phase": "P1",
       "mergedAt": "2026-09-07T08:42:09Z"
+    },
+    {
+      "number": 36,
+      "title": "Make retention and network-audit claims truthful",
+      "url": "https://github.com/IslandDevCrew/kaydence/pull/36",
+      "phase": "P1",
+      "mergedAt": "2026-09-07T09:07:34Z"
     }
   ],
   "resume": {
     "activePhase": "P1",
     "nextActions": [
-      "P1-G4 TRUST COPY: PR #35 is merged as f6c647a after exact-head three-OS CI 34095530493. Gate-Merge Fusion was explicitly approved and activated 2026-09-07. Next work unit on mission/p1-g4-trust-copy corrects Privacy audio-retention and source-audit claims without changing backend policy.",
-      "P1-G4 REOPENED: use ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt. Next bounded packets: restore the locked nav at <=500px; correct Privacy audio-retention and static network-count claims; distinguish IPC errors/fixtures from runtime; remove unproved Cleanup reference-lane OK badges. Preserve Design v2 and the final-logo carve-out.",
-      "P1 RECORDING INTEGRATION: coordinate a separately owned packet for live backend recording/elapsed feedback. The current cockpit renders recording state only for preview. Do not touch Buzz's Rust/inject lane or invent backend proof.",
+      "P1-G4 RESPONSIVE NAV: PR #36 merged 8974148 after exact-head three-OS CI 34103020341. Next unit mission/p1-g4-responsive-nav restores the same locked ten-item rail at <=500px and keyboard reachability in short windows; keep 900x600 unchanged.",
+      "P1-G4 REOPENED: modal and Privacy truth-copy fixes are merged (#35/#36). Remaining bounded packets: narrow navigation; distinguish native loading/errors from labeled fixtures; remove unproved Cleanup gates/reference-lane health; bind Dictate accent/method to runtime OS. Audit the locked 11px type floor and all screens at 200%.",
+      "P1 RECORDING INTEGRATION: read-only audit confirms no live capture-status bridge. Request a separately owned backend projection + bootstrap/reopen synchronization; do not poll recent_history for a clock or subtract Started.at_ms from Date.now(). No Buzz Rust/inject edits or SessionEvent changes without lane/ADR authority.",
       "ADR-0016 HUMAN GATE: approve or revise ORT 1.28 binary provenance, the shipped CTC model/license and source pins, and the non-default hedge posture before treating the new ONNX/Silero lane as ship-authorized.",
       "P1-P0-8 PHYSICAL PROOF: download UI wiring is merged and the default build remains network-off. On reference devices, complete live OS permission proof, one real first dictation, and <=60-second install-to-dictation evidence. Enabling model-download in the default shipped build remains a separate ADR-0017 operator gate.",
       "P1-G3 PHYSICAL PROOF: measure packaged q5 ASR-resident RAM and full release-to-focused-field timing; reduce visible no-model macOS idle below 80 MB; fix Windows close-to-tray behind a dedicated ADR/operator go; prove Linux tray/reopen.",
