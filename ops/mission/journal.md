@@ -713,3 +713,9 @@
 - Reopened P1-G4 for confirmed accessibility and UI truth defects; retained all prior D5 evidence and operator design acceptance. Next packets cover narrow nav, Privacy retention/source-audit copy, IPC failure/fixture distinction, Cleanup reference-lane truth, and separately coordinated recording feedback.
 - PR #35 is open, not merged. Main protection is absent and auto-merge disabled; Gate-Merge Fusion requires an operator action. No settings, ADR statuses, backend files, or physical-proof claims changed.
 - This is a pre-merge resume record on the PR branch, not a merged-product heartbeat. State, journal, and generated HTML travel together; next session must inspect the final PR head's CI before integration. P1 remains active; no later phase is opened.
+
+## 2026-09-07T08:42Z — session 31 (Gate-Merge Fusion activated; PR #35 merged)
+- Operator explicitly approved required CI, merge-commit auto-merge, and P1-G4 continuance. Activated the documented settings, retained repo visibility and separate ADR/operator gates, and used no admin bypass.
+- PR #35 merged as `f6c647a` after final-head run `34095530493` passed all three OS legs and merge state was CLEAN. Tested and merged trees are identical. Evidence: `ops/mission/evidence/2026-09-07-gate-merge-activation.txt`.
+- Refreshed active named gates; they pass, while synthetic bench remains PARTIAL. P1-G4 remains open for the other verified defects. Next bounded unit is Privacy truth-copy restoration, followed by responsive nav and runtime/reference-state repairs.
+- Heartbeat committed on the next mission branch under protected-main workflow; no direct-main push. Mission-control Tier 2 separates implementation/review; parallel primary-source research examines Voxtype without importing code or changing dependencies.

@@ -139,14 +139,14 @@
     "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
     "status": "active",
     "started": "2026-07-07",
-    "updated": "2026-09-07T07:26:11Z",
-    "sessionCount": 30
+    "updated": "2026-09-07T08:44:07Z",
+    "sessionCount": 31
   },
   "policies": {
     "merge": "auto",
     "branchPrefix": "mission/",
     "maxPrLines": 400,
-    "notes": "auto = merge a mission branch when the relevant standing gates are green with fresh evidence. GitHub remote origin=IslandDevCrew/kaydence is PUBLIC. Every normal push and PR now emits the full ubuntu-latest/windows-latest/macos-latest matrix; only the manual windows_visual_proof dispatch narrows to Windows. Current product-code proof: PR #30 Actions run 30921789739 passed setup plus all three OS jobs at exact head 2f74f65; its tree is byte-identical to merge 1904cde. Evidence: ops/mission/evidence/2026-08-04-p1-adr-identity-integrity.txt. Standing gates: cargo fmt --check, cargo clippy -D warnings, cargo test, frontend check/build, scripts/bench.sh --check, scripts/check-privacy-posture.sh, scripts/check-adr-status.sh. Critical decision paths still HALT for operator go + ADR. One-branch/one-PR discipline is restored; the July 27/August 2 direct-main work remains recorded, not normalized away."
+    "notes": "Gate-Merge Fusion activated with explicit operator approval 2026-09-07: required strict GitHub Actions checks for ubuntu-latest, macos-latest, windows-latest; allow_auto_merge=true; use merge commits, not squash. Existing admin bypass setting remains false-enforcement as in the approved protocol; agents must never use an admin/direct-main bypass. PR #35 exact-head CI 34095530493 was green and CLEAN before merge f6c647a; tested/merged tree aac4e01e47abdc0af4eb053a5c02117806d8f18f. Evidence: ops/mission/evidence/2026-09-07-gate-merge-activation.txt. Critical ADR/human gates remain unchanged."
   },
   "phases": [
     {
@@ -207,9 +207,9 @@
           "title": "3-OS CI matrix green (macOS + Windows + Linux) on the current HEAD",
           "command": "gh run list --branch main --limit 1",
           "status": "passed",
-          "evidence": "ops/mission/evidence/2026-08-02-full-3os-main-ci.txt; ops/mission/evidence/2026-08-04-p1-adr-identity-integrity.txt",
-          "lastRun": "2026-08-04T15:12Z",
-          "notes": "PASS on the current product tree. Actions run 30921789739 completed setup, Ubuntu, macOS, and Windows successfully at exact head 2f74f65; its tree is byte-identical to main merge 1904cde. Every normal push continues to validate all three OSes."
+          "evidence": "ops/mission/evidence/2026-08-02-full-3os-main-ci.txt; ops/mission/evidence/2026-08-04-p1-adr-identity-integrity.txt; ops/mission/evidence/2026-09-07-gate-merge-activation.txt",
+          "lastRun": "2026-09-07T07:39:48Z",
+          "notes": "PASS on PR #35 head 4b6bc462394108ccec7a4752c92a2770d74536b8: Actions 34095530493 passed all three OS jobs; merge f6c647a has an identical tree. Hosted CI is not physical-device proof."
         },
         {
           "id": "P0-G7",
@@ -355,7 +355,7 @@
           "status": "pending",
           "evidence": "ops/mission/design-relock/idea.lock.json; ops/mission/design-relock/plan.lock.json; ops/mission/design-relock/COCKPIT_V2_PUNCHLIST.md; ops/mission/design-relock/P1_G4_OPERATOR_SIGNOFF.md; ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html; ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-pillbar.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-stackedpanel.html; ops/mission/evidence/2026-08-09-d4-design-rebuild-gates.txt; ops/mission/evidence/2026-08-09-d5-live-verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/manifest.sha256; superseded original evidence retained for history: ops/mission/evidence/2026-07-11-p1-g4-native-linux.txt; ops/mission/evidence/2026-07-11-p1-g4-windows-diagnostic.txt; ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png; ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt; ops/mission/evidence/2026-07-14-windows-webview-proof/manifest.json; ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt",
           "lastRun": "2026-09-07T07:26:11Z",
-          "notes": "REOPENED 2026-09-07: fresh rendered keyboard checks falsified modal containment; narrow nav disappears and Privacy/preview/reference-lane truth defects remain. PR #35 restores only modal accessibility (independent targeted Judge and local checks PASS; remote CI/integration pending). This is not a design re-lock or a revocation of operator taste approval. Historical D5 record follows: PASSED. Operator signoff is recorded in P1_G4_OPERATOR_SIGNOFF.md. Design Language v2 merged in PR #33 (74f98e3). PR #34 (d0c7d4d) closed the D5 capture gap with six exact 900x600 PNGs plus a 700x600 responsive proof and SHA-256 manifest; preserved Decision 6 at 17.80px/17.78px; fixed the narrow footer/top-band behavior and Decision S1 idle waveform. Fresh Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383. Sequential synthetic Tab traversal inside the Browser iframe remained bridge-limited and is not newly claimed; dialog focus/Escape and structural a11y checks pass, while retained native keyboard evidence remains authoritative. The final logo asset remains the recorded FUTURE carve-out and was not changed."
+          "notes": "REOPENED 2026-09-07: fresh rendered keyboard checks falsified modal containment; narrow nav disappears and Privacy/preview/reference-lane truth defects remain. PR #35 merged as f6c647a with independent targeted Judge, local checks, and all three CI legs PASS; it restores only modal accessibility. This is not a design re-lock or a revocation of operator taste approval. Historical D5 record follows: PASSED. Operator signoff is recorded in P1_G4_OPERATOR_SIGNOFF.md. Design Language v2 merged in PR #33 (74f98e3). PR #34 (d0c7d4d) closed the D5 capture gap with six exact 900x600 PNGs plus a 700x600 responsive proof and SHA-256 manifest; preserved Decision 6 at 17.80px/17.78px; fixed the narrow footer/top-band behavior and Decision S1 idle waveform. Fresh Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383. Sequential synthetic Tab traversal inside the Browser iframe remained bridge-limited and is not newly claimed; dialog focus/Escape and structural a11y checks pass, while retained native keyboard evidence remains authoritative. The final logo asset remains the recorded FUTURE carve-out and was not changed."
         },
         {
           "id": "P1-G5",
@@ -851,7 +851,7 @@
     {
       "label": "Platform parity (CI legs green)",
       "baseline": "0 / 3 (Mac-first field; Linux unserved)",
-      "current": "3 / 3 on the current product tree: Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383 before merge commit d0c7d4d.",
+      "current": "3 / 3 on tested and merged PR #35 tree: Actions 34095530493 at 4b6bc46, merge f6c647a. Native WebView/device proof remains separate.",
       "target": "3 / 3 incl. Wayland",
       "direction": "up"
     },
@@ -879,7 +879,7 @@
     {
       "label": "Visual system (logos + screen families)",
       "baseline": "none",
-      "current": "identity locked; four P1 boards passed operator signoff; Design Language v2 and all three Cockpit layouts merged; D5 capture gap closed with seven hashed PNGs and a fresh 3-OS CI matrix",
+      "current": "Design v2 and identity remain locked; D5 evidence retained. Astra repass reopened P1-G4 for accessibility/UI truth defects. PR #35 closes modal focus and scaled-dialog defects only.",
       "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS",
       "direction": "up"
     }
@@ -1629,22 +1629,28 @@
       "url": "https://github.com/IslandDevCrew/kaydence/pull/34",
       "phase": "P1",
       "mergedAt": "2026-08-10"
+    },
+    {
+      "number": 35,
+      "title": "Keep Privacy and Setup dialogs keyboard-accessible",
+      "url": "https://github.com/IslandDevCrew/kaydence/pull/35",
+      "phase": "P1",
+      "mergedAt": "2026-09-07T08:42:09Z"
     }
   ],
   "resume": {
     "activePhase": "P1",
     "nextActions": [
-      "P1 ASTRA MODAL PR: review https://github.com/IslandDevCrew/kaydence/pull/35. Local modal checks and 253 Rust tests pass; three-OS CI must be checked at the final PR head. Do not merge automatically while main is unprotected and auto-merge is disabled; operator activation of Gate-Merge Fusion is still needed.",
+      "P1-G4 TRUST COPY: PR #35 is merged as f6c647a after exact-head three-OS CI 34095530493. Gate-Merge Fusion was explicitly approved and activated 2026-09-07. Next work unit on mission/p1-g4-trust-copy corrects Privacy audio-retention and source-audit claims without changing backend policy.",
       "P1-G4 REOPENED: use ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt. Next bounded packets: restore the locked nav at <=500px; correct Privacy audio-retention and static network-count claims; distinguish IPC errors/fixtures from runtime; remove unproved Cleanup reference-lane OK badges. Preserve Design v2 and the final-logo carve-out.",
       "P1 RECORDING INTEGRATION: coordinate a separately owned packet for live backend recording/elapsed feedback. The current cockpit renders recording state only for preview. Do not touch Buzz's Rust/inject lane or invent backend proof.",
       "ADR-0016 HUMAN GATE: approve or revise ORT 1.28 binary provenance, the shipped CTC model/license and source pins, and the non-default hedge posture before treating the new ONNX/Silero lane as ship-authorized.",
       "P1-P0-8 PHYSICAL PROOF: download UI wiring is merged and the default build remains network-off. On reference devices, complete live OS permission proof, one real first dictation, and <=60-second install-to-dictation evidence. Enabling model-download in the default shipped build remains a separate ADR-0017 operator gate.",
       "P1-G3 PHYSICAL PROOF: measure packaged q5 ASR-resident RAM and full release-to-focused-field timing; reduce visible no-model macOS idle below 80 MB; fix Windows close-to-tray behind a dedicated ADR/operator go; prove Linux tray/reopen.",
       "P1 EXIT: start from main at/after d0c7d4d, close the physical P1-G3/P1-P0-8 evidence without weakening their criteria, rerun standing gates plus a full three-OS matrix, then open P2.",
-      "PROCESS: one branch = one PR = one merge for product changes. PR #34 is merged; its heartbeat reconciles state, journal, and generated HTML."
+      "PROCESS: use mission branches, <=400 changed lines, independent Judge plus fresh evidence, all three required CI legs and CLEAN state, then gh pr merge --auto --merge with the expected head SHA. Commit a state/journal/rendered heartbeat after every merge; no admin or direct-main bypass."
     ],
     "blockers": [
-      "PR #35 is pending integration. Gate-Merge Fusion is not active: allow_auto_merge=false; main branch protection returns 404 and effective branch rules are empty. Operator authority is needed to change these settings; no manual merge/main-push bypass.",
       "P1-G4 reopened by the 2026-09-07 Astra repass: known navigation/accessibility and UI truth defects remain. Historical D5 captures/operator design acceptance are retained; the targeted modal fix does not establish production UI completion.",
       "ADR-0016 is Proposed. The ONNX CTC + Silero implementation is live-proven but not ship-authorized until the operator approves binary/model/license/source posture.",
       "P1-G3 still lacks physical release-to-focused-field timing, packaged q5 ASR-resident measurement, a sub-80 MB visible no-model cockpit, a Windows tray lifecycle fix, and Linux tray/reopen proof.",

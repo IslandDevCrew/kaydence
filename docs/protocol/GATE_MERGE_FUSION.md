@@ -1,8 +1,9 @@
 # Gate-Merge Fusion — take the human out of the merge loop
 
-**Status:** Proposed. The code gates already exist in CI; the missing pieces are
-three operator-side settings. Nothing here weakens a gate — it makes an existing
-gate *the merge authority* so agents stop re-verifying by hand.
+**Status:** Activated with explicit operator approval, 2026-09-07. Strict required
+three-OS CI and auto-merge are enabled. Use merge commits, not squash, per the
+operator's activation instruction. Evidence: `ops/mission/evidence/2026-09-07-gate-merge-activation.txt`.
+The historical rationale and activation commands follow; critical human gates remain.
 
 ## The problem this solves
 
@@ -50,7 +51,7 @@ do them silently. Each is one command; run from the repo:
    ```
 3. **Every phase PR opts into auto-merge** — the agent that opens it runs:
    ```bash
-   gh pr merge <N> --auto --squash
+   gh pr merge <N> --auto --merge --match-head-commit <reviewed-head-sha>
    ```
    GitHub lands it the instant the required 3-OS gate passes. No human click,
    and no agent merged on a claim — the merge is a *consequence of evidence*.
