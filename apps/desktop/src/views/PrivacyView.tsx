@@ -180,8 +180,8 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
     {
       id: "network-audit",
       label: "Network Audit",
-      detail: "New egress-capable call sites fail the source gate.",
-      status: "0 unreviewed",
+      detail: "Unreviewed network call sites fail the source gate.",
+      status: "Source-level",
       state: "ready",
     },
     {
@@ -229,7 +229,7 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
             <em className="privacy-enforced"><span className="privacy-enforced-dot" aria-hidden="true" />Enforced</em>
           </article>
           <article>
-            <CockpitGlyph name="database" /><strong>Local History Only</strong><small>Audio never persists past transcription. Transcripts kept {props.historyRetentionDays} days, then purged.</small>
+            <CockpitGlyph name="database" /><strong>Local History Only</strong><small>Audio and transcripts stay local. {props.historyRetentionDays}-day retention policy.</small>
             <em className="privacy-enforced"><span className="privacy-enforced-dot" aria-hidden="true" />Enforced</em>
           </article>
           <article>
@@ -289,12 +289,12 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
 
           {networkAuditRow ? (
             <aside className="privacy-panel privacy-network-panel" aria-label="Network audit">
-              <header><div><h2>Network Audit</h2><small>{networkAuditRow.detail}</small></div><span>Verified</span></header>
+              <header><div><h2>Network Audit</h2><small>{networkAuditRow.detail}</small></div><span>{networkAuditRow.status}</span></header>
               <div className="privacy-network-hero">
                 <span className="privacy-shield-ring" aria-hidden="true"><CockpitGlyph name="privacy" /></span>
-                <div className="privacy-network-count"><strong>0</strong><span>outbound connections</span></div>
+                <div className="privacy-network-count"><strong>Source</strong><span>allowlist audit</span></div>
               </div>
-              <small className="privacy-network-note">{networkAuditRow.status} since launch</small>
+              <small className="privacy-network-note">Live connections not measured here.</small>
             </aside>
           ) : null}
         </div>
@@ -329,7 +329,7 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
             <header><div><span>Kaydence Core</span><h2 id="privacy-constitution-title">Privacy Constitution</h2></div><button aria-label="Close privacy constitution" onClick={() => setConstitutionOpen(false)} type="button">Close</button></header>
             <dl>
               <div><dt>No transmission by default</dt><dd>No telemetry, account stream, or unreviewed egress leaves the machine.</dd></div>
-              <div><dt>Local persistence is visible</dt><dd>Audio never persists past transcription. Transcripts are kept local for {props.historyRetentionDays} days, then purged, with export, delete, and purge controls throughout.</dd></div>
+              <div><dt>Local persistence is visible</dt><dd>Audio and transcripts are retained locally. History refresh applies your {props.historyRetentionDays}-day retention policy; export, delete, and purge remain available.</dd></div>
               <div><dt>Context is explicit opt-in</dt><dd>Accessibility context and OCR remain off in P1. Future P3 context is memory-bound and secure-field aware.</dd></div>
               <div><dt>Secure fields fail closed</dt><dd>Known password and secure targets are held instead of receiving dictation.</dd></div>
             </dl>
