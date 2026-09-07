@@ -139,8 +139,8 @@
     "northStar": "Own the machine, the voice, and the fleet: a local-first dictation platform whose flagship trio (Voiceprint, Relay, Conductor) no cloud incumbent can copy without abandoning its business model. Privacy line = transmission + persistence, not awareness (ADR-0006). Pay-once, three desktops, one behavior.",
     "status": "active",
     "started": "2026-07-07",
-    "updated": "2026-09-07T09:56:19Z",
-    "sessionCount": 34
+    "updated": "2026-09-07T10:11:47Z",
+    "sessionCount": 35
   },
   "policies": {
     "merge": "auto",
@@ -353,9 +353,9 @@
           "title": "Screen-family fidelity: 01 Main Dictation Cockpit, 03 Cleanup & Injection (injection paths + Raw), 07 Privacy & Context (no-transmission / secure-field posture), 10 First Run & License match the operator-approved design language",
           "command": "design-review: built screens vs the design-relock's locked Editorial Precision system (ops/mission/design-relock/) + keyboard/a11y checklist",
           "status": "pending",
-          "evidence": "ops/mission/design-relock/idea.lock.json; ops/mission/design-relock/plan.lock.json; ops/mission/design-relock/COCKPIT_V2_PUNCHLIST.md; ops/mission/design-relock/P1_G4_OPERATOR_SIGNOFF.md; ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html; ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-pillbar.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-stackedpanel.html; ops/mission/evidence/2026-08-09-d4-design-rebuild-gates.txt; ops/mission/evidence/2026-08-09-d5-live-verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/manifest.sha256; superseded original evidence retained for history: ops/mission/evidence/2026-07-11-p1-g4-native-linux.txt; ops/mission/evidence/2026-07-11-p1-g4-windows-diagnostic.txt; ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png; ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt; ops/mission/evidence/2026-07-14-windows-webview-proof/manifest.json; ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt; ops/mission/evidence/2026-09-07-p1-g4-trust-copy.txt; ops/mission/evidence/2026-09-07-p1-responsive-nav.txt; ops/mission/evidence/2026-09-07-p1-capture-bridge-boundary.md; ops/mission/evidence/2026-09-07-p1-runtime-reference.txt; ops/mission/evidence/2026-09-07-p1-readability-audit/audit.md",
-          "lastRun": "2026-09-07T09:56:19Z",
-          "notes": "CURRENT: PR #38 merged 7c898ee with exact-head three-OS CI 34107560559. Cleanup no longer invents secure/round-trip passes or imports runtime proof into OS references; Dictate retains runtime identity. PRs #35-37 close modal focus, Privacy copy and compact-nav defects. P1-G4 remains pending for native hydration/fixture truth, 11px floor/reflow, status-popover reachability, absent live capture projection and native fidelity evidence. Historical trail (earlier remaining-lists are superseded by CURRENT): PR #37 merged 42d7099: narrow nav, short-rail footer overlap and clipped focus fixed; six 900x600 rail captures unchanged. Full G4 remains pending. PR #36 merged 8974148: Privacy now acknowledges retained audio and distinguishes source audit from unmeasured live traffic. Remaining findings: narrow nav, native hydration/fixture truth, reference-lane proof/accent leakage, sub-11px text, and absent live capture bridge. REOPENED 2026-09-07: fresh rendered keyboard checks falsified modal containment; narrow nav disappears and Privacy/preview/reference-lane truth defects remain. PR #35 merged as f6c647a with independent targeted Judge, local checks, and all three CI legs PASS; it restores only modal accessibility. This is not a design re-lock or a revocation of operator taste approval. Historical D5 record follows: PASSED. Operator signoff is recorded in P1_G4_OPERATOR_SIGNOFF.md. Design Language v2 merged in PR #33 (74f98e3). PR #34 (d0c7d4d) closed the D5 capture gap with six exact 900x600 PNGs plus a 700x600 responsive proof and SHA-256 manifest; preserved Decision 6 at 17.80px/17.78px; fixed the narrow footer/top-band behavior and Decision S1 idle waveform. Fresh Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383. Sequential synthetic Tab traversal inside the Browser iframe remained bridge-limited and is not newly claimed; dialog focus/Escape and structural a11y checks pass, while retained native keyboard evidence remains authoritative. The final logo asset remains the recorded FUTURE carve-out and was not changed."
+          "evidence": "ops/mission/design-relock/idea.lock.json; ops/mission/design-relock/plan.lock.json; ops/mission/design-relock/COCKPIT_V2_PUNCHLIST.md; ops/mission/design-relock/P1_G4_OPERATOR_SIGNOFF.md; ops/mission/evidence/2026-08-09-design-gauntlet-winner-locked-v1.html; ops/mission/evidence/2026-08-09-cockpit-v2-hud-winner.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-pillbar.html; ops/mission/evidence/2026-08-09-cockpit-v2-layout-stackedpanel.html; ops/mission/evidence/2026-08-09-d4-design-rebuild-gates.txt; ops/mission/evidence/2026-08-09-d5-live-verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/verification.txt; ops/mission/evidence/2026-08-10-d5-playwright-captures/manifest.sha256; superseded original evidence retained for history: ops/mission/evidence/2026-07-11-p1-g4-native-linux.txt; ops/mission/evidence/2026-07-11-p1-g4-windows-diagnostic.txt; ops/mission/evidence/windows-proof-run-29137950481/browser-vs-native-comparison.png; ops/mission/evidence/2026-07-14-p1-g4-windows-host-proof.txt; ops/mission/evidence/2026-07-14-windows-webview-proof/manifest.json; ops/mission/evidence/2026-09-07-p1-astra-dialog-polish.txt; ops/mission/evidence/2026-09-07-p1-g4-trust-copy.txt; ops/mission/evidence/2026-09-07-p1-responsive-nav.txt; ops/mission/evidence/2026-09-07-p1-capture-bridge-boundary.md; ops/mission/evidence/2026-09-07-p1-runtime-reference.txt; ops/mission/evidence/2026-09-07-p1-readability-audit/audit.md; ops/mission/evidence/2026-09-07-p1-hydration-state.txt",
+          "lastRun": "2026-09-07T10:11:47Z",
+          "notes": "CURRENT: PR #39 merged 494a0b2 with exact-head three-OS CI 34108964817. Native loading/error/retry and stale-history states no longer impersonate browser fixtures; absent capture projection is explicitly unavailable. Shared rail and per-screen 11px/reflow fixes are prepared locally, not yet merged. Status popover mutual exclusion needs correction. P1-G4 remains pending for these, live capture integration and native fidelity evidence. Historical trail (earlier remaining-lists are superseded by CURRENT): PR #38 merged 7c898ee with exact-head three-OS CI 34107560559. Cleanup no longer invents secure/round-trip passes or imports runtime proof into OS references; Dictate retains runtime identity. PRs #35-37 close modal focus, Privacy copy and compact-nav defects. P1-G4 remains pending for native hydration/fixture truth, 11px floor/reflow, status-popover reachability, absent live capture projection and native fidelity evidence. Historical trail (earlier remaining-lists are superseded by CURRENT): PR #37 merged 42d7099: narrow nav, short-rail footer overlap and clipped focus fixed; six 900x600 rail captures unchanged. Full G4 remains pending. PR #36 merged 8974148: Privacy now acknowledges retained audio and distinguishes source audit from unmeasured live traffic. Remaining findings: narrow nav, native hydration/fixture truth, reference-lane proof/accent leakage, sub-11px text, and absent live capture bridge. REOPENED 2026-09-07: fresh rendered keyboard checks falsified modal containment; narrow nav disappears and Privacy/preview/reference-lane truth defects remain. PR #35 merged as f6c647a with independent targeted Judge, local checks, and all three CI legs PASS; it restores only modal accessibility. This is not a design re-lock or a revocation of operator taste approval. Historical D5 record follows: PASSED. Operator signoff is recorded in P1_G4_OPERATOR_SIGNOFF.md. Design Language v2 merged in PR #33 (74f98e3). PR #34 (d0c7d4d) closed the D5 capture gap with six exact 900x600 PNGs plus a 700x600 responsive proof and SHA-256 manifest; preserved Decision 6 at 17.80px/17.78px; fixed the narrow footer/top-band behavior and Decision S1 idle waveform. Fresh Actions run 31364075234 passed Ubuntu, macOS, and Windows at exact PR head 995b383. Sequential synthetic Tab traversal inside the Browser iframe remained bridge-limited and is not newly claimed; dialog focus/Escape and structural a11y checks pass, while retained native keyboard evidence remains authoritative. The final logo asset remains the recorded FUTURE carve-out and was not changed."
         },
         {
           "id": "P1-G5",
@@ -851,7 +851,7 @@
     {
       "label": "Platform parity (CI legs green)",
       "baseline": "0 / 3 (Mac-first field; Linux unserved)",
-      "current": "3 / 3 on tested and merged PR #38 tree: Actions 34107560559 at 1446122, merge 7c898ee. Native WebView/device proof remains separate.",
+      "current": "3 / 3 on tested and merged PR #39 tree: Actions 34108964817 at 697de42, merge 494a0b2. Native WebView/device proof remains separate.",
       "target": "3 / 3 incl. Wayland",
       "direction": "up"
     },
@@ -879,7 +879,7 @@
     {
       "label": "Visual system (logos + screen families)",
       "baseline": "none",
-      "current": "Design v2/identity locked; P1-G4 reopened. PRs #35-38 close modal focus, Privacy claims, compact-nav and runtime/reference truth defects. Native hydration, 11px readability/reflow, popover access and native evidence remain pending.",
+      "current": "Design v2/identity locked; P1-G4 reopened. PRs #35-39 close modal focus, Privacy claims, compact-nav, runtime/reference and native-hydration truth defects. 11px readability/reflow, popover access, live capture integration and native evidence remain pending.",
       "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS",
       "direction": "up"
     }
@@ -1657,13 +1657,20 @@
       "url": "https://github.com/IslandDevCrew/kaydence/pull/38",
       "phase": "P1",
       "mergedAt": "2026-09-07T09:56:19Z"
+    },
+    {
+      "number": 39,
+      "title": "Distinguish native loading failures from browser fixtures",
+      "url": "https://github.com/IslandDevCrew/kaydence/pull/39",
+      "phase": "P1",
+      "mergedAt": "2026-09-07T10:11:47Z"
     }
   ],
   "resume": {
     "activePhase": "P1",
     "nextActions": [
-      "P1-G4 HYDRATION: PR #38 merged 7c898ee after exact-head three-OS CI 34107560559. Next mission/p1-g4-hydration-state has a reviewed local frontend patch for explicit native loading/error/retry, stale-history warnings and unavailable live capture status. Publish only with fresh evidence and required CI.",
-      "P1-G4 READABILITY: restore the locked 11px floor without clipping (shared rail first, then per-screen body reflow); verify status-pill popovers and 501x300 content reachability. Read the four-screen pre-correction audit and repeat all3layouts/light-dark/keyboard/200%-equivalent plus native fidelity.",
+      "P1-G4 RAIL: PR #39 merged 494a0b2 after exact-head three-OS CI 34108964817. Publish mission/p1-g4-nav-type only with its refreshed evidence, independent Judge and required CI. The tested and merged hydration trees match.",
+      "P1-G4 SCREEN READABILITY: finish Dictate popover mutual exclusion/Escape and 11px reflow; review local Cleanup, Privacy and Setup packets independently in <=400-line PRs. Restore accessible full text at 501x300 and repeat all3layouts/light-dark/keyboard/200%-equivalent plus native fidelity.",
       "P1 RECORDING INTEGRATION: read-only audit confirms no live capture-status bridge. Request a separately owned backend projection + bootstrap/reopen synchronization; do not poll recent_history for a clock or subtract Started.at_ms from Date.now(). No Buzz Rust/inject edits or SessionEvent changes without lane/ADR authority.",
       "ADR-0016 HUMAN GATE: approve or revise ORT 1.28 binary provenance, the shipped CTC model/license and source pins, and the non-default hedge posture before treating the new ONNX/Silero lane as ship-authorized.",
       "P1-P0-8 PHYSICAL PROOF: download UI wiring is merged and the default build remains network-off. On reference devices, complete live OS permission proof, one real first dictation, and <=60-second install-to-dictation evidence. Enabling model-download in the default shipped build remains a separate ADR-0017 operator gate.",
@@ -1672,7 +1679,7 @@
       "PROCESS: use mission branches, <=400 changed lines, independent Judge plus fresh evidence, all three required CI legs and CLEAN state, then gh pr merge --auto --merge with the expected head SHA. Commit a state/journal/rendered heartbeat after every merge; no admin or direct-main bypass."
     ],
     "blockers": [
-      "P1-G4 remains pending: native bootstrap/fixture truth, sub-11px text, clipped/crowded short-window content and live capture projection/native fidelity gaps. PRs #35-38 are bounded fixes, not production UI completion; historical taste approval is retained.",
+      "P1-G4 remains pending: sub-11px text, clipped/crowded short-window content, overlapping Dictate status popovers and live capture projection/native fidelity gaps. PRs #35-39 are bounded fixes, not production UI completion; historical taste approval is retained.",
       "ADR-0016 is Proposed. The ONNX CTC + Silero implementation is live-proven but not ship-authorized until the operator approves binary/model/license/source posture.",
       "P1-G3 still lacks physical release-to-focused-field timing, packaged q5 ASR-resident measurement, a sub-80 MB visible no-model cockpit, a Windows tray lifecycle fix, and Linux tray/reopen proof.",
       "P1-P0-8 still lacks complete live OS permission proof, a real first dictation, and <=60-second reference-device evidence. ADR-0017 separately requires operator go before model-download is enabled in the default shipped build; the merged UI does not claim cancellation support.",
