@@ -128,12 +128,13 @@
 
 .cleanup-board {
   display: grid;
-  grid-template-rows: 36px 42px minmax(0, 1fr) 38px;
+  grid-template-rows: minmax(36px, auto) minmax(42px, auto) minmax(0, 1fr) minmax(38px, auto);
   gap: 6px;
   min-width: 0;
   min-height: 0;
   height: 100vh;
-  overflow: hidden;
+  overflow: auto;
+  overflow-wrap: anywhere;
   padding: 8px;
   color: var(--ink);
 }
@@ -152,7 +153,7 @@
 .cleanup-method-section > div:first-child,
 .cleanup-health-section > div,
 .cleanup-current-p95,
-.cleanup-gates-section > div,
+.cleanup-gates-section > div:not(.cleanup-status-legend),
 .cleanup-actions {
   display: flex;
   align-items: center;
@@ -178,9 +179,9 @@
 
 .cleanup-titlebar strong {
   overflow: hidden;
-  font-size: .7rem;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-lane-switcher {
@@ -196,7 +197,7 @@
   border-radius: 5px;
   background: transparent;
   color: var(--muted);
-  font-size: .58rem;
+  font-size: var(--text-2xs);
   padding: 4px 6px;
 }
 
@@ -207,6 +208,7 @@
 }
 
 .cleanup-heading {
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
   min-width: 0;
@@ -219,7 +221,7 @@
 
 .cleanup-heading span {
   color: var(--muted);
-  font-size: .56rem;
+  font-size: var(--text-2xs);
   font-weight: 750;
   text-transform: uppercase;
 }
@@ -227,9 +229,9 @@
 .cleanup-heading h1 {
   overflow: hidden;
   margin: 1px 0 0;
-  font-size: 1rem;
+  font-size: var(--text-lg);
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-main-grid {
@@ -243,7 +245,7 @@
 .cleanup-panel {
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
   padding: 8px;
 }
 
@@ -254,11 +256,11 @@
 }
 
 .cleanup-panel h2 {
-  font-size: .72rem;
+  font-size: var(--text-xs);
 }
 
 .cleanup-panel h3 {
-  font-size: .64rem;
+  font-size: var(--text-2xs);
 }
 
 .cleanup-panel p,
@@ -266,13 +268,14 @@
 .cleanup-panel dt,
 .cleanup-panel dd {
   color: var(--muted);
-  font-size: .56rem;
+  font-size: var(--text-2xs);
   line-height: 1.35;
 }
 
 .cleanup-rules-panel {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: repeat(4, max-content);
+  align-content: start;
   gap: 7px;
 }
 
@@ -298,7 +301,7 @@
 .cleanup-dial-section > p {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-issue {
@@ -329,13 +332,13 @@
   min-width: 0;
   min-height: 22px;
   border-bottom: 1px solid var(--line);
-  font-size: .58rem;
+  font-size: var(--text-2xs);
 }
 
 .cleanup-rule-list label > span {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-rule-list input {
@@ -348,9 +351,9 @@
 
 .cleanup-rule-list small {
   overflow: hidden;
-  max-width: 58px;
+  max-width: none;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-examples {
@@ -374,16 +377,16 @@
   grid-column: 1 / -1;
   padding: 4px 5px;
   background: var(--surface-soft);
-  font-size: .57rem;
+  font-size: var(--text-2xs);
 }
 
 .cleanup-examples p {
   display: grid;
-  grid-template-columns: 35px minmax(0, 1fr);
+  grid-template-columns: var(--space-9) minmax(0, 1fr);
   gap: 4px;
   min-width: 0;
   padding: 4px 5px;
-  font-size: .53rem;
+  font-size: var(--text-2xs);
   line-height: 1.25;
 }
 
@@ -394,7 +397,7 @@
 
 .cleanup-examples p span {
   color: var(--muted);
-  font-size: .49rem;
+  font-size: var(--text-2xs);
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -419,7 +422,7 @@
   overflow: hidden;
   margin-top: 1px;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-destination-section button,
@@ -429,7 +432,7 @@
   border-radius: 6px;
   background: var(--surface);
   color: var(--ink);
-  font-size: .56rem;
+  font-size: var(--text-2xs);
   padding: 5px 7px;
 }
 
@@ -438,7 +441,7 @@
   align-items: center;
   gap: 4px;
   overflow: hidden;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-destination-section button .cockpit-glyph {
@@ -480,12 +483,12 @@
 
 .cleanup-method-section > div:first-child > span,
 .cleanup-health-section span,
-.cleanup-gates-section > div > span {
+.cleanup-gates-section > div:not(.cleanup-status-legend) > span {
   border-radius: 5px;
   padding: 2px 4px;
-  font-size: .5rem;
+  font-size: var(--text-2xs);
   font-weight: 850;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-method-section span.ready,
@@ -510,7 +513,7 @@
 .cleanup-method-section > strong,
 .cleanup-fallback-section > strong,
 .cleanup-health-section strong {
-  font-size: .61rem;
+  font-size: var(--text-2xs);
 }
 
 .cleanup-method-section dl {
@@ -569,16 +572,16 @@
 .cleanup-budget-grid span,
 .cleanup-current-p95 span {
   color: var(--muted);
-  font-size: .48rem;
+  font-size: var(--text-2xs);
 }
 
 .cleanup-budget-grid strong,
 .cleanup-current-p95 strong {
   overflow: hidden;
-  font-size: .54rem;
+  font-size: var(--text-2xs);
   font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-current-p95 {
@@ -587,7 +590,7 @@
   padding: 4px;
 }
 
-.cleanup-gates-section > div {
+.cleanup-gates-section > div:not(.cleanup-status-legend) {
   display: grid;
   grid-template-columns: 17px minmax(0, 1fr) auto;
   gap: 5px;
@@ -595,7 +598,7 @@
   border-bottom: 1px solid var(--line);
 }
 
-.cleanup-gates-section > div > span {
+.cleanup-gates-section > div:not(.cleanup-status-legend) > span {
   display: grid;
   place-items: center;
   width: 17px;
@@ -610,13 +613,13 @@
 
 .cleanup-gates-section strong {
   overflow: hidden;
-  font-size: .55rem;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cleanup-gates-section small {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 /* 4-state status legend (good/standby/idle/danger) — locked model,
@@ -636,7 +639,7 @@
   align-items: center;
   gap: 4px;
   color: var(--muted);
-  font-size: .5rem;
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: .02em;
   text-transform: uppercase;
@@ -677,7 +680,7 @@
 .cleanup-actions span {
   margin-left: auto;
   color: var(--muted);
-  font-size: .55rem;
+  font-size: var(--text-2xs);
 }
 
 .cleanup-actions button:last-child {
@@ -717,7 +720,7 @@
     gap: 2px;
   }
 
-  .cleanup-gates-section > div {
+  .cleanup-gates-section > div:not(.cleanup-status-legend) {
     min-height: 17px;
   }
 }
@@ -728,7 +731,7 @@
   }
 
   .cleanup-main-grid {
-    grid-template-columns: minmax(210px, 1fr) minmax(174px, .72fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .cleanup-lane-switcher button {
@@ -748,9 +751,12 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .cleanup-destination-section > button:last-child,
-  .cleanup-destination-section > div small {
-    display: none;
+  .cleanup-board {
+    grid-template-rows: repeat(4, max-content);
+  }
+
+  .cleanup-panel {
+    overflow: visible;
   }
 }
 
