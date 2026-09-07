@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Modal } from "../components/Modal";
 import {
   CockpitGlyph,
   COCKPIT_LAYOUT_PRESET_OPTIONS,
@@ -331,15 +332,6 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
     ? props.firstRun.asr_candidates
     : [{ id: selectedModel, selected: true }];
 
-  useEffect(() => {
-    if (!evidenceOpen) return undefined;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setEvidenceOpen(false);
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [evidenceOpen]);
-
   const openEvidence = (section: EvidenceSection) => {
     setEvidenceSection(section);
     setEvidenceOpen(true);
@@ -505,9 +497,9 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
       </div>
 
       {evidenceOpen ? (
-        <div className="first-run-dialog-backdrop" onClick={() => setEvidenceOpen(false)}>
-          <section aria-labelledby="first-run-evidence-title" aria-modal="true" className="first-run-dialog" onClick={(event) => event.stopPropagation()} role="dialog">
-            <header><div><span>Local setup evidence</span><h2 id="first-run-evidence-title">First Run Proof</h2></div><button autoFocus aria-label="Close setup evidence" onClick={() => setEvidenceOpen(false)} type="button">Close</button></header>
+        <Modal className="first-run-dialog-backdrop" labelledBy="first-run-evidence-title" onDismiss={() => setEvidenceOpen(false)}>
+          <section className="first-run-dialog">
+            <header><div><span>Local setup evidence</span><h2 id="first-run-evidence-title">First Run Proof</h2></div><button aria-label="Close setup evidence" onClick={() => setEvidenceOpen(false)} type="button">Close</button></header>
             <nav aria-label="Setup evidence sections">
               {(["models", "permissions", "proof"] as const).map((section) => <button aria-pressed={evidenceSection === section} key={section} onClick={() => setEvidenceSection(section)} type="button">{section}</button>)}
             </nav>
@@ -563,7 +555,7 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
               </div>
             ) : null}
           </section>
-        </div>
+        </Modal>
       ) : null}
     </section>
   );

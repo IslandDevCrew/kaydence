@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Modal } from "../components/Modal";
 import {
   CockpitGlyph,
   type AppView,
@@ -146,15 +147,6 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
     },
   ];
   const auditRows = props.auditItems.slice(0, 4);
-
-  useEffect(() => {
-    if (!constitutionOpen) return undefined;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setConstitutionOpen(false);
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [constitutionOpen]);
 
   const readerRows = [
     {
@@ -330,15 +322,11 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
       </footer>
 
       {constitutionOpen ? (
-        <div className="privacy-dialog-backdrop" onClick={() => setConstitutionOpen(false)}>
+        <Modal className="privacy-dialog-backdrop" labelledBy="privacy-constitution-title" onDismiss={() => setConstitutionOpen(false)}>
           <section
-            aria-labelledby="privacy-constitution-title"
-            aria-modal="true"
             className="privacy-dialog"
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
           >
-            <header><div><span>Kaydence Core</span><h2 id="privacy-constitution-title">Privacy Constitution</h2></div><button autoFocus aria-label="Close privacy constitution" onClick={() => setConstitutionOpen(false)} type="button">Close</button></header>
+            <header><div><span>Kaydence Core</span><h2 id="privacy-constitution-title">Privacy Constitution</h2></div><button aria-label="Close privacy constitution" onClick={() => setConstitutionOpen(false)} type="button">Close</button></header>
             <dl>
               <div><dt>No transmission by default</dt><dd>No telemetry, account stream, or unreviewed egress leaves the machine.</dd></div>
               <div><dt>Local persistence is visible</dt><dd>Audio never persists past transcription. Transcripts are kept local for {props.historyRetentionDays} days, then purged, with export, delete, and purge controls throughout.</dd></div>
@@ -346,7 +334,7 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
               <div><dt>Secure fields fail closed</dt><dd>Known password and secure targets are held instead of receiving dictation.</dd></div>
             </dl>
           </section>
-        </div>
+        </Modal>
       ) : null}
     </section>
   );

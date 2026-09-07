@@ -11,9 +11,9 @@
 .first-run-dialog {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
-  width: min(700px, 94vw);
-  max-height: min(520px, 90vh);
-  min-height: 360px;
+  width: min(700px, 100%);
+  max-height: min(520px, 100%);
+  min-height: min(360px, 100%);
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-card);

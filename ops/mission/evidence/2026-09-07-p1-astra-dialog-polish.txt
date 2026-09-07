@@ -1,0 +1,74 @@
+Kaydence P1 Astra repass — modal accessibility work packet
+Date: 2026-09-07. Base: e79fca2fddeafe65ce533185c0f01eaeb210540d.
+Branch: mission/p1-astra-accessibility-polish. PRD trace: P0-8; gate P1-G4.
+Orchestration: mission-control Tier 2, independent skeptical reviewer.
+Scope: frontend modal presentation, its regression check, scoped guide, evidence.
+No Rust/backend, dependencies, policy, token, logo, navigation, or model changes.
+
+ORIENT / PLAN
+Read state first; remote main still e79fca2, no open PR at kickoff.
+Routine restoration of required keyboard navigation and 200%-scale access:
+replace two mouse-modal sections with one native Modal, preserve their content,
+contain Tab/Shift-Tab, return focus, and bound Setup's minimum dialog height.
+Keep P1 pending; do not treat UI fixtures as native runtime proof.
+
+RED / BUILD
+Built actual production frontend with local tsc/eslint/vite binaries.
+Before fix: checked-in keyboard script failed with
+  AssertionError: Privacy: Shift+Tab must stay inside modal
+Baseline also reproduced Tab reaching BODY and Escape returning focus to BODY.
+At 450x300, the previous Setup dialog's 360px minimum exceeded viewport height.
+Native showModal makes background inert. Explicit boundary wrapping avoids
+Chromium's single-control Tab exit to browser chrome. No global key listeners.
+Close/Escape/backdrop dismiss through React; native close restores the opener.
+
+AUDIT — LOCAL
+Browser plugin not available in this session; skill-approved existing Playwright.
+Chromium headless, real Vite production bundle at http://127.0.0.1:1427.
+Data is browser-preview fixtures, NOT live dictation/permission/history proof.
+Served JS: index-bwPfArGz.js
+SHA256: d439f02dd66241e2ae94fc1b56a777923d7f9022dfe5bac4f9db433b5aa43da9
+Served CSS: index-B9K9LTyW.css
+SHA256: 59ea2bb74ffd671c18c0a5db0a455d1e2a027646b68c2026983f469bdce5fc35
+Regression check: ops/mission/evidence/2026-09-07-p1-dialog-keyboard-check.cjs
+PASS Privacy and Setup at 900x600 and 450x300: initial focus, reverse Tab,
+18 forward Tabs, visible Close, Escape dismissal, Close dismissal, focus return.
+PASS page identity/nonblank dialog/no console errors/no framework overlay.
+450x300 is a 200%-equivalent CSS viewport, not physical OS scaling proof.
+PNG captures: 2026-09-07-p1-dialog-polish/; manifest.sha256 binds all four.
+
+Standing gates freshly rerun: fmt, clippy -D warnings, cargo test --all,
+frontend tsc/eslint, Vite production build, privacy/source-network audit,
+ADR status checker PASS. ADR-0009 and ADR-0016 remain declared Proposed.
+Rust tests: 236 library + 5 reference-bench + 2 crash-recovery + 5 event-sequence
++ 5 short-utterance = 253 passed. Active named filters also rerun separately.
+bench.sh --check: PASS 4 synthetic metrics; PARTIAL, not P1-G3 closure.
+Unmeasured: GPU release-to-inject, prediction, idle RAM/CPU, real ASR/reference p95.
+Full standing-gate output: 2026-09-07-p1-dialog-polish/local-gates.log.gz.
+
+LIMITS / NEXT PACKETS
+Native WebView, screen reader, Windows/Linux rendered proof not newly captured.
+Only modal accessibility is being closed by this packet, not full production UX.
+Confirmed independent queue: restore narrow nav using the same locked 10 items;
+correct Privacy retention and invented live-network-count claims; distinguish
+preview/IPC failure from runtime; remove unproved Cleanup reference-lane OK badges;
+separately coordinate real recording feedback with the backend/event lane owner.
+All P1 physical and operator gates in state remain open; no P2 promotion.
+
+MERGE AUTHORITY
+Live settings 2026-09-07: allow_auto_merge=false; main protection returns 404;
+branch rules=[]; merge commits permitted. Gate-Merge Fusion is still Proposed.
+Do not enable protections/auto-merge, manually merge, or push main automatically.
+Remote Audit and independent Judge are recorded below before any completion claim.
+
+INDEPENDENT JUDGE — PASS, BOUNDED
+Reviewer /root/polish_review reran all four check cases and additionally proved:
+native HTML :modal state; background programmatic focus rejected; 24 reverse
+Tabs per dialog; backdrop dismissal + focus return; Setup's models, permissions,
+and proof section changes with 20 mixed Tab events each at 450x300. No errors.
+Four PNGs visually reviewed; Close visible, no introduced composition drift.
+Reviewed Modal.tsx SHA256:
+8da6559d66dbb5ff96173f4cdceaed741ef1fb5ddf19a0a921c78a3c7a04532d
+WebKit check blocked: cached webkit-2336/pw_run.sh is missing; no install attempted.
+Not tested: native OS scaling/WebViews, screen reader, async download states.
+PASS applies only to the modal delta. Privacy truth defects remain unfixed.
