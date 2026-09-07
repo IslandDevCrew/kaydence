@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 export type AppView = "Dictate" | "Cleanup" | "Privacy" | "Setup";
 export type CleanupDial = "raw" | "light" | "full";
@@ -198,8 +198,7 @@ export interface StatusPillItem {
  * across Pill Bar / Mic Capsule / Stacked Panel): a brand block with the
  * version underneath on the left; an "all systems operational" indicator, a
  * decorative mic-level meter centered in the negative space, and the five
- * status items as clickable pill popovers (native <details>/<summary> — no
- * extra UI state needed) on the right.
+ * status items as mutually exclusive native <details>/<summary> popovers.
  */
 export function StatusFooter({
   appName,
@@ -218,6 +217,7 @@ export function StatusFooter({
   statusItems: StatusPillItem[];
   version: string;
 }): JSX.Element {
+  const [openStatus, setOpenStatus] = useState<string | null>(null);
   return (
     <footer className="cockpit-statusbar">
       <div className="cockpit-sb-left">
@@ -233,8 +233,22 @@ export function StatusFooter({
         </span>
         <div className="cockpit-sb-pills">
           {statusItems.map((item) => (
-            <details className="cockpit-sb-pill" key={item.label}>
-              <summary>
+            <details
+              className="cockpit-sb-pill"
+              key={item.label}
+              open={openStatus === item.label}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setOpenStatus(null);
+                  event.currentTarget.querySelector("summary")?.focus();
+                }
+              }}
+            >
+              <summary onClick={(event) => {
+                event.preventDefault();
+                setOpenStatus(current => current === item.label ? null : item.label);
+              }}>
                 <i className={`cockpit-sb-pill-dot state-${item.state}`} aria-hidden="true" />
                 {item.label}
               </summary>
