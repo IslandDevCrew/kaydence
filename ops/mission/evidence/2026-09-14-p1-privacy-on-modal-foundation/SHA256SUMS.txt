@@ -7,4 +7,4 @@ d471d5b1e5c6fdbdc9bcb0ffc087d7bea4fb4431581d742817c5c9cf07529728  ops/mission/ev
 a83e876bd9d621453ae3f0ad32fc815c1813b86a60057479eeede36595dab3f4  ops/mission/evidence/2026-09-14-p1-privacy-on-modal-foundation/privacy-light-501-end.png
 1cd37fed2e16767d3d7f247e3637f80497518708852f865a2c482f2cac3e9703  ops/mission/evidence/2026-09-14-p1-privacy-on-modal-foundation/privacy-light-900-end.png
 a9a04163c2c72dac022f08909ec353cd30e741a07ee2cd0c0ff32258544c3a64  ops/mission/evidence/2026-09-14-p1-privacy-on-modal-foundation/privacy-light-900-start.png
-048a71b2d8f41d1d921af68f68262de3baf3a618700a173133a519662b31501d  ops/mission/evidence/2026-09-14-p1-privacy-on-modal-foundation/raw-and-bindings.json.gz
+d32e11952dc7e871c70a614206c7a62ae400437c92894e5ec9499ba3acc5e5ff  ops/mission/evidence/2026-09-14-p1-privacy-on-modal-foundation/raw-and-bindings.json.gz
