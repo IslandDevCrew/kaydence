@@ -1,6 +1,6 @@
 # ADR-0020: Accessible shared focus-indicator color
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-14
 - **PRD items affected:** P0-1..P0-8; PRD §5 accessibility; P1-G4
 
@@ -18,9 +18,9 @@ colors: `ops/mission/evidence/2026-09-14-p1-contrast-approval.md`.
 Use shared `--focus-ring`, derived from the existing palette, for authored
 focus outlines: 20% unchanged OS accent plus 80% current theme ink. Preserve
 outline widths, offsets/insets, target geometry, navigation, all raw/reserved
-colors, identity and all existing states. No JavaScript or per-OS rule is added.
-This supplements, rather than edits, accepted ADR-0018/0019. Acceptance remains
-pending the separately assigned review and exact integrated evidence.
+colors, identity and all existing states. No runtime JavaScript or per-OS rule is added.
+This supplements, rather than edits, accepted ADR-0018/0019. Recorded operator
+approval and independent integrated review bind this narrowly scoped decision.
 
 ## Alternatives considered
 

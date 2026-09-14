@@ -858,7 +858,7 @@
     {
       "label": "ADRs accepted (0009 and 0016 Proposed by design)",
       "baseline": "8",
-      "current": "17 of 20 numbered ADRs;0020 focus contrast Proposed pending integrated review.",
+      "current": "18 of 20 numbered ADRs;0020 focus contrast Accepted after integrated review.",
       "target": "20 (0009 Relay crypto review; 0016 ORT/model shipping review)",
       "direction": "up"
     },
