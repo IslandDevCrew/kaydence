@@ -1,0 +1,13 @@
+34be46aa5160445cb93ba99f589e11f938615c4e92d0ea1dd0e78951db65debc  apps/desktop/src/components/Modal.tsx
+1952e8732fb91bebab771b28a97a2c18ce9709148c020dc37fe679344a328009  apps/desktop/src/components/Modal.css
+f6a948b3aa3daf9a133463fb3d9e162700e2c84b359cf2de884a4d0a82849777  apps/desktop/src/views/FirstRunView.css
+195795f711b01108117ca2a815f8fc4414565732f9235cb2335c3afb245059d6  apps/desktop/src/views/PrivacyView.css
+977b820857785e8ad33908b5961da0b6976e133480914cda7b1fff562a278f02  ops/mission/evidence/2026-09-14-p1-modal-keyboard-check.cjs
+57d39eb90bf4301c42fb77912125138d45550ca0e0b48571624e1d0c07143fd9  ops/mission/evidence/2026-09-14-p1-modal-keyboard.md
+b5c474ef89d65577163068d83ba2471c03c1a89ccaf228e00ecad661124697b5  ops/mission/evidence/2026-09-14-p1-modal-keyboard/dark-models-900.png
+1c0bff9755389b4760535971d4d3658dcdbe4900819d5fcac50389bfcf8731d1  ops/mission/evidence/2026-09-14-p1-modal-keyboard/dark-privacy-900.png
+b7d913dbb19e8deb6f14a02e118a27a0449525276f76915ef730e9a2435ec5c9  ops/mission/evidence/2026-09-14-p1-modal-keyboard/dark-proof-450.png
+692e8f1a9331893a6fff01a5dc577e02720a9c37bf0c86df51030bd4457bb0c4  ops/mission/evidence/2026-09-14-p1-modal-keyboard/light-models-900.png
+0c4b4668f81a34e9c6f59693e5382a74b4d8223462d355f61d30edfd50e93173  ops/mission/evidence/2026-09-14-p1-modal-keyboard/light-privacy-900.png
+b8c53536bdcadbff82c19728ae45728059dfb24749038efe1200a2a615ab6a66  ops/mission/evidence/2026-09-14-p1-modal-keyboard/light-proof-450.png
+e832804b9d36d152c44b1a1e18614eb0ede30ac0ce57c5338e5d98ffb760309d  ops/mission/evidence/2026-09-14-p1-modal-keyboard/raw-and-bindings.json.gz

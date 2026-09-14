@@ -791,3 +791,9 @@
 ## 2026-09-14T21:36Z — session 43 (opener custody merged)
 - PR46 merged9b35ac8 after head7ff203b passed all3OS CI34898299870/CLEAN; tested/merged tree60f5f55460c9ea020bb5251649ae50e54a71062c. Expected-head MERGE, no bypass. Immediate heartbeat rides focus-color ee86500;0020 is still Proposed pending integrated review.
 - Focus measurements/independent visual cues pass with low segments retained; no full-AA/native claim. Shared-scroll34632f0 is held for introduced WebKit missing rings; removing its interception breaks Chromium confinement. Separate keyboard Unit A precedes scroll Unit B. Body/copy and physical/runtime/shipping gates remain open; P1-G4 stays pending.
+
+## 2026-09-14T22:08Z — session 44 (focus contrast merged)
+- PR47 merged913edd8 after head3212c05 passed all3OS CI34901506895/CLEAN; tested/merged tree6bf467a9fab2cc6aeea8f44cfa45e04b4aac6224. Expected-head MERGE, no bypass. ADR0020 Accepted; no immutable ADR edits. Immediate heartbeat rides keyboard Unit A.
+- Keyboard A rebased unchanged onto actual main atb13e016; independent59/60/4negative/24cue, focus96/768 and full253/local gates PASS on the identical tested tree. Final parent/heartbeat Audit and own CI remain required. B still HELD: fresh WebKit wheel11/12, dark450 Privacy background moves80->0. Old failures remain retained.
+- Actual Privacy/Setup full-reading checks remain RED for inherited small/hidden/truncated text; future-body composition previews are not actual-body proof. Their body units follow A/B. Native/physical/runtime/shipping/download and other-phase gates remain open; P1-G4 is not closed.
+- Final delta Audit caught two stale current metrics still naming PR46/focus open. Both now agree with PR47 merge evidence; product, immutable ADRs and phase gates are unchanged. The docs RED is retained in the Audit trail.

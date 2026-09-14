@@ -31,9 +31,9 @@
   font: inherit;
 }
 
-.first-run-board button:focus-visible,
-.first-run-board select:focus-visible,
-.first-run-board input:focus-visible {
+.first-run-board button:is(:focus-visible, :focus:where([data-modal-keyboard-focus])),
+.first-run-board select:is(:focus-visible, :focus:where([data-modal-keyboard-focus])),
+.first-run-board input:is(:focus-visible, :focus:where([data-modal-keyboard-focus])) {
   outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
 }
