@@ -140,7 +140,7 @@
     "status": "active",
     "started": "2026-07-07",
     "updated": "2026-09-14",
-    "sessionCount": 37
+    "sessionCount": 38
   },
   "policies": {
     "merge": "auto",
@@ -1671,14 +1671,21 @@
       "url": "https://github.com/IslandDevCrew/kaydence/pull/40",
       "phase": "P1",
       "mergedAt": "2026-09-07T10:31:42Z"
+    },
+    {
+      "number": 41,
+      "title": "Record scoped P1-G4 contrast approval",
+      "url": "https://github.com/IslandDevCrew/kaydence/pull/41",
+      "phase": "P1",
+      "mergedAt": "2026-09-14T19:36:46Z"
     }
   ],
   "resume": {
     "activePhase": "P1",
     "nextActions": [
-      "P1-G4 CONTRAST APPROVED 2026-09-14: operator explicitly approved the narrow contrast ADR/correction preserving identity/layout/raw OS accents. Read 2026-09-14-p1-contrast-approval.md. Prepare ADR0018 and common derived control/text tokens, verify normal-text contrast in all3accents/both themes, independently Judge and run all gates. This is not design implementation acceptance or a P1-G4/ship/backend gate waiver.",
-      "P1-G4 PREPARED PACKETS: isolated worktrees under /Users/IDC2.5/Documents/Kaydence/.worktrees/: p1-g4-dictate-readability5652998 (54 cases, bounded Judge PASS), p1-g4-cleanup-type6b0a396 (24 cases, integrated local gates; Judge pending), p1-g4-privacy-type6f22aec (24 cases; integration/Judge pending), p1-g4-setup-type74272b0 (24 cases; integration/Judge pending). No product packet is pushed or merged. Rebase each onto currentmain separately, refresh captures/source hashes, run independent Judge/Audit and all gates, publish <=400-line PRs with three exact-head CI checks and MERGE auto-merge.",
-      "P1-G4 CLEANUP TRUTH: fix frontend-only Full rewrite claim, Raw always-on checks, production-unwired dictionary/Profile rule wording and illustrative examples that exceed current RuleCleaner semantics. Dictionary implementation exists but the runtime pass is empty; do not claim it is absent. Use examples bound by existing tests, not new cleanup/prompt behavior.",
+      "P1-G4 CONTRAST: approval checkpoint PR41 merged1586345. Local p1-g4-accessible-accents has common derived shades,90 scopes/930 samples minimum4.951315:1,48 hashed PNGs and standing gates PASS. Independent Judge and ADR0018 acceptance pending; then exact-head3OS CI/CLEAN/merge. Nonaccent status contrast and Setup opacity remain explicitly open, not AA-exempt. See2026-09-14-p1-accessible-accents.txt.",
+      "P1-G4 PREPARED PACKETS: worktrees under /Users/IDC2.5/Documents/Kaydence/.worktrees/: Dictate d623192 now54+48+12 cases/Judge PASS after new761/800px History clipping and short-window focus fixes; Cleanup6b0a396 fresh24+wheel/keyboard Judge PASS; Privacy6f22aec and Setup74272b0 fresh reviews underway. Rebase each onto currentmain separately, reconcile the accent PR's duplicate statusbar overflow hunk, refresh captures/hashes, rerun Judge/gates and publish <=400-line PRs with three exact-head CI checks and CLEAN/MERGE auto-merge. No body packet merged.",
+      "P1-G4 CLEANUP TRUTH: local p1-cleanup-capability-copy8d06b19 removes unsupported Full/profile claims, Raw checks and production-unwired dictionary status; examples bind existing Rust fixtures.18 browser cases/tsc/eslint PASS; integrate after body/contrast packets and independently Judge full visible copy before PR. Dictionary helper exists; production pass is empty. No Rust behavior change.",
       "P1-G4 FINAL FIDELITY: after approved corrections, repeat all4screens/all3cockpitlayouts at900x600, narrow/intermediate widths, both themes, keyboard/a11y and 200%-equivalent; collect actual native WebView/OS scaling evidence separately. Browser fixtures, OS selectors and synthetic benches never substitute for native proofs.",
       "P1 RECORDING INTEGRATION: read-only audit confirms no live capture-status bridge. Request a separately owned backend projection + bootstrap/reopen synchronization; do not poll recent_history for a clock or subtract Started.at_ms from Date.now(). No Buzz Rust/inject edits or SessionEvent changes without lane/ADR authority.",
       "ADR-0016 HUMAN GATE: approve or revise ORT 1.28 binary provenance, the shipped CTC model/license and source pins, and the non-default hedge posture before treating the new ONNX/Silero lane as ship-authorized.",
