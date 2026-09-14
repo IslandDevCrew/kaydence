@@ -787,3 +787,7 @@
 - PR45 mergedf29aef2 after head0b16de0 passed all3OS CI34895919091 and CLEAN; tested/merged tree81b366b40f9c6a928d8b94900293adbdeda43e6a. Expected-head MERGE, no bypass. Immediate heartbeat rides the opener-custody unit.
 - Opener9ee4f9c retains164 pointer/24held-IPC/4keyboard PASS and fresh full gates after actual-parent rebase; independent Judge underway. Body/scroll/copy packets remain unmerged, with historical source-bound evidence preserved.
 - Pixel-backed focus sweep found authored AA outline-contrast defects on actual inset fills and tinted surfaces. Separate derived-color cure/additive0020 is under the existing narrow contrast go; no accepted ADR changes. Ordinary WebKit Tab/native/physical/runtime/download/shipping/P2 gates remain open; P1-G4 is not closed.
+
+## 2026-09-14T21:36Z — session 43 (opener custody merged)
+- PR46 merged9b35ac8 after head7ff203b passed all3OS CI34898299870/CLEAN; tested/merged tree60f5f55460c9ea020bb5251649ae50e54a71062c. Expected-head MERGE, no bypass. Immediate heartbeat rides focus-color ee86500;0020 is still Proposed pending integrated review.
+- Focus measurements/independent visual cues pass with low segments retained; no full-AA/native claim. Shared-scroll34632f0 is held for introduced WebKit missing rings; removing its interception breaks Chromium confinement. Separate keyboard Unit A precedes scroll Unit B. Body/copy and physical/runtime/shipping gates remain open; P1-G4 stays pending.
