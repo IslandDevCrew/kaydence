@@ -1,5 +1,7 @@
 # P1-G4 modal keyboard custody — bounded local verification
 
+Historical author packet at3d5f604: its original source manifest remains unchanged. Current focus-color composition and independent results are in `2026-09-14-p1-modal-keyboard-integrated.md`; original color/source bindings are not current after rebase.
+
 - Base: PR46 `7ff203bd954e3154a709a9a70ee914b47f19dbee`; candidate served at `http://127.0.0.1:1444`.
 - Scope: non-control-origin Tab confinement, explicit keyboard cue, and native focus visibility. No IPC, backend, command, copy, palette, ring geometry, navigation or identity changes.
 - Status: local checks PASS; independent Judge, full standing gates, remote Audit/CI and merge remain pending. P1-G4 remains open.
