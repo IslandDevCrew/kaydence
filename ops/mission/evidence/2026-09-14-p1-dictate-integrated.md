@@ -1,6 +1,6 @@
 # P1-G4 Dictate integrated candidate — 2026-09-14
 
-Integrated onto reviewed accent02a1ff5 ancestry (publication waits for its merge).
+Integrated onto merged PR42/main9d0d6a7 ancestry (tested accent head02a1ff5).
 Merge-resolve traced the sole overlapping popup hunk: accent34f182b supplied
 --accent-ink, while5652998 restored11px. Both intents survive; no intent dropped.
 The already-applied statusbar overflow prerequisite was not reverted.
