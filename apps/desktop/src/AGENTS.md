@@ -23,6 +23,8 @@ regex over transcript text here, you are in the wrong layer — move it to Rust.
   legible at 200% scaling.
 - Text-bearing accent controls use `--accent-control`/`--accent-ink` per ADR-0018;
   preserve raw OS accents and test both themes instead of using raw accent text/fills.
+- Authored focus colors use `--focus-ring` (ADR-0020); preserve outline geometry
+  and test actual adjacent fills, including selected inset controls and dialogs.
 - Modal surfaces use `components/Modal`: native background inertness, bounded
   Tab/Shift-Tab navigation, Escape dismissal, and focus restoration to the opener.
   Keep Close reachable at the 450x300 effective viewport (900x600 at 200%).
