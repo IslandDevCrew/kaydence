@@ -62,3 +62,11 @@ checker efe6088f. Full digests and raw results are archived in manifest.sha256.
 The independent Privacy full-read artifact retains a separate View History outline
 defect at450px in body6f22aec; it is NOT waived or fixed by this shared-modal packet.
 No native OS/WebView verification or broader P1-G4 closure is claimed.
+
+Independent runners remain uncommitted in /tmp; only their raw results are archived.
+Repro: set PLAYWRIGHT_MODULE to the bundled Playwright path, CAPTURE_DIR to a fresh
+temporary directory, and PRIVACY_STYLE_REF=6f22aec for the Privacy runner below.
+Primary reproducible checker stays plain source in this packet (not compressed).
+- /tmp/kaydence-modal-judge-20260914/independent.cjs SHA256073e96780d183223e5b8913c237ccb4ab0c5cd0a71b9c3702845709ddf06c693
+- /tmp/kaydence-modal-judge-20260914/setup.cjs SHA2562946649795a362cfb57a287e9b33b02cd310c10a580cab1e2330b14b77b5bbb8
+- /tmp/kaydence-modal-containment-judge-20260914/receipt-negative.cjs SHA256df54eec9156d57b442fb7d33dc5b1df4fd5bb12aeedda6a434ace1b5bdb7a463

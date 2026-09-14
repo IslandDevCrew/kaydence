@@ -2,7 +2,7 @@
 2b9406228185dfc2f404fdea95d3154921f1072d8fa449cedc1534ef4820c92b  apps/desktop/src/components/Modal.tsx
 059d436b33e6a30291df1f0685cc7d94ce64ac97aceecb6a75d653843f93339e  apps/desktop/src/views/PrivacyView.css
 efe6088fa2aa39a67c853fd0506e828074ec53e709ba457b5fd11c2d6d0ad4c7  ops/mission/evidence/2026-09-14-p1-modal-scroll-check.cjs
-523966c48929e2737cc7913e47e55ea4344440f4d013450caa739b8d38e457cf  ops/mission/evidence/2026-09-14-p1-modal-scroll.md
+36e7d4e695de6e4eef27616fc1df624e9f4c7f72eb1daf13a4dda30d4621cc0f  ops/mission/evidence/2026-09-14-p1-modal-scroll.md
 0c2bd3d456237a70a26980775a3d7b3b7c5a84ccf3428056efecefbc9123e100  ops/mission/evidence/2026-09-14-p1-modal-scroll/base.log.gz
 a9dc039472a1a022518de4933a3f44a64556adfff31d05ad382baf8f3f83c3a3  ops/mission/evidence/2026-09-14-p1-modal-scroll/base/privacy-after-wheel.png
 33f3d987fa24476ef8361cd429310a2379cf6b5dc3a804655538d93d7d50a88b  ops/mission/evidence/2026-09-14-p1-modal-scroll/base/privacy-dark-450.png
@@ -36,11 +36,8 @@ f80fff8b93fd74ec779d1ef427d2c52998357cdb109015c2757cf103f872004b  ops/mission/ev
 b657528d89ba3e148a5b54c20505889acf63e838901f60a93603a70d5d0dd129  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge-base.json.gz
 0d63bb3b31e2380bf74d77c26e4cd3b0070def04532e1341c7ce1eb3074679ab  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge-fullread-privacy.json.gz
 5e66ee54c6daa35750c5c0111f0fa8e7af5951046663dbc14d6bd4e663e7ca8c  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge-fullread-setup.json.gz
-2c63032108d877638f90d89e459396ad2df423f9e39318e11ad12948515c2d03  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge-privacy-runner.cjs.gz
 0417541880dcbd49d4af60169745eba950b148da26f47963de36fad5ae89469f  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge-privacy.json.gz
 e600699455b0fb9c273f872713129817c9a38e08e9d1d717be42cbbacdec8afd  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge-receipt-negative.json.gz
-76764099f5b7891601713aecc506dac9d09a2a4750ecae431567462765b0e541  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge-receipt-runner.cjs.gz
-154e3acc045647b9914010f3113cb9e7c2646cfbcef348635850ea2675ec51af  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge-setup-runner.cjs.gz
 c2d9b2c46c286586a2efcdc8b4a8fcfdcb1cbb5f526d234a5d42693e8fb0dc7c  ops/mission/evidence/2026-09-14-p1-modal-scroll/judge.txt.gz
 fc5d84539ef2a13e4f6b627cf3504e17ddec47841a6e4a294c12d92d4fb2a100  ops/mission/evidence/2026-09-14-p1-modal-scroll/privacy-body.log.gz
 87367cb113c582da142c1da152010f9bc9f79ac5563ea9007f2db3e9833479cc  ops/mission/evidence/2026-09-14-p1-modal-scroll/privacy-body/privacy-after-wheel.png
