@@ -1,0 +1,80 @@
+[
+  {
+    "theme": "light",
+    "lane": "macOS",
+    "text": "Save Changes",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(20, 167, 161)",
+    "font": "8.96px",
+    "weight": "800",
+    "disabled": false,
+    "ratio": 2.9695103769387883,
+    "minimum": 4.5,
+    "pass": false
+  },
+  {
+    "theme": "light",
+    "lane": "Windows",
+    "text": "Save Changes",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(0, 103, 192)",
+    "font": "8.96px",
+    "weight": "800",
+    "disabled": false,
+    "ratio": 5.673753670293826,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "theme": "light",
+    "lane": "Linux",
+    "text": "Save Changes",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(31, 157, 99)",
+    "font": "8.96px",
+    "weight": "800",
+    "disabled": false,
+    "ratio": 3.46464896741796,
+    "minimum": 4.5,
+    "pass": false
+  },
+  {
+    "theme": "dark",
+    "lane": "macOS",
+    "text": "Save Changes",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(20, 167, 161)",
+    "font": "8.96px",
+    "weight": "800",
+    "disabled": false,
+    "ratio": 2.9695103769387883,
+    "minimum": 4.5,
+    "pass": false
+  },
+  {
+    "theme": "dark",
+    "lane": "Windows",
+    "text": "Save Changes",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(0, 103, 192)",
+    "font": "8.96px",
+    "weight": "800",
+    "disabled": false,
+    "ratio": 5.673753670293826,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "theme": "dark",
+    "lane": "Linux",
+    "text": "Save Changes",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(31, 157, 99)",
+    "font": "8.96px",
+    "weight": "800",
+    "disabled": false,
+    "ratio": 3.46464896741796,
+    "minimum": 4.5,
+    "pass": false
+  }
+]
