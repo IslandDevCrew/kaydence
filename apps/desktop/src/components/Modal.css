@@ -13,6 +13,10 @@ dialog.modal-backdrop {
 dialog.modal-backdrop:not([open]) { display: none; }
 dialog.modal-backdrop::backdrop { background: transparent; }
 
+dialog.modal-backdrop :is(.privacy-dialog, .first-run-evidence-body) {
+  overscroll-behavior: contain;
+}
+
 dialog.modal-backdrop :is(button, [href], input, select, textarea, [tabindex]) {
   scroll-margin: var(--space-2);
 }

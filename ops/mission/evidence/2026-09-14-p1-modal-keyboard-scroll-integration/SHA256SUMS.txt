@@ -1,0 +1,4 @@
+1b8c698593d3d0ef9a88761df2007de2c6bb7fda7d0fc6c6584d0b85242f9434  ops/mission/evidence/2026-09-14-p1-modal-keyboard-scroll-integration.md
+5a0098081026ac9e383917f8be561956fc69b70bd2d5634b8623bb4654f92c27  ops/mission/evidence/2026-09-14-p1-modal-keyboard-scroll-integration/chromium-privacy-wheel-450.png
+f65ea22a1f5102e8e79600ebed0be0de20cb56ba70a32912b9f77af5b6387d99  ops/mission/evidence/2026-09-14-p1-modal-keyboard-scroll-integration/raw-and-bindings.json.gz
+cb013fed5dfb798191a882e3ff65eaf42dbd85bf39c55d1cc5590c844f6f8aab  ops/mission/evidence/2026-09-14-p1-modal-keyboard-scroll-integration/webkit-setup-wheel-450.png
