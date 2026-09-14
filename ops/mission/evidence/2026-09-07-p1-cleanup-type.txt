@@ -1,0 +1,19 @@
+P1-G4 Cleanup body readability correction — 2026-09-07
+ORIENT: base 697de42246328cf368fc313855684a13c83fd31c; product scope only CleanupView.css after the shared rail.
+PLAN: restore locked token typography floor (11px), isolate gate-row styles from the four-state legend, preserve full readable copy and reachable controls across 900x600 / 450x300 / 500x300 / 501x300 in both themes.
+Routine presentation correction; no backend, dependency, event, cleanup semantics, nav, brand, or reserved-color change.
+Browser skill is not listed: existing Playwright/Chromium harness used as permitted by frontend-testing-debugging; actual frontend served on 127.0.0.1:1432.
+RED: the baseline check found body type as small as 7.68px, hidden/clipped copy at 501px, and gate-row selectors affecting the legend. See baseline-red.log.gz.
+BUILD: all body type consumes existing --text-* tokens >=11px; gate rows explicitly exclude the legend. Full copy wraps, rules rows use intrinsic max-content sizing with genuine panel scrolling, and 501-700px uses a single-column scrollable body without hiding destination metadata/controls.
+Visual self-review rejected an initial automated green: scrollIntoView can move overflow:hidden descendants although users cannot. The strengthened test rejects hidden overflow and text outside its section; intrinsic-track-red.log.gz reproduces the 900px example/rule overlap before the max-content correction.
+GREEN: 24 cases (four dimensions x two themes x three OS reference choices) passed font floor, full text ranges, hidden-overflow rejection, section separation, legend text-range nonintersection, keyboard actions, and actual mouse-wheel scrolling where 900px panels overflow.
+REGRESSION: existing navigation (10 viewport/theme cases), modal keyboard (4 cases), runtime/reference truth suite, local tsc/eslint, direct Vite production build, and git diff --check PASS. Re-run all standing gates after integration; backend/three-OS CI is the parent's merge gate, not claimed by this isolated packet.
+VISUAL: inspected saved light 900 initial, dark 900 scrolled detail, light 450 full-page, light 501 initial, and dark 501 detail. Larger text uses reachable scrolling rather than compressed/overlapping rows. Sixteen PNGs cover initial/full-page and scrolled details for each dimension/theme.
+SHA256 CleanupView.css: e2c16fdd5892c221b91e043159eb6471ec9747aaa9b2e771d64c23cfe960c237
+SHA256 readability check: d59590659b55518dba23d7bf73f3849a569e28c9b3b2b1f0af0c9319957d10ec
+Artifacts: 2026-09-07-p1-cleanup-type/manifest.sha256 binds the sixteen PNGs and eight compressed logs. Test command: PLAYWRIGHT_MODULE=<bundled playwright> APP_URL=http://127.0.0.1:1432 node ops/mission/evidence/2026-09-07-p1-cleanup-type-check.cjs.
+LIMITS: Chromium browser fixtures and reference choices are not physical macOS/Windows/Linux WebView proof, native capture/delivery proof, contrast audit, or full phase closure. Shared rail typography is deliberately untouched and owned by a parallel packet. Parent must rebase, fresh-gate, independently Judge/Audit, and await three-OS CI before any merge.
+
+INTEGRATION CHECKPOINT: rebased locally onto PR40 candidate d21ace9 (including shared rail), not yet published. All16 screenshots refreshed; current CleanupView.css SHA256 2dc0c1f3cdeb55a4f4efd7b6043bd2a96b35fb637dbf7096eb92defacfe7e058 supersedes the pre-rail CSS binding above.
+Fresh full local fmt/clippy/253 Rust tests/tsc/eslint/privacy/ADR/build PASS; synthetic bench remains PARTIAL. Integrated readability24, rail10, nav10, hydration7, reference16, modal4 and Privacy2 guards PASS. Compressed integrated logs and refreshed hashes are saved.
+Main visual review inspected integrated900px and501px captures. Independent Judge is still PENDING: this packet is not merge-ready and has no PR/CI claim. It remains frozen while the separately documented inherited accent-contrast conflict awaits operator/design ADR ruling. No colors were changed.

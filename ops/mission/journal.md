@@ -771,3 +771,8 @@
 - Immediate heartbeat on Dictate branch follows the clean docs-only rebase. Its final54+48+12 checks,90 accent scopes,253Rust/standing gates/build and independent Judge pass, including newly caught whole History focus outlines. Publication remains gated on exact-head CI/CLEAN.
 - Fresh real-wheel review found Privacy modal Close/ShiftTab/restoration defects, now a separately reviewed sharedmodal candidate5ba4401. Setup's native rail/nested-button focus boundaries were corrected and independently rechecked at a37a48c (docshead2aa7ca9). Cleanup copy8d06b19 Judge PASS is still limited by pending body integration.
 - Nonaccent status/prose contrast is being corrected without changing raw status colors or enabling future features. P1-G4 remains pending; no native, backend lane, download-default, ship or P2 authority changed.
+
+## 2026-09-14T20:22Z — session 40 (Dictate readability merged)
+- PR43 merged73101ab after head6ffca63 passed all3OS CI34891141104 and CLEAN; tested/merged tree108a29addbb0290945e8356bb042ca299ca64d0b. Expected-head MERGE auto-merge, no bypass. Immediate heartbeat rides the next protected-main Cleanup unit.
+- Cleanup integrated24+24/Judge and local standing gates pass; final docs/CI pending. Status-text f676d85 passes450scopes/24036samples plus independent180-scope Judge. Sharedmodal wheel/focus correction remains under review; Privacy History guard catches450/500 ring clipping and the margin cure passes24 locally. Setup2aa7ca9 and capability-copy8d06b19 still require integration.
+- P1-G4 stays pending. Browser fixture/scaling-equivalent evidence is not native/VM/runtime proof; no backend lane, default-download, shipping or P2 gate changed. Resume actions identify unmerged work and exact next gates.
