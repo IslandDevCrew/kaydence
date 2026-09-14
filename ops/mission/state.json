@@ -1751,7 +1751,7 @@
       "PROCESS: use mission branches, <=400 changed lines, independent Judge plus fresh evidence, all three required CI legs and CLEAN state, then gh pr merge --auto --merge with the expected head SHA. Commit a state/journal/rendered heartbeat after every merge; no admin or direct-main bypass."
     ],
     "blockers": [
-      "P1-G4 pending: PR42-48 corrections merged. B2835 scroll cure has bounded browser Judge/local PASS but awaits own CI/merge after Audit71e4d2a PASS; Privacy/Setup/capability copy remain unmerged. Native fidelity and live capture projection remain unresolved. No AA or phase waiver.",
+      "P1-G4 pending: PR42-49 corrections merged. Privacy/Setup bodies and capability copy remain unmerged; final density/fidelity and live capture projection unresolved. Local Windows-Kaydence-Proof VM exists but launch transport stalled; all guests remain stopped, no native proof. No AA or phase waiver.",
       "ADR-0016 is Proposed. The ONNX CTC + Silero implementation is live-proven but not ship-authorized until the operator approves binary/model/license/source posture.",
       "P1-G3 still lacks physical release-to-focused-field timing, packaged q5 ASR-resident measurement, a sub-80 MB visible no-model cockpit, a Windows tray lifecycle fix, and Linux tray/reopen proof.",
       "P1-P0-8 still lacks complete live OS permission proof, a real first dictation, and <=60-second reference-device evidence. ADR-0017 separately requires operator go before model-download is enabled in the default shipped build; the merged UI does not claim cancellation support.",
