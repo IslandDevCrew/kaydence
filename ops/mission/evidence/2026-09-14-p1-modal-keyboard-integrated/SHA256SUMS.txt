@@ -1,3 +1,4 @@
 27d312d429a06a58f4f36600ab183861933ddd999afb745d5d9b2310bcd20bcd  ops/mission/evidence/2026-09-14-p1-modal-keyboard-integrated/raw-and-bindings.json.gz
 b0b28911ba04378ba1665071982278fa2ce91b9d8398a0708e6dba3fbb477847  ops/mission/evidence/2026-09-14-p1-modal-keyboard-integrated/parent-audit-and-gates.json.gz
 3de8c3f4fe6f800eb4775d96269a7b90303c21206ae2a0da5cf84bfb5ff6f39a  ops/mission/evidence/2026-09-14-p1-modal-keyboard-integrated/pr47-premerge.json.gz
+5a3e6054eee2e86ccd4f6c63b1257f127c7226d1ef54537a88d8992c6630318e  ops/mission/evidence/2026-09-14-p1-modal-keyboard-integrated/final-delta-audit.json.gz
