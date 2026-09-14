@@ -102,7 +102,7 @@ async function wheelBottom(page, root, delta = 10000) {
         assert.deepEqual(await background(), behind, 'Modal wheel must not scroll inert background');
         stage = 'wheel then Tab'; const wheel = await wheelBottom(page, scroll);
         assert.deepEqual(await background(), behind, 'Modal lower boundary must not scroll inert background');
-        assert(wheel.max <= 0 || wheel.top > 0, 'Real wheel scrolls overflowing modal content');
+        assert(wheel.max <= 0 || Math.abs(wheel.top - wheel.max) <= .5, 'Real wheel reaches the bottom without rebound');
         await page.keyboard.press('Tab'); await visibleFocus(page, true);
         if (process.env.CAPTURE_DIR && theme === 'light' && width === 450 && (!privacyStyle || view === 'Privacy')) await page.screenshot({ path: `${process.env.CAPTURE_DIR}/${view.toLowerCase()}-after-wheel.png` });
         await page.locator(view === 'Privacy' ? '.privacy-dialog dt' : '.first-run-evidence-summary strong').first().click();

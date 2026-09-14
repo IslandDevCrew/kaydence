@@ -14,7 +14,7 @@ dialog.modal-backdrop:not([open]) { display: none; }
 dialog.modal-backdrop::backdrop { background: transparent; }
 
 dialog.modal-backdrop :is(.privacy-dialog, .first-run-evidence-body) {
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
 }
 
 dialog.modal-backdrop :is(button, [href], input, select, textarea, [tabindex]) {
