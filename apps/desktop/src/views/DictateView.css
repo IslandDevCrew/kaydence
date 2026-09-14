@@ -89,7 +89,7 @@
 .dictate-shell .compact-sidebar .nav-item.active,
 .dictate-shell .compact-sidebar .nav-item:hover {
   background: color-mix(in srgb, var(--accent) 14%, var(--surface));
-  color: color-mix(in srgb, var(--accent) 78%, var(--ink));
+  color: var(--accent-ink);
 }
 
 .dictate-shell .compact-sidebar .nav-item:disabled {
@@ -177,7 +177,7 @@
   padding: 5px 8px;
   text-transform: capitalize;
 }
-.cockpit-dial button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.cockpit-dial button[aria-pressed="true"] { background: var(--accent-control); color: var(--on-accent); }
 
 /* L2/L3 — Capture is always centered/primary; Cleanup+Output and History are
    its flanks. Only the arrangement below (which flank sits where, or whether
@@ -349,7 +349,7 @@
   display: grid;
   grid-template-columns: 126px minmax(0, 1fr);
   align-items: stretch;
-  overflow: hidden;
+  overflow: visible;
   padding: 0;
 }
 .cockpit-sb-left {
@@ -425,7 +425,7 @@
 }
 .cockpit-sb-pop strong { font-size: .68rem; }
 .cockpit-sb-pop small { color: var(--muted); font-size: .58rem; }
-.cockpit-sb-pop button { justify-self: start; margin-top: 2px; border: 0; background: none; padding: 0; color: var(--accent); font-size: .58rem; font-weight: 700; }
+.cockpit-sb-pop button { justify-self: start; margin-top: 2px; border: 0; background: none; padding: 0; color: var(--accent-ink); font-size: .58rem; font-weight: 700; }
 
 @media (max-width: 760px) {
   .cockpit-sb-right {

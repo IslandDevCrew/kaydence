@@ -89,7 +89,7 @@
 .privacy-shell .compact-sidebar .nav-item.active,
 .privacy-shell .compact-sidebar .nav-item:hover {
   background: color-mix(in srgb, var(--accent) 14%, var(--surface));
-  color: color-mix(in srgb, var(--accent) 78%, var(--ink));
+  color: var(--accent-ink);
 }
 
 .privacy-shell .compact-sidebar .nav-item:disabled {
@@ -203,7 +203,7 @@
 }
 
 .privacy-lane-switcher button[aria-pressed="true"] {
-  background: var(--accent);
+  background: var(--accent-control);
   color: var(--on-accent);
 }
 
@@ -261,7 +261,7 @@
   border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--line));
   border-radius: 6px;
   background: var(--surface);
-  color: color-mix(in srgb, var(--accent) 78%, var(--ink));
+  color: var(--accent-ink);
   font-size: .56rem;
   font-weight: 800;
   padding: 5px 7px;
@@ -411,7 +411,7 @@
 .privacy-panel header > span {
   border-radius: 5px;
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  color: color-mix(in srgb, var(--accent) 76%, var(--ink));
+  color: var(--accent-ink);
   padding: 2px 4px;
   font-size: .47rem;
   white-space: nowrap;
@@ -534,7 +534,7 @@
 
 .privacy-reader-row em.state-ready,
 .privacy-permission-row.state-ready em {
-  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+  color: var(--accent-ink);
 }
 
 .privacy-reader-row em.state-pending,
@@ -631,7 +631,7 @@
   font-variant-numeric: tabular-nums;
   font-size: 1.05rem;
   line-height: 1;
-  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+  color: var(--accent-ink);
 }
 
 .privacy-network-count span {
@@ -749,7 +749,7 @@
 }
 
 .privacy-footer > span.ready {
-  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+  color: var(--accent-ink);
 }
 
 .privacy-footer > span.pending {
@@ -791,7 +791,7 @@
 }
 
 .privacy-dialog header span {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: .62rem;
   font-weight: 850;
   text-transform: uppercase;
