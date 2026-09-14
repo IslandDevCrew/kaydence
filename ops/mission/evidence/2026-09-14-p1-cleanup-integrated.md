@@ -23,4 +23,4 @@ Current source/captures/logs are bound by the adjacent integrated manifest.
 Independent Judge PASS at749518a: fresh24+24, full rings for all nine controls
 and94-98 fragments reached with real wheel. Natural checker and actual raw logs
 are archived; no forced-focus substitute. Main scope Audit PASS; no gate weakened.
-Final docs Audit, exact-head three-OS CI/CLEAN and merge remain pending.
+Independent final docs Audit PASS atd4062f1; exact-head three-OS CI/CLEAN and merge remain pending.
