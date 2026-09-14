@@ -1,7 +1,7 @@
 # P1-G4 — integrated status-text verification
 
-The status treatment is now layered on merged Dictate PR43 and Cleanup d4062f1
-(PR44 pending), retaining both body corrections and all semantic ink tokens.
+The status treatment is now layered on merged Dictate PR43 and Cleanup PR44,
+main1445775, retaining both body corrections and all semantic ink tokens.
 The original status packet's source hashes/captures remain historical; this
 integrated manifest binds current sources,24 preview PNGs and fresh actual logs.
 
@@ -13,7 +13,7 @@ Fresh fmt/clippy/253Rust tests/frontend/privacy/ADR/build PASS; synthetic bench
 measured fields PASS, physical fields PARTIAL. No backend or dependency change.
 Independent integrated Judge PASS at1f6baae (same sources through77aae59):
 own180 scopes/10,098 samples, negative probes and four rendered views verified.
-Main scope Audit PASS; final docs/CI/CLEAN and merged-parent reconciliation pending.
+Main scope Audit PASS; final docs/CI/CLEAN pending. PR44's pre-merge snapshot is archived.
 
 Forced focus in the paint checker is not keyboard proof. Mocked IPC/status and
 OS accent selectors are not native recording/injection/VM proof. Other screen
