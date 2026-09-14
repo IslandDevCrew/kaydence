@@ -20,4 +20,7 @@ P1-G4 and native fidelity remain open; OS selectors are not native OS proof.
 SHA256 CleanupView.css: d9889a896fa849ef7df97e067f0537ac316b6e31627d6196808c5949b1bf0448
 SHA256 checker: d59590659b55518dba23d7bf73f3849a569e28c9b3b2b1f0af0c9319957d10ec
 Current source/captures/logs are bound by the adjacent integrated manifest.
-Independent Judge, final Audit, exact-head three-OS CI/CLEAN and merge pending.
+Independent Judge PASS at749518a: fresh24+24, full rings for all nine controls
+and94-98 fragments reached with real wheel. Natural checker and actual raw logs
+are archived; no forced-focus substitute. Main scope Audit PASS; no gate weakened.
+Final docs Audit, exact-head three-OS CI/CLEAN and merge remain pending.
