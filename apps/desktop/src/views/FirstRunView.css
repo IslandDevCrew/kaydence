@@ -122,6 +122,9 @@
   object-fit: cover;
 }
 
+/* The scrollable rail is a native keyboard stop at short-window sizes. */
+.first-run-step-rail:focus-visible { outline-offset: -2px; }
+
 .first-run-brand strong {
   font-size: var(--text-base);
 }
@@ -284,6 +287,7 @@
 }
 
 .first-run-heading > button {
+  scroll-margin-block: var(--space-1);
   min-height: 28px;
   color: var(--accent-ink);
   font-size: var(--text-2xs);

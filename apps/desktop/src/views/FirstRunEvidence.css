@@ -86,6 +86,9 @@
   padding: 4px 10px;
 }
 
+.first-run-permission-row button:focus-visible { outline-offset: -2px; }
+.first-run-permission-row button { scroll-margin-block: var(--space-1); }
+
 .first-run-evidence-summary,
 .first-run-preflight,
 .first-run-permission-proof {

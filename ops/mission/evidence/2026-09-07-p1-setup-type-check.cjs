@@ -1,5 +1,26 @@
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+async function naturalFocusWalk(page, scope, issues) {
+  for (let step = 0; step < 40; step++) {
+    await page.keyboard.press('Tab');
+    const failure = await page.evaluate(selector => {
+      const el = document.activeElement, root = document.querySelector(selector);
+      if (!root?.contains(el)) return selector.startsWith('dialog') ? 'focus escaped scope' : 'page cycle complete';
+      const r = el.getBoundingClientRect(), s = getComputedStyle(el);
+      const ring = Math.max(0, parseFloat(s.outlineWidth) + parseFloat(s.outlineOffset));
+      let top = 0, bottom = innerHeight, left = 0, right = innerWidth;
+      for (let p = el.parentElement; p; p = p.parentElement) {
+        const b = p.getBoundingClientRect(), css = getComputedStyle(p);
+        if (/auto|scroll|hidden|clip/.test(css.overflowY)) { top = Math.max(top, b.top); bottom = Math.min(bottom, b.bottom); }
+        if (/auto|scroll|hidden|clip/.test(css.overflowX)) { left = Math.max(left, b.left); right = Math.min(right, b.right); }
+        if (p.matches('dialog[open]')) break;
+      }
+      return s.outlineStyle === 'none' || r.top - ring < top || r.bottom + ring > bottom || r.left - ring < left || r.right + ring > right ? `natural focus/ring clipped: ${el.getAttribute('aria-label') || el.className || el.textContent} ${JSON.stringify({ rect: [r.top, r.bottom, r.left, r.right], clip: [top, bottom, left, right], ring, outline: s.outlineStyle })}` : null;
+    }, scope);
+    if (failure === 'page cycle complete') break;
+    if (failure) issues.push(failure);
+  }
+}
 async function inspect(root) {
   return root.evaluate(board => {
     const issues = [], walker = document.createTreeWalker(board, NodeFilter.SHOW_TEXT);
@@ -47,6 +68,8 @@ async function inspect(root) {
       for (const lane of ['macOS', 'Windows', 'Linux']) {
         await page.locator('.first-run-lanes').getByRole('button', { name: lane, exact: true }).click();
         const issues = await inspect(page.locator('.first-run-board'));
+        await page.locator('.first-run-lanes').getByRole('button', { name: lane, exact: true }).click();
+        await naturalFocusWalk(page, '.first-run-board', issues);
         await page.keyboard.press('Tab');
         for (const control of await page.locator('.first-run-board button:enabled, .first-run-board select:enabled, .first-run-board input:enabled').all()) {
           await control.focus();
@@ -74,6 +97,8 @@ async function inspect(root) {
         for (const section of ['permissions', 'models', 'proof']) {
           await modal.getByRole('button', { name: section, exact: true }).click();
           issues.push(...(await inspect(modal.locator('.first-run-dialog'))).map(s => `${section}: ${s}`));
+          await modal.getByRole('button', { name: section, exact: true }).click();
+          await naturalFocusWalk(page, 'dialog[open]', issues);
         }
         for (const key of ['Shift+Tab', ...Array(10).fill('Tab')]) { await page.keyboard.press(key); assert(await modal.evaluate(el => el.contains(document.activeElement)), 'Modal focus containment'); }
         const close = modal.getByRole('button', { name: 'Close setup evidence' }); await close.focus();
