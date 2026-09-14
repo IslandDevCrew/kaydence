@@ -78,8 +78,8 @@ interface DictateViewProps {
 
 const cleanupCopy: Record<CleanupDial, string> = {
   raw: "No cleanup. Preserve recognized text exactly.",
-  light: "Balanced cleanup for daily dictation.",
-  full: "Opt-in rewrite using the selected profile.",
+  light: "Built-in cleanup rules, without rewriting.",
+  full: "Full currently uses Light rules; no profile rewrite.",
 };
 
 const waveformHeights = Array.from(
@@ -126,15 +126,15 @@ export function DictateView(props: DictateViewProps): JSX.Element {
       <PanelHeading>Cleanup</PanelHeading>
       <SegmentedDial disabled={props.cleanupPending} onChange={props.onCleanupChange} value={props.cleanupDial} />
       <p>{cleanupCopy[props.cleanupDial]}</p>
-      <ul>
+      {props.cleanupDial !== "raw" ? <ul aria-label="Enabled cleanup rules">
         {[
           "Remove filler words",
-          "Fix capitalization",
-          "Smart punctuation",
+          "Sentence capitalization",
+          "Spoken punctuation",
           "Normalize spacing",
           "Basic formatting",
         ].map((rule) => <li key={rule}><CockpitGlyph name="check" />{rule}</li>)}
-      </ul>
+      </ul> : null}
       {props.cleanupIssue ? <small className="cockpit-note issue">{props.cleanupIssue}</small> : null}
       <button onClick={() => props.onNavigate("Cleanup")} type="button">Configure cleanups</button>
     </section>
