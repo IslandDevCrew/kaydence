@@ -782,3 +782,8 @@
 - Status text retains450scopes/24036samples after body integration, independent180-scope Judge and local standing gates PASS. SharedModal integrated24+12fullread/Judge PASS; actualPrivacy24+6/Judge PASS closes the History-ring finding. Setup assembled33b9c33 and capability-copy visible-state checks continue; copy integration found a separately corrected narrow Configure focus-ring defect.
 - A test-only WebKit26.5 runtime was installed outside the repo for compatibility probes; no app dependency/default changed. P1-G4/native/physical/runtime and shipping/download/other-phase gates remain separate. No native or VM completion claim.
 - Final docs Audit correctly rejected appending status rules to immutable Accepted0018. Its original bytes are restored; additive0019 records the same operator-approved measured text treatment. Fresh ADR gate passes; publication awaits re-Audit. Product/Judge results unchanged.
+
+## 2026-09-14T21:10Z — session 42 (status contrast merged)
+- PR45 mergedf29aef2 after head0b16de0 passed all3OS CI34895919091 and CLEAN; tested/merged tree81b366b40f9c6a928d8b94900293adbdeda43e6a. Expected-head MERGE, no bypass. Immediate heartbeat rides the opener-custody unit.
+- Opener9ee4f9c retains164 pointer/24held-IPC/4keyboard PASS and fresh full gates after actual-parent rebase; independent Judge underway. Body/scroll/copy packets remain unmerged, with historical source-bound evidence preserved.
+- Pixel-backed focus sweep found authored AA outline-contrast defects on actual inset fills and tinted surfaces. Separate derived-color cure/additive0020 is under the existing narrow contrast go; no accepted ADR changes. Ordinary WebKit Tab/native/physical/runtime/download/shipping/P2 gates remain open; P1-G4 is not closed.
