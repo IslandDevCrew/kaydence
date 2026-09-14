@@ -215,6 +215,8 @@
   padding: 0 5px;
 }
 
+.privacy-heading > button { scroll-margin: var(--space-2); }
+
 .privacy-heading-icon {
   display: grid;
   place-items: center;

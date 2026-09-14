@@ -21,6 +21,12 @@ function keyboardCue(element: HTMLElement): () => void {
   return clear;
 }
 
+function revealFocus(element: HTMLElement, block: ScrollLogicalPosition = "nearest"): void {
+  element.focus({ preventScroll: true });
+  // Refocusing an already-active control does not undo subsequent wheel scrolling.
+  element.scrollIntoView({ block, inline: "nearest", behavior: "instant" });
+}
+
 /** Native modality keeps the background inert; the actual trigger owns focus return. */
 export function Modal({
   children, className, labelledBy, onDismiss, opener, fallbackOpener,
@@ -41,15 +47,16 @@ export function Modal({
   };
   useLayoutEffect(() => {
     const dialog = ref.current;
-    dialog?.showModal();
+    if (!dialog) return;
+    dialog.showModal();
+    revealFocus(controlsIn(dialog)[0] ?? dialog);
     return () => {
       clearCue.current?.();
-      dialog?.close();
+      dialog.close();
       const target = opener?.isConnected && !opener.disabled ? opener : fallbackOpener;
       if (target?.isConnected && !target.disabled) {
-        target.focus({ preventScroll: true });
+        revealFocus(target, target === opener ? "nearest" : "center");
         if (keyboard.current) keyboardCue(target);
-        if (target !== opener) target.scrollIntoView({ behavior: "instant", block: "center", inline: "nearest" });
       }
     };
   }, [opener, fallbackOpener]);
@@ -72,13 +79,14 @@ export function Modal({
         if (event.key !== "Tab") return;
         const first = controls[0];
         const last = controls[controls.length - 1];
+        // Browsers may focus a scrolling section that is not in the control list.
         const unmanaged = !controls.includes(document.activeElement as HTMLElement);
         if (event.shiftKey && (document.activeElement === first || unmanaged)) {
           event.preventDefault();
-          last?.focus();
+          revealFocus(last ?? event.currentTarget);
         } else if (!event.shiftKey && (document.activeElement === last || unmanaged)) {
           event.preventDefault();
-          first?.focus();
+          revealFocus(first ?? event.currentTarget);
         }
       }}
       ref={ref}
