@@ -1,0 +1,11 @@
+1c0394bfccf4a18677ad92b8437c10fd8ab9461707c093a014d29593bb919d4a  apps/desktop/src/views/FirstRunView.css
+a758e21806955b6f3b9e560c09618160a58ac03c790236239ad22ad6ef1c13d8  apps/desktop/src/views/FirstRunView.tsx
+29ae2d3c56cf91b6157639778f4b17de39824a58e146373c82c6377ec3de3ad6  apps/desktop/src/views/FirstRunEvidence.css
+2b9406228185dfc2f404fdea95d3154921f1072d8fa449cedc1534ef4820c92b  apps/desktop/src/components/Modal.tsx
+22e9579b36dcaec5196b0779db015299d8435b487c8d48195a215cbac0d64242  ops/mission/evidence/2026-09-14-p1-setup-integrated/kaydence-setup-final18-20260914.log.gz
+2a0f56318eef3fd0310cd0146dc427816935d5dd931908142f5eaee264eefe2b  ops/mission/evidence/2026-09-14-p1-setup-integrated/kaydence-setup-final24-20260914.log.gz
+42748ab744a13187d8253904b8209e02c7290b3cd9b22282b3ebc663d7e34434  ops/mission/evidence/2026-09-14-p1-setup-integrated/kaydence-setup-integrated-standing-20260914.log.gz
+ec688f26b5b64517c685cceb95dba3a3f880ef528102ddf3a4783c52aa72107b  ops/mission/evidence/2026-09-14-p1-setup-integrated/setup-dark-450-proof.png
+9e3a2abdab9b301e4ab1cfaf83f854ca135a96e56e3e8b29c86d5bb38f23b03d  ops/mission/evidence/2026-09-14-p1-setup-integrated/setup-dark-450.png
+e9d85c57885ef40c87ffee1888ae9e88adde4feca055f951d99a46f1e47c9a4b  ops/mission/evidence/2026-09-14-p1-setup-integrated/setup-light-900-bottom.png
+621ba036a7c2e1b817f90e18a0540ca2dc5aa90f0fb582831d4a37bb9935275c  ops/mission/evidence/2026-09-14-p1-setup-integrated/setup-light-900.png
