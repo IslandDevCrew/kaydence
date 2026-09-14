@@ -22,5 +22,10 @@ Final accent90-scope check passes; no per-OS palette/layout fork introduced.
 Fresh final fmt/clippy/253Rust/frontend/privacy/ADR/build PASS; physical bench PARTIAL.
 
 Current captures/logs are SHA-bound in2026-09-14-p1-dictate-integrated/manifest.sha256.
-Pending independent final source Judge, exact-main rebase,3OS CI/CLEAN/merge and
-heartbeat. Native/VM, app-wide contrast, capability copy and P1-G4 remain separate.
+Independent final Judge PASS: fresh54+12 at b28afa4, unchanged sources through
+the final docs/rebase onto mergedPR42. Raw Judge logs archived. PR42 pre-merge
+CLEAN/all3CI snapshot is retained; tested/merged trees matchccb256fd89d85dcda1b62bbb43569c0b69d57adc.
+Main scope Audit: only presentation/readability/focus, no raw palette/identity,
+Rust, dependency, IPC, destructive-confirm or contract changes. No gate weakened.
+Pending final docs Audit and3OS CI/CLEAN/merge. Native/VM, app-wide contrast,
+capability copy and P1-G4 remain separate; heartbeat afterPR42 is committed.
