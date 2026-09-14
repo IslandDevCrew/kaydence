@@ -18,6 +18,25 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
       for (const panel of await page.locator('.cockpit-topband,.cockpit-capture-panel,.cockpit-history-panel,.cockpit-control-panel,.cockpit-transcript-panel').all()) {
         check(await panel.evaluate(el => el.clientHeight > 0 && el.scrollWidth <= el.clientWidth + 1), `panel dimensions: ${await panel.getAttribute('class')}`);
       }
+      await page.getByRole('button', { name: 'Dictate', exact: true }).click();
+      let historyTargets = 0, reachedFooter = false;
+      for (let step = 0; step < 65; step++) {
+        await page.keyboard.press('Tab');
+        const target = await page.evaluate(() => {
+          const el = document.activeElement, panel = el?.closest('.cockpit-history-panel');
+          if (!panel) return null;
+          const r = el.getBoundingClientRect(), b = panel.getBoundingClientRect();
+          return { text: el.textContent.trim(), summary: el.tagName === 'SUMMARY',
+            visible: r.top >= Math.max(0, b.top) && r.bottom <= Math.min(innerHeight, b.bottom) && r.left >= b.left && r.right <= b.right };
+        });
+        if (target) {
+          historyTargets++; check(target.visible, `whole History keyboard target clipped: ${target.text}`);
+          if (target.summary) await page.keyboard.press('Enter');
+        }
+        if (await page.evaluate(() => document.activeElement?.matches('.cockpit-sb-pill summary'))) { reachedFooter = true; break; }
+      }
+      check(reachedFooter && historyTargets >= 5, 'natural History traversal reaches footer without activating destructive controls');
+      await page.reload();
       if (width === 900 && height === 600) {
         const [status, meter, pills] = await Promise.all(['.cockpit-sb-right > strong', '.cockpit-mic-meter', '.cockpit-sb-pills'].map(selector => page.locator(selector).boundingBox()));
         const left = meter.x - status.x - status.width, right = pills.x - meter.x - meter.width;
