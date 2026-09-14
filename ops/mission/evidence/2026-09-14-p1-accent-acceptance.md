@@ -10,7 +10,7 @@ manifest (SHA d61d5a366b2c293f5cae9240dbc663c5a3a81d285af8233089ae1b69e05ad16a).
 Main AUDIT: narrow operator go + ADR0018 Accepted; original raw accents/white,
 reserved colors, identity/layouts/type unchanged. One explicit overflow prerequisite
 restores pointer access. No Rust/IPC/dependency edits, no non-negotiable weakened.
-Local fmt/clippy/253 Rust tests/frontend/privacy/ADR/build and37 browser regressions
+Local fmt/clippy/253 Rust tests/frontend/privacy/ADR/build and39 browser regressions
 PASS. Benchmark measured fields PASS, physical fields PARTIAL. Main inspected four
 rendered cross-theme/OS views; this is not native, app-wide AA or P1-G4 closure.
 27 nonaccent low-contrast and18 unsupported opacity occurrences remain queued.
