@@ -14,6 +14,8 @@ measured fields PASS, physical fields PARTIAL. No backend or dependency change.
 Independent integrated Judge PASS at1f6baae (same sources through77aae59):
 own180 scopes/10,098 samples, negative probes and four rendered views verified.
 Main scope Audit PASS; final docs/CI/CLEAN pending. PR44's pre-merge snapshot is archived.
+Docs Audit caught an attempted append to immutable0018; its original bytes are
+restored and additive ADR0019 records the same scoped, measured status decision.
 
 Forced focus in the paint checker is not keyboard proof. Mocked IPC/status and
 OS accent selectors are not native recording/injection/VM proof. Other screen

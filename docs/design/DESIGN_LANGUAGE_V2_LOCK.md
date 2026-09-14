@@ -49,7 +49,7 @@ only where needed for readability. Use `--accent-ink` for accent text and
 `--accent-control` with white text for filled controls; raw OS colors, identity,
 reserved semantics, layouts and all other invariants remain locked. This targeted
 correction does not close P1-G4 or waive the remaining accessibility/native gates.
-ADR-0018's status-text follow-through similarly derives `--success-ink`,
+ADR-0019's status-text follow-through similarly derives `--success-ink`,
 `--warn-ink` and `--danger-ink` for affected text; raw status colors, dots,
 backgrounds and the four-state model remain locked. Future-step prose stays
 readable without making its disabled feature available.

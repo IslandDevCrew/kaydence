@@ -42,4 +42,6 @@ probes rejected. Archived raw Judge record/logs bind scope and measured results.
 Main Audit PASS: scoped ADR follow-through, no invariant or gate weakened.
 Additional39 reference/rail/dialog/hydration/privacy browser regressions PASS.
 Final integrated source binding, docs Audit and exact-head CI/CLEAN are pending.
+Final docs Audit rejected the initial0018 append: accepted0018 is restored,
+and additive0019 now records this treatment. The integrated record owns acceptance.
 P1-G4 and full WCAG/native/reference-hardware gates remain open.

@@ -858,8 +858,8 @@
     {
       "label": "ADRs accepted (0009 and 0016 Proposed by design)",
       "baseline": "8",
-      "current": "16 of 18 numbered ADRs (including accepted0018)",
-      "target": "18 (0009 Relay crypto review; 0016 ORT/model shipping review)",
+      "current": "17 of 19 numbered ADRs (including accepted0019 status text)",
+      "target": "19 (0009 Relay crypto review; 0016 ORT/model shipping review)",
       "direction": "up"
     },
     {
