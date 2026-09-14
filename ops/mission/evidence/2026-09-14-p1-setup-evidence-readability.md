@@ -5,7 +5,7 @@
 Routine frontend presentation correction for PRD P0-8 / P1-G4, under the approved
 11px/readability continuation. Only `FirstRunEvidence.css` and owned checks/evidence
 change; model selection, permission/download behavior, IPC, identity, colors, 8px cards,
-main-board CSS, Rust and mission state are untouched. The preserved full-Setup branch
+main-board CSS and Rust are untouched; publication includes the PR50 mission heartbeat. The preserved full-Setup branch
 `mission/p1-g4-setup-type` remains at9e47df3 for the later main-board unit.
 This separate unit started on shared-modal B c4b9a79, then clean-rebased to B2835f544.
 Actual source/checker anchor3dcc81d remains local, not merged or phase-accepted.
@@ -47,6 +47,15 @@ nine current source hashes and verbatim Judge. Two plain independent supplementa
 remain under /tmp/kaydence-setup-evidence-judge-20260914 with paths/hashes in Judge data;
 no source scripts are compressed. Reproduce checked-in primary with PLAYWRIGHT_MODULE,
 APP_URL=http://127.0.0.1:1435 and fresh CAPTURE_DIR, then DETAILS=1; run sibling negative.
-Publication Audit, actual merged-parent reconciliation and own3OS CI/CLEAN remain required.
-Main-board9px text,
-other dynamic error/contrast states, native/OS scaling and full-AA/P1 acceptance remain open.
+## Actual-parent publication
+
+PR50 merged7ed4c8a with own3OS CI34908301900/CLEAN and tested-tree parity. Dialog branch
+3f2066e rebases onto that actual parent with identical application bytes to combined88ce218.
+Fresh combined proof:72 default/blocked cases,12 negative controls and96 focus scopes/768
+states PASS. Fresh actual-parent full253/fmt/clippy/frontend/privacy/ADR/synthetic4/build
+at2806f00 PASS; exact commands, head and exit0 are logged, physical metrics remain PARTIAL.
+The integrated bundle retains all prior records and adds publication/currentSources bindings,
+76 PNGs, gate/browser results, PR50 merge receipts and the Privacy archive-only Audit readback.
+Its original head/sources remain the historical3dcc anchor, not a claim Privacy was present then.
+Publication Audit and own3OS CI/CLEAN remain required. Main-board9px text, other dynamic
+error/contrast states, native/OS scaling and full-AA/P1 acceptance remain open.
