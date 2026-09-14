@@ -42,8 +42,8 @@ The plain negative checker rejects8px text, hidden/clipped text, missing outline
 of content-sized rows and removal of the eyebrow floor. Independent Judge at3dcc81d PASS:
 fresh72/12 plus24 separate narrow character/client-box/cue cases; four matched row-rule
 removals reproduce card spill. Permission inset changes offset only; it is not unchanged geometry.
-Manifest-bound historical/integrated/Judge bundles retain16/13/13 raw records,4/80/96 PNGs,
-nine current source hashes and verbatim Judge. Two plain independent supplemental runners
+Historical3dcc packet counts were16/13/13 raw records,4/80/96 PNGs and nine source hashes;
+those records and verbatim Judge remain retained. Two plain independent supplemental runners
 remain under /tmp/kaydence-setup-evidence-judge-20260914 with paths/hashes in Judge data;
 no source scripts are compressed. Reproduce checked-in primary with PLAYWRIGHT_MODULE,
 APP_URL=http://127.0.0.1:1435 and fresh CAPTURE_DIR, then DETAILS=1; run sibling negative.
@@ -54,7 +54,7 @@ PR50 merged7ed4c8a with own3OS CI34908301900/CLEAN and tested-tree parity. Dialo
 Fresh combined proof:72 default/blocked cases,12 negative controls and96 focus scopes/768
 states PASS. Fresh actual-parent full253/fmt/clippy/frontend/privacy/ADR/synthetic4/build
 at2806f00 PASS; exact commands, head and exit0 are logged, physical metrics remain PARTIAL.
-The integrated bundle retains all prior records and adds publication/currentSources bindings,
+The current integrated bundle holds26 raw/156 PNGs/10 publication.currentSources bindings,
 76 PNGs, gate/browser results, PR50 merge receipts and the Privacy archive-only Audit readback.
 Its original head/sources remain the historical3dcc anchor, not a claim Privacy was present then.
 Publication Audit and own3OS CI/CLEAN remain required. Main-board9px text, other dynamic
