@@ -16,9 +16,9 @@ Inset History button/summary outlines preserve their color/width and visible foc
 all54 cases now pass, including expanded Export/Delete without destructive activation.
 At900x600 meter gaps remain17.140625/17.125;761/800/880/899 remain docked correctly.
 Main inspected501px Refresh focus: complete outline is visible inside its button.
-48 natural-keyboard/wheel and12 expanded-History checks passed on the integrated
-pre-button-inset source; logs are retained as supporting, not exact-final-source proof.
-Accent90-scope check passed integration; no per-OS palette/layout fork introduced.
+Fresh final48 natural-keyboard/wheel and12 expanded-History checks also pass;
+logs and all15 final PNGs bind the current source, superseding preliminary runs.
+Final accent90-scope check passes; no per-OS palette/layout fork introduced.
 Fresh final fmt/clippy/253Rust/frontend/privacy/ADR/build PASS; physical bench PARTIAL.
 
 Current captures/logs are SHA-bound in2026-09-14-p1-dictate-integrated/manifest.sha256.
