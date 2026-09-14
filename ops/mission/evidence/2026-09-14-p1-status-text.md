@@ -36,5 +36,10 @@ Main inspected Setup light; body typography remains a separate queued correction
 Fresh fmt/clippy/253Rust tests/frontend/privacy/ADR/build PASS; synthetic bench
 measured fields PASS and physical fields PARTIAL. Final results use *-final names;
 other JSON archives preserve preliminary/baseline findings, not acceptance.
-Independent Judge and final integrated source binding/CI are pending.
+Independent Judge PASS at130e3a7: own180 scopes/10,098 samples, same minimum;
+50 hashes/counts verified and original Issue-color/unsupported-gradient negative
+probes rejected. Archived raw Judge record/logs bind scope and measured results.
+Main Audit PASS: scoped ADR follow-through, no invariant or gate weakened.
+Additional39 reference/rail/dialog/hydration/privacy browser regressions PASS.
+Final integrated source binding, docs Audit and exact-head CI/CLEAN are pending.
 P1-G4 and full WCAG/native/reference-hardware gates remain open.
