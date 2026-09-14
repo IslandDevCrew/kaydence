@@ -7,8 +7,8 @@ Routine frontend presentation correction for PRD P0-8 / P1-G4, under the approve
 change; model selection, permission/download behavior, IPC, identity, colors, 8px cards,
 main-board CSS, Rust and mission state are untouched. The preserved full-Setup branch
 `mission/p1-g4-setup-type` remains at9e47df3 for the later main-board unit.
-This separate unit started on shared-modal B c4b9a79; it is a dependent local candidate,
-not a merged or phase-accepted result. Parent integration and independent Judge follow.
+This separate unit started on shared-modal B c4b9a79, then clean-rebased to B2835f544.
+Actual source/checker anchor3dcc81d remains local, not merged or phase-accepted.
 
 ## Implementation and falsification
 
@@ -33,10 +33,20 @@ Browser plugin unavailable; bundled Playwright is the explicitly permitted fallb
 Positive runs never inject CSS, force focus or assign scrolling. Extended IPC fixtures show
 blocked model/preflight and permission guidance; downloads stay disabled, OS settings are
 never opened, and unknown commands fail. They are browser fixtures, not native proof.
-Local c4b9a79-based candidate:36 default +36 extended cases PASS;12 negative probes reject
-their faults. The shared scroll-parent rebase and fresh source-bound matrix remain pending.
+Historical c4-based candidate:36 default +36 extended PASS and12 negative probes; retained.
+Fresh actual B2835 parent at3dcc81d:36 default +36 extended PASS and12 negatives reject
+their faults. Typecheck/lint, reference16, rail10, modal4 and external production build PASS;
+main standing gates also pass253 tests/fmt/clippy/privacy/ADR/synthetic4, physical PARTIAL.
 
 The plain negative checker rejects8px text, hidden/clipped text, missing outlines, removal
-of content-sized rows and removal of the eyebrow floor. Source-bound raw logs/results,
-PNG hashes and gate output will be archived with the final candidate. Main-board9px text,
+of content-sized rows and removal of the eyebrow floor. Independent Judge at3dcc81d PASS:
+fresh72/12 plus24 separate narrow character/client-box/cue cases; four matched row-rule
+removals reproduce card spill. Permission inset changes offset only; it is not unchanged geometry.
+Manifest-bound historical/integrated/Judge bundles retain16/13/13 raw records,4/80/96 PNGs,
+nine current source hashes and verbatim Judge. Two plain independent supplemental runners
+remain under /tmp/kaydence-setup-evidence-judge-20260914 with paths/hashes in Judge data;
+no source scripts are compressed. Reproduce checked-in primary with PLAYWRIGHT_MODULE,
+APP_URL=http://127.0.0.1:1435 and fresh CAPTURE_DIR, then DETAILS=1; run sibling negative.
+Publication Audit, actual merged-parent reconciliation and own3OS CI/CLEAN remain required.
+Main-board9px text,
 other dynamic error/contrast states, native/OS scaling and full-AA/P1 acceptance remain open.

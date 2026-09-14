@@ -1,0 +1,3 @@
+495b60c3c9105778af5908d349fdca392e1420c8ee681c799b05b4f714994343  ops/mission/evidence/2026-09-14-p1-setup-evidence-readability/historical.json.gz
+4ac41e7d61e115f19eae1f9e2860fb8b88e18ead8153d80f223b3819eeb3d9cc  ops/mission/evidence/2026-09-14-p1-setup-evidence-readability/integrated.json.gz
+909333e1f8b33dedbb1403a75ca79135fc92f02451ac948c2a40f5b0a74f5416  ops/mission/evidence/2026-09-14-p1-setup-evidence-readability/judge.json.gz
