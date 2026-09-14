@@ -851,7 +851,7 @@
     {
       "label": "Platform parity (CI legs green)",
       "baseline": "0 / 3 (Mac-first field; Linux unserved)",
-      "current": "3 / 3 on PR46 head7ff203b, Actions34898299870; merge9b35ac8 has identical tree60f5f55460c9ea020bb5251649ae50e54a71062c. Native proof remains separate.",
+      "current": "3 / 3 on PR47 head3212c05, Actions34901506895; merge913edd8 has identical tree6bf467a9fab2cc6aeea8f44cfa45e04b4aac6224. Native proof remains separate.",
       "target": "3 / 3 incl. Wayland",
       "direction": "up"
     },
@@ -879,7 +879,7 @@
     {
       "label": "Visual system (logos + screen families)",
       "baseline": "none",
-      "current": "Design v2/identity locked; P1-G4 pending. PR42-46 accent/status/body/opener corrections merged. Focus contrast, keyboard/scroll custody, Privacy/Setup, capability copy and native proof remain open.",
+      "current": "Design v2/identity locked; P1-G4 pending. PR42-47 accent/status/body/opener/focus-color corrections merged. Keyboard/scroll custody, Privacy/Setup, capability copy and native proof remain open.",
       "target": "1 logo chosen (ADR-0012) + 10 families built 3-OS",
       "direction": "up"
     }
