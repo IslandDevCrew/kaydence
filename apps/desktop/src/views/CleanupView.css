@@ -495,19 +495,19 @@
 .cleanup-health-section span.ready,
 .cleanup-gates-section span.ready {
   background: color-mix(in srgb, var(--success) 16%, var(--surface));
-  color: var(--success);
+  color: var(--success-ink);
 }
 
 .cleanup-method-section span.pending,
 .cleanup-health-section span.pending,
 .cleanup-gates-section span.pending {
   background: color-mix(in srgb, var(--warn) 18%, var(--surface));
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .cleanup-health-section span.issue {
   background: color-mix(in srgb, var(--danger) 14%, var(--surface));
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .cleanup-method-section > strong,

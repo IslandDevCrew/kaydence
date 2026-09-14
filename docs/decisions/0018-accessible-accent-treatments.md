@@ -47,3 +47,15 @@ Text-bearing accent surfaces use accessible derived shades rather than the
 literal reference fill. New controls must consume the semantic tokens and tests.
 P1-G4, recording integration, native proof, ADR-0016 shipping, ADR-0017 downloads
 and later-phase gates remain separate; this ADR changes no backend authority.
+
+## Status-text follow-through — 2026-09-14
+
+The same scoped operator approval covers the remaining measured text-contrast
+defects recorded above. Apply shared `--success-ink`, `--warn-ink` and
+`--danger-ink` (60% existing status color, 40% theme ink) to affected text only.
+Keep raw status palette values, dots, backgrounds and four-state meanings.
+Informational future-step prose uses muted ink instead of group opacity; its
+P3 label and disabled feature remain unchanged. No identity/layout change.
+Evidence and acceptance are tracked in
+`ops/mission/evidence/2026-09-14-p1-status-text.md`; browser paint checks do not
+close keyboard, native or P1-G4 gates. The original accent acceptance is historical.

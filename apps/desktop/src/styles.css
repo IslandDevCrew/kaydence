@@ -99,6 +99,9 @@
 :root, .app-shell {
   --accent-control: color-mix(in srgb, var(--accent) 75%, black);
   --accent-ink: color-mix(in srgb, var(--accent) 60%, var(--ink));
+  --success-ink: color-mix(in srgb, var(--success) 60%, var(--ink));
+  --warn-ink: color-mix(in srgb, var(--warn) 60%, var(--ink));
+  --danger-ink: color-mix(in srgb, var(--danger) 60%, var(--ink));
 }
 
 /* ---- Theme scopes: var() re-points ONLY (zero raw values) ---- */

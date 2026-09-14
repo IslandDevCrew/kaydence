@@ -384,7 +384,7 @@
 .cockpit-sb-right > strong { flex: none; font-size: var(--text-2xs); white-space: nowrap; }
 .cockpit-sb-right > strong.operational::before,
 .cockpit-sb-right > strong.attention::before { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--success); content: ""; }
-.cockpit-sb-right > strong.attention { color: var(--warn); }
+.cockpit-sb-right > strong.attention { color: var(--warn-ink); }
 .cockpit-sb-right > strong.attention::before { background: var(--warn); }
 
 .cockpit-sb-pills { display: flex; flex-wrap: wrap; gap: 4px; }

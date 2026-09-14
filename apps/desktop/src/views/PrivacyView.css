@@ -354,7 +354,7 @@
   align-items: center;
   gap: 3px;
   margin-top: 2px;
-  color: color-mix(in srgb, var(--success) 82%, var(--ink));
+  color: var(--success-ink);
   font-size: .44rem;
   font-style: normal;
   font-weight: 800;
@@ -540,7 +540,7 @@
 .privacy-reader-row em.state-pending,
 .privacy-permission-row.state-needs_hardware em,
 .privacy-permission-row.state-needs_review em {
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .privacy-permission-row.state-blocked em {
@@ -753,7 +753,7 @@
 }
 
 .privacy-footer > span.pending {
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .privacy-dialog-backdrop {
