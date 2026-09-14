@@ -5,7 +5,7 @@ The four CSS outline colors now use 20% existing OS accent + 80% theme ink. Widt
 
 ## Evidence and reproduction
 
-Directory `2026-09-14-p1-focus-contrast/`: 26 manifest-verified artifacts, including 18 PNGs, final RED/candidate metrics and raw logs, historical first-candidate metrics/log, local gates and source/ranking JSON (gzip is data, not compressed test source).
+Directory `2026-09-14-p1-focus-contrast/`: 29 manifest-bound artifacts include the original18 PNGs and historical measurements; `integrated-data.json.gz` additionally binds42 natural/18 negative PNGs, verbatim independent raw data/logs, current sources at8f49272 and external plain-runner hashes (gzip is data, not compressed test source).
 `source-and-ranking.json.gz` binds the historical pre-PR46 sources, served CSS and ranked cues with every retained low segment. Current integrated bindings are separate; inherited Modal/Privacy/Setup TSX changed on rebase, not the focus CSS/checkers. `SHA256SUMS` verifies archived files.
 The plain checker is `2026-09-14-p1-focus-check.cjs` (SHA256 `69794ad901d134ba7835d1cf84872d1a2e3c9a1fbd3826a20d897bfacae6bece`). Run from the worktree with the installed Playwright module:
 ```sh
@@ -25,5 +25,5 @@ Independent review resolves all30 conservatively short controls:60 continuous to
 The original active inset navigation and tinted Setup Evidence findings improve in the final actual-pixel records. Inspect selected filled controls and tinted surfaces, not only page backgrounds.
 The 12 previously unmatched measurement states are now included with actual adjacent paint; Privacy Constitution and Setup models/permissions/proof dialogs are included. This is browser fixture proof, not native capture, OS/VM, full-screen readability or P1-G4 closure.
 Inherited preintegration short-window body clipping (including Setup Full) remains outside this color unit. The separately held shared-scroll WebKit pointer-to-keyboard missing-outline defect is not cured here; an absent ring is never a color PASS.
-Integrated Judge reruns96/768,18 negatives and42 natural captures PASS. Original local ADR gate RED was due to then-Proposed0020; acceptance is now recorded after review, without changing accepted0018/0019 or granting an exception. Main full standing gates and final docs Audit follow.
+Integrated Judge reruns96/768,18 negatives and42 natural captures PASS. Original local ADR gate RED was due to then-Proposed0020; acceptance is now recorded after review, without changing accepted0018/0019 or granting an exception. Main standing gates at8f49272 PASS: fmt/clippy,253 Rust tests,frontend type/lint,privacy,ADR,synthetic4 metrics,production build; physical benchmarks remain PARTIAL. Final docs Audit pending.
 Own exact-head three-OS CI/CLEAN and expected-head merge remain required. Later body/keyboard/scroll integration must revalidate this color treatment; full-AA/native/P1-G4 acceptance is not claimed.
