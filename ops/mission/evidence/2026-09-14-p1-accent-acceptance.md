@@ -23,3 +23,6 @@ Additional archive SHA256 (under2026-09-14-p1-accessible-accents):
 
 Pre-merge requirement: all3 exact-head OS CI checks SUCCESS and CLEAN, merge commit,
 then state/journal/render heartbeat. No native/phase/shipping claim accompanies this ADR.
+
+Final independent docs/scope Audit PASS at2dd25df:389 text lines, state/journal/render
+byte parity, all69 hashes and gate counts verified; statuses/policies/invariants unchanged.
