@@ -193,7 +193,7 @@
 }
 
 .first-run-step-rail li.later {
-  opacity: .64;
+  color: var(--muted);
 }
 
 .first-run-local-note {
@@ -455,12 +455,12 @@
 
 .first-run-status-button .ready,
 .first-run-state.ready {
-  color: color-mix(in srgb, var(--success) 82%, var(--ink));
+  color: var(--success-ink);
 }
 
 .first-run-status-button .issue,
 .first-run-state.pending {
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .first-run-inline-action,
@@ -473,7 +473,7 @@
 .first-run-confirmed {
   border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
   background: color-mix(in srgb, var(--accent) 9%, var(--surface));
-  color: color-mix(in srgb, var(--success) 80%, var(--ink));
+  color: var(--success-ink);
   opacity: 1;
 }
 
@@ -559,7 +559,7 @@
 
 .first-run-free-label {
   justify-self: end;
-  color: color-mix(in srgb, var(--success) 80%, var(--ink));
+  color: var(--success-ink);
   font-size: 9px;
 }
 

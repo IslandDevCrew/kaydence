@@ -127,6 +127,16 @@ operator's actual four asks before proceeding. Landed as commit `8a34fae`.
 **Operator: "solid I lock that in and then let's push this as a PR." Proceeding to branch push,
 PR open, and merge.**
 
+## 2026-09-14 P1-G4 reconciliation
+
+PR43 supersedes the narrow-meter and Dictate readability findings: docking now
+applies through899px; at900x600 the measured gaps are17.140625/17.125px after
+the11px typography correction. Centering/composition are preserved, not the
+historical absolute gap. Disclosure keyboard behavior and History focus rings
+are corrected. See `../evidence/2026-09-14-p1-dictate-integrated.md`.
+P1-G4 remains pending for the other body/modal/status/capability/native gates;
+the dated D5 closeout below is historical, not a blanket phase acceptance.
+
 ## 2026-08-10 D5 amendment and responsive closeout
 
 The D5 capture gap and its one responsive finding are closed by the hashed
