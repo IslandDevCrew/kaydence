@@ -1,8 +1,8 @@
 # P1-G4 — integrated Cleanup body acceptance
 
-Product frozen atc16056b, layered over Dictate f73a818 and merged PR42 ancestry.
+Product frozen atc16056b, now integrated over merged PR43/main73101ab ancestry.
 This supersedes the September7 packet's source binding and pending-accent hold;
-historical captures/logs remain unchanged. Publication awaits Dictate's merge.
+Historical captures/logs remain unchanged. PR43 all3OS/CLEAN snapshot is archived.
 
 Fresh own24 browser cases pass at900x600,450/500/501x300, both themes and three
 OS reference choices. Full text ranges,11px floor, actual panel wheel scrolling,
