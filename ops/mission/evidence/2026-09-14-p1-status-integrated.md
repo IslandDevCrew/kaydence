@@ -13,7 +13,10 @@ Fresh fmt/clippy/253Rust tests/frontend/privacy/ADR/build PASS; synthetic bench
 measured fields PASS, physical fields PARTIAL. No backend or dependency change.
 Independent integrated Judge PASS at1f6baae (same sources through77aae59):
 own180 scopes/10,098 samples, negative probes and four rendered views verified.
-Main scope Audit PASS; final docs/CI/CLEAN pending. PR44's pre-merge snapshot is archived.
+Main scope Audit and independent final docs Audit PASS at0f0c566;
+fresh exact-head CI/CLEAN remain pending. PR44's pre-merge snapshot is archived.
+Final reviewer record:2026-09-14-p1-status-integrated/final-audit.txt.
+ADR status recheck PASS after0019:17of19Accepted;0009/0016 remain Proposed.
 Docs Audit caught an attempted append to immutable0018; its original bytes are
 restored and additive ADR0019 records the same scoped, measured status decision.
 
