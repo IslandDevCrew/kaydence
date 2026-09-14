@@ -825,7 +825,7 @@
   line-height: 1.35;
 }
 
-.privacy-shell button:focus-visible {
+.privacy-shell button:is(:focus-visible, :focus:where([data-modal-keyboard-focus])) {
   outline: 3px solid var(--focus-ring);
   outline-offset: 1px;
 }
