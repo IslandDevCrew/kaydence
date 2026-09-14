@@ -11,7 +11,9 @@ unsupported paint, blocked pointer states or frontend errors. Counts unchanged:
 preview5,346; ready4,752; blocked4,434; held4,752; failed4,752.
 Fresh fmt/clippy/253Rust tests/frontend/privacy/ADR/build PASS; synthetic bench
 measured fields PASS, physical fields PARTIAL. No backend or dependency change.
-Independent integrated Judge and final docs/CI/CLEAN remain pending.
+Independent integrated Judge PASS at1f6baae (same sources through77aae59):
+own180 scopes/10,098 samples, negative probes and four rendered views verified.
+Main scope Audit PASS; final docs/CI/CLEAN and merged-parent reconciliation pending.
 
 Forced focus in the paint checker is not keyboard proof. Mocked IPC/status and
 OS accent selectors are not native recording/injection/VM proof. Other screen
