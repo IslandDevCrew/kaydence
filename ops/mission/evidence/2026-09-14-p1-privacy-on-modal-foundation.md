@@ -1,5 +1,5 @@
 # P1-G4 Privacy readability on the keyboard/scroll foundation
-- Judged source95850b6 is application-byte-identical after rebasing to actual PR49 merge669ca89; port1434 serves that bundle. Fresh actual-parent standing gates at910c4b2 PASS. Original parent/productCommit bindings remain historical; final publication Audit and own exact-head3OS CI/CLEAN remain required.
+- Judged source95850b6 is application-byte-identical after rebasing to actual PR49 merge669ca89; port1434 serves that bundle. Fresh actual-parent standing gates at910c4b2 and final publication Audit20523f6 PASS. Original parent/productCommit bindings remain historical; own exact-head3OS CI/CLEAN remains required.
 - Rebased only Privacy body/History-ring/evidence and its prior refresh; body CSS remains byte-identical (`d0e8976c…`). Historical `97a55f7` evidence/checker and the prior `c4b9a79` raw proof are preserved.
 - Product scope is only `PrivacyView.css`: restore token-based 11px floor, complete policy text, natural vertical reading, narrow reflow and the History-button scroll margin. No copy, JS, backend, IPC, dependencies, runtime state, identity, palette or navigation changes.
 - Composition keeps History 8px margin and inherited marker-aware `--focus-ring`. Modal focus/actual-opener behavior, inner overscroll `none` and outer `contain` are inherited unchanged from the corrected parent.
