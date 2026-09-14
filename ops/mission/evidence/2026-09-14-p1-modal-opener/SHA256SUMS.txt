@@ -39,3 +39,8 @@ c41f20d9b4513fd03293ed92c47cbd1572abfe131f95485e086e5621bc2fec79  ops/mission/ev
 570324378e0b7a8961c5939c872f076311f36b5dcc637a0af689486326578451  ops/mission/evidence/2026-09-14-p1-modal-pending-check.cjs
 aefa5e16a6c4c167e45523edbe79f64b30d539ea639a942a08bfb94a0a9abd5a  ops/mission/evidence/2026-09-14-p1-modal-opener/pr45-premerge.json.gz
 f54be9bdb4fc64059cd88863738b357eb6922befd8ed846c0afe2355cb6e090c  ops/mission/evidence/2026-09-14-p1-modal-opener/standing.log.gz
+61918529ff2939bebdbd69f39adb516d8d8ff10f02c47a8f357c07515cd8e3af  ops/mission/evidence/2026-09-14-p1-modal-opener/parent-standing.log.gz
+951c38e6c08465f8be60e6946e0fdecdceca742402b73179d7ab5810257d1404  ops/mission/evidence/2026-09-14-p1-modal-opener/JUDGE.txt.gz
+48380e77c3c2200c404042c85dcac82f0a165cf46278f6574ea4e592e89a4b87  ops/mission/evidence/2026-09-14-p1-modal-opener/AUDIT.txt.gz
+318168ef2ef0c33b6183d1581687bdd7a6bff75fa6237295ae836b9b5383d3da  ops/mission/evidence/2026-09-14-p1-modal-opener/independent.json.gz
+69d1e057b569eaffff79396266055a9972069d0b17af24fc85d2ff534935bf5f  ops/mission/evidence/2026-09-14-p1-modal-opener/tab-baseline.json.gz
