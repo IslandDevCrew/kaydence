@@ -25,9 +25,10 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         const target = await page.evaluate(() => {
           const el = document.activeElement, panel = el?.closest('.cockpit-history-panel');
           if (!panel) return null;
-          const r = el.getBoundingClientRect(), b = panel.getBoundingClientRect();
+          const r = el.getBoundingClientRect(), b = panel.getBoundingClientRect(), s = getComputedStyle(el);
+          const ring = Math.max(0, parseFloat(s.outlineWidth) + parseFloat(s.outlineOffset));
           return { text: el.textContent.trim(), summary: el.tagName === 'SUMMARY',
-            visible: r.top >= Math.max(0, b.top) && r.bottom <= Math.min(innerHeight, b.bottom) && r.left >= b.left && r.right <= b.right };
+            visible: s.outlineStyle !== 'none' && r.top - ring >= Math.max(0, b.top) && r.bottom + ring <= Math.min(innerHeight, b.bottom) && r.left - ring >= b.left && r.right + ring <= b.right };
         });
         if (target) {
           historyTargets++; check(target.visible, `whole History keyboard target clipped: ${target.text}`);

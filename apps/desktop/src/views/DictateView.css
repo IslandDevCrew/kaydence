@@ -300,7 +300,7 @@
 .cockpit-history-row { border-top: 1px solid var(--line); }
 .cockpit-history-row summary { justify-content: space-between; gap: 8px; cursor: pointer; padding: 5px 1px; list-style-position: inside; }
 .cockpit-history-row summary span { min-width: 0; }
-.cockpit-history-row summary:focus-visible { outline-offset: -2px; }
+.cockpit-history-panel :is(button, summary):focus-visible { outline-offset: -2px; }
 .cockpit-history-row strong,
 .cockpit-history-row small { display: block; overflow: hidden; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
 .cockpit-history-row strong { font-size: .69rem; }
