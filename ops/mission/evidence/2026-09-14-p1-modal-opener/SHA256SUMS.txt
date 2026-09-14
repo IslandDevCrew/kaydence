@@ -37,3 +37,5 @@ c2731955ef28122815d7e775f725f5d8dd65b9116333448dcd219c6c03e54427  ops/mission/ev
 0ef1fb8886e483aa519324e835969c91ca8b6f92b58d9e6edd479c61c8885571  ops/mission/evidence/2026-09-14-p1-modal-opener/webkit-original-pointer.json.gz
 c41f20d9b4513fd03293ed92c47cbd1572abfe131f95485e086e5621bc2fec79  ops/mission/evidence/2026-09-14-p1-modal-opener/webkit-original-pointer.log.gz
 570324378e0b7a8961c5939c872f076311f36b5dcc637a0af689486326578451  ops/mission/evidence/2026-09-14-p1-modal-pending-check.cjs
+aefa5e16a6c4c167e45523edbe79f64b30d539ea639a942a08bfb94a0a9abd5a  ops/mission/evidence/2026-09-14-p1-modal-opener/pr45-premerge.json.gz
+f54be9bdb4fc64059cd88863738b357eb6922befd8ed846c0afe2355cb6e090c  ops/mission/evidence/2026-09-14-p1-modal-opener/standing.log.gz
