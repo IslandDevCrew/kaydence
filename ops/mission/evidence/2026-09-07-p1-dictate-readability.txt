@@ -1,0 +1,37 @@
+P1-G4 Dictate body/readability and status disclosure correction — 2026-09-07
+Status: bounded local Judge PASS; not published, merged, or phase complete.
+ORIENT: base697de42246328cf368fc313855684a13c83fd31c; locked11px floor and Candidate2 default.
+PLAN: restore body typography/reflow and usable footer disclosures; retain900 numerical centering.
+Scope: DictateView.css below shared rail, StatusFooter presentation-only state, test/evidence.
+No Rust, dependency, IPC, capture bridge, navigation, palette, brand or cleanup behavior change.
+
+RED -> GREEN:
+- Baseline: sub11px body text and ancestor overflow clipped popovers.
+- First reflow:450px last-row popup escaped left edge; group anchoring fixed it.
+- Independent Judge rejected two simultaneously open popovers occluding controls.
+  Reverse-order regression was RED; controlled single-open state plus Escape/focus return fixed it.
+- Independent Judge then found761–880px unanchored meter despite <=760px passing.
+  Added761/800/880/899px tests (RED), extended footer-only docking through899px (GREEN).
+- Strong54-case suite:2themes x3layouts x9viewports. Font floor, nonzero panels,
+  horizontal bounds, hit-tested popup targets, Tab/Escape focus and reverse exclusivity PASS.
+- At900x600, meter gaps17.140625/17.125px remain numerically centered (difference0.015625px).
+  At761/800/880/899, independent meter docking error is0px; no right anchor is lost.
+- Independent extra checks: mouse forward/reverse, Space/Enter/Tab/Shift-Tab/Escape,
+  actual wheel reachability and Configure navigation pass across all3layouts.
+
+JUDGE PASS source bindings:
+CockpitChrome.tsx 4d7554307d9be0e5d0b8dfe0f1587369ecb26e3258ba20b601bd3fd87ba28ffa
+DictateView.css ff8305231cd6616648324536d17cc850baf97980900415968b8211f1a236d7bc
+readability-check 5e8da490ea6e8702bf9558fb372e7e8976d350ac16fcdd18bcf0b4f058ca49f6
+Final local fmt/clippy/253 Rust tests/tsc/eslint/privacy/ADR/build PASS; synthetic bench PARTIAL.
+Final browser regressions: readability54, nav10, hydration7, reference16, modal4, Privacy2 PASS.
+Fourteen PNGs include6default layouts/themes,6popover views,2 intermediate800px docking captures.
+Three retained RED logs and final local/browser logs are compressed and SHA256-bound.
+Reproduce: PLAYWRIGHT_MODULE=<bundled module> APP_URL=http://127.0.0.1:1433
+node ops/mission/evidence/2026-09-07-p1-dictate-readability-check.cjs
+AUDIT: bounded source/evidence review passes; all3 exact-head CI legs and integrated rebase remain required.
+LIMITS: Chromium fixtures/CSS dimensions are not native OS/VM/scaling, screen-reader or recording proof.
+Current native capture status stays unavailable. Raw/Full cleanup truth findings remain a separate unit.
+Shared rail is not yet integrated here; rebase onto currentmain, refresh captures/hashes and re-Judge before PR.
+The inherited white-on-accent contrast contradiction requires a separate operator/design ADR ruling;
+no color correction or fullP1-G4 acceptance is claimed. This packet is frozen locally at that checkpoint.
