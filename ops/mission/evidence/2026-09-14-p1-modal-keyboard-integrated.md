@@ -1,6 +1,6 @@
 # P1-G4 keyboard custody: composed focus-color verification
 
-Anchor `0be60925dd3e33387b4dba11588974a30517ae91`, based on focus PR47 head3212c05. This is a dependent local branch until PR47 merges; no phase closure.
+Test anchor `0be60925dd3e33387b4dba11588974a30517ae91`, originally based on focus PR47 head3212c05. PR47 merged913edd8 with all3OS CI34901506895/CLEAN and tree parity. Rebaseb13e016 is byte-identical to3576791; heartbeat44 committed434ba35. No phase closure.
 Rebase intent: retain Unit A's explicit keyboard-cue selectors and the parent's ADR0020 `--focus-ring` colors. Widths, offsets and radii remain unchanged. Modal behavior/margin and the plain135-line checker are byte-identical to independently reviewed3d5f604.
 
 ## Evidence ledger
@@ -16,4 +16,4 @@ Rebase intent: retain Unit A's explicit keyboard-cue selectors and the parent's 
 
 Old author manifest/source colors are historical3d5f604, not current after composition. Current sources bind in this integrated packet. Browser fixtures and explicit WebKit Option+Tab are not native OS/full-keyboard/scaling evidence; no settings or native IPC changed.
 Unit B full-wheel reading/scroll restoration, downstream body fidelity, native/VM/physical/runtime/shipping gates remain separate. No Rust, dependency, IPC contract, download default, brand or policy change.
-Actual merged-parent rebase, final publication Audit, own exact-head three-OS CI/CLEAN and expected-head merge remain required. P1-G4 remains pending.
+Dependent-candidate Audit PASS at3576791 (SHA4f21437b216418f6ea672169045c21586fa9c58d6ee06012fb195dab2ef0c245). Actual-parent full standing gates rerun434ba35 PASS (253 Rust,fmt/clippy,frontend,privacy,ADR,synthetic4,build; physical PARTIAL). Parent-audit-and-gates.json.gz preserves both; PR47 premerge snapshot is separately hashed. Final heartbeat/source delta Audit, own exact-head three-OS CI/CLEAN and expected-head merge remain required. P1-G4 remains pending.
