@@ -140,7 +140,7 @@
     "status": "active",
     "started": "2026-07-07",
     "updated": "2026-09-14",
-    "sessionCount": 43
+    "sessionCount": 44
   },
   "policies": {
     "merge": "auto",
@@ -1713,14 +1713,21 @@
       "url": "https://github.com/IslandDevCrew/kaydence/pull/46",
       "phase": "P1",
       "mergedAt": "2026-09-14T21:36:17Z"
+    },
+    {
+      "number": 47,
+      "title": "Preserve visible focus with derived contrast colors",
+      "url": "https://github.com/IslandDevCrew/kaydence/pull/47",
+      "phase": "P1",
+      "mergedAt": "2026-09-14T22:08:45Z"
     }
   ],
   "resume": {
     "activePhase": "P1",
     "nextActions": [
-      "P1-G4 NEXT: PR46 merged9b35ac8 after all3OS CI34898299870/CLEAN/tree parity. Focus-color integrated96/768,42 visual/18 negative checks and full local gates PASS; ADR0020 Accepted at8f49272. Final Audit PASS de33989; own3OS CI/CLEAN/merge pending. Keyboard Unit A3d5f604 awaits independent Judge/integration; shared-scroll34632f0 is HELD for introduced WebKit missing rings, removal also fails Chromium confinement. Resolve A before B, then Privacy/Setup/copy; <=400-line PR gates and heartbeat after each merge.",
-      "P1-G4 PREPARED under /Users/IDC2.5/Documents/Kaydence/.worktrees/: sharedModal a16a9da, Privacy97a55f7 and Setup9e47df3 have archived integrated browser evidence; rebase each onto actual merged opener/preceding parent and rerun Judge/gates before publication. WebKit pointer BODY-return is addressed by opener unit; ordinary Tab remains a separate unresolved compatibility question.",
-      "P1-G4 CLEANUP TRUTH: capability-copy25a20b3 passes72dial/24read/18fixture and independent18 natural flows plus bad-copy/dictionary/hidden/clipped negatives. Configure ring margin RED/GREEN reproduced. Rebase onto final screen parents before PR. FOCUS CONTRAST: pixel-backed48-combination measurement confirms AA outline defects; separate derived-color correction plus additive0020 under existing narrow contrast go, never edit Accepted0018/0019.",
+      "P1-G4 NEXT: PR47 merged913edd8 after all3OS CI34901506895/CLEAN and tested/merged tree6bf467a9fab2cc6aeea8f44cfa45e04b4aac6224. Keyboard A rebased unchanged onto actual main atb13e016; independent59+60+4negative+24cue, focus96/768 and full local gates PASS on identical tested tree. Final parent/heartbeat Audit and ownCI/CLEAN/merge pending. Shared-scroll B remains HELD: actual WebKit wheel11/12, dark450 Privacy moves background80->0. Resolve A then B then Privacy/Setup/copy; <=400-line PR gates and heartbeat after each merge.",
+      "P1-G4 PREPARED under /Users/IDC2.5/Documents/Kaydence/.worktrees/: B retains historical34632f0 failures and locally composes A keyboard custody plus ADR0020 colors; investigate its fresh WebKit wheel failure without weakening containment. Privacy97a55f7 and Setup9e47df3 must rebase onto the preceding merged unit and rerun actual full-reading proof. Future-body CSS composition previews are not actual-body or native acceptance.",
+      "P1-G4 CLEANUP TRUTH: capability-copy25a20b3 passes72dial/24read/18fixture and independent18 natural flows plus negative guards. Configure ring margin RED/GREEN reproduced; rebase onto final screen parents before PR. FOCUS CONTRAST: PR47/ADR0020 merged, low neighboring segments retained; preserve the semantic token and never edit Accepted0018/0019/0020. Native full-keyboard/OS scaling remains separate from WebKit Option+Tab browser proof.",
       "P1-G4 FINAL FIDELITY: after approved corrections, repeat all4screens/all3cockpitlayouts at900x600, narrow/intermediate widths, both themes, keyboard/a11y and 200%-equivalent; collect actual native WebView/OS scaling evidence separately. Browser fixtures, OS selectors and synthetic benches never substitute for native proofs.",
       "P1 RECORDING INTEGRATION: read-only audit confirms no live capture-status bridge. Request a separately owned backend projection + bootstrap/reopen synchronization; do not poll recent_history for a clock or subtract Started.at_ms from Date.now(). No Buzz Rust/inject edits or SessionEvent changes without lane/ADR authority.",
       "ADR-0016 HUMAN GATE: approve or revise ORT 1.28 binary provenance, the shipped CTC model/license and source pins, and the non-default hedge posture before treating the new ONNX/Silero lane as ship-authorized.",
@@ -1730,7 +1737,7 @@
       "PROCESS: use mission branches, <=400 changed lines, independent Judge plus fresh evidence, all three required CI legs and CLEAN state, then gh pr merge --auto --merge with the expected head SHA. Commit a state/journal/rendered heartbeat after every merge; no admin or direct-main bypass."
     ],
     "blockers": [
-      "P1-G4 pending: PR42-46 corrections merged; focus contrast, keyboard/scroll custody, Privacy/Setup and capability copy remain unmerged. Shared-scroll keyboard gate is RED; native fidelity and live capture projection unresolved. No AA waiver.",
+      "P1-G4 pending: PR42-47 corrections merged; keyboard/scroll custody, Privacy/Setup and capability copy remain unmerged. B WebKit wheel containment and actual body-reading checks remain RED; native fidelity and live capture projection unresolved. No AA or phase waiver.",
       "ADR-0016 is Proposed. The ONNX CTC + Silero implementation is live-proven but not ship-authorized until the operator approves binary/model/license/source posture.",
       "P1-G3 still lacks physical release-to-focused-field timing, packaged q5 ASR-resident measurement, a sub-80 MB visible no-model cockpit, a Windows tray lifecycle fix, and Linux tray/reopen proof.",
       "P1-P0-8 still lacks complete live OS permission proof, a real first dictation, and <=60-second reference-device evidence. ADR-0017 separately requires operator go before model-download is enabled in the default shipped build; the merged UI does not claim cancellation support.",
