@@ -802,7 +802,7 @@
     {
       "label": "Product code (Rust+TS lines)",
       "baseline": "0",
-      "current": "23,573 Rust/TS/TSX lines; native app + tests",
+      "current": "24,134 tracked Rust/TS/TSX lines; native app + tests, counted at40b6be5 on2026-09-14.",
       "target": "buildable app",
       "direction": "up"
     },

@@ -54,7 +54,7 @@ PR50 merged7ed4c8a with own3OS CI34908301900/CLEAN and tested-tree parity. Dialo
 Fresh combined proof:72 default/blocked cases,12 negative controls and96 focus scopes/768
 states PASS. Fresh actual-parent full253/fmt/clippy/frontend/privacy/ADR/synthetic4/build
 at2806f00 PASS; exact commands, head and exit0 are logged, physical metrics remain PARTIAL.
-The current integrated bundle holds31 raw/156 PNGs/10 publication.currentSources bindings,
+The current integrated bundle holds32 raw/156 PNGs/10 publication.currentSources bindings,
 including76 new PNGs, gate/browser results, PR50 merge receipts and Privacy's Audit readback.
 Its original head/sources remain the historical3dcc anchor, not a claim Privacy was present then.
 Publication Audit4a4e6dd PASS is archived; own3OS CI/CLEAN remain required. Main-board9px text, other dynamic
