@@ -44,5 +44,10 @@ build pass. Full-copy gates retain font>=11px, complete clipped-ancestor ranges,
 center hit-testing, actual wheel reachability and whole native focus outlines.
 
 Final source, logs, screenshots and checks are bound by the adjacent manifest.
-Independent integration Judge, main-owned full gates/CI/PR/merge remain pending.
+Independent integration Judge PASS atbcd744e: fresh72+18 and independent18 flows,
+bad-copy/dictionary/hidden/clipped negatives reject. Exact-wheel old margin RED
+299.625+1px versus final291.625+1px GREEN. Initial private ellipsis false alarm
+and inconclusive alternate-wheel negative remain disclosed in archived Judge.
+Main full fmt/clippy/253Rust/frontend/privacy/ADR gates PASS; physical bench PARTIAL.
+Final parent integration, Audit and exact-head CI/PR/merge remain pending.
 Browser CSS viewports are not native OS/WebView, hardware or whole-P1-G4 proof.
