@@ -55,7 +55,7 @@ Fresh combined proof:72 default/blocked cases,12 negative controls and96 focus s
 states PASS. Fresh actual-parent full253/fmt/clippy/frontend/privacy/ADR/synthetic4/build
 at2806f00 PASS; exact commands, head and exit0 are logged, physical metrics remain PARTIAL.
 The current integrated bundle holds26 raw/156 PNGs/10 publication.currentSources bindings,
-76 PNGs, gate/browser results, PR50 merge receipts and the Privacy archive-only Audit readback.
+including76 new PNGs, gate/browser results, PR50 merge receipts and Privacy's Audit readback.
 Its original head/sources remain the historical3dcc anchor, not a claim Privacy was present then.
 Publication Audit and own3OS CI/CLEAN remain required. Main-board9px text, other dynamic
 error/contrast states, native/OS scaling and full-AA/P1 acceptance remain open.
