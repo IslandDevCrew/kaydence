@@ -1,0 +1,14 @@
+# P1-G4 Privacy readability on the keyboard/scroll foundation
+- Parent: frozen modal packet `c4b9a79cf4d5a147134cfca97860db62edd19d81`; actual frontend at port 1434. Local verification only; parent reconciliation, independent Judge, standing gates and CI remain required before publication.
+- Rebased only the three Privacy body/History-ring/evidence commits from `5a6e53e`; historical `97a55f7` evidence and its plain checker remain byte-identical.
+- Product scope is only `PrivacyView.css`: restore token-based 11px floor, complete policy text, natural vertical reading, narrow reflow and the History-button scroll margin. No copy, JS, backend, IPC, dependencies, state, identity, palette or navigation changes.
+- Conflict resolution keeps both intents: new History 8px margin plus inherited marker-aware `--focus-ring` selector. Modal initial/boundary/return focus, inner/outer wheel containment and actual-opener margin remain inherited and unchanged.
+- Same primary checker: predecessor port 1438 fails all 24 cases; integrated actual bundle passes 24/24 across three OS reference presentations, both themes and 450/500/501/900 widths. This is CSS viewport evidence, not physical OS scaling.
+- Actual natural full-reading/keyboard checks pass Chromium 6/6 and WebKit Option+Tab 6/6 at 450x300, 501x300 and 900x600, both themes: all text fragments reached by real wheel, modal Close after reading, opener return, reverse traversal and complete History outline. `futureBody:false`, zero stylesheet recipes/overrides.
+- The existing Source/allowlist-audit text-range linebox advisory remains in raw output; inspected captures show separate readable glyph lines. It is not silently discarded or treated as whole-WCAG proof.
+- Hidden-section negative injection fails 24/24 as expected; the primary gate cannot pass by hiding policy content. Fresh frontend typecheck/lint and diff check pass.
+- Painted focus gate passes 96 scopes / 768 states, qualifying-side minimum 3.7451306265; no baseline geometry comparison, all-pixels or AAA-area claim.
+- Eight actual-source screenshots, raw JSON/logs, source/checker hashes and temporary plain-runner hash are bound by the companion manifest and `raw-and-bindings.json.gz`; no source scripts are compressed.
+- Reproduce primary with bundled `PLAYWRIGHT_MODULE`, `APP_URL=http://127.0.0.1:1434`, fresh `CAPTURE_DIR`, and `node ops/mission/evidence/2026-09-07-p1-privacy-readability-check.cjs`. Add `INJECT_HIDDEN=1` for the failing negative.
+- Full-reader: `/tmp/kaydence-modal-b-integrated/full-privacy.cjs`, `ENGINE=chromium|webkit`, same URL and fresh capture directory, **no** `PRIVACY_STYLE_REF`. Exact paths/hashes and raw observations are archived.
+- WebKit Option+Tab is explicitly labeled; browser/system settings were not changed. Native WebView/VM/hardware acceptance and broader P1-G4 remain open; this packet does not claim completion of the other screens.
