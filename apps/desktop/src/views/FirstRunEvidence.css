@@ -61,7 +61,7 @@
 .first-run-dialog > nav button[aria-pressed="true"] {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
   background: var(--surface);
-  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+  color: var(--accent-ink);
 }
 
 .first-run-evidence-body {
@@ -95,7 +95,7 @@
 
 .first-run-evidence-summary span,
 .first-run-proof-grid span {
-  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+  color: var(--accent-ink);
   font-size: 8px;
   font-weight: 850;
   text-transform: uppercase;

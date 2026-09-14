@@ -88,7 +88,7 @@
 }
 
 .first-run-lanes button[aria-pressed="true"] {
-  background: var(--accent);
+  background: var(--accent-control);
   color: var(--on-accent);
   font-weight: 800;
 }
@@ -188,7 +188,7 @@
 
 .first-run-step-rail li.active > span {
   border-color: var(--accent);
-  background: var(--accent);
+  background: var(--accent-control);
   color: var(--on-accent);
 }
 
@@ -250,7 +250,7 @@
 .first-run-heading span,
 .first-run-dialog header span {
   display: block;
-  color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+  color: var(--accent-ink);
   font-size: 8px;
   font-weight: 850;
   text-transform: uppercase;
@@ -282,7 +282,7 @@
 
 .first-run-heading > button {
   min-height: 28px;
-  color: color-mix(in srgb, var(--accent) 78%, var(--ink));
+  color: var(--accent-ink);
   font-size: 9px;
   font-weight: 800;
   padding: 4px 9px;
@@ -332,12 +332,12 @@
 
 .first-run-progress li.done span {
   border-color: color-mix(in srgb, var(--accent) 58%, var(--line));
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .first-run-progress li.active span {
   border-color: var(--accent);
-  background: var(--accent);
+  background: var(--accent-control);
   color: var(--on-accent);
 }
 
@@ -521,7 +521,7 @@
 
 .first-run-hotkey-control button[aria-pressed="true"],
 .first-run-cleanup-control button[aria-pressed="true"] {
-  background: var(--accent);
+  background: var(--accent-control);
   color: var(--on-accent);
 }
 
@@ -594,7 +594,7 @@
 }
 
 .first-run-license-card > span strong {
-  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  color: var(--accent-ink);
   font-size: 10px;
 }
 
@@ -659,7 +659,7 @@
 
 .first-run-footer > button.primary {
   border-color: var(--accent);
-  background: var(--accent);
+  background: var(--accent-control);
   color: var(--on-accent);
   font-weight: 800;
 }

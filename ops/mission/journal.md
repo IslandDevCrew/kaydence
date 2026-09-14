@@ -758,3 +758,10 @@
 - Operator approved the narrow contrast ADR/correction while preserving identity, layouts and raw OS accents. Main remains86a389a; all four prepared worktrees are clean. Mission-control Tier2 retains separate implementation and independent Judge.
 - Fresh standing gates PASS; synthetic benchmark physical fields remain PARTIAL. Current contrast reproduction remains RED. The explicit approval is recorded, not treated as implementation proof or broader backend/shipping authority.
 - Publish this durable checkpoint/approval record first; prepare the measured contrast treatment with ADR0018 separately, then integrate each reviewed body packet in <=400-line PRs. No Rust, new dependency, identity or default-download change.
+
+## 2026-09-14T19:36Z — session 38 (Approval checkpoint merged)
+- PR41 merged1586345 after exact head11e24bc passed all3OS legs of Actions34886595298 and pre-merge CLEAN was observed. Tested/merged trees matchf5a316eb06796f4d03a4415f6f88e357b64cc703; expected-head MERGE auto-merge, no bypass.
+- Immediate protected-main heartbeat follows on the accent branch. Common derived shades pass90 scopes/930 samples at minimum4.951315:1; independent Judge/ADR acceptance and publication remain pending.48 PNGs and fresh local gate logs archived. Nonaccent status/opacity findings remain open.
+- Fresh independent review caught History target clipping missed by the earlier suite. Local Dictate d623192 fixes the row allocation and contained focus outline;54+48+12 cases/Judge PASS. Cleanup24-case/reachability Judge PASS; other screen reviews continue. Local cleanup-copy8d06b19 passes18 state cases, awaiting integration/full-visible-copy review.
+- P1-G4 remains pending; no native-device, backend lane, shipping, default-download or P2 authority changed. Next actions name local candidates and required integration rather than calling them shipped.
+- Same-session acceptance: independent accent rerun/Judge PASS and main scoped Audit allow ADR0018 Accepted under the explicit contrast go. Local standing/ADR/build and39 regression cases pass; publication still requires exact-head3OS CI/CLEAN. Nonaccent and native findings remain open.

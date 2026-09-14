@@ -42,6 +42,14 @@ Full artifact chain: `ops/mission/design-relock/idea.lock.json`,
 
 ## What's locked
 
+### Contrast amendment — ADR-0018 (2026-09-14)
+
+Operator-approved shared derived accent treatments supersede raw-accent text/fills
+only where needed for readability. Use `--accent-ink` for accent text and
+`--accent-control` with white text for filled controls; raw OS colors, identity,
+reserved semantics, layouts and all other invariants remain locked. This targeted
+correction does not close P1-G4 or waive the remaining accessibility/native gates.
+
 - **One token system**: raw palette hexes declared once (`--l-*`/`--d-*`), semantic tokens
   (`--bg`, `--surface`, `--ink`, `--muted`, `--line`, `--success`, `--warn`, `--danger`) re-point
   via `var()` only in theme scopes — zero raw-value duplication.

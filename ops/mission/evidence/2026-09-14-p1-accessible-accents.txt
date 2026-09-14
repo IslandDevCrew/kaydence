@@ -1,0 +1,36 @@
+P1-G4 accessible accent treatments — 2026-09-14
+Disposition: local frontend gate PASS; independent Judge/ADR acceptance/CI/merge remain main-agent custody. Not full P1-G4 or app-wide AA closure.
+
+ORIENT / PLAN
+Base 86a389ad9e5f5916e797de9a5539bdbaecd719dc; mission/p1-g4-accessible-accents.
+State and scoped AGENTS/design lock read; frontend-testing skill used with existing Playwright fallback.
+Operator-approved narrow contrast correction; main owns ADR-0018. No Rust/IPC/dependencies/assets/mission state edits.
+Baseline Vite1431 product source equals base; candidate isolated Vite1436. Offline frozen ignore-scripts install.
+
+RED / BUILD
+Same checker: baseline exit1, 90 scopes/900 accent samples, 443 failures, 30 obstructed hover targets; minimum2.969510:1 white/aqua.
+Common --accent-control = color-mix(in srgb, var(--accent) 75%, black).
+Common --accent-ink = color-mix(in srgb, var(--accent) 60%, var(--ink)).
+Declare on :root AND .app-shell to resolve App.tsx inline OS accent correctly. Raw aqua/cobalt/emerald and white --on-accent unchanged.
+Dictate: active/hover nav, selected cleanup dial, popup action text. Cleanup: nav, selected dials/lane, permissions/save.
+Privacy: nav/lane, accent labels/actions/state-ready copy and Constitution heading. Setup/Evidence: selected controls, progress numbers, accent headings/actions/license/tab/summary copy.
+Only additional dependency: main-authorized statusbar overflow:hidden→visible restores default-window popover pointer access. Other narrow/Escape/exclusivity fixes remain in separate Dictate packet.
+Dormant shared legacy selectors untouched after usage audit; original mark, decorative accents, layouts, fonts, radii and reserved colors preserved.
+
+GATE / VISUAL REVIEW
+Final checker exit0: 90 scopes, 930 accent samples, zero failures/unsupported accent paint/blocked pointers/frontend errors.
+900x600 × light/dark × mac/windows/linux browser references; four screens, three Dictate layouts, five status disclosures, Privacy dialog and three Setup Evidence tabs.
+Rest/real reachable hover/focus after finite animation settlement; normalized floating-point sRGB parsing and solid/translucent ancestor compositing.
+Accent-fill detection is foreground-independent. Disabled controls excluded; future-phase prose is not exempt. Unsupported image/group-opacity/filter/blend paint is flagged, never accepted as contrast proof.
+Lowest observed light/dark: mac4.951315/4.951315; windows7.300182/5.464548; linux5.496852/5.650937 (all ratios :1).
+All90 before/after element size/type hashes equal; this is NOT positional/screenshot identity. Visual samples reviewed across all four families and three OS references;48 PNGs archived (24before/24after).
+Fresh check-frontend.sh tsc/eslint PASS; local Vite build PASS outside repo at /tmp/kaydence-p1-accessible-accents-dist; existing nav10/modal4/reference16 cases PASS.
+Reproduce: set PLAYWRIGHT_MODULE to installed Playwright path, APP_URL=http://127.0.0.1:1436; node ops/mission/evidence/2026-09-14-p1-accent-check.cjs.
+Optional BASELINE_METRICS reads baseline.json.gz; RESULT_PATH writes gzip measured rows; CAPTURE_DIR writes PNGs. See SHA256SUMS.txt for every capture/log plus reviewed source/test/this record.
+
+OPEN / AUDIT LIMITS
+Nonaccent light-theme findings unchanged: Cleanup Fixture2.613415; Privacy Enforced4.053337 and pending/off labels3.137866. Separate correction/authority, not covered by this accent pass.
+Setup later-step number/Whisper-Ahead/P3 use ancestor opacity in both themes: reported unsupported/unverified, not AA-exempt or passing. Full measured records preserve these findings.
+This base still has inherited body typography/short-window findings handled by other packets. Default900 popup pointer checks do not prove narrow-popup containment or Escape/exclusivity.
+Browser reference lanes are not native macOS/Windows/Linux VM proof. No model download, purchase, settings save, real injection/native action, push, PR, merge or target-cache mutation performed.
+Parent must integrate fresh, independently judge exact source, accept ADR, run three-OS CI and update mission heartbeat before merge/phase claims.

@@ -94,6 +94,13 @@
   --ease-inout: cubic-bezier(.4,0,.2,1);
 }
 
+/* ADR-0018: preserve raw OS identity; derive readable text treatments uniformly.
+   Re-resolve on the shell where App.tsx supplies the per-OS inline accent. */
+:root, .app-shell {
+  --accent-control: color-mix(in srgb, var(--accent) 75%, black);
+  --accent-ink: color-mix(in srgb, var(--accent) 60%, var(--ink));
+}
+
 /* ---- Theme scopes: var() re-points ONLY (zero raw values) ---- */
 :root[data-theme="dark"] {
   --bg: var(--d-bg);
