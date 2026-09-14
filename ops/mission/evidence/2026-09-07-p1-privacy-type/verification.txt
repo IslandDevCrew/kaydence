@@ -1,0 +1,20 @@
+P1-G4 Privacy body readability; 2026-09-07; local PASS, not merged or phase complete.
+Base697de42246328cf368fc313855684a13c83fd31c; mission/p1-g4-privacy-type.
+Scope: PrivacyView.css below shared rail; owned browser test/evidence only.
+Trace: reopened P1-G4 / PRD P0-7; DESIGN_LANGUAGE_V2_LOCK.md 11px floor.
+ORIENT/PLAN: routine token/wrapping/intrinsic-grid repair, no policy or design re-lock.
+RED: all24 cases failed typography; minimum7.04px;501x300 main-grid height0px.
+GREEN:24/24 (900x600,450/500/501x300; light/dark; macOS/Windows/Linux selectors).
+Wheel input reaches every text fragment; floor, section bounds, non-overlap, Setup Tab/Enter,
+Constitution focus/Escape/return and dialog floor pass;501 main-grid now667px.
+Negative INJECT_HIDDEN=1:24/24 expected FAIL, exit1; hidden permission rows rejected.
+Existing nav10/10, dialog4/4, privacy-copy2/2, reference16/16 guards PASS.
+bash scripts/check-frontend.sh:PASS; local vite build --outDir /tmp/kaydence-p1-privacy-type-dist:PASS.
+PLAYWRIGHT_MODULE=/Users/IDC2.5/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright
+APP_URL=http://127.0.0.1:1434 node ops/mission/evidence/2026-09-07-p1-privacy-readability-check.cjs
+Optional CAPTURE_DIR=this directory; INJECT_HIDDEN must be unset for normal verification.
+Visual spot-review: 900px before/after and501px dark end; original cards/icons/palette retained.
+Browser plugin unavailable: Chromium fixtures only;450x300 is CSS200%-equivalent, not native scaling.
+No Rust/IPC/product-policy/shared-style/rail/dependency/control-plane changes; dist scaffold untouched.
+Independent Judge/Audit, rebased exact-head gates,3-OS CI and native fidelity remain with parent.
+SHA-256 source/test/7PNG inventory: manifest.sha256; verify from repository root with shasum -a256 -c.
