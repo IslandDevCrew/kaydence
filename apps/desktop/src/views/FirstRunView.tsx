@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Modal } from "../components/Modal";
 import {
   CockpitGlyph,
@@ -316,6 +316,8 @@ function evidenceFor(kind: FirstRunNextStepKind): EvidenceSection {
 
 export function FirstRunView(props: FirstRunViewProps): JSX.Element {
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const evidenceOpener = useRef<HTMLButtonElement | null>(null);
+  const evidenceFallback = useRef<HTMLButtonElement | null>(null);
   const [evidenceSection, setEvidenceSection] = useState<EvidenceSection>("proof");
   const currentStep = activeStep(props.firstRun.next_step.kind);
   const selectedRuntime = props.lane.id === props.runtimeLane;
@@ -332,14 +334,15 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
     ? props.firstRun.asr_candidates
     : [{ id: selectedModel, selected: true }];
 
-  const openEvidence = (section: EvidenceSection) => {
+  const openEvidence = (section: EvidenceSection, trigger: HTMLButtonElement) => {
+    evidenceOpener.current = trigger;
     setEvidenceSection(section);
     setEvidenceOpen(true);
   };
 
-  const runPrimaryAction = () => {
+  const runPrimaryAction = (trigger: HTMLButtonElement) => {
     const kind = props.firstRun.next_step.kind;
-    if (kind !== "dictation" && kind !== "complete") openEvidence(evidenceFor(kind));
+    if (kind !== "dictation" && kind !== "complete") openEvidence(evidenceFor(kind), trigger);
     props.onPrimaryAction();
   };
 
@@ -394,7 +397,7 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
           </ol>
 
           <section className={`first-run-next step-${props.firstRun.next_step.kind}`} aria-label="First-run next step">
-            <span>Next step</span><strong>{props.firstRun.next_step.title}</strong><p>{props.firstRun.next_step.detail}</p><button onClick={() => openEvidence(evidenceFor(props.firstRun.next_step.kind))} type="button">Evidence</button>
+            <span>Next step</span><strong>{props.firstRun.next_step.title}</strong><p>{props.firstRun.next_step.detail}</p><button onClick={(event) => openEvidence(evidenceFor(props.firstRun.next_step.kind), event.currentTarget)} ref={evidenceFallback} type="button">Evidence</button>
           </section>
 
           <section className="first-run-controls" aria-label="First-run configuration">
@@ -404,13 +407,13 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
               <select aria-label="Local ASR engine" disabled={props.modelRefreshPending || !selectedRuntime} onChange={(event) => props.onModelChange(event.target.value)} value={selectedModel}>
                 {modelOptions.map((model) => <option key={model.id} value={model.id}>{model.id}</option>)}
               </select>
-              <button aria-label="Review models" className="first-run-status-button" onClick={() => openEvidence("models")} type="button"><span className={asrReady ? "ready" : "issue"}>{asrReady ? "Ready" : props.firstRun.asr_runtime.state === "blocked" ? "Blocked" : props.firstRun.model_ready ? "Prepare" : "Review"}</span></button>
+              <button aria-label="Review models" className="first-run-status-button" onClick={(event) => openEvidence("models", event.currentTarget)} type="button"><span className={asrReady ? "ready" : "issue"}>{asrReady ? "Ready" : props.firstRun.asr_runtime.state === "blocked" ? "Blocked" : props.firstRun.model_ready ? "Prepare" : "Review"}</span></button>
             </div>
 
             <div className="first-run-control-row">
               <span className="first-run-control-icon"><CockpitGlyph name="privacy" /></span>
               <div><strong>Grant OS Permissions</strong><small>{displayedPermissions.map((item) => item.label).join(", ") || "Runtime requirements"}</small></div>
-              <button className="first-run-inline-action" onClick={() => openEvidence("permissions")} type="button">Review</button>
+              <button className="first-run-inline-action" onClick={(event) => openEvidence("permissions", event.currentTarget)} type="button">Review</button>
               <span className={permissionsReady ? "first-run-state ready" : "first-run-state pending"}>{selectedRuntime ? (permissionsReady ? "Ready" : "Proof") : "Reference"}</span>
             </div>
 
@@ -491,13 +494,13 @@ export function FirstRunView(props: FirstRunViewProps): JSX.Element {
           <footer className="first-run-footer">
             <button onClick={() => props.onNavigate("Dictate")} type="button">Cancel</button>
             <div><small>{selectedRuntime ? (props.previewFixture ? "Fixture state" : timingLabel(props.firstRun.setup_timing)) : `${props.lane.label} reference lane`}</small><strong>{selectedRuntime ? (props.firstRunActionNote ?? props.setupRefreshIssue ?? props.firstRun.next_step.proof_requirement) : `Runtime proof remains on ${props.runtimeLane === "mac" ? "macOS" : props.runtimeLane === "windows" ? "Windows" : "Linux"}.`}</strong></div>
-            <button className="primary" disabled={props.firstRunActionDisabled || !selectedRuntime} onClick={runPrimaryAction} type="button">{selectedRuntime ? props.firstRun.next_step.action_label : "Runtime only"}</button>
+            <button className="primary" disabled={props.firstRunActionDisabled || !selectedRuntime} onClick={(event) => runPrimaryAction(event.currentTarget)} type="button">{selectedRuntime ? props.firstRun.next_step.action_label : "Runtime only"}</button>
           </footer>
         </div>
       </div>
 
       {evidenceOpen ? (
-        <Modal className="first-run-dialog-backdrop" labelledBy="first-run-evidence-title" onDismiss={() => setEvidenceOpen(false)}>
+        <Modal className="first-run-dialog-backdrop" labelledBy="first-run-evidence-title" onDismiss={() => setEvidenceOpen(false)} opener={evidenceOpener.current} fallbackOpener={evidenceFallback.current}>
           <section className="first-run-dialog">
             <header><div><span>Local setup evidence</span><h2 id="first-run-evidence-title">First Run Proof</h2></div><button aria-label="Close setup evidence" onClick={() => setEvidenceOpen(false)} type="button">Close</button></header>
             <nav aria-label="Setup evidence sections">

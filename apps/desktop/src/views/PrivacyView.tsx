@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Modal } from "../components/Modal";
 import {
   CockpitGlyph,
@@ -134,6 +134,7 @@ function permissionStateLabel(state: PrivacyPermissionState): string {
 
 export function PrivacyView(props: PrivacyViewProps): JSX.Element {
   const [constitutionOpen, setConstitutionOpen] = useState(false);
+  const constitutionOpener = useRef<HTMLButtonElement | null>(null);
   const selectedRuntime = props.lane.id === props.runtimeLane;
   const permissionRows = selectedRuntime
     ? props.permissionRequirements
@@ -217,7 +218,7 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
         <div><span>Screen family 07</span><h1>Privacy &amp; Context</h1><small>Your voice. Your device. Your control.</small></div>
         <button
           aria-expanded={constitutionOpen}
-          onClick={() => setConstitutionOpen(true)}
+          onClick={(event) => { constitutionOpener.current = event.currentTarget; setConstitutionOpen(true); }}
           type="button"
         >Privacy Constitution</button>
       </div>
@@ -324,7 +325,7 @@ export function PrivacyView(props: PrivacyViewProps): JSX.Element {
       </footer>
 
       {constitutionOpen ? (
-        <Modal className="privacy-dialog-backdrop" labelledBy="privacy-constitution-title" onDismiss={() => setConstitutionOpen(false)}>
+        <Modal className="privacy-dialog-backdrop" labelledBy="privacy-constitution-title" onDismiss={() => setConstitutionOpen(false)} opener={constitutionOpener.current}>
           <section
             className="privacy-dialog"
           >
