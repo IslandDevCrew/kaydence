@@ -797,3 +797,7 @@
 - Keyboard A rebased unchanged onto actual main atb13e016; independent59/60/4negative/24cue, focus96/768 and full253/local gates PASS on the identical tested tree. Final parent/heartbeat Audit and own CI remain required. B still HELD: fresh WebKit wheel11/12, dark450 Privacy background moves80->0. Old failures remain retained.
 - Actual Privacy/Setup full-reading checks remain RED for inherited small/hidden/truncated text; future-body composition previews are not actual-body proof. Their body units follow A/B. Native/physical/runtime/shipping/download and other-phase gates remain open; P1-G4 is not closed.
 - Final delta Audit caught two stale current metrics still naming PR46/focus open. Both now agree with PR47 merge evidence; product, immutable ADRs and phase gates are unchanged. The docs RED is retained in the Audit trail.
+
+## 2026-09-14T22:32Z — session 45 (keyboard custody merged)
+- PR48 merged0314331 after headdbc69ad passed all3OS CI34903450196/CLEAN; tested/merged treed149971f15508be22519fc6f449c4c6d94237448. Expected-head MERGE, no bypass. Immediate heartbeat on B changes metadata only while its browser diagnostics run; actual-parent rebase waits for a safe pause.
+- B remains HELD: independent Chromium large-wheel input drifts backward despite local greens. Finite causal controls preserve the RED. Privacy112879c actual reading passes; Setup dialog/main-board split preserves9e47df3 and the400-line cap. These units still need review/current-parent gates. Native/physical/runtime/shipping gates and P1-G4 remain open.
