@@ -30,6 +30,7 @@
 .first-run-board select,
 .first-run-board input {
   font: inherit;
+  scroll-margin-block: var(--space-2);
 }
 
 .first-run-board button:is(:focus-visible, :focus:where([data-modal-keyboard-focus])),
@@ -735,10 +736,12 @@
   .first-run-license { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .first-run-license-card { min-height: 88px; }
   .first-run-pricing-note { line-height: 1.25; }
-  .first-run-footer { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .first-run-footer { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .first-run-footer > div { grid-column: 1 / -1; grid-row: 1; }
+  .first-run-footer > button { justify-self: start; }
+  .first-run-footer > button.primary { justify-self: end; }
   .first-run-footer strong {
-    max-width: 180px;
-    line-height: 1.15;
+    line-height: 1.3;
     white-space: normal;
   }
 }
