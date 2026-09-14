@@ -68,6 +68,22 @@ const results = [];
         await page.keyboard.press('Tab'); const setup = board.getByRole('button', { name: 'Review in Setup' });
         assert(await setup.evaluate(el => el === document.activeElement));
         const focused = await setup.boundingBox(); assert(focused.y >= 0 && focused.y + focused.height <= height, 'Keyboard scroll exposes Setup action');
+        await page.keyboard.press('Tab');
+        const history = board.getByRole('button', { name: 'View History' });
+        assert(await history.evaluate(el => el === document.activeElement), 'Tab reaches History');
+        assert(await history.evaluate(el => {
+          const r = el.getBoundingClientRect(), s = getComputedStyle(el);
+          const ring = Math.max(0, parseFloat(s.outlineWidth) + parseFloat(s.outlineOffset));
+          let top = 0, bottom = innerHeight, left = 0, right = innerWidth;
+          for (let p = el.parentElement; p; p = p.parentElement) {
+            const b = p.getBoundingClientRect(), style = getComputedStyle(p);
+            if (/auto|scroll|hidden|clip/.test(style.overflowY)) { top = Math.max(top, b.top); bottom = Math.min(bottom, b.bottom); }
+            if (/auto|scroll|hidden|clip/.test(style.overflowX)) { left = Math.max(left, b.left); right = Math.min(right, b.right); }
+          }
+          return s.outlineStyle !== 'none' && r.top - ring >= top && r.bottom + ring <= bottom && r.left - ring >= left && r.right + ring <= right;
+        }), 'Complete History focus ring must stay visible');
+        await page.keyboard.press('Shift+Tab');
+        assert(await setup.evaluate(el => el === document.activeElement));
         await page.keyboard.press('Enter'); assert(await page.getByRole('button', { name: 'Cancel', exact: true }).isVisible());
         assert.deepEqual(errors, []); results.push({ theme, width, lane, status: 'PASS', textFragments: seen.size });
       } catch (e) { results.push({ theme, width, lane, status: 'FAIL', reason: e.message }); }

@@ -811,6 +811,10 @@
   line-height: 1.35;
 }
 
+.privacy-audit-panel > header > button {
+  scroll-margin-block: 8px;
+}
+
 .privacy-shell button:is(:focus-visible, :focus:where([data-modal-keyboard-focus])) {
   outline: 3px solid var(--focus-ring);
   outline-offset: 1px;
