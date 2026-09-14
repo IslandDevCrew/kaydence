@@ -1,0 +1,4 @@
+7d208a202ee46fdbbeaf95f163ae9615153905084f86e4b7d66b19d49df9cea2  ops/mission/evidence/2026-09-14-p1-modal-custody-integration.md
+0b640913a44f391241bf2a3f1d0792fd5544c0e6c885163846d376e222c8f49f  ops/mission/evidence/2026-09-14-p1-modal-custody-integration/integrated-missing-ring.png
+b7f09efc4440203bef721af7554e6590dad5b1d84b946bc0a0ec5f0214a3fde9  ops/mission/evidence/2026-09-14-p1-modal-custody-integration/opener-visible-ring.png
+e58d7c5f9d9bf09cd4bb2dd8f0e4a8e2807cabd6c5ae5837cf96d81f13a137e2  ops/mission/evidence/2026-09-14-p1-modal-custody-integration/raw-and-bindings.json.gz
