@@ -1,0 +1,17 @@
+f9b045c5ff935e86cd91c49b914616a3dd39fc4d41dfb40dedafe8086e21ebf9  apps/desktop/src/views/FirstRunView.css
+a6e8c8214c44365c8f15c7a96655cf107c29545bb1b8a33da19280a60c9e35a0  ops/mission/evidence/2026-09-14-p1-setup-density-check.cjs
+768f2e5f5140c88771af9e37b0d4f13bc22f8593a74b8a08d888b4cd493f2775  ops/mission/evidence/2026-09-14-p1-setup-default-density.md
+94099dfcf39aa3f42906d1d4c71d0ad6deccddb4c29ed17dc095aec49d7efa7a  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-action-cue.png
+27f35cd04c70f83775f6c7475c909e8fd67c15f59ffd429df93b5c913edf49d4  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-dark.png
+3d6782e800de72a38af5594545ed8ac2df69dae53ad3f1e3244811c14f8c055f  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-light.png
+66530ebfc58f2b25579fac44fcca51a83f8d582572f73b98168b662d56f426f3  ops/mission/evidence/2026-09-14-p1-setup-default-density/before-dark.png
+b1cc2b70f87bd83808fd2c4acc69c87d21d252519d2c4341834c914871243947  ops/mission/evidence/2026-09-14-p1-setup-default-density/before-light.png
+1c190fbbc1f7676a3104cfd26d3ed3795a88cbd944bdf4e29a4781b36039a0e4  ops/mission/evidence/2026-09-14-p1-setup-default-density/browser-evidence.json.gz
+3d6782e800de72a38af5594545ed8ac2df69dae53ad3f1e3244811c14f8c055f  ops/mission/evidence/2026-09-14-p1-setup-default-density/judge-default-light.png
+c24cb2be5badc326b73420a8b81d722976532d9347c796a3ade55faa1c31593c  ops/mission/evidence/2026-09-14-p1-setup-default-density/judge-one-rule-negative.png
+94099dfcf39aa3f42906d1d4c71d0ad6deccddb4c29ed17dc095aec49d7efa7a  ops/mission/evidence/2026-09-14-p1-setup-default-density/judge-primary-dark.png
+5364c7868d69d11d1a4bd2cd0485fba95931d39c6c1a52c83c7d91b71f9764a1  ops/mission/evidence/2026-09-14-p1-setup-default-density/publication-evidence.json.gz
+53d9ddd834b7d3d01ab13ff457098a21534c407dc3628d1c871d5e27da2ef8e0  ops/mission/evidence/2026-09-14-p1-setup-default-density/copy-candidate-blocked.png
+3d6782e800de72a38af5594545ed8ac2df69dae53ad3f1e3244811c14f8c055f  ops/mission/evidence/2026-09-14-p1-setup-default-density/copy-candidate-default.png
+cc9bc82c4b5e92554c00b74ac936cffcbaa6504df94e29f166c716a1316c60ab  ops/mission/evidence/2026-09-14-p1-setup-default-density/copy-candidate-evidence.json.gz
+720a8a5bb8e1d83d42877d0e1fc4f82fc0b3b400ebd7b758a9fd795d16e9f685  ops/mission/evidence/2026-09-14-p1-setup-default-density/final-publication.json.gz

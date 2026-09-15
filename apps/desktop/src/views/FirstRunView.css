@@ -751,8 +751,9 @@
   .first-run-heading h1 { font-size: var(--text-lg); }
   .first-run-progress { min-height: 20px; }
   .first-run-progress span { width: 17px; height: 17px; }
-  .first-run-control-row { min-height: 31px; }
-  .first-run-license-card { min-height: 82px; padding: 6px; }
+  .first-run-control-row { min-height: 31px; padding-block: var(--space-05); }
+  .first-run-next { padding-block: var(--space-075); }
+  .first-run-license-card { min-height: 82px; padding: var(--space-1) 6px; }
   .first-run-footer > button { min-height: 25px; }
 }
 
