@@ -42,30 +42,30 @@ interface CleanupViewProps {
 }
 
 const rules = [
-  "Smart punctuation",
+  "Spoken punctuation",
   "Capitalize sentence start",
   "Remove filler words",
-  "Collapse self-corrections",
+  "Simple correction markers",
   "Normalize whitespace",
-  "Remove verbal clutter",
+  "Remove repeated words",
   "Apply custom dictionary",
 ];
 
 const examples = [
   {
     label: "Punctuation",
-    before: "this is a test lets see how it works",
-    after: "This is a test. Let's see how it works.",
+    before: "hello comma world",
+    after: "Hello, world.",
   },
   {
     label: "Filler removal",
-    before: "um so basically like the point is uh this",
-    after: "So basically, the point is this.",
+    before: "um send send the build comma you know then ship it period",
+    after: "Send the build, then ship it.",
   },
   {
     label: "Self-correction",
-    before: "I want to go to the store no the market",
-    after: "I want to go to the market.",
+    before: "schedule it for Tuesday no wait Friday",
+    after: "Schedule it for Friday.",
   },
 ];
 
@@ -153,12 +153,13 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
             <h3>Output Rules</h3>
             <div className="cleanup-rule-list">
               {rules.map((rule) => {
-                const enabled = cleanupEnabled && rule !== "Remove verbal clutter";
+                const connected = rule !== "Apply custom dictionary";
+                const enabled = cleanupEnabled && connected;
                 return (
                   <label key={rule}>
                     <input checked={enabled} disabled readOnly type="checkbox" />
                     <span>{rule}</span>
-                    <small>{enabled ? "Profile rule" : "Not applied"}</small>
+                    <small>{!connected ? "Not connected" : enabled ? "Built-in rule" : "Bypassed"}</small>
                   </label>
                 );
               })}
@@ -166,7 +167,7 @@ export function CleanupView(props: CleanupViewProps): JSX.Element {
           </section>
 
           <section className="cleanup-example-section">
-            <h3>Before / After Examples</h3>
+            <h3>Illustrative Before / After Examples</h3>
             <div className="cleanup-examples">
               {examples.map((example) => (
                 <div key={example.label}>

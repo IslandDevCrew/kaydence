@@ -293,7 +293,7 @@
 .cockpit-panel-header button,
 .cockpit-history-row button,
 .cockpit-purge,
-.cockpit-control-panel > button { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: var(--text-2xs); padding: 5px 7px; }
+.cockpit-control-panel > button { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: var(--text-2xs); padding: 5px 7px; scroll-margin-block: var(--space-2); }
 
 .cockpit-history-panel { display: grid; align-content: start; gap: 4px; overflow: auto; }
 .cockpit-panel-header { justify-content: space-between; }

@@ -820,3 +820,8 @@
 - PR51 merged934a85c after corrected head4dcc220 passed all3OS CI34911490124/CLEAN; tested/merged tree9f86a20334b8a4a04f492b08e2ac934a703c6a1c. LOC delta Audit PASS, prior green40b6 CI retained but not used to authorize the corrected head.
 - Immediate heartbeat on main-board0691d77, unchanged source rebased onto actual934a85c. Independent guarded Judge and packaging pre-Audit PASS; actual-parent gates/finalAudit/ownCI remain. Copy integration and small default-density follow; Privacy composition needs ADR/go if rearranged. Native/runtime/shipping/P1 gates remain open.
 - Final main-board publication Auditd96882e PASS: actual-parent/source/evidence/state48/LOC24134/render agree; verdict archived before ownCI. Original RED and physical PARTIAL remain, with no policy/phase waiver.
+
+## 2026-09-15T00:52Z — session 49 (Setup board merged)
+- PR52 merged09ae12c after headafb6e02 passed all3OS CI34914083549/CLEAN; tested/merged tree6d640522637aef1cc90e1133cc387c796b0c2a02. Final Audit and archive-only delta PASS; expected-head merge commit, no bypass.
+- Immediate heartbeat on capability-copy4b9bc94 rebased unchanged onto actual09ae12c. Rerun actual-parent gates, finalAudit and ownCI before publication; independently reviewed density37b7f26 follows. Privacy composition/native/runtime/shipping/P1 gates remain open.
+- Final capability-copy Audit38e9ba9 PASS: source/current archives/actual-parent gates/state49/render agree; historical pre-amendment manifest anchors remain explicitly historical. Candidate LOC24135 will refresh the merged metric after ownCI/CLEAN and expected-head merge.
