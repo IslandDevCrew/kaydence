@@ -1,9 +1,13 @@
 f9b045c5ff935e86cd91c49b914616a3dd39fc4d41dfb40dedafe8086e21ebf9  apps/desktop/src/views/FirstRunView.css
 a6e8c8214c44365c8f15c7a96655cf107c29545bb1b8a33da19280a60c9e35a0  ops/mission/evidence/2026-09-14-p1-setup-density-check.cjs
-989ae7138df0113c25beb0fed7e50e2d3e1fb6d9541c3608c96d68c60f4f75e6  ops/mission/evidence/2026-09-14-p1-setup-default-density.md
+233891ac0e2dd76198aeba2762c58fe1ffbc165de2d6b9f40fea0cf1475e6c20  ops/mission/evidence/2026-09-14-p1-setup-default-density.md
 94099dfcf39aa3f42906d1d4c71d0ad6deccddb4c29ed17dc095aec49d7efa7a  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-action-cue.png
 27f35cd04c70f83775f6c7475c909e8fd67c15f59ffd429df93b5c913edf49d4  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-dark.png
 3d6782e800de72a38af5594545ed8ac2df69dae53ad3f1e3244811c14f8c055f  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-light.png
 66530ebfc58f2b25579fac44fcca51a83f8d582572f73b98168b662d56f426f3  ops/mission/evidence/2026-09-14-p1-setup-default-density/before-dark.png
 b1cc2b70f87bd83808fd2c4acc69c87d21d252519d2c4341834c914871243947  ops/mission/evidence/2026-09-14-p1-setup-default-density/before-light.png
 1c190fbbc1f7676a3104cfd26d3ed3795a88cbd944bdf4e29a4781b36039a0e4  ops/mission/evidence/2026-09-14-p1-setup-default-density/browser-evidence.json.gz
+3d6782e800de72a38af5594545ed8ac2df69dae53ad3f1e3244811c14f8c055f  ops/mission/evidence/2026-09-14-p1-setup-default-density/judge-default-light.png
+c24cb2be5badc326b73420a8b81d722976532d9347c796a3ade55faa1c31593c  ops/mission/evidence/2026-09-14-p1-setup-default-density/judge-one-rule-negative.png
+94099dfcf39aa3f42906d1d4c71d0ad6deccddb4c29ed17dc095aec49d7efa7a  ops/mission/evidence/2026-09-14-p1-setup-default-density/judge-primary-dark.png
+5364c7868d69d11d1a4bd2cd0485fba95931d39c6c1a52c83c7d91b71f9764a1  ops/mission/evidence/2026-09-14-p1-setup-default-density/publication-evidence.json.gz
