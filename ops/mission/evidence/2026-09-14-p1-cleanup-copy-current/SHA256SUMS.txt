@@ -1,4 +1,4 @@
 d5d3ca17c63886a3a990dc9a9e954fb2d8a16ec8cd33a7eff7ddfe6137bce67b  ops/mission/evidence/2026-09-14-p1-cleanup-copy-current.md
 2b3c5efc6289d642431090cae70c6b874d3f4b233152d3410951ab41ecb4614e  ops/mission/evidence/2026-09-14-p1-cleanup-copy-current/raw-and-bindings.json.gz
 a1811a707b9dc4f49de8913cea55181630de2d6fc6285deba9ede4e1128a426e  ops/mission/evidence/2026-09-14-p1-cleanup-copy-current/independent-judge.json.gz
-4190f65c8ee739a1ec085864fdfd38e2c38f4d876bbb5ba137ac8218e07e014e  ops/mission/evidence/2026-09-14-p1-cleanup-copy-current/integrated.json.gz
+74ab5bed98d8aa519f8cd3db1a7a5e51d999a08b06ba36bee3778dda023fec1e  ops/mission/evidence/2026-09-14-p1-cleanup-copy-current/integrated.json.gz
