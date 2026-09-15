@@ -1,6 +1,6 @@
 f9b045c5ff935e86cd91c49b914616a3dd39fc4d41dfb40dedafe8086e21ebf9  apps/desktop/src/views/FirstRunView.css
 a6e8c8214c44365c8f15c7a96655cf107c29545bb1b8a33da19280a60c9e35a0  ops/mission/evidence/2026-09-14-p1-setup-density-check.cjs
-979d18b3c8d178874119d709e0386716e49f68dc25a99c78bc292b88fd7bc3aa  ops/mission/evidence/2026-09-14-p1-setup-default-density.md
+13a6aeda447cb594bbfcfceb3445f3a2d5550a587fff3932e2dd581152de747d  ops/mission/evidence/2026-09-14-p1-setup-default-density.md
 94099dfcf39aa3f42906d1d4c71d0ad6deccddb4c29ed17dc095aec49d7efa7a  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-action-cue.png
 27f35cd04c70f83775f6c7475c909e8fd67c15f59ffd429df93b5c913edf49d4  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-dark.png
 3d6782e800de72a38af5594545ed8ac2df69dae53ad3f1e3244811c14f8c055f  ops/mission/evidence/2026-09-14-p1-setup-default-density/after-light.png
@@ -14,3 +14,4 @@ c24cb2be5badc326b73420a8b81d722976532d9347c796a3ade55faa1c31593c  ops/mission/ev
 53d9ddd834b7d3d01ab13ff457098a21534c407dc3628d1c871d5e27da2ef8e0  ops/mission/evidence/2026-09-14-p1-setup-default-density/copy-candidate-blocked.png
 3d6782e800de72a38af5594545ed8ac2df69dae53ad3f1e3244811c14f8c055f  ops/mission/evidence/2026-09-14-p1-setup-default-density/copy-candidate-default.png
 cc9bc82c4b5e92554c00b74ac936cffcbaa6504df94e29f166c716a1316c60ab  ops/mission/evidence/2026-09-14-p1-setup-default-density/copy-candidate-evidence.json.gz
+a9ff6f264a89f0b8be63c7858c8301ed1e68c613384debe86dc9a2bf52d85543  ops/mission/evidence/2026-09-14-p1-setup-default-density/final-publication.json.gz
