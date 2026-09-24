@@ -2842,6 +2842,32 @@ fn main_window_open_action(window_exists: bool) -> MainWindowOpenAction {
     }
 }
 
+/// Carry out a user close of the cockpit: destroy the WebView, keep the
+/// tray-owned runtime (AGENTS.md invariant 7). Called from the app-level
+/// `RunEvent` callback, never a `Builder::on_window_event` listener: Tauri
+/// attaches those asynchronously (a posted `AddEventListener` message), so a
+/// close in the first few hundred ms after the window appears bypassed them
+/// and the whole process exited (ADR-0021). The app callback is live from the
+/// first event and runs before Tauri checks for `prevent_close`.
+#[cfg(desktop)]
+fn intercept_main_window_close(
+    app: &tauri::AppHandle,
+    lifecycle: &DesktopLifecycle,
+    api: &tauri::CloseRequestApi,
+) {
+    lifecycle.mark_window_close();
+    // Not yet registered with the manager: Tauri's default close destroys the
+    // window, and the pending flag still keeps the tray runtime alive.
+    let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
+        return;
+    };
+    api.prevent_close();
+    if let Err(err) = window.destroy() {
+        lifecycle.cancel_window_close();
+        eprintln!("{} window close failed: {err}", settings::APP_NAME);
+    }
+}
+
 #[cfg(desktop)]
 fn open_main_window(app: &tauri::AppHandle) -> Result<(), String> {
     match main_window_open_action(app.get_webview_window(MAIN_WINDOW_LABEL).is_some()) {
@@ -2910,23 +2936,9 @@ pub fn run() {
     let builder = builder.plugin(tauri_plugin_dialog::init());
 
     #[cfg(desktop)]
-    let lifecycle = Arc::new(DesktopLifecycle::default());
-    #[cfg(desktop)]
-    let close_lifecycle = Arc::clone(&lifecycle);
+    let lifecycle = DesktopLifecycle::default();
     #[cfg(desktop)]
     let builder = builder
-        .on_window_event(move |window, event| {
-            if window.label() == MAIN_WINDOW_LABEL {
-                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                    api.prevent_close();
-                    close_lifecycle.mark_window_close();
-                    if let Err(err) = window.destroy() {
-                        close_lifecycle.cancel_window_close();
-                        eprintln!("{} window close failed: {err}", settings::APP_NAME);
-                    }
-                }
-            }
-        })
         .on_menu_event(|app, event| match event.id().as_ref() {
             TRAY_OPEN_ID => {
                 if let Err(err) = open_main_window(app) {
@@ -3010,29 +3022,29 @@ pub fn run() {
         });
 
     #[cfg(desktop)]
-    app.run(move |app, event| {
-        // `app` is only consumed by the macOS Reopen arm below; keep it live on
-        // the other desktops without a warning (mirrors the `let _ = app;` idiom
-        // used elsewhere in this module).
-        #[cfg(not(target_os = "macos"))]
-        let _ = &app;
-        match event {
-            tauri::RunEvent::ExitRequested { code, api, .. }
-                if lifecycle.should_keep_running_after_exit_request(code) =>
-            {
-                api.prevent_exit();
-            }
-            #[cfg(target_os = "macos")]
-            tauri::RunEvent::Reopen {
-                has_visible_windows: false,
-                ..
-            } => {
-                if let Err(err) = open_main_window(app) {
-                    eprintln!("{} window reopen failed: {err}", settings::APP_NAME);
-                }
-            }
-            _ => {}
+    app.run(move |app, event| match event {
+        tauri::RunEvent::WindowEvent {
+            label,
+            event: tauri::WindowEvent::CloseRequested { api, .. },
+            ..
+        } if label == MAIN_WINDOW_LABEL => {
+            intercept_main_window_close(app, &lifecycle, &api);
         }
+        tauri::RunEvent::ExitRequested { code, api, .. }
+            if lifecycle.should_keep_running_after_exit_request(code) =>
+        {
+            api.prevent_exit();
+        }
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Reopen {
+            has_visible_windows: false,
+            ..
+        } => {
+            if let Err(err) = open_main_window(app) {
+                eprintln!("{} window reopen failed: {err}", settings::APP_NAME);
+            }
+        }
+        _ => {}
     });
 
     #[cfg(not(desktop))]

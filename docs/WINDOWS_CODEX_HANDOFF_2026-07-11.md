@@ -81,6 +81,16 @@ PE check and independent `dumpbin` both report `AA64 machine (ARM64)` for the
 `ba0e358927bc4e1eebff2c2e25d6d3cf64059c7c5f9c0da5af60e73090da89c5`.
 Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-arm64-build-contract.txt`.
 
+## Windows x64 Build Prerequisite
+
+The shipped `asr-whisper` feature runs bindgen, which needs `libclang.dll`.
+Install official LLVM (`winget install --id LLVM.LLVM -e`; bindgen finds
+`C:\Program Files\LLVM\bin` without `LIBCLANG_PATH`) or the VS Build Tools
+`Microsoft.VisualStudio.Component.VC.Llvm.Clang` component. An LLVM-MinGW
+`clang.exe` on PATH is not enough: it ships `libclang-cpp.dll` only, and the
+build fails with "Unable to find libclang". Hosted `windows-latest` runners
+already include LLVM. Verified on an x64 NUC 2026-09-24.
+
 ## Still Needed On Windows
 
 1. Integrate the proven ARM64 release-build primitive into P3 `.msi` packaging,
@@ -93,6 +103,15 @@ Evidence: `ops/mission/evidence/2026-07-11-p1-g3-windows-arm64-build-contract.tx
 4. Measure full hotkey-release-to-inject p50/p95 plus ASR-resident RAM and idle
    CPU. The current proof measures only warm ASR inference.
 5. Add the independent Parakeet/ort runtime and human-voice WER corpus.
+6. Merge the close-to-tray race fix (ADR-0021, Proposed): a close within
+   ~300–600 ms of the window appearing bypassed the async window listener and
+   exited the process. Evidence: `ops/mission/evidence/2026-09-24-p1-g3-windows-close-race.txt`.
+7. Fix the default hotkey on Windows: `RightAlt` maps to `Code::AltRight`,
+   which `global-hotkey` 0.8's Windows `key_to_vk` does not map, so it fails
+   with "Unknown VKCode for AltRight" on every launch and first run always
+   needs a rebind. ARCHITECTURE §5 already sanctions Raw Input for Windows
+   hotkeys; the choice (Raw Input listener vs a Windows default chord, plus
+   AltGr on non-US layouts) needs its own ADR.
 
 ## Do Not Claim
 
