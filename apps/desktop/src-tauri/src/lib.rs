@@ -805,7 +805,9 @@ impl HotkeyRuntimeHandle {
     }
 
     /// The role a Right-Alt press currently maps to, via the same bound
-    /// shortcuts the plugin path uses, so rebinding works unchanged.
+    /// shortcuts the plugin path uses, so rebinding works unchanged. Only the
+    /// Windows Raw Input listener needs it (ADR-0022).
+    #[cfg(any(target_os = "windows", test))]
     fn right_alt_role(&self, shift: bool) -> Option<HotkeyShortcutRole> {
         use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 
