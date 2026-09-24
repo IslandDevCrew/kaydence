@@ -1,0 +1,129 @@
+# P1-G3 Windows close-to-tray: causal diagnosis + fix (ADR-0021)
+
+Date: 2026-09-24
+Host: Windows 11 Pro 10.0.26200, x64 (Intel i7-1185G7, 32 GB), interactive session
+Base: origin/main 8a57637; branch mission/p1-g3-windows-lifecycle
+Scope: closes the causal-instrumentation requirement from
+`2026-07-14-p1-g3-windows-runtime-diagnostic.txt` and proves the fix live.
+This is not a P1-G3 gate close (other P1-G3 items remain open).
+
+## Method
+
+A session-local PowerShell harness (not committed; same technique as the 07-14
+diagnostic): launch `kaydence.exe` built with `--features custom-protocol`, wait for the
+process's MainWindowHandle, sleep `SettleMs`, PostMessage(WM_CLOSE), wait 2-3 s,
+record: process alive, IsWindow(closed hwnd), stderr. For causality a temporary,
+env-gated build (`KAYDENCE_LIFECYCLE_TRACE`, removed before commit) printed every
+`RunEvent` and every `Builder::on_window_event` callback.
+
+## Cause (instrumented)
+
+Healthy close (settled 1.5 s):
+  on_window_event CloseRequested  -> prevent_close + mark + destroy
+  run_event WindowEvent CloseRequested
+  run_event WindowEvent Destroyed
+  run_event ExitRequested { code: None }   -> prevented; process alive
+
+Killed close (immediate):
+  run_event WindowEvent CloseRequested      (NO on_window_event callback)
+  run_event WindowEvent Destroyed
+  run_event ExitRequested { code: None }   -> flag never marked, not prevented
+  run_event Exit                            -> process exits (07-14 symptom)
+
+`tauri-runtime-wry` 2.11.4 registers window listeners asynchronously:
+`WindowDispatch::on_window_event` posts `WindowMessage::AddEventListener` through
+the event-loop proxy (lib.rs:1986-1993). A close handled before that message
+bypasses the listener. The app-level `RunEvent` callback is invoked by
+`on_close_requested` before it checks the prevent signal, from the first event.
+
+Windows reports `ExitRequested { code: None }` for the last-window exit, same as
+macOS/Linux. The unmerged 2026-07-15 local draft's premise ("Windows reports
+Some(0)") is disproved by this trace.
+
+Tauri's manager drops destroyed windows on the app-level path
+(`tauri` 2.11.5 app.rs:2544 `manager.on_window_close(label)`), independent of
+the per-window listener, so tray reopen recreates the window after either path.
+
+## Before fix: race window (release, idle machine, 3 runs per timing)
+
+settle_ms  listener_fired  survived
+0          0/3             0/3
+100        0/3             0/3
+300        0/3             0/3
+600        2/3             2/3
+1000       3/3             3/3
+1500       3/3             3/3
+Listener fired <=> survived in 18/18 runs. The unprotected gap is ~300-600 ms
+after the window appears on an idle release build; an earlier sweep run under
+concurrent CPU load showed the listener still unattached at 400 ms (discarded
+as confounded for survival counts).
+
+## Fix
+
+Close interception moved from `Builder::on_window_event` into the `app.run`
+`RunEvent::WindowEvent { CloseRequested }` arm (`intercept_main_window_close`):
+mark pending -> prevent_close -> destroy (unchanged sequence); if the manager
+does not yet hold the window, the default close destroys it and the marked flag
+still keeps the runtime alive. `DesktopLifecycle` semantics/tests unchanged.
+
+## After fix
+
+Traced release build, same sweep: survived 18/18; window destroyed 18/18;
+`ExitRequested { code: None }` present and `Exit` absent in 18/18.
+
+Final untraced shipping build
+`target/release/kaydence.exe` sha256
+8e43c68cc98e361c5eff916adf582ede90eaafe45cf05db7221b882776bbac70:
+- sweep (0/100/300/600/1000/1500 ms x3): survived 18/18
+- immediate-close repeats: 8/8, then 15/15 survived with the targeted
+  `Tauri Window` destroyed
+- Disclosure: in the first sweep, 2 of 3 immediate closes survived but the
+  targeted window was NOT destroyed (no stderr error). Not reproduced in the
+  following 23 immediate closes; cause unknown. Impact if real: the very first
+  close within ~150 ms of launch is ignored (runtime unaffected).
+- After close the process owns 3 top-level windows: `tray_icon_app` (hidden),
+  `global_hotkey_app` (hidden), `Tao Thread Event Target` (tao's internal
+  16x16 untitled event target). No user-facing window remains.
+
+## Full lifecycle contract (live, traced release build, PID 29092)
+
+1. Immediate WM_CLOSE -> cockpit destroyed, process alive (ExitRequested{None}
+   prevented).
+2. Tray left-click (real click on the Kaydence tray icon via computer-use) ->
+   `TrayIconEvent Click Left Up` -> cockpit recreated in the SAME PID 29092
+   (MainWindowTitle "Kaydence").
+3. Tray right-click -> "Quit Kaydence" (performed by the operator) ->
+   `MenuEvent(tray-quit)` -> `ExitRequested { code: Some(0) }` (not
+   intercepted) -> `Exit` -> PID 29092 terminated at 2026-09-24T11:59:43Z.
+   The exit code was not captured (non-parent observer); termination is proven
+   by the Exit event and process end.
+
+"Live status unavailable" on the recreated cockpit is the designed non-preview
+label (DictateView.tsx:117), not a reopen defect.
+
+## Gates (this host, final tree)
+
+- cargo fmt --check: PASS
+- cargo clippy --all-targets -D warnings: PASS (default and asr-whisper)
+- cargo test --all: PASS (224 lib + integration targets); lifecycle tests
+  user_window_close_is_a_one_shot_background_transition,
+  explicit_quit_and_failed_close_are_not_intercepted,
+  open_action_recreates_only_a_missing_cockpit: PASS
+- check-adr-status.sh: PASS (0021 Proposed, declared exception)
+- audit-network.sh: PASS; check-privacy-posture.sh --check: PASS
+
+## Also observed on this host (not fixed here)
+
+- Every launch logs "Kaydence global hotkey disabled: Unable to register
+  hotkey: Unknown VKCode for AltRight": global-hotkey 0.8.0's Windows
+  key_to_vk has no AltRight arm, so the default RightAlt binding never
+  registers on Windows. Needs its own ADR/work unit.
+- asr-whisper failed to build until official LLVM was installed (bindgen needs
+  libclang.dll; the LLVM-MinGW clang on PATH ships only libclang-cpp.dll).
+  Installed LLVM.LLVM via winget with operator approval; asr-whisper then built.
+
+## Decision boundary
+
+Judge: platform lifecycle change touching non-negotiable #5 -> critical path.
+ADR-0021 is Proposed. Merge requires explicit operator go. macOS/Linux run the
+same path; their live close/reopen/Quit proofs should be re-run.
