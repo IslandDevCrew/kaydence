@@ -21,7 +21,18 @@ with OS/app shortcuts, and emitting start/stop intents to the session manager.
 5. Fn/Globe and media keys behave differently per OS/keyboard — keep a tested
    allowlist of recommended default chords (current default: hold Right-Alt /
    Right-Option; revisit in beta).
+6. **Windows Right-Alt is served by Raw Input, not `global-hotkey` (ADR-0022).**
+   `RegisterHotKey` cannot deliver a lone modifier, so `windows.rs` owns bare and
+   Shift+Right-Alt; never "fix" it by mapping `AltRight` in the plugin (that
+   registers but never fires). An owned press injects the `vkE8` menu mask so the
+   target app keeps focus. A chord during the hold sends `Signal::Chord`: early →
+   discarded like a tap, late → kept (never lose a word).
+7. **The Raw Input listener sees every keystroke system-wide.** `raw_key.rs`
+   reduces each record to a Right-Alt edge / Shift state / "other key" boolean
+   and drops it. Key identities are never stored, logged, transmitted, or passed
+   beyond `RightAltEdge`; changing that needs a new ADR.
 
 ## Tests
 Rapid double-tap, hold-under-250ms, toggle auto-stop, rebind flow, conflict
-detection fake.
+detection fake. Right-Alt reducer (auto-repeat, Shift role, AltGr/Alt+Tab
+chords, own mask ignored) and early/late chord semantics run on every OS.
