@@ -35,7 +35,10 @@ thread model, and event contract there are binding.
 7. User-close destroys the cockpit WebView but keeps the tray-owned hotkey/audio
    runtime alive. Tray interaction recreates the configured main window on
    desktop; macOS reopen does the same. Explicit Quit still terminates. Do not
-   replace this with hide-only behavior.
+   replace this with hide-only behavior. Intercept the close in the app-level
+   `RunEvent` callback (`app.run`), never a `Builder::on_window_event` listener:
+   Tauri attaches those asynchronously, and a close before attachment exits the
+   whole process (ADR-0021).
 
 ## Testing
 Unit tests beside code; pipeline behavior in `tests/integration/` as event-
