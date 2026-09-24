@@ -1,8 +1,6 @@
 # ADR-0021: Race-free close-to-tray — intercept cockpit close in the app event loop
 
-- **Status:** Proposed — awaits operator go. Platform lifecycle code under
-  non-negotiable #5 is a root AGENTS §7.5 critical decision path (the 2026-07-14
-  diagnostic required "a dedicated ADR and explicit operator `go`").
+- **Status:** Accepted <!-- Operator gave explicit `go` on PR #55, 2026-09-24, after the 3-OS CI pass and the live Windows evidence. Removed from the check-adr-status.sh exception list on acceptance. -->
 - **Date:** 2026-09-24
 - **PRD items affected:** P1-G3 (Windows close-to-tray blocker); P1-P0-1 (tray-owned
   hotkey runtime); supports src-tauri AGENTS.md invariant 7.
@@ -81,5 +79,3 @@ Intercept the cockpit close in the **app-level `RunEvent` callback**
 - Verification owed: this box proves Windows (race sweep 18/18, same-PID tray
   reopen, tray Quit). macOS and Linux run the same code path; their live
   close/reopen/Quit proofs should be re-run on their reference machines.
-- On acceptance, flip Status to Accepted and remove 0021 from
-  `scripts/check-adr-status.sh` `PROPOSED_OK`.

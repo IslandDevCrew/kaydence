@@ -6,7 +6,8 @@
 # design review, which gates the P4-1 build — the one remaining exception.
 # Former exceptions, removed on operator acceptance: ADR-0012 (visual identity,
 # 2026-07-08), ADR-0013 (Linux injection strategy, its dependency-set spike),
-# ADR-0015 (quantized P1 ASR default, 2026-07-13). This script passes when every
+# ADR-0015 (quantized P1 ASR default, 2026-07-13), ADR-0021 (race-free
+# close-to-tray, 2026-09-24). This script passes when every
 # ADR except the declared exceptions is Accepted.
 #
 # Portable to bash 3.2 (macOS default): no associative arrays, no mapfile.
@@ -17,11 +18,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIR="${KAYDENCE_ADR_DIR:-$ROOT/docs/decisions}"
 
 # ADR numbers allowed to be non-Accepted (space-separated), + reasons in one place.
-PROPOSED_OK=" 0009 0016 0021 "
+PROPOSED_OK=" 0009 0016 "
 reason_for() { case "$1" in
   0009) echo "Relay crypto — critical decision path; operator review gates P4-1" ;;
   0016) echo "ONNX 2nd ASR lane + Silero VAD — operator go gates the vendored ORT binary + CTC model/CC-BY + source pins" ;;
-  0021) echo "Race-free close-to-tray — platform lifecycle change; operator go gates merge" ;;
   *)    echo "" ;;
 esac; }
 
