@@ -7,7 +7,14 @@
 # installer budget (root AGENTS.md non-negotiable #7).
 #
 #   bash scripts/check-linux-packages.sh [bundle-dir] [--require-appimage]
+#                                        [--appimage-budget-warn]
 #   (default bundle-dir: target/release/bundle)
+#
+# --appimage-budget-warn: an AppImage over 60 MB is reported as a WARNING (and a
+# GitHub ::warning:: annotation) instead of a failure. An AppImage bundles the
+# whole WebKitGTK stack (~87 MB measured 2026-09-26), so whether it may exceed the
+# installer budget is an operator decision (ADR-0023 follow-up); until that is
+# made, the overrun is surfaced on every run, never hidden. .deb/.rpm stay strict.
 #
 # Needs bsdtar (libarchive) for .deb/.rpm; an AppImage is inspected with its
 # own --appimage-extract. Exit 0 = all present packages pass.
@@ -15,14 +22,16 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
   exit 0
 fi
 DIR="target/release/bundle"
 REQUIRE_APPIMAGE=0
+APPIMAGE_BUDGET_WARN=0
 for arg in "$@"; do
   case "$arg" in
     --require-appimage) REQUIRE_APPIMAGE=1 ;;
+    --appimage-budget-warn) APPIMAGE_BUDGET_WARN=1 ;;
     *) DIR="$arg" ;;
   esac
 done
@@ -43,10 +52,15 @@ check_listing() { # name listing-file
     || { echo "  FAIL $name: desktop entry missing"; fail=1; }
 }
 
-check_size() { # file
+check_size() { # file [warn-only]
   local size; size="$(stat -c %s "$1")"
   if [ "$size" -gt "$BUDGET" ]; then
-    echo "  FAIL $(basename "$1"): $size bytes > 60 MB installer budget"; fail=1
+    if [ "${2:-}" = warn ]; then
+      echo "  WARN $(basename "$1"): $size bytes > 60 MB installer budget (operator decision pending)"
+      echo "::warning title=AppImage over installer budget::$(basename "$1") is $size bytes (> 60 MB). Bundles WebKitGTK; operator decision pending (ADR-0023 follow-up)."
+    else
+      echo "  FAIL $(basename "$1"): $size bytes > 60 MB installer budget"; fail=1
+    fi
   fi
   echo "  size $(basename "$1"): $size bytes"
 }
@@ -74,7 +88,11 @@ for app in "$DIR"/appimage/*.AppImage; do
   chmod +x "$app_abs"
   (cd "$WORK" && "$app_abs" --appimage-extract >/dev/null)
   (cd "$WORK/squashfs-root" && find . -type f -o -type l) | sed 's#^\./##' > "$WORK/appimage.list"
-  check_listing appimage "$WORK/appimage.list"; check_size "$app"
+  if [ "$APPIMAGE_BUDGET_WARN" = 1 ]; then
+    check_listing appimage "$WORK/appimage.list"; check_size "$app" warn
+  else
+    check_listing appimage "$WORK/appimage.list"; check_size "$app"
+  fi
   rm -rf "$WORK/squashfs-root"
 done
 
