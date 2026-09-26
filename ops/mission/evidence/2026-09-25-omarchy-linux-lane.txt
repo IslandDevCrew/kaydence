@@ -175,8 +175,8 @@ local Unix sockets; audit-network PASS.
 ────────────────────────────────────────────────────────────────────────────
 - asr-whisper feature build/test on this host: needs `cmake` (sudo pacman);
   covered by CI (Ubuntu leg + new Arch/Debian legs).
-- deb/rpm/AppImage bundling: tauri CLI native binary still downloading over
-  the hotspot; config verified against tauri-utils 2.9.3 schema only.
+- AppImage bundling: needs a linuxdeploy download (hotspot); deferred to CI.
+  (deb + rpm are VERIFIED — §9.)
 - End-to-end dictation (speech → ASR → typed text): no local ASR model on
   this host (60 MB q5 download at ~10 KB/s ≈ 100 min).
 - AT-SPI secure-field refusal on Hyprland with a real password field: not
@@ -191,3 +191,20 @@ cargo test --all 279 passed / 0 failed (+2 keycode-safety regressions:
 typing_never_touches_a_bindable_keycode, safe_codes_are_distinct_printable_keys)
 · audit-network PASS · privacy posture PASS · ADR status PASS · frontend PASS.
 Live re-run of §5.5 remains PENDING (session locked at commit time).
+
+────────────────────────────────────────────────────────────────────────────
+9. LINUX PACKAGES (tauri-cli 2.11.5, --bundles deb rpm, offline)      VERIFIED
+────────────────────────────────────────────────────────────────────────────
+Kaydence_0.1.0_amd64.deb      7,713,270 B   sha256 39fb173965e6a98c…
+Kaydence-0.1.0-1.x86_64.rpm   7,714,083 B   sha256 d03979e263eadf52…
+Both < 60 MB installer budget. Payload (bsdtar -tf) in both:
+  /usr/bin/kaydence (13.1 MB) · /usr/bin/kaydence-ctl (2.4 MB) ·
+  /usr/share/kaydence/omarchy/kaydence-bindings.lua ·
+  /usr/share/applications/Kaydence.desktop (StartupWMClass=kaydence, Icon=kaydence) ·
+  hicolor 32 / 128 / 256@2 / 1024 icons
+deb control: Section utils; Depends libayatana-appindicator3-1,
+  libwebkit2gtk-4.1-0, libgtk-3-0 (an explicit appindicator dep duplicated
+  Tauri's auto-dep in the first bundle → removed); long description added.
+FOUND (pre-existing, cross-platform): /usr/bin/asr-onnx-selftest is shipped
+  in both packages — Tauri bundles auto-discovered src/bin targets. Needs an
+  autobins / [[bin]] packaging decision (handoff task K-4b). Not fixed here.
