@@ -24,6 +24,14 @@ pub mod macos;
 #[cfg(target_os = "linux")]
 pub mod uinput;
 
+// Hyprland focus identity (parsing is pure/cross-platform; socket I/O Linux-only)
+// and per-injection XKB keymaps (pure) — ADR-0023.
+pub mod hyprland;
+pub mod xkb;
+
+#[cfg(target_os = "linux")]
+pub mod wayland_vk;
+
 #[cfg(target_os = "windows")]
 pub mod windows;
 
@@ -364,7 +372,10 @@ pub type PlatformTextInjector = macos::MacOsTextInjector;
 #[cfg(target_os = "windows")]
 pub type PlatformTextInjector = windows::WindowsTextInjector;
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(target_os = "linux")]
+pub type PlatformTextInjector = linux::LinuxTextInjector;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 pub type PlatformTextInjector = UnimplementedInjector;
 
 /// The current platform's injector. Platforms without an approved backend use
@@ -380,14 +391,16 @@ pub fn platform_injector() -> PlatformTextInjector {
         windows::WindowsTextInjector
     }
 
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    #[cfg(target_os = "linux")]
     {
-        let platform = if cfg!(target_os = "linux") {
-            "Linux"
-        } else {
-            "unknown"
-        };
-        UnimplementedInjector { platform }
+        linux::LinuxTextInjector::detect()
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+    {
+        UnimplementedInjector {
+            platform: "unknown",
+        }
     }
 }
 
@@ -741,10 +754,12 @@ mod tests {
         assert!(injector.delivered.is_empty());
     }
 
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    // Exercises the placeholder type directly: calling `platform_injector()`
+    // here would drive the REAL backend — on a Linux desktop that types into
+    // whatever window is focused (ADR-0023).
     #[test]
     fn placeholder_backend_refuses_and_reports_no_caps() {
-        let mut inj = platform_injector();
+        let mut inj = UnimplementedInjector { platform: "test" };
         assert_eq!(inj.caps().keystroke, KeystrokeChannel::None);
         assert_eq!(inj.focused_field(), FieldKind::NoTarget);
         assert!(inj.insert_native("x").is_err());

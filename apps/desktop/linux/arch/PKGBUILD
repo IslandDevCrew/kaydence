@@ -1,0 +1,72 @@
+# Kaydence — Arch Linux / Omarchy package (ADR-0023). Builds from source at the
+# repository HEAD; publishable to the AUR as `kaydence-git`.
+#
+#   cd apps/desktop/linux/arch && makepkg -si
+#
+# Shipped features match the CI "shipped ASR" lane for Linux: the embedded
+# frontend (custom-protocol) + the whisper.cpp CPU adapter (asr-whisper), built
+# portable (GGML_NATIVE=OFF) so the package runs on any x86_64/aarch64 CPU.
+# No model weights are bundled; first run fetches/validates them per ADR-0017.
+
+pkgname=kaydence-git
+_pkgname=kaydence
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Local-first dictation: speak anywhere, ship clean text (Wayland-native on Hyprland/Omarchy)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/IslandDevCrew/kaydence"
+license=('MIT')
+depends=('webkit2gtk-4.1' 'gtk3' 'libayatana-appindicator' 'alsa-lib' 'at-spi2-core'
+         'glibc' 'gcc-libs' 'hicolor-icon-theme')
+makedepends=('git' 'rust' 'nodejs' 'pnpm' 'clang' 'cmake')
+optdepends=('hyprland: focus-aware, rootless Wayland injection + compositor keybindings (Omarchy)')
+provides=("$_pkgname")
+conflicts=("$_pkgname")
+# The workspace release profile already enables LTO + strip.
+options=('!lto' '!debug')
+source=("$_pkgname::git+$url.git")
+sha256sums=('SKIP')
+
+_manifest=apps/desktop/src-tauri/Cargo.toml
+
+pkgver() {
+  cd "$_pkgname"
+  printf "0.1.0.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+prepare() {
+  cd "$_pkgname"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --manifest-path "$_manifest" --target "$(rustc -vV | sed -n 's/^host: //p')"
+  pnpm install --frozen-lockfile
+}
+
+build() {
+  cd "$_pkgname"
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target GGML_NATIVE=OFF
+  pnpm --filter kaydence-desktop build
+  cargo build --frozen --release --manifest-path "$_manifest" \
+    --features custom-protocol,asr-whisper --bin kaydence --bin kaydence-ctl
+}
+
+check() {
+  cd "$_pkgname"
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  cargo test --frozen --manifest-path "$_manifest" --lib
+}
+
+package() {
+  cd "$_pkgname"
+  install -Dm755 target/release/kaydence "$pkgdir/usr/bin/kaydence"
+  install -Dm755 target/release/kaydence-ctl "$pkgdir/usr/bin/kaydence-ctl"
+  install -Dm644 apps/desktop/linux/kaydence.desktop \
+    "$pkgdir/usr/share/applications/kaydence.desktop"
+  install -Dm644 apps/desktop/src-tauri/icons/32x32.png \
+    "$pkgdir/usr/share/icons/hicolor/32x32/apps/kaydence.png"
+  install -Dm644 apps/desktop/src-tauri/icons/128x128.png \
+    "$pkgdir/usr/share/icons/hicolor/128x128/apps/kaydence.png"
+  install -Dm644 apps/desktop/src-tauri/icons/128x128@2x.png \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/kaydence.png"
+  install -Dm644 apps/desktop/linux/omarchy/kaydence-bindings.lua \
+    "$pkgdir/usr/share/kaydence/omarchy/kaydence-bindings.lua"
+}

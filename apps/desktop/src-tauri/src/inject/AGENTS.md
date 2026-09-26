@@ -43,9 +43,21 @@ Known per-app quirks (documented, not defects):
   2026-07-09 (native insert PASS; keystroke PASS on classic Win32 Edit).
 - **Linux GNOME/Wayland:** AT-SPI-gated uinput is live-proven for an accessible
   `Text` field and refuses a real `PasswordText` field. The current uinput
-  keymap is US-QWERTY ASCII only; Unicode beyond ASCII and optional portal/libei
-  remain required follow-ups. Opaque clients still follow ADR-0013's disclosed
-  Lenient/Strict policy boundary.
+  keymap is US-QWERTY ASCII only, so the uinput rung refuses (holds) any text it
+  cannot type completely rather than deliver a partial sentence; optional
+  portal/libei remains a required follow-up. Opaque clients still follow
+  ADR-0013's disclosed Lenient/Strict policy boundary.
+- **Linux Hyprland/Omarchy + wlroots (ADR-0023):** the shipped backend is
+  `linux.rs::LinuxTextInjector`. Keystrokes go through
+  `zwp_virtual_keyboard_v1` (`wayland_vk.rs`) with a per-injection keymap
+  (`xkb.rs`): rootless and Unicode-complete, keycodes ≤ 255 for XWayland
+  clients. Focus truth comes from Hyprland IPC (`hyprland.rs`, the shared
+  frontmost-window helper for `profiles/`). The AT-SPI verdict is trusted only
+  when its pid matches the compositor-focused window. Proof harness:
+  `scripts/linux-wayland-inject-proof.sh`.
+- **Never call `platform_injector()` from a unit test.** On a Linux desktop it is
+  real and types into the developer's focused window; tests use fakes or
+  `UnimplementedInjector`.
 
 ## Definition of done
 All three OSes, matrix green, clipboard-restore test green, secure-field test

@@ -69,6 +69,17 @@ futures-lite = "2"
 # (AT-SPI InsertText no-ops on modern GNOME; ADR-0013 amendment). Local device
 # I/O, not a network surface.
 evdev = "0.13"
+# Wayland virtual-keyboard keystroke channel (ADR-0013 ladder rung 2, ADR-0023):
+# `zwp_virtual_keyboard_v1` on Hyprland/wlroots — rootless, full Unicode via a
+# per-injection XKB keymap. Pure-Rust wire protocol over the local Wayland
+# socket; both crates were pre-approved in ADR-0013 (MIT, Smithay project).
+# NOT a network surface.
+wayland-client = "0.31"
+wayland-protocols-misc = { version = "0.3", features = ["client"] }
+# Safe syscall wrappers, already in the lockfile via the Wayland/zbus stacks
+# (Apache-2.0/MIT): memfd for the keymap (never touches disk), SO_PEERCRED +
+# getuid for the local control socket's same-user check. NOT a network surface.
+rustix = { version = "1", features = ["fs", "net", "process"] }
 
 # Windows text injection (P1-P0-3, ADR-0013). UI Automation = the secure-field
 # signal (IsPassword, non-negotiable #8) AND the native insertion path

@@ -1,0 +1,193 @@
+KAYDENCE — OMARCHY / HYPRLAND LINUX LANE EVIDENCE (ADR-0023, Proposed)
+Date: 2026-09-25
+Agent: Claude (Claude Code), operator-directed ("get it working here on Linux,
+Omarchy is the most important platform; continue until the first Linux PR").
+Band discipline: every claim below is marked VERIFIED (observed on this host),
+FIXED+UNIT-VERIFIED (defect found live, fixed, pinned by tests, live re-run
+pending), or PENDING (not yet observed). Nothing pending is claimed as done.
+
+────────────────────────────────────────────────────────────────────────────
+0. HOST
+────────────────────────────────────────────────────────────────────────────
+OS            Omarchy 4.0.4 (Arch Linux base), kernel 7.2.5-3-omarchy x86_64
+Compositor    Hyprland 0.56.2 (Lua config), XWayland present, session Wayland
+Toolchain     rustc 1.98.1, node v26.7.0, pnpm 11.10.0
+Hardware      Microsoft Surface keyboard (us layout, compose:caps), eDP-1
+Incumbent     voxtype 1.0.1 (Omarchy default dictation binds: F9 PTT,
+              SUPER+CTRL+X toggle) — left untouched
+Network       phone hotspot, 4–25 KB/s; all builds below ran --offline --locked
+              from a pre-warmed cargo cache (see §6 lockfile note)
+
+────────────────────────────────────────────────────────────────────────────
+1. BASELINE — upstream main f5f4eb6 on Omarchy x86_64, unmodified   VERIFIED
+────────────────────────────────────────────────────────────────────────────
+cargo fmt --check PASS · clippy --all-targets -D warnings PASS ·
+cargo test --all 240 passed / 0 failed · check-frontend PASS ·
+audit-network PASS · privacy posture PASS · ADR status PASS ·
+bench --check PASS (4 measured; 4 unmeasured, as on every host)
+
+────────────────────────────────────────────────────────────────────────────
+2. DEFECTS FOUND ON THIS HOST (pre-existing on main)                 VERIFIED
+────────────────────────────────────────────────────────────────────────────
+D1  inject::platform_injector() was UnimplementedInjector on Linux — the
+    shipped app could never deliver text on Linux (uinput/AT-SPI existed only
+    in the atspi-selftest binary).
+D2  profiles::PlatformFrontmostAppDetector was UnknownFrontmostAppDetector on
+    Linux → verify_focus_binding() holds every Linux delivery Held{FocusChanged}
+    even if an injector worked.
+D3  /dev/uinput is `crw------- root root` on stock Omarchy → the ADR-0013
+    validated uinput path is unavailable without sudo + udev + relogin.
+D4  The default hotkey cannot be registered on Linux at all:
+      "Unable to register hotkey: Unknown scancode for key: AltRight"
+    (tauri-plugin-global-shortcut / global-hotkey 0.8). On Wayland an X11 grab
+    would anyway only see XWayland windows. Linux never had a working hotkey.
+D5  Omarchy ships a dictation-binding contract (voxtype.lua: F9 press→start,
+    release→stop) that Kaydence did not speak.
+
+────────────────────────────────────────────────────────────────────────────
+3. WHAT THE LANE ADDS (code)                                          VERIFIED
+────────────────────────────────────────────────────────────────────────────
+inject/wayland_vk.rs   zwp_virtual_keyboard_v1 channel (rootless)
+inject/xkb.rs          per-injection XKB keymaps (full Unicode, layout-free)
+inject/hyprland.rs     Hyprland IPC: focused window class/pid/address, binds
+inject/linux.rs        LinuxTextInjector + AT-SPI focus tracker + pure
+                       classify_focus (a11y verdict counts only when its pid ==
+                       compositor-focused pid)
+profiles/mod.rs        LinuxFrontmostAppDetector (Hyprland)
+hotkeys/mod.rs         ControlCommand + pure control_signal/status_label
+hotkeys/control.rs     private control socket + `record` CLI + compositor
+                       binding detection + honest Wayland guidance
+bin/kaydence-ctl.rs    GUI-free binding client
+bin/wayland-selftest.rs  probe + focus-gated typing harness
+lib.rs                 control socket wired into the hotkey runtime (same
+                       Press/Release edges, one lock), 5-min safety stop,
+                       first-run hotkey status honest on Wayland; test
+                       constructor uses inert OS seams
+
+────────────────────────────────────────────────────────────────────────────
+4. GATES ON THE FINAL TREE (--offline --locked)                      VERIFIED
+────────────────────────────────────────────────────────────────────────────
+cargo fmt --check                          PASS
+cargo clippy --all-targets -D warnings     PASS
+cargo test --all                           277 passed / 0 failed (before the
+                                           §5.4 keycode fix; +2 regression tests
+                                           after it — re-run in §8)
+scripts/check-frontend.sh                  PASS
+scripts/audit-network.sh                   PASS (no new network call sites)
+scripts/check-privacy-posture.sh --check   PASS
+scripts/check-adr-status.sh                PASS (0023 declared Proposed)
+scripts/bench.sh --check                   PASS (4 measured) / PARTIAL (4 unmeasured)
+Omarchy snippet                            luac -p OK; executed against a stub
+                                           of Omarchy's o.bind API → 3 binds
+PKGBUILD                                   bash -n OK; makepkg --printsrcinfo OK
+kaydence.desktop                           desktop-file-validate OK
+release build (custom-protocol)            target/release/kaydence 13,095,784 B
+                                           (installer budget < 60 MB)
+
+────────────────────────────────────────────────────────────────────────────
+5. LIVE PROOFS ON HYPRLAND
+────────────────────────────────────────────────────────────────────────────
+5.1 App launch                                                      VERIFIED
+    Native Wayland client: class "kaydence", title "Kaydence", xwayland=false,
+    tiled on workspace 1. Control socket ready:
+      drwx------ /run/user/1000/kaydence
+      srw------- /run/user/1000/kaydence/control.sock
+    First-run hotkey status now reports the D4 failure + Wayland guidance
+    instead of a silent grab.
+
+5.2 Hyprland IPC + virtual keyboard probe (wayland-selftest --probe) VERIFIED
+    hyprland session: true
+    focused window: class="foot" pid=Some(455638) xwayland=false
+    zwp_virtual_keyboard_v1: AVAILABLE (connect+create 3.9–8.0 ms)
+    Lua-mode focus dispatch discovered: Hyprland 0.56 evaluates `dispatch` as
+    Lua → hl.dsp.focus({ window = "address:…" }) (legacy form = Lua error).
+
+5.3 Control path through the real app (release build)              VERIFIED
+    status→idle · start→recording (mic captured 32,768 samples into the WAL)
+    · duplicate start→recording (idempotent) · stop→finalizing→idle after tail
+    · 100 ms toggle tap → "capture discarded … removed=true" (P1 floor holds)
+    · target_app=Unknown while the session was locked (no focused window) →
+      nothing can be typed (correct).
+    Exec cost of the client (median of 5–7):
+      kaydence record status       75,960 µs  (145 shared libs; GTK/WebKit)
+      kaydence-ctl record status    2,107 µs  (3 shared libs, 2.4 MB)
+    `kaydence-ctl record start` total 71,365 µs of which ≈69 ms is the
+    PRE-EXISTING audio device open (cpal → ALSA → pipewire-alsa) inside
+    StartCapture. That exceeds the 50 ms hotkey→capture budget on this host
+    on EVERY hotkey path (not specific to this lane) → tracked as follow-up
+    (audio/: pre-open / warm the input stream). Not claimed as passing.
+
+5.4 Unicode typing into a real focused Wayland client — run 1      PARTIAL
+    scripts/linux-wayland-inject-proof.sh (foot, byte-exact readback):
+      PASS ascii      43 chars   30 ms
+      PASS latin1     43 chars   27 ms
+      PASS cjk        16 chars   30 ms
+      PASS rtl        15 chars   22 ms
+      PASS combining   8 chars   26 ms
+      PASS emoji      28 chars   33 ms
+      FAIL multichunk 300 distinct CJK chars (2 keymaps of 247 keys)
+    Root causes (both real product bugs, both fixed):
+      (a) Hyprland matched its keybindings by translating the virtual
+          keyboard's keycodes through the PHYSICAL keymap. Dropped slots were
+          exactly evdev 67 99 113 114 115 116 140 161 162 163 164 165 190 191
+          192 200 201 207 210 224 225 228 229 230 = F9, Print, Mute, Vol±,
+          Power, Calculator, Eject, media, MicMute, Touchpad, Brightness,
+          KbdBacklight — and the user's Omarchy binds FIRED.
+          Observed side effects on the operator's session: 2 screenshots in
+          ~/Pictures (19:09:31, 19:09:34), microphone left MUTED (not changed
+          back by the agent — prior state unknown; operator informed),
+          voxtype start+stop instant pair, volume/brightness down+up (net 0),
+          touchpad toggle→on (ends on). No window left open.
+          FIX: slots now use ONLY 48 evdev codes whose stock meaning is a
+          plain printable key (xkb.rs SAFE_EVDEV_CODES); regression test pins
+          the 24 codes above as never used. Verified: Omarchy has no
+          unmodified binds on any printable key.
+      (b) Re-uploading a keymap on the SAME virtual keyboard is not forwarded
+          by Hyprland (client kept decoding chunk 2 with chunk 1's keymap).
+          FIX: a fresh virtual keyboard per keymap chunk (renew_keyboard).
+    Status: FIXED+UNIT-VERIFIED. Live re-run PENDING (see 5.5).
+
+5.5 Unicode typing — run 2 (after fixes)                            PENDING
+    Attempted; the session had re-locked (DPMS off, lock surface holds focus).
+    The P9 gate refused before typing a single key ("target never took focus
+    — nothing typed"). Side-effect audit around the attempt: mic state
+    unchanged, speaker unchanged, 0 new screenshots. Re-run on an unlocked
+    session: `bash scripts/linux-wayland-inject-proof.sh` (8 cases incl. a
+    2-keymap English pangram and a 7-keymap CJK passage).
+
+────────────────────────────────────────────────────────────────────────────
+6. DEPENDENCIES / LOCKFILE                                           VERIFIED
+────────────────────────────────────────────────────────────────────────────
+Added (cfg linux only): wayland-client 0.31 (MIT), wayland-protocols-misc 0.3
+(MIT) — both pre-approved in ADR-0013; rustix 1 direct (Apache-2.0/MIT;
+already in the lockfile transitively).
+Cargo.lock diff is ADDITIVE ONLY: +7 packages (downcast-rs 1.2.1,
+wayland-backend 0.3.17, wayland-client 0.31.15, wayland-protocols 0.32.13,
+wayland-protocols-misc 0.3.12, wayland-scanner 0.31.11, wayland-sys 0.31.11)
++ kaydence's dependency list; 0 changed/removed entries. (An offline resolve
+had downgraded 11 unrelated wasm crates; that churn was rejected and the lock
+rebuilt as original + new packages; `cargo check --locked` accepts it.)
+No network surface: Wayland, Hyprland IPC, AT-SPI and the control socket are
+local Unix sockets; audit-network PASS.
+
+────────────────────────────────────────────────────────────────────────────
+7. NOT DONE HERE (honest gaps)                                        PENDING
+────────────────────────────────────────────────────────────────────────────
+- asr-whisper feature build/test on this host: needs `cmake` (sudo pacman);
+  covered by CI (Ubuntu leg + new Arch/Debian legs).
+- deb/rpm/AppImage bundling: tauri CLI native binary still downloading over
+  the hotspot; config verified against tauri-utils 2.9.3 schema only.
+- End-to-end dictation (speech → ASR → typed text): no local ASR model on
+  this host (60 MB q5 download at ~10 KB/s ≈ 100 min).
+- AT-SPI secure-field refusal on Hyprland with a real password field: not
+  exercised live (session locked). Logic is pure-tested (classify_focus).
+- Tray/reopen on Waybar-less Omarchy 4 shell: not exercised.
+
+────────────────────────────────────────────────────────────────────────────
+8. RE-RUN AFTER THE KEYCODE + KEYBOARD-RENEWAL FIXES                 VERIFIED
+────────────────────────────────────────────────────────────────────────────
+cargo fmt --check PASS · clippy --all-targets -D warnings PASS ·
+cargo test --all 279 passed / 0 failed (+2 keycode-safety regressions:
+typing_never_touches_a_bindable_keycode, safe_codes_are_distinct_printable_keys)
+· audit-network PASS · privacy posture PASS · ADR status PASS · frontend PASS.
+Live re-run of §5.5 remains PENDING (session locked at commit time).

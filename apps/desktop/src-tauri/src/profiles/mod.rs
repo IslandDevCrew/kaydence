@@ -253,13 +253,31 @@ impl FrontmostAppDetector for WindowsFrontmostAppDetector {
     }
 }
 
+/// Linux frontmost-app detection. Wayland has no generic "focused window" API;
+/// Hyprland (Omarchy) exposes one over its IPC socket (`inject::hyprland`, the
+/// shared frontmost-window helper — ADR-0023). Elsewhere this returns `None`, so
+/// the session target is `Unknown` and delivery holds with "insert here".
+#[cfg(target_os = "linux")]
+#[derive(Debug, Default)]
+pub struct LinuxFrontmostAppDetector;
+
+#[cfg(target_os = "linux")]
+impl FrontmostAppDetector for LinuxFrontmostAppDetector {
+    fn frontmost_app(&mut self) -> Option<AppRef> {
+        crate::inject::hyprland::foreground_app()
+    }
+}
+
 #[cfg(target_os = "macos")]
 pub type PlatformFrontmostAppDetector = MacOsFrontmostAppDetector;
 
 #[cfg(target_os = "windows")]
 pub type PlatformFrontmostAppDetector = WindowsFrontmostAppDetector;
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(target_os = "linux")]
+pub type PlatformFrontmostAppDetector = LinuxFrontmostAppDetector;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 pub type PlatformFrontmostAppDetector = UnknownFrontmostAppDetector;
 
 pub fn platform_target_resolver() -> SessionTargetResolver<PlatformFrontmostAppDetector> {

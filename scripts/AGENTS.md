@@ -39,6 +39,15 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
 - `check-adr-status.sh` — **present (P0-T6)**. P0-G7 gate: all ADRs Accepted
   except declared by-design exceptions (ADR-0009 Relay stays Proposed until the
   operator crypto review gates P4-1). Comment-safe status parse.
+- `linux-wayland-inject-proof.sh` — **present (ADR-0023)**. Hyprland-only live
+  proof for the rootless `zwp_virtual_keyboard_v1` path. It opens a throwaway
+  `foot` window per case and focuses it through Hyprland IPC. The
+  `wayland-selftest` binary re-verifies focus before the first key and refuses
+  to type otherwise (P9). The script then compares the typed text byte for byte
+  across ASCII, Latin-1, CJK, RTL, combining marks, emoji, and a passage long
+  enough to force several keymaps. Writes only to a mktemp dir. It cannot run
+  while the session is locked: the lock screen holds focus and the harness
+  correctly refuses.
 - `gen-types` — Rust `SessionEvent`/Settings → TypeScript types.
 - `corpus/` tools — record/annotate golden transcripts (raw audio + expected
   Light output pairs).

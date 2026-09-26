@@ -99,7 +99,13 @@ modules allowed `#[cfg(target_os)]` blocks, each behind a trait:
   desktop portals (`org.freedesktop.portal.*`, `GlobalShortcuts`) where a
   compositor exposes them; app detection via the portal / compositor where
   permitted, else a documented degraded mode. Wayland is the highest platform
-  risk — spiked early in P1.
+  risk — spiked early in P1. **As built (ADR-0023, Omarchy/Hyprland first):**
+  keystrokes via `zwp_virtual_keyboard_v1` with per-injection Unicode keymaps
+  (rootless); frontmost app + focus binding via Hyprland IPC; the Wayland hotkey
+  is a compositor keybinding running `kaydence-ctl record …`, which reaches the
+  app over a private per-user control socket and becomes the same Press/Release
+  edges as a native grab. GNOME/KDE keep the uinput opt-in until the portal +
+  libei rung lands.
 
 The clipboard fallback is shared across all three OSes: snapshot → set → paste
 keystroke → restore, bounded at 200 ms, with the snapshot kept until restore
