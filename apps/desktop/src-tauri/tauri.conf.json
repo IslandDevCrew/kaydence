@@ -54,7 +54,10 @@
         }
       },
       "appimage": {
-        "bundleMediaFramework": false
+        "bundleMediaFramework": false,
+        "files": {
+          "/usr/share/kaydence/omarchy/kaydence-bindings.lua": "../linux/omarchy/kaydence-bindings.lua"
+        }
       }
     }
   }
