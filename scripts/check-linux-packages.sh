@@ -70,7 +70,9 @@ found_appimage=0
 for app in "$DIR"/appimage/*.AppImage; do
   [ -e "$app" ] || continue
   echo "== $(basename "$app")"; checked=$((checked + 1)); found_appimage=1
-  (cd "$WORK" && chmod +x "$app" && "$app" --appimage-extract >/dev/null)
+  app_abs="$(realpath "$app")"   # extraction runs inside $WORK
+  chmod +x "$app_abs"
+  (cd "$WORK" && "$app_abs" --appimage-extract >/dev/null)
   (cd "$WORK/squashfs-root" && find . -type f -o -type l) | sed 's#^\./##' > "$WORK/appimage.list"
   check_listing appimage "$WORK/appimage.list"; check_size "$app"
   rm -rf "$WORK/squashfs-root"
