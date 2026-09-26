@@ -11,6 +11,39 @@ default-run = "kaydence"
 name = "kaydence_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
+# Shipped binaries: `kaydence` (src/main.rs) and `kaydence-ctl` (the Wayland
+# compositor-binding client, ADR-0023) are auto-discovered. Everything below is
+# a developer/proof tool that must never reach an installer (see [features]).
+[[bin]]
+name = "asr-onnx-selftest"
+path = "src/bin/asr-onnx-selftest.rs"
+required-features = ["dev-tools"]
+
+[[bin]]
+name = "atspi-selftest"
+path = "src/bin/atspi-selftest.rs"
+required-features = ["dev-tools"]
+
+[[bin]]
+name = "reference-bench"
+path = "src/bin/reference-bench.rs"
+required-features = ["dev-tools"]
+
+[[bin]]
+name = "uia-selftest"
+path = "src/bin/uia-selftest.rs"
+required-features = ["dev-tools"]
+
+[[bin]]
+name = "vad-selftest"
+path = "src/bin/vad-selftest.rs"
+required-features = ["dev-tools"]
+
+[[bin]]
+name = "wayland-selftest"
+path = "src/bin/wayland-selftest.rs"
+required-features = ["dev-tools"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
@@ -69,6 +102,17 @@ futures-lite = "2"
 # (AT-SPI InsertText no-ops on modern GNOME; ADR-0013 amendment). Local device
 # I/O, not a network surface.
 evdev = "0.13"
+# Wayland virtual-keyboard keystroke channel (ADR-0013 ladder rung 2, ADR-0023):
+# `zwp_virtual_keyboard_v1` on Hyprland/wlroots — rootless, full Unicode via a
+# per-injection XKB keymap. Pure-Rust wire protocol over the local Wayland
+# socket; both crates were pre-approved in ADR-0013 (MIT, Smithay project).
+# NOT a network surface.
+wayland-client = "0.31"
+wayland-protocols-misc = { version = "0.3", features = ["client"] }
+# Safe syscall wrappers, already in the lockfile via the Wayland/zbus stacks
+# (Apache-2.0/MIT): memfd for the keymap (never touches disk), SO_PEERCRED +
+# getuid for the local control socket's same-user check. NOT a network surface.
+rustix = { version = "1", features = ["fs", "net", "process"] }
 
 # Windows text injection (P1-P0-3, ADR-0013). UI Automation = the secure-field
 # signal (IsPassword, non-negotiable #8) AND the native insertion path
@@ -94,6 +138,15 @@ objc2-app-kit = { version = "0.3.2", default-features = false, features = ["NSPa
 objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSData", "NSString"] }
 
 [features]
+# Developer/proof binaries (selftests, reference bench) are default-on so
+# `cargo run --bin <name>` and CI's `--all-targets` keep building and linting
+# them unchanged. They are declared below with `required-features =
+# ["dev-tools"]` because the Tauri bundler only honours features passed to
+# `tauri build`, never Cargo defaults — so these binaries stay OUT of every
+# installer. Without this, tauri-cli 2.11 bundles one arbitrary src/bin binary
+# (its get_binaries() treats `path.ends_with("")` as "already added").
+default = ["dev-tools"]
+dev-tools = []
 custom-protocol = ["tauri/custom-protocol"]
 # Feature-gated network surfaces stay OFF by default (non-negotiable #1).
 byok = []

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Kaydence
+GenericName=Dictation
+Comment=Local-first dictation: speak anywhere, ship clean text
+Exec=kaydence
+Icon=kaydence
+Terminal=false
+Categories=Utility;Accessibility;
+Keywords=dictation;speech;voice;transcription;whisper;
+StartupNotify=true
+StartupWMClass=kaydence

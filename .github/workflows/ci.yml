@@ -39,6 +39,109 @@ jobs:
             echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"]}' >> "$GITHUB_OUTPUT"
           fi
 
+  # Distro legs (ADR-0023): Arch Linux = Omarchy's base (the priority Linux
+  # target), Debian 12 = the Linux reference VM. Containers beside the required
+  # 3-OS matrix — they add signal without renaming any required check. The
+  # frontend + bash gates are distro-independent and stay on the Ubuntu leg.
+  linux-distros:
+    needs: setup
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.windows_visual_proof) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["archlinux:latest", "debian:bookworm"]
+    container: ${{ matrix.image }}
+    env:
+      GGML_NATIVE: "OFF"
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: system deps (Arch / Omarchy base)
+        if: startsWith(matrix.image, 'archlinux')
+        run: |
+          pacman -Syu --noconfirm --needed base-devel git rustup clang cmake lua \
+            webkit2gtk-4.1 gtk3 libayatana-appindicator librsvg alsa-lib at-spi2-core
+          rustup default stable
+          rustup component add rustfmt clippy
+      - name: system deps (Debian)
+        if: startsWith(matrix.image, 'debian')
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential ca-certificates \
+            curl git pkg-config clang libclang-dev cmake lua5.4 \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libasound2-dev
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+            | sh -s -- -y --profile minimal --component rustfmt,clippy
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - uses: actions/checkout@v4
+      - name: fmt
+        run: cargo fmt --all -- --check
+        working-directory: apps/desktop/src-tauri
+      - name: clippy (default + shipped Linux ASR)
+        run: |
+          cargo clippy --locked --all-targets -- -D warnings
+          cargo clippy --locked --all-targets --features asr-whisper -- -D warnings
+        working-directory: apps/desktop/src-tauri
+      - name: test
+        run: cargo test --locked --all
+        working-directory: apps/desktop/src-tauri
+      - name: Omarchy bindings snippet + PKGBUILD parse
+        shell: bash
+        run: |
+          if command -v luac >/dev/null; then LUAC=luac; else LUAC=luac5.4; fi
+          "$LUAC" -p apps/desktop/linux/omarchy/kaydence-bindings.lua
+          bash -n apps/desktop/linux/arch/PKGBUILD
+
+  # Linux installers (ADR-0023): .deb + .rpm + AppImage with the shipped Linux
+  # ASR (asr-whisper), built on the oldest supported baseline (Ubuntu 22.04 —
+  # AppImages must be built on old glibc; current Arch's gdk-pixbuf also lacks
+  # the loader dir linuxdeploy's GTK plugin needs). The payload gate fails the
+  # job if any package ships more than kaydence + kaydence-ctl, misses the
+  # Omarchy snippet/desktop entry, or a .deb/.rpm exceeds the 60 MB installer
+  # budget. The AppImage bundles WebKitGTK (~87 MB): its overrun is annotated as
+  # a warning on every run until the operator decides (ADR-0023 follow-up).
+  linux-bundles:
+    needs: setup
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.windows_visual_proof) }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      GGML_NATIVE: "OFF"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with: { node-version: lts/* }
+      - name: enable pnpm
+        run: corepack enable
+        shell: bash
+        env: { COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" }
+      - name: linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev libasound2-dev patchelf \
+            libfuse2 file clang libclang-dev cmake libarchive-tools
+      - name: install
+        run: pnpm install --frozen-lockfile
+      - name: build installers (deb, rpm, AppImage)
+        working-directory: apps/desktop
+        run: npx --yes @tauri-apps/cli@2.11.5 build --features asr-whisper --bundles deb,rpm,appimage
+      - name: payload gate
+        run: bash scripts/check-linux-packages.sh target/release/bundle --require-appimage --appimage-budget-warn
+      - name: upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaydence-linux-installers-${{ github.sha }}
+          path: |
+            target/release/bundle/deb/*.deb
+            target/release/bundle/rpm/*.rpm
+            target/release/bundle/appimage/*.AppImage
+          if-no-files-found: error
+          retention-days: 14
+
   build-test:
     needs: setup
     env:
