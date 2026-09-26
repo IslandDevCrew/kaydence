@@ -44,14 +44,12 @@
       "deb": {
         "section": "utils",
         "files": {
-          "/usr/bin/kaydence-ctl": "../../../target/release/kaydence-ctl",
           "/usr/share/kaydence/omarchy/kaydence-bindings.lua": "../linux/omarchy/kaydence-bindings.lua"
         }
       },
       "rpm": {
         "depends": ["libayatana-appindicator-gtk3"],
         "files": {
-          "/usr/bin/kaydence-ctl": "../../../target/release/kaydence-ctl",
           "/usr/share/kaydence/omarchy/kaydence-bindings.lua": "../linux/omarchy/kaydence-bindings.lua"
         }
       },

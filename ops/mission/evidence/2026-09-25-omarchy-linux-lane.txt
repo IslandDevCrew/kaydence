@@ -208,3 +208,78 @@ deb control: Section utils; Depends libayatana-appindicator3-1,
 FOUND (pre-existing, cross-platform): /usr/bin/asr-onnx-selftest is shipped
   in both packages — Tauri bundles auto-discovered src/bin targets. Needs an
   autobins / [[bin]] packaging decision (handoff task K-4b). Not fixed here.
+
+────────────────────────────────────────────────────────────────────────────
+10. RETRY ON A FAST NETWORK — 2026-09-26 (same host)
+────────────────────────────────────────────────────────────────────────────
+10.1 Live Unicode typing, run 3 (after the §5.4 fixes)             VERIFIED
+     scripts/linux-wayland-inject-proof.sh → RESULT: PASS (8/8 byte-exact)
+       ascii 43 chars 28 ms · latin1 43 / 27 ms · cjk 16 / 29 ms ·
+       rtl 15 / 23 ms · combining 8 / 32 ms · emoji 28 / 27 ms ·
+       pangram 102 chars (2 keymaps) 68 ms ·
+       multichunk 300 distinct CJK chars (7 keymaps, fresh device each) 252 ms
+     Side-effect audit before→after: mic state unchanged, speaker unchanged,
+     ~/Pictures 5→5, window list unchanged. Closes §5.5 PENDING.
+
+10.2 CI on PR #57 head 0580a3b (run 36206374709, pull_request)     VERIFIED
+     setup · build-test ubuntu/windows/macos · linux-distros archlinux:latest
+     + debian:bookworm — all PASS.
+
+10.3 Shipped Linux ASR lane on this host                           VERIFIED
+     cmake 4.4.3 (user-space, scratch), GGML_NATIVE=OFF:
+     clippy --all-targets --features asr-whisper -D warnings PASS;
+     cargo test --all-targets --features asr-whisper 285 passed / 0 failed.
+
+10.4 First real human speech on Omarchy x86_64                      VERIFIED
+     CPU Intel i7-8650U (avx2 fma f16c), 4 whisper threads, q5_1 model
+     (sha256 4baf70dd…, 59,721,011 B, fetched from the registry-pinned URL).
+     Clip: whisper.cpp samples/jfk.wav, 11.0 s, sha256 59dfb9a4acb36fe2…
+     Text: "And so my fellow Americans asked not what your country can do for
+     you, ask what you can do for your country."  warmup 91 ms · transcribe
+     2,095 ms · RTF 0.190. asr_golden FAILED its absolute 1,200 ms assertion
+     (an 11 s clip against a per-release budget) — recorded, not waived.
+
+10.5 Reference bench, x86 CPU (scripts/bench-reference.mjs)           FAIL
+     10 samples; clip = JFK 3.0–7.9 s (4.9 s, sha256 5b0bcef3052a0b45…):
+     release→delivery-policy p50 3,606 ms · p95 4,062 ms (budget 1,200) FAIL
+     idle RAM 107.582 MB (≤ 250) PASS · idle CPU 0 % (≤ 1) PASS.
+     Events show two raw_final passes (VAD splits the 1 s pause).
+
+10.6 Root cause + lever (measured; NOT shipped in this PR)          MEASURED
+     Each whisper pass encodes a fixed 30 s window. whisper-rs 0.16 probe,
+     same model + clip, 4 runs each:
+       default                      median 1,774 ms
+       audio_ctx fitted (310)       median   298 ms   (6.0× faster)
+     Identical text both ways: "Ask not what your country can do for you."
+     The engine/ change needs a cross-platform golden-corpus/WER gate and an
+     ADR-0015 amendment → separate PR (plan item K-10).
+
+10.7 Correction to §5.3 "≈69 ms mic open"                          CORRECTED
+     cpal 0.17 probe on this host (host → device → configs → build → play):
+     22.4–23.3 ms steady state, 41.7 ms on the first open of a process.
+     The 71 ms figure was the whole `record start` round trip, which also
+     covers post-capture work (WAL create, focus resolution, history write).
+     Order in audio::start_capture: device open/build → WAL create →
+     stream.play(). Command→capture-start ≈ 2.1 (ctl) + ~23 (open) + WAL
+     create ≈ 26–30 ms, inside the 50 ms budget. DERIVED from measured parts
+     (strace unavailable on this host), not directly measured.
+
+10.8 Packages after the dev-tools fix                               VERIFIED
+     tauri build --features asr-whisper --bundles deb,rpm:
+       Kaydence_0.1.0_amd64.deb 8,154,918 B · Kaydence-0.1.0-1.x86_64.rpm
+       8,157,264 B; /usr/bin = kaydence + kaydence-ctl only (the Tauri
+       get_binaries() `ends_with("")` bug no longer ships a selftest).
+     scripts/check-linux-packages.sh → PASS; verified to FAIL on a synthetic
+     .deb that carries asr-onnx-selftest.
+     AppImage: linuxdeploy-plugin-gtk fails on current Arch
+     (/usr/lib/gdk-pixbuf-2.0/2.10.0 absent) → built + gated in CI on
+     ubuntu-22.04 (new linux-bundles job). Local packages came from a sparse
+     checkout before the brand logo was restored → CI artifacts authoritative.
+
+10.9 Live end-to-end dictation + secure-field proofs                PENDING
+     Harnesses committed (linux-e2e-dictation-proof.sh,
+     linux-secure-field-proof.sh). Attempts on 2026-09-26 were refused by
+     their gates: the session was locked (Omarchy's lock surface holds
+     keyboard focus; detected via monitors[].solitaryBlockedBy = LOCK).
+     Nothing was typed; cleanup audit: mic unchanged, default source
+     unchanged, 0 leftover PipeWire modules, 0 leftover app processes.

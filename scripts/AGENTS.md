@@ -48,6 +48,24 @@ Linux — portable bash 3.2 [macOS default: no `declare -A`, no `mapfile`] or pa
   enough to force several keymaps. Writes only to a mktemp dir. It cannot run
   while the session is locked: the lock screen holds focus and the harness
   correctly refuses.
+- `linux-secure-field-proof.sh` — **present (ADR-0023, non-negotiable #8)**.
+  Drives the *shipped* Linux delivery path (`LinuxTextInjector` → AT-SPI focus
+  tracker + Hyprland pid match → `inject_committed_text`) at a real GTK4 window
+  twice. A password entry must be refused (`Held{SecureField}`, field empty),
+  and a normal entry must receive exactly the text. Needs Hyprland and
+  PyGObject/GTK 4.
+- `linux-e2e-dictation-proof.sh` — **present (ADR-0023)**. The real app
+  end to end: speech → WAL → VAD → whisper.cpp → cleanup → focus binding →
+  virtual keyboard → a focused window, with byte readback and release→text
+  timing. Speech comes from a temporary PipeWire null sink + remapped source
+  routed to the app process only (`PIPEWIRE_NODE`). The app runs on a
+  throwaway `XDG_DATA_HOME`. The operator's mic, default devices and Kaydence
+  data are never touched, and all of it is removed on exit.
+- `check-linux-packages.sh` — **present (ADR-0023), CI gate**. Every built
+  .deb/.rpm/AppImage must ship exactly `kaydence` + `kaydence-ctl` in
+  `/usr/bin`, include the Omarchy snippet and a desktop entry, and stay under
+  the 60 MB installer budget. Verified to FAIL on a package carrying a stray
+  selftest binary.
 - `gen-types` — Rust `SessionEvent`/Settings → TypeScript types.
 - `corpus/` tools — record/annotate golden transcripts (raw audio + expected
   Light output pairs).

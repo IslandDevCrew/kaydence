@@ -24,6 +24,11 @@ fail() { echo "[proof] FAIL: $*" >&2; exit 1; }
 [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] || fail "not a Hyprland session"
 command -v foot >/dev/null || fail "foot is required (Omarchy default terminal)"
 command -v jq >/dev/null || fail "jq is required"
+# A locked session (Omarchy/Quickshell ext-session-lock) keeps keyboard focus on
+# the lock screen: refuse up front with a clear reason instead of a focus miss.
+if hyprctl -j monitors | jq -e 'any(.[]; (.solitaryBlockedBy // []) | index("LOCK"))' >/dev/null 2>&1; then
+  fail "the session is locked — unlock it and rerun (the lock screen holds keyboard focus)"
+fi
 
 cargo build --quiet --manifest-path apps/desktop/src-tauri/Cargo.toml --bin wayland-selftest
 BIN=target/debug/wayland-selftest

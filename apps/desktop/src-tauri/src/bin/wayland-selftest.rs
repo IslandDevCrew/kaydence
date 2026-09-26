@@ -29,10 +29,75 @@ mod linux {
         match args.get(1).map(String::as_str) {
             Some("--probe") => probe(),
             Some("--type-into") if args.len() == 4 => type_into(&args[2], &args[3]),
+            Some("--guarded-type-into") if args.len() == 4 => guarded_type_into(&args[2], &args[3]),
             _ => {
-                eprintln!("usage: wayland-selftest --probe | --type-into <window-address> <text>");
+                eprintln!(
+                    "usage: wayland-selftest --probe | --type-into <window-address> <text> \
+                     | --guarded-type-into <window-address> <text>"
+                );
                 64
             }
+        }
+    }
+
+    /// The SHIPPED delivery path, not just the keyboard: `LinuxTextInjector`
+    /// (AT-SPI focus tracker + Hyprland pid match) → `inject_committed_text`
+    /// (secure-field policy → plan → virtual keyboard). Exit 0 = Injected,
+    /// 10 = Held{SecureField} (refused, nothing typed), 3 = focus gate refused,
+    /// 1 = anything else.
+    fn guarded_type_into(address: &str, text: &str) -> i32 {
+        use kaydence_lib::events::{HoldReason, SessionEvent, SessionId};
+        use kaydence_lib::inject::linux::LinuxTextInjector;
+        use kaydence_lib::inject::{inject_committed_text, TextInjector, UnknownFieldPolicy};
+
+        if !address.starts_with("0x") || !address[2..].chars().all(|c| c.is_ascii_hexdigit()) {
+            eprintln!("[guard] refusing: {address:?} is not a Hyprland window address");
+            return 64;
+        }
+        // Start the injector (and its AT-SPI focus tracker) BEFORE focus moves,
+        // so the tracker sees the target's focus event like the running app would.
+        let mut injector = LinuxTextInjector::detect();
+        std::thread::sleep(Duration::from_millis(700));
+        let previous = focused_address();
+        focus_window(address);
+        let deadline = Instant::now() + Duration::from_millis(1500);
+        while focused_address().as_deref() != Some(address) {
+            if Instant::now() > deadline {
+                eprintln!("[guard] REFUSED: target never took focus — nothing typed (P9 gate)");
+                return 3;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        // Let the accessibility focus event reach the tracker.
+        std::thread::sleep(Duration::from_millis(600));
+        let field = injector.focused_field();
+        println!(
+            "[guard] keystroke channel={:?} focused_field={field:?}",
+            injector.caps().keystroke
+        );
+        let event = if focused_address().as_deref() == Some(address) {
+            inject_committed_text(
+                &mut injector,
+                SessionId(ulid::Ulid::new()),
+                text,
+                UnknownFieldPolicy::Lenient,
+                false,
+            )
+        } else {
+            eprintln!("[guard] REFUSED: focus moved before delivery — nothing typed (P9 gate)");
+            return 3;
+        };
+        if let Some(prev) = previous.filter(|p| p != address) {
+            focus_window(&prev);
+        }
+        println!("[guard] outcome={event:?}");
+        match event {
+            SessionEvent::Injected { .. } => 0,
+            SessionEvent::Held {
+                reason: HoldReason::SecureField,
+                ..
+            } => 10,
+            _ => 1,
         }
     }
 

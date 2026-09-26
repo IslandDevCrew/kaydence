@@ -76,6 +76,13 @@ cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml --bin wayland-selfte
 # Byte-exact Unicode typing proof into a throwaway foot window (needs an
 # unlocked session; it moves focus to its own window and gives it back):
 bash scripts/linux-wayland-inject-proof.sh
+
+# Password fields are refused, normal fields typed (shipped injector path):
+bash scripts/linux-secure-field-proof.sh
+
+# Whole pipeline, speech → typed text, isolated from your mic and data:
+KAYDENCE_WHISPER_MODEL=~/path/ggml-base.en-q5_1.bin KAYDENCE_E2E_CLIP=~/path/speech16k.wav \
+  KAYDENCE_E2E_EXPECT="words you expect" bash scripts/linux-e2e-dictation-proof.sh
 ```
 
 - **First-run says the hotkey is not registered.** Expected until a binding exists:
