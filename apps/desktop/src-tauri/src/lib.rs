@@ -2005,17 +2005,24 @@ impl HotkeyRuntime {
         let app_data_dir = app_data_dir.into();
         let recorder = audio::WalCaptureRuntime::new_wal_only(app_data_dir.clone());
         let history = history::HistoryStore::open(&app_data_dir)?;
+        // Inert OS seams: a unit test must never read the live desktop's focus or
+        // type into whatever window the developer has focused (the Linux
+        // injector is real since ADR-0023). Tests that exercise delivery opt in
+        // with `with_target_resolver` / `with_injector` fakes.
         Ok(Self::with_recorder(
             recorder,
             history,
-            Box::new(profiles::platform_target_resolver()),
+            Box::new(profiles::SessionTargetResolver::new(
+                profiles::StaticFrontmostAppDetector::unknown(),
+                profiles::ProfileStore::default(),
+            )),
             Box::new(pipeline::default_runtime_pipeline_with_asr(
                 engine::LocalAsrAdapterState::Pending {
                     selected_model_id: None,
                     lane: engine::EngineLane::LocalCpu,
                 },
             )),
-            Box::new(inject::platform_injector()),
+            Box::new(inject::UnimplementedInjector { platform: "test" }),
         ))
     }
 
@@ -2293,6 +2300,23 @@ impl HotkeyRuntime {
             }
         }
         Ok(None)
+    }
+
+    /// Apply one hotkey edge from any source (native grab or the Wayland control
+    /// socket) and collect what the caller must do after releasing the lock:
+    /// the tail-tick wake time and the first-run proof.
+    fn apply_hotkey_signal(
+        &mut self,
+        role: HotkeyShortcutRole,
+        signal: hotkeys::Signal,
+    ) -> (Option<u64>, HotkeyRuntimeFirstRunProof) {
+        match self.handle_shortcut_signal(role, signal) {
+            Ok(tail_wake_ms) => (tail_wake_ms, self.take_first_run_proof()),
+            Err(err) => {
+                eprintln!("Kaydence hotkey runtime failed: {err}");
+                (None, HotkeyRuntimeFirstRunProof::default())
+            }
+        }
     }
 
     fn should_accept_shortcut_signal(
@@ -2755,15 +2779,7 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
                 };
 
                 let (tail_wake_ms, proof) = match handler_runtime.lock() {
-                    Ok(mut runtime) => {
-                        match runtime.handle_shortcut_signal(shortcut_role, signal) {
-                            Ok(tail_wake_ms) => (tail_wake_ms, runtime.take_first_run_proof()),
-                            Err(err) => {
-                                eprintln!("Kaydence hotkey runtime failed: {err}");
-                                (None, HotkeyRuntimeFirstRunProof::default())
-                            }
-                        }
-                    }
+                    Ok(mut runtime) => runtime.apply_hotkey_signal(shortcut_role, signal),
                     Err(_) => {
                         eprintln!("Kaydence hotkey runtime lock poisoned");
                         (None, HotkeyRuntimeFirstRunProof::default())
@@ -2781,8 +2797,27 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
 
     let handle = app.state::<HotkeyRuntimeHandle>();
     handle.set_runtime(Arc::clone(&runtime));
-    app.global_shortcut().register(shortcut)?;
-    handle.set_primary_shortcut(shortcut);
+    // Wayland hotkey (ADR-0023): the compositor runs `<app> record …`, which
+    // reaches this runtime over the local control socket. Started before the
+    // native grab so a Wayland session keeps a working path even when the X11
+    // grab is refused.
+    install_control_socket(app.handle(), &runtime, started);
+    let compositor = hotkeys::control::compositor_hotkey_status();
+    match app.global_shortcut().register(shortcut) {
+        Ok(()) => handle.set_primary_shortcut(shortcut),
+        // On Wayland a compositor binding replaces the grab entirely.
+        Err(err) if compositor == hotkeys::control::CompositorHotkey::Bound => {
+            eprintln!("Kaydence native hotkey grab unavailable ({err}); compositor binding active");
+        }
+        Err(err) => {
+            return Err(
+                match hotkeys::control::wayland_hotkey_guidance(compositor) {
+                    Some(guidance) => format!("{err}. {guidance}").into(),
+                    None => err.into(),
+                },
+            );
+        }
+    }
     if let Some(override_shortcut) = cleanup_override_shortcut {
         match app.global_shortcut().register(override_shortcut) {
             Ok(()) => handle.set_cleanup_override_shortcut(Some(override_shortcut)),
@@ -2794,8 +2829,126 @@ fn install_global_hotkey(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
     } else {
         handle.set_cleanup_override_shortcut(None);
     }
-    app.state::<RuntimeSnapshot>().mark_hotkey_registered();
+    match hotkeys::control::wayland_hotkey_guidance(compositor) {
+        // An X11 grab on a Wayland desktop only ever sees XWayland windows, so
+        // it is not a working global hotkey: say so instead of going silently
+        // dead (hotkeys invariant 3). The first `record` command received
+        // flips this to registered.
+        Some(guidance) => app
+            .state::<RuntimeSnapshot>()
+            .mark_hotkey_registration_failed(guidance),
+        None => app.state::<RuntimeSnapshot>().mark_hotkey_registered(),
+    }
     Ok(())
+}
+
+/// Serve the compositor control socket (Linux; a no-op elsewhere).
+#[cfg(desktop)]
+fn install_control_socket<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    runtime: &Arc<Mutex<HotkeyRuntime>>,
+    started: Instant,
+) {
+    let app = app.clone();
+    let runtime = Arc::clone(runtime);
+    match hotkeys::control::serve(move |cmd| control_command(&app, &runtime, started, cmd)) {
+        Ok(Some(path)) => println!("Kaydence control socket ready: {path}"),
+        Ok(None) => {}
+        Err(err) => eprintln!("Kaydence control socket unavailable: {err}"),
+    }
+}
+
+/// One `record <verb>` from a compositor binding → the same hotkey edge the
+/// native grab would produce, decided and applied under one runtime lock.
+#[cfg(desktop)]
+fn control_command<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    runtime: &Arc<Mutex<HotkeyRuntime>>,
+    started: Instant,
+    cmd: hotkeys::ControlCommand,
+) -> Result<&'static str, &'static str> {
+    let at_ms = elapsed_ms(started);
+    let (outcome, label) = {
+        let Ok(mut rt) = runtime.lock() else {
+            return Err("runtime-unavailable");
+        };
+        let before = rt.coordinator.state();
+        let outcome = hotkeys::control_signal(rt.coordinator.mode(), before, cmd, at_ms)
+            .map(|signal| rt.apply_hotkey_signal(HotkeyShortcutRole::Primary, signal));
+        let after = rt.coordinator.state();
+        let capture_started_ms = match (before, after) {
+            (hotkeys::CaptureState::Idle, hotkeys::CaptureState::Capturing { started_ms, .. }) => {
+                Some(started_ms)
+            }
+            _ => None,
+        };
+        (
+            outcome.map(|o| (o, capture_started_ms)),
+            hotkeys::status_label(after),
+        )
+    };
+    if cmd != hotkeys::ControlCommand::Status {
+        // A command arrived: the compositor binding demonstrably works.
+        let snapshot = app.state::<RuntimeSnapshot>();
+        let first_run = snapshot.snapshot().settings.first_run;
+        if !first_run.hotkey_registered {
+            snapshot.mark_hotkey_registered();
+        }
+        if !first_run.input_permission_ready {
+            snapshot.mark_input_permission_ready();
+        }
+    }
+    if let Some(((tail_wake_ms, proof), capture_started_ms)) = outcome {
+        apply_hotkey_first_run_proof(app, proof);
+        if let Some(ends_ms) = tail_wake_ms {
+            schedule_tail_tick(runtime, started, ends_ms);
+        }
+        if let Some(capture_started_ms) = capture_started_ms {
+            schedule_control_capture_limit(app.clone(), runtime, started, capture_started_ms);
+        }
+    }
+    Ok(label)
+}
+
+/// Safety stop for a socket-started capture whose release never arrived.
+/// Fires only if that exact capture is still running.
+#[cfg(desktop)]
+fn schedule_control_capture_limit<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    runtime: &Arc<Mutex<HotkeyRuntime>>,
+    started: Instant,
+    capture_started_ms: u64,
+) {
+    let runtime = Arc::clone(runtime);
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(
+            hotkeys::control::CONTROL_CAPTURE_LIMIT_MS,
+        ));
+        let outcome = match runtime.lock() {
+            Ok(mut rt) => match rt.coordinator.state() {
+                state @ hotkeys::CaptureState::Capturing { started_ms, .. }
+                    if started_ms == capture_started_ms =>
+                {
+                    eprintln!("Kaydence control capture reached the 5-minute safety stop");
+                    hotkeys::control_signal(
+                        rt.coordinator.mode(),
+                        state,
+                        hotkeys::ControlCommand::Stop,
+                        elapsed_ms(started),
+                    )
+                    .map(|signal| rt.apply_hotkey_signal(HotkeyShortcutRole::Primary, signal))
+                }
+                _ => None,
+            },
+            Err(_) => None,
+        };
+        if let Some((tail_wake_ms, proof)) = outcome {
+            apply_hotkey_first_run_proof(&app, proof);
+            if let Some(ends_ms) = tail_wake_ms {
+                schedule_tail_tick(&runtime, started, ends_ms);
+            }
+        }
+    });
 }
 
 #[cfg(desktop)]

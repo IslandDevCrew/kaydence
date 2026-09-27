@@ -29,6 +29,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "Productivity",
+    "shortDescription": "Local-first dictation: speak anywhere, ship clean text.",
+    "longDescription": "Kaydence is a local-first dictation app: hold a key, speak, and clean text lands in the focused app. Audio and transcripts stay on your machine. On Hyprland/Omarchy it types through the compositor's virtual keyboard (no root, full Unicode) and binds its hotkey via kaydence-ctl; see /usr/share/kaydence/omarchy/kaydence-bindings.lua.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,6 +39,26 @@
       "icons/icon.icns",
       "icons/icon.ico",
       "icons/icon.png"
-    ]
+    ],
+    "linux": {
+      "deb": {
+        "section": "utils",
+        "files": {
+          "/usr/share/kaydence/omarchy/kaydence-bindings.lua": "../linux/omarchy/kaydence-bindings.lua"
+        }
+      },
+      "rpm": {
+        "depends": ["libayatana-appindicator-gtk3"],
+        "files": {
+          "/usr/share/kaydence/omarchy/kaydence-bindings.lua": "../linux/omarchy/kaydence-bindings.lua"
+        }
+      },
+      "appimage": {
+        "bundleMediaFramework": false,
+        "files": {
+          "/usr/share/kaydence/omarchy/kaydence-bindings.lua": "../linux/omarchy/kaydence-bindings.lua"
+        }
+      }
+    }
   }
 }

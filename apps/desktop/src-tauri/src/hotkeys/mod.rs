@@ -11,6 +11,8 @@
 //! another's internals — communicate only via `SessionEvent`.
 #![allow(dead_code)]
 
+pub mod control;
+
 /// Which activation gesture the hotkey uses.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HotkeyMode {
@@ -106,6 +108,10 @@ impl CaptureCoordinator {
         self.state
     }
 
+    pub fn mode(&self) -> HotkeyMode {
+        self.mode
+    }
+
     /// Abort the current session after a runtime start failure. Normal stop
     /// paths should still flow through [`Signal`] so timing invariants apply.
     pub fn reset(&mut self) {
@@ -179,6 +185,90 @@ impl CaptureCoordinator {
             };
             Action::None
         }
+    }
+}
+
+// ───────────────────── compositor-bound control commands ────────────────────
+//
+// On Wayland an app cannot grab a global key; the compositor owns the keyboard
+// (ADR-0023). Omarchy/Hyprland, Sway, and GNOME/KDE custom shortcuts instead
+// *run a command* on press — and Hyprland/Sway also on release. So the Linux
+// hotkey is `<app> record start|stop|toggle`, delivered over the local control
+// socket (`control.rs`) and translated here into the SAME press/release edges the
+// X11/macOS/Windows grab produces. Every timing invariant above (debounce,
+// 250 ms floor, 300 ms tail) therefore applies unchanged.
+
+/// A control command received from the compositor binding.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ControlCommand {
+    /// Key-down of a push-to-talk binding (or "start" of a toggle).
+    Start,
+    /// Key-up of a push-to-talk binding (or "stop" of a toggle).
+    Stop,
+    /// One-key toggle (GNOME/KDE custom shortcuts only fire on press).
+    Toggle,
+    /// Read-only state query (for status bars). Never changes capture state.
+    Status,
+}
+
+impl ControlCommand {
+    /// Parse the wire/CLI verb. Accepts voxtype-compatible verbs so an Omarchy
+    /// user can swap `voxtype record start` for ours in the same binding.
+    pub fn parse(verb: &str) -> Option<Self> {
+        match verb.trim() {
+            "start" => Some(Self::Start),
+            "stop" => Some(Self::Stop),
+            "toggle" => Some(Self::Toggle),
+            "status" => Some(Self::Status),
+            _ => None,
+        }
+    }
+
+    pub fn verb(self) -> &'static str {
+        match self {
+            Self::Start => "start",
+            Self::Stop => "stop",
+            Self::Toggle => "toggle",
+            Self::Status => "status",
+        }
+    }
+}
+
+/// Translate a control command into the hotkey edge it stands for, given the
+/// current mode + state. `None` = nothing to do (already in the requested state,
+/// or a status query). Idempotent by construction: a duplicated `start` (e.g. a
+/// compositor auto-repeat) cannot restart or double-start a capture. Pure.
+pub fn control_signal(
+    mode: HotkeyMode,
+    state: CaptureState,
+    cmd: ControlCommand,
+    at_ms: u64,
+) -> Option<Signal> {
+    use CaptureState::*;
+    use ControlCommand::*;
+    let press = Signal::Press { at_ms };
+    // The edge that ends a capture differs by mode: push-to-talk ends on key-up,
+    // toggle mode ends on a second press (releases are ignored there).
+    let stop_edge = match mode {
+        HotkeyMode::PushToTalk => Signal::Release { at_ms },
+        HotkeyMode::Toggle => press,
+    };
+    match (cmd, state) {
+        (Status, _) => None,
+        (Start | Toggle, Idle) => Some(press),
+        (Stop | Toggle, Capturing { .. }) => Some(stop_edge),
+        // Start while capturing, stop while idle, anything while finalizing.
+        _ => None,
+    }
+}
+
+/// Stable lowercase label for the control socket's `status` reply (consumed by
+/// status bars; never includes transcript content — privacy #1). Pure.
+pub fn status_label(state: CaptureState) -> &'static str {
+    match state {
+        CaptureState::Idle => "idle",
+        CaptureState::Capturing { .. } => "recording",
+        CaptureState::Finalizing { .. } => "finalizing",
     }
 }
 
@@ -275,5 +365,118 @@ mod tests {
 
         assert_eq!(c.state(), CaptureState::Idle);
         assert_eq!(c.step(Signal::Press { at_ms: 500 }), Action::StartCapture);
+    }
+
+    // ── compositor-bound control commands (ADR-0023) ──
+
+    /// Drive a coordinator purely through control commands, the way a
+    /// compositor binding would.
+    fn drive(c: &mut CaptureCoordinator, cmd: ControlCommand, at_ms: u64) -> Action {
+        match control_signal(c.mode, c.state(), cmd, at_ms) {
+            Some(sig) => c.step(sig),
+            None => Action::None,
+        }
+    }
+
+    #[test]
+    fn control_verbs_parse_and_round_trip() {
+        for cmd in [
+            ControlCommand::Start,
+            ControlCommand::Stop,
+            ControlCommand::Toggle,
+            ControlCommand::Status,
+        ] {
+            assert_eq!(ControlCommand::parse(cmd.verb()), Some(cmd));
+        }
+        assert_eq!(
+            ControlCommand::parse(" start\n"),
+            Some(ControlCommand::Start)
+        );
+        assert_eq!(ControlCommand::parse("START"), None);
+        assert_eq!(ControlCommand::parse("rm -rf"), None);
+        assert_eq!(ControlCommand::parse(""), None);
+    }
+
+    #[test]
+    fn push_to_talk_bind_start_stop_behaves_like_a_held_key() {
+        // Hyprland `bind` → start on key-down, `bindr` → stop on key-up.
+        let mut c = ptt();
+        assert_eq!(
+            drive(&mut c, ControlCommand::Start, 0),
+            Action::StartCapture
+        );
+        assert_eq!(drive(&mut c, ControlCommand::Stop, 400), Action::None);
+        assert!(matches!(
+            c.state(),
+            CaptureState::Finalizing { ends_ms: 700, .. }
+        ));
+        assert_eq!(c.step(Signal::Tick { at_ms: 700 }), Action::FinalizeCapture);
+    }
+
+    #[test]
+    fn control_path_keeps_the_short_tap_floor() {
+        // Pitfall P1 still applies through the socket: a 100 ms tap is discarded.
+        let mut c = ptt();
+        drive(&mut c, ControlCommand::Start, 0);
+        assert_eq!(
+            drive(&mut c, ControlCommand::Stop, 100),
+            Action::DiscardCapture
+        );
+        assert_eq!(c.state(), CaptureState::Idle);
+    }
+
+    #[test]
+    fn duplicate_start_and_stray_stop_are_idempotent() {
+        let mut c = ptt();
+        assert_eq!(drive(&mut c, ControlCommand::Stop, 0), Action::None); // idle stop
+        assert_eq!(
+            drive(&mut c, ControlCommand::Start, 10),
+            Action::StartCapture
+        );
+        // compositor key-repeat re-sends start: must not restart the capture
+        assert_eq!(drive(&mut c, ControlCommand::Start, 500), Action::None);
+        assert!(matches!(
+            c.state(),
+            CaptureState::Capturing { started_ms: 10, .. }
+        ));
+    }
+
+    #[test]
+    fn toggle_command_works_in_push_to_talk_mode() {
+        // GNOME/KDE custom shortcuts fire on press only → one key toggles.
+        let mut c = ptt();
+        assert_eq!(
+            drive(&mut c, ControlCommand::Toggle, 0),
+            Action::StartCapture
+        );
+        assert_eq!(drive(&mut c, ControlCommand::Toggle, 600), Action::None);
+        assert!(matches!(c.state(), CaptureState::Finalizing { .. }));
+        // a toggle during the tail cannot overlap sessions
+        assert_eq!(drive(&mut c, ControlCommand::Toggle, 650), Action::None);
+        assert_eq!(c.step(Signal::Tick { at_ms: 900 }), Action::FinalizeCapture);
+    }
+
+    #[test]
+    fn stop_command_ends_a_toggle_mode_capture() {
+        // In toggle mode releases are ignored, so `stop` must map to a press.
+        let mut c = toggle();
+        assert_eq!(
+            drive(&mut c, ControlCommand::Start, 0),
+            Action::StartCapture
+        );
+        assert_eq!(drive(&mut c, ControlCommand::Stop, 500), Action::None);
+        assert!(matches!(c.state(), CaptureState::Finalizing { .. }));
+    }
+
+    #[test]
+    fn status_never_changes_state() {
+        let mut c = ptt();
+        assert_eq!(drive(&mut c, ControlCommand::Status, 0), Action::None);
+        assert_eq!(status_label(c.state()), "idle");
+        drive(&mut c, ControlCommand::Start, 0);
+        assert_eq!(drive(&mut c, ControlCommand::Status, 100), Action::None);
+        assert_eq!(status_label(c.state()), "recording");
+        drive(&mut c, ControlCommand::Stop, 400);
+        assert_eq!(status_label(c.state()), "finalizing");
     }
 }
